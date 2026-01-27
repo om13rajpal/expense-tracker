@@ -1,0 +1,170 @@
+================================================================================
+DEEP TRANSACTION DATA ANALYSIS REPORT
+================================================================================
+
+1. BALANCE PROGRESSION ANALYSIS
+--------------------------------------------------------------------------------
+First Transaction:
+  Date: January 01, 2026
+  Balance: ₹65,970.41
+
+Last Transaction:
+  Date: January 24, 2026
+  Balance: ₹41,816.55
+
+Period: Jan 01 to Jan 24, 2026 (94 transactions)
+
+2. MONTHLY BREAKDOWN
+--------------------------------------------------------------------------------
+
+2026-01 (January 2026):
+  Opening Balance: ₹66,300.56
+  Closing Balance: ₹41,816.55
+  Total Credits (Income): ₹315,310.45
+  Total Debits (Expenses): ₹339,794.46
+  Net Change: ₹-24,484.01
+  Growth Rate: -36.93%
+  Transaction Count: 94
+
+
+3. INCOME ANALYSIS
+--------------------------------------------------------------------------------
+
+Income Sources:
+  POONAM M (UPI)
+    Total: ₹193,000.00
+    Count: 4 transactions
+    Average: ₹48,250.00
+  AGI READ (UPI)
+    Total: ₹70,005.45
+    Count: 1 transactions
+    Average: ₹70,005.45
+  MOHIT S (UPI)
+    Total: ₹37,500.00
+    Count: 1 transactions
+    Average: ₹37,500.00
+  NEFT Transfer
+    Total: ₹7,000.00
+    Count: 1 transactions
+    Average: ₹7,000.00
+  JASVIN T (UPI)
+    Total: ₹6,740.00
+    Count: 6 transactions
+    Average: ₹1,123.33
+  Amazon (Refund)
+    Total: ₹963.00
+    Count: 2 transactions
+    Average: ₹481.50
+  AARYAN (UPI)
+    Total: ₹80.00
+    Count: 1 transactions
+    Average: ₹80.00
+  Google (Refund)
+    Total: ₹16.00
+    Count: 2 transactions
+    Average: ₹8.00
+  Apple (Refund)
+    Total: ₹5.00
+    Count: 1 transactions
+    Average: ₹5.00
+  CHHAVI (UPI)
+    Total: ₹1.00
+    Count: 1 transactions
+    Average: ₹1.00
+
+
+4. LARGE EXPENSES ANALYSIS (₹5,000+)
+--------------------------------------------------------------------------------
+  Jan 05: ₹283,500.00 - WDL TFR INB THAPAR INSTITUTE OF ENGIN 0099226162099 AT 00652 MAIN BRAN
+  Jan 03: ₹25,500.00 - WDL TFR UPI/DR/102371709595/THAPAR I/HDFC/thaparinst/Pay 0097696162090
+
+
+5. RECURRING TRANSACTIONS
+--------------------------------------------------------------------------------
+
+Recurring Merchants (3+ transactions):
+  Groww (Investment)
+    Total Spent: ₹11,878.00
+    Transactions: 14
+    Average: ₹848.43
+  Zepto (Grocery)
+    Total Spent: ₹1,308.00
+    Transactions: 9
+    Average: ₹145.33
+  Wrap Chip (Restaurant)
+    Total Spent: ₹1,740.00
+    Transactions: 7
+    Average: ₹248.57
+  Swiggy (Food Delivery)
+    Total Spent: ₹2,794.00
+    Transactions: 5
+    Average: ₹558.80
+
+
+6. DAILY SPENDING PATTERN
+--------------------------------------------------------------------------------
+  Beginning (1-10):
+    Total Spent: ₹314,865.45
+    Transactions: 19
+    Average: ₹16,571.87
+  Mid-Month (11-20):
+    Total Spent: ₹11,037.01
+    Transactions: 28
+    Average: ₹394.18
+  End-Month (21-31):
+    Total Spent: ₹13,892.00
+    Transactions: 27
+    Average: ₹514.52
+
+
+7. BALANCE VERIFICATION
+--------------------------------------------------------------------------------
+No balance anomalies detected. All balances are consistent.
+
+
+8. KEY INSIGHTS
+--------------------------------------------------------------------------------
+
+January 2026 Summary (Jan 1-24):
+  Total Income: ₹315,310.45
+  Total Expenses: ₹339,794.46
+  Net Position: ₹-24,484.01
+
+  Starting Balance (Before Jan 1): ₹66,300.56
+  Ending Balance (Jan 24): ₹41,816.55
+  Actual Change in Balance: ₹-24,484.01
+
+
+9. WHY THE MISMATCH?
+--------------------------------------------------------------------------------
+
+The user reported:
+  - Monthly spend: ₹3,39,000
+  - Monthly income: ₹3,15,000
+  - Total balance: ₹41,98,000
+
+Our analysis shows:
+  - Actual expenses (Jan 1-24): ₹339,794.46
+  - Actual income (Jan 1-24): ₹315,310.45
+  - Current balance (Jan 24): ₹41,816.55
+
+EXPLANATION:
+1. PARTIAL MONTH: This is only Jan 1-24, not a full month
+2. BALANCE ≠ INCOME - EXPENSES: The total balance (₹41,98,000) is NOT calculated
+   as income minus expenses. It's the RUNNING BALANCE in the account.
+3. STARTING POSITION: The user started with ₹66,300.56 before the first transaction
+   on Jan 1. This is money from BEFORE this period.
+4. CORRECT CALCULATION:
+   - Starting Balance + Income - Expenses = Ending Balance
+   - ₹66,300.56 + ₹315,310.45 - ₹339,794.46 = ₹41,816.55
+
+The reported numbers might be:
+- User interface showing projected full month values
+- Including pending transactions not yet imported
+- Showing different date ranges
+- Including multiple accounts combined
+
+
+================================================================================
+END OF ANALYSIS
+================================================================================
