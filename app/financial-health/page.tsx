@@ -172,7 +172,7 @@ function ScoreRing({ score, size = 160 }: { score: number; size?: number }) {
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <span className={`text-4xl font-bold ${getScoreColor(score)}`}>
-          {score}
+          {Math.round(score)}
         </span>
         <span className="text-xs text-muted-foreground">/ 100</span>
       </div>

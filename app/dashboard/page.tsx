@@ -414,7 +414,7 @@ export default function DashboardPage() {
                               healthMetrics.financialFreedomScore >= 50 ? "text-amber-600" :
                               "text-rose-600"
                             }`}>
-                              {healthMetrics.financialFreedomScore}
+                              {Math.round(healthMetrics.financialFreedomScore)}
                             </span>
                           </div>
                           <Progress
@@ -434,7 +434,7 @@ export default function DashboardPage() {
                             ].map(item => (
                               <div key={item.label} className="text-center">
                                 <p className="text-[10px] text-muted-foreground">{item.label}</p>
-                                <p className="text-xs font-semibold">{item.value}/{item.max}</p>
+                                <p className="text-xs font-semibold">{Math.round(item.value * 10) / 10}/{item.max}</p>
                               </div>
                             ))}
                           </div>
