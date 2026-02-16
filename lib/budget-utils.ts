@@ -95,13 +95,18 @@ export function calculateBudgetSpending(
   // Get transaction categories for this budget category
   const transactionCategories = getTransactionCategoriesForBudget(budgetCategory);
 
+  // Match transactions whose category is either a mapped transaction category
+  // OR the budget category name itself (for manually re-categorized transactions)
+  const matches = (cat: string) =>
+    transactionCategories.includes(cat as TransactionCategory) || cat === budgetCategory;
+
   // Calculate total spent in this budget category
   const actualSpent = categoryBreakdown
-    .filter(cb => transactionCategories.includes(cb.category))
+    .filter(cb => matches(cb.category))
     .reduce((sum, cb) => sum + cb.amount, 0);
 
   const transactionCount = categoryBreakdown
-    .filter(cb => transactionCategories.includes(cb.category))
+    .filter(cb => matches(cb.category))
     .reduce((sum, cb) => sum + cb.transactionCount, 0);
 
   // Pro-rate budget for partial month
@@ -113,14 +118,14 @@ export function calculateBudgetSpending(
   const dailyAverage = period.elapsedDays > 0 ? actualSpent / period.elapsedDays : 0;
   const projectedSpent = dailyAverage * period.totalDays;
 
-  // Calculate remaining budget
-  const remaining = proratedBudget - actualSpent;
+  // Calculate remaining budget (against full monthly budget)
+  const remaining = monthlyBudget - actualSpent;
 
-  // Calculate percentage used (based on pro-rated budget)
-  const percentageUsed = proratedBudget > 0 ? (actualSpent / proratedBudget) * 100 : 0;
+  // Calculate percentage used (against full monthly budget)
+  const percentageUsed = monthlyBudget > 0 ? (actualSpent / monthlyBudget) * 100 : 0;
 
-  // Check if overspent
-  const isOverspent = actualSpent > proratedBudget;
+  // Check if overspent (against full monthly budget)
+  const isOverspent = actualSpent > monthlyBudget;
 
   return {
     budgetCategory,

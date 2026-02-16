@@ -1,0 +1,50 @@
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+
+interface NWIBucket {
+  percentage: number
+  categories: string[]
+}
+
+interface NWIConfig {
+  needs: NWIBucket
+  wants: NWIBucket
+  investments: NWIBucket
+  savings: NWIBucket
+}
+
+interface NWIConfigResponse {
+  success: boolean
+  config?: NWIConfig
+  error?: string
+}
+
+export function useNWIConfig() {
+  return useQuery<NWIConfigResponse>({
+    queryKey: ["nwi-config"],
+    queryFn: async () => {
+      const res = await fetch("/api/nwi-config")
+      if (!res.ok) throw new Error("Failed to fetch NWI config")
+      return res.json()
+    },
+  })
+}
+
+export function useUpdateNWIConfig() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (config: Partial<NWIConfig>) => {
+      const res = await fetch("/api/nwi-config", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(config),
+      })
+      if (!res.ok) throw new Error("Failed to update NWI config")
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["nwi-config"] })
+      queryClient.invalidateQueries({ queryKey: ["financial-health"] })
+    },
+  })
+}

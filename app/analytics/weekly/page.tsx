@@ -248,9 +248,11 @@ export default function WeeklyAnalyticsPage() {
                   </Card>
                   <Card className="border border-border/70">
                     <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground">Net Savings</p>
-                      <p className="text-2xl font-semibold">{formatCurrency(weeklyMetrics.netSavings)}</p>
-                      <p className="text-xs text-muted-foreground">{weeklyMetrics.savingsRate.toFixed(1)}% of income</p>
+                      <p className="text-xs text-muted-foreground">Net Change</p>
+                      <p className={`text-2xl font-semibold ${(weeklyMetrics.totalIncome - weeklyMetrics.totalExpenses) >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                        {(weeklyMetrics.totalIncome - weeklyMetrics.totalExpenses) >= 0 ? "+" : ""}{formatCurrency(weeklyMetrics.totalIncome - weeklyMetrics.totalExpenses)}
+                      </p>
+                      <p className="text-xs text-muted-foreground">Balance change this week</p>
                     </CardContent>
                   </Card>
                   <Card className="border border-border/70">
@@ -271,12 +273,22 @@ export default function WeeklyAnalyticsPage() {
                     <CardContent>
                       <ResponsiveContainer width="100%" height={280}>
                         <BarChart data={dailyBreakdown}>
-                          <CartesianGrid vertical={false} stroke="hsl(var(--border))" />
-                          <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
-                          <YAxis tickLine={false} axisLine={false} tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`} />
-                          <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                          <Bar dataKey="income" fill="#22c55e" radius={[6, 6, 0, 0]} isAnimationActive={false} />
-                          <Bar dataKey="expenses" fill="#f43f5e" radius={[6, 6, 0, 0]} isAnimationActive={false} />
+                          <CartesianGrid vertical={false} stroke="var(--border)" strokeOpacity={0.4} strokeDasharray="3 3" />
+                          <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} tick={{ fill: "var(--muted-foreground)" }} />
+                          <YAxis tickLine={false} axisLine={false} tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`} tick={{ fill: "var(--muted-foreground)" }} />
+                          <Tooltip
+                            formatter={(value: number) => formatCurrency(value)}
+                            contentStyle={{
+                              borderRadius: 10,
+                              fontSize: 12,
+                              border: "1px solid var(--border)",
+                              background: "var(--card)",
+                              color: "var(--card-foreground)",
+                            }}
+                            cursor={{ fill: "var(--muted)", opacity: 0.3 }}
+                          />
+                          <Bar dataKey="income" fill="var(--chart-1)" radius={[6, 6, 0, 0]} isAnimationActive={false} />
+                          <Bar dataKey="expenses" fill="var(--chart-5)" radius={[6, 6, 0, 0]} isAnimationActive={false} />
                         </BarChart>
                       </ResponsiveContainer>
                     </CardContent>

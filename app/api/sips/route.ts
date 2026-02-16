@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
           const provider = typeof item.provider === "string" ? item.provider.trim() : ""
           const monthlyAmount = Number(item.monthlyAmount)
           const startDate = typeof item.startDate === "string" ? item.startDate : ""
-          const expectedAnnualReturn = item.expectedAnnualReturn === "" || item.expectedAnnualReturn === null
+          const expectedAnnualReturn = item.expectedAnnualReturn === "" || item.expectedAnnualReturn == null
             ? undefined
             : Number(item.expectedAnnualReturn)
           const status = item.status === "paused" || item.status === "cancelled" ? item.status : "active"

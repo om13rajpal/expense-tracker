@@ -14,6 +14,31 @@ function ensureDate(date: Date | string): Date {
 }
 
 /**
+ * Sort comparator for transactions by date ascending, with sequence as tie-breaker.
+ * When multiple transactions share the same date, the sequence (row index from sheet)
+ * preserves original sheet row ordering, ensuring the running balance sequence
+ * is maintained correctly. Falls back to id if sequence is unavailable.
+ */
+function sortByDateAsc(a: Transaction, b: Transaction): number {
+  const diff = ensureDate(a.date).getTime() - ensureDate(b.date).getTime();
+  if (diff !== 0) return diff;
+  // Tie-break by sequence (row index) to preserve sheet row order
+  if (a.sequence != null && b.sequence != null) return a.sequence - b.sequence;
+  return (a.id || '').localeCompare(b.id || '');
+}
+
+/**
+ * Sort comparator for transactions by date descending, with sequence as tie-breaker.
+ */
+function sortByDateDesc(a: Transaction, b: Transaction): number {
+  const diff = ensureDate(b.date).getTime() - ensureDate(a.date).getTime();
+  if (diff !== 0) return diff;
+  // Tie-break by sequence descending (higher sequence = later in sheet = first when descending)
+  if (a.sequence != null && b.sequence != null) return b.sequence - a.sequence;
+  return (b.id || '').localeCompare(a.id || '');
+}
+
+/**
  * Account summary with actual balance from sheet data
  */
 export interface AccountSummary {
@@ -41,10 +66,8 @@ export function calculateAccountSummary(transactions: Transaction[]): AccountSum
     };
   }
 
-  // Sort by date to get chronological order
-  const sorted = [...filtered].sort((a, b) =>
-    ensureDate(a.date).getTime() - ensureDate(b.date).getTime()
-  );
+  // Sort by date to get chronological order (with id tie-breaker for same-day txns)
+  const sorted = [...filtered].sort(sortByDateAsc);
 
   // Get actual balances from sheet (if available)
   const firstTransaction = sorted[0];
@@ -90,12 +113,10 @@ export function getBalanceAtDate(transactions: Transaction[], targetDate: Date):
   const filtered = transactions.filter(t => isCompletedStatus(t.status));
   if (filtered.length === 0) return 0;
 
-  // Filter transactions up to target date
+  // Filter transactions up to target date, sort descending (latest first)
   const transactionsUpToDate = filtered.filter(
     t => ensureDate(t.date) <= targetDate
-  ).sort((a, b) =>
-    ensureDate(b.date).getTime() - ensureDate(a.date).getTime()
-  ); // Sort descending
+  ).sort(sortByDateDesc);
 
   // Return balance of most recent transaction before target date
   const latestWithBalance = transactionsUpToDate.find(
@@ -118,10 +139,8 @@ export function calculateBalanceTrend(
 ): Array<{ date: Date; balance: number }> {
   if (transactions.length === 0) return [];
 
-  // Sort by date
-  const sorted = [...transactions].sort((a, b) =>
-    ensureDate(a.date).getTime() - ensureDate(b.date).getTime()
-  );
+  // Sort by date (with id tie-breaker for same-day txns)
+  const sorted = [...transactions].sort(sortByDateAsc);
 
   const completed = sorted.filter(t => isCompletedStatus(t.status));
   const balancePoints = sorted
@@ -171,9 +190,7 @@ export function validateBalanceConsistency(transactions: Transaction[]): {
     return { isConsistent: true, inconsistencies: [] };
   }
 
-  const sorted = [...transactions].sort((a, b) =>
-    ensureDate(a.date).getTime() - ensureDate(b.date).getTime()
-  );
+  const sorted = [...transactions].sort(sortByDateAsc);
   const inconsistencies = [];
 
   for (let i = 1; i < sorted.length; i++) {

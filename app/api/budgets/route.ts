@@ -2,9 +2,10 @@
  * Budget API endpoints
  * Handles budget retrieval and updates using MongoDB.
  *
- * GET  - Returns merged budgets (from budget_categories collection).
- * POST - Bulk-update all budget amounts (writes into budget_categories docs).
- * PUT  - Update a single category's budget amount.
+ * GET   - Returns merged budgets (from budget_categories collection).
+ * POST  - Bulk-update all budget amounts (writes into budget_categories docs).
+ * PUT   - Update a single category's budget amount.
+ * PATCH - Toggle rollover flag for a category.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -39,10 +40,12 @@ export async function GET(request: NextRequest) {
       }
 
       const budgets: Record<string, number> = {};
+      const rolloverFlags: Record<string, boolean> = {};
       let latestUpdatedAt: string | null = null;
 
       for (const doc of docs) {
         budgets[doc.name] = doc.budgetAmount;
+        rolloverFlags[doc.name] = doc.rollover === true;
         if (!latestUpdatedAt || doc.updatedAt > latestUpdatedAt) {
           latestUpdatedAt = doc.updatedAt;
         }
@@ -52,6 +55,7 @@ export async function GET(request: NextRequest) {
         {
           success: true,
           budgets,
+          rolloverFlags,
           updatedAt: latestUpdatedAt,
         },
         { headers: corsHeaders() }
@@ -187,6 +191,67 @@ export async function PUT(request: NextRequest) {
       console.error('Error in PUT /api/budgets:', error);
       return NextResponse.json(
         { success: false, error: 'Failed to update budget' },
+        { status: 500, headers: corsHeaders() }
+      );
+    }
+  })(request);
+}
+
+/**
+ * PATCH /api/budgets
+ * Toggle the rollover flag for a budget category.
+ * Body: { category: string, rollover: boolean }
+ */
+export async function PATCH(request: NextRequest) {
+  return withAuth(async (req, { user }) => {
+    try {
+      const body = await req.json();
+      const { category, rollover } = body;
+
+      if (!category || typeof category !== 'string') {
+        return NextResponse.json(
+          { success: false, error: 'Invalid category' },
+          { status: 400, headers: corsHeaders() }
+        );
+      }
+
+      if (typeof rollover !== 'boolean') {
+        return NextResponse.json(
+          { success: false, error: 'Rollover must be a boolean' },
+          { status: 400, headers: corsHeaders() }
+        );
+      }
+
+      const updatedAt = new Date().toISOString();
+      const db = await getMongoDb();
+      const col = db.collection(COLLECTION);
+
+      const result = await col.updateOne(
+        { userId: user.userId, name: category },
+        { $set: { rollover, updatedAt } }
+      );
+
+      if (result.matchedCount === 0) {
+        return NextResponse.json(
+          { success: false, error: `Category "${category}" not found` },
+          { status: 404, headers: corsHeaders() }
+        );
+      }
+
+      return NextResponse.json(
+        {
+          success: true,
+          message: `Rollover ${rollover ? 'enabled' : 'disabled'} for ${category}`,
+          category,
+          rollover,
+          updatedAt,
+        },
+        { headers: corsHeaders() }
+      );
+    } catch (error) {
+      console.error('Error in PATCH /api/budgets:', error);
+      return NextResponse.json(
+        { success: false, error: 'Failed to update rollover setting' },
         { status: 500, headers: corsHeaders() }
       );
     }

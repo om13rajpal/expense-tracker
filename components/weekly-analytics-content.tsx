@@ -52,6 +52,9 @@ function formatCurrency(amount: number): string {
   }).format(amount)
 }
 
+const CHART_INCOME = "var(--chart-1)"
+const CHART_EXPENSE = "var(--chart-5)"
+
 export function WeeklyAnalyticsContent({ transactions }: WeeklyAnalyticsContentProps) {
   const availableWeeks = useMemo(
     () => getAvailableWeeks(transactions),
@@ -136,11 +139,9 @@ export function WeeklyAnalyticsContent({ transactions }: WeeklyAnalyticsContentP
 
   if (availableWeeks.length === 0) {
     return (
-      <Card className="border border-border/70">
-        <CardContent className="py-10 text-center text-sm text-muted-foreground">
-          No weekly data available yet. Add transactions to see weekly analytics.
-        </CardContent>
-      </Card>
+      <div className="rounded-xl border border-border/60 bg-card p-10 text-center text-sm text-muted-foreground">
+        No weekly data available yet. Add transactions to see weekly analytics.
+      </div>
     )
   }
 
@@ -148,15 +149,16 @@ export function WeeklyAnalyticsContent({ transactions }: WeeklyAnalyticsContentP
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-semibold">{weeklyMetrics.weekLabel}</h2>
-          <p className="text-sm text-muted-foreground">
+          <h2 className="text-lg font-semibold">{weeklyMetrics.weekLabel}</h2>
+          <p className="text-xs text-muted-foreground">
             {formatWeekDateRange(selectedWeek.year, selectedWeek.weekNumber)}
           </p>
         </div>
         <div className="flex items-center gap-2">
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon"
+            className="h-8 w-8"
             onClick={() => setSelectedWeek(getPreviousWeek(selectedWeek))}
           >
             <ChevronLeft className="h-4 w-4" />
@@ -168,7 +170,7 @@ export function WeeklyAnalyticsContent({ transactions }: WeeklyAnalyticsContentP
               if (week) setSelectedWeek(week)
             }}
           >
-            <SelectTrigger className="w-[220px]">
+            <SelectTrigger className="w-[220px] h-9 text-xs">
               <SelectValue placeholder="Select week" />
             </SelectTrigger>
             <SelectContent>
@@ -177,7 +179,7 @@ export function WeeklyAnalyticsContent({ transactions }: WeeklyAnalyticsContentP
                   <div className="flex items-center gap-2">
                     {week.label}
                     {week.label === getCurrentWeek().label && (
-                      <Badge variant="default" className="text-xs">Current</Badge>
+                      <Badge variant="default" className="text-[10px]">Current</Badge>
                     )}
                   </div>
                 </SelectItem>
@@ -185,8 +187,9 @@ export function WeeklyAnalyticsContent({ transactions }: WeeklyAnalyticsContentP
             </SelectContent>
           </Select>
           <Button
-            variant="outline"
+            variant="ghost"
             size="icon"
+            className="h-8 w-8"
             onClick={() => setSelectedWeek(getNextWeek(selectedWeek))}
           >
             <ChevronRight className="h-4 w-4" />
@@ -203,112 +206,116 @@ export function WeeklyAnalyticsContent({ transactions }: WeeklyAnalyticsContentP
         closingBalance={closingBalance}
       />
 
-      <div className="grid gap-4 md:grid-cols-4">
-        <Card className="border border-border/70">
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">Total Income</p>
-            <p className="text-2xl font-semibold text-emerald-600">
-              {formatCurrency(weeklyMetrics.totalIncome)}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {weeklyMetrics.incomeTransactionCount} entries
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="border border-border/70">
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">Total Expenses</p>
-            <p className="text-2xl font-semibold text-rose-600">
-              {formatCurrency(weeklyMetrics.totalExpenses)}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {weeklyMetrics.expenseTransactionCount} entries
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="border border-border/70">
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">Net Savings</p>
-            <p className="text-2xl font-semibold">
-              {formatCurrency(weeklyMetrics.netSavings)}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {weeklyMetrics.savingsRate.toFixed(1)}% of income
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="border border-border/70">
-          <CardContent className="p-4">
-            <p className="text-xs text-muted-foreground">Average Daily Spend</p>
-            <p className="text-2xl font-semibold">
-              {formatCurrency(weeklyMetrics.averageDailySpend)}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {weeklyMetrics.daysInWeek} active days
-            </p>
-          </CardContent>
-        </Card>
+      {/* Unified stat bar */}
+      <div className="rounded-xl border border-border/60 bg-card divide-x divide-border/40 grid grid-cols-4">
+        <div className="px-5 py-3">
+          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Income</p>
+          <p className="text-lg font-semibold text-primary tabular-nums mt-0.5">
+            {formatCurrency(weeklyMetrics.totalIncome)}
+          </p>
+          <p className="text-[10px] text-muted-foreground">{weeklyMetrics.incomeTransactionCount} entries</p>
+        </div>
+        <div className="px-5 py-3">
+          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Expenses</p>
+          <p className="text-lg font-semibold tabular-nums mt-0.5">
+            {formatCurrency(weeklyMetrics.totalExpenses)}
+          </p>
+          <p className="text-[10px] text-muted-foreground">{weeklyMetrics.expenseTransactionCount} entries</p>
+        </div>
+        <div className="px-5 py-3">
+          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Net Change</p>
+          <p className={`text-lg font-semibold tabular-nums mt-0.5 ${(weeklyMetrics.totalIncome - weeklyMetrics.totalExpenses) >= 0 ? "text-primary" : "text-destructive"}`}>
+            {(weeklyMetrics.totalIncome - weeklyMetrics.totalExpenses) >= 0 ? "+" : ""}{formatCurrency(weeklyMetrics.totalIncome - weeklyMetrics.totalExpenses)}
+          </p>
+          <p className="text-[10px] text-muted-foreground">Balance change this week</p>
+        </div>
+        <div className="px-5 py-3">
+          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Avg Daily</p>
+          <p className="text-lg font-semibold tabular-nums mt-0.5">
+            {formatCurrency(weeklyMetrics.averageDailySpend)}
+          </p>
+          <p className="text-[10px] text-muted-foreground">{weeklyMetrics.daysInWeek} active days</p>
+        </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <Card className="border border-border/70">
-          <CardHeader>
-            <CardTitle>Daily Breakdown</CardTitle>
-            <CardDescription>Income vs expenses by day</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ResponsiveContainer width="100%" height={280}>
-              <BarChart data={dailyBreakdown}>
-                <CartesianGrid vertical={false} stroke="hsl(var(--border))" />
-                <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
-                <YAxis
-                  tickLine={false}
-                  axisLine={false}
-                  tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`}
-                />
-                <Tooltip formatter={(value: number) => formatCurrency(value)} />
-                <Bar dataKey="income" fill="#22c55e" radius={[6, 6, 0, 0]} isAnimationActive={false} />
-                <Bar dataKey="expenses" fill="#f43f5e" radius={[6, 6, 0, 0]} isAnimationActive={false} />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-        <Card className="border border-border/70">
-          <CardHeader>
-            <CardTitle>Top Categories</CardTitle>
-            <CardDescription>Highest weekly spend areas</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-3">
+        <div className="rounded-xl border border-border/60 bg-card p-5">
+          <div className="mb-4">
+            <h3 className="text-sm font-semibold">Daily Breakdown</h3>
+            <p className="text-xs text-muted-foreground">Income vs expenses by day</p>
+          </div>
+          <ResponsiveContainer width="100%" height={280}>
+            <BarChart data={dailyBreakdown}>
+              <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--color-border)" strokeOpacity={0.5} />
+              <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} />
+              <YAxis
+                tickLine={false}
+                axisLine={false}
+                tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`}
+                tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+              />
+              <Tooltip
+                formatter={(value: number) => formatCurrency(value)}
+                contentStyle={{
+                  borderRadius: 10,
+                  fontSize: 12,
+                  border: "1px solid var(--border)",
+                  background: "var(--card)",
+                  color: "var(--card-foreground)",
+                }}
+                cursor={{ fill: "var(--muted)", opacity: 0.3 }}
+              />
+              <Bar dataKey="income" fill={CHART_INCOME} radius={[4, 4, 0, 0]} isAnimationActive={false} />
+              <Bar dataKey="expenses" fill={CHART_EXPENSE} radius={[4, 4, 0, 0]} isAnimationActive={false} />
+            </BarChart>
+          </ResponsiveContainer>
+          <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border/30">
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <div className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: CHART_INCOME }} />
+              Income
+            </div>
+            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+              <div className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: CHART_EXPENSE }} />
+              Expenses
+            </div>
+          </div>
+        </div>
+        <div className="rounded-xl border border-border/60 bg-card p-5">
+          <div className="mb-4">
+            <h3 className="text-sm font-semibold">Top Categories</h3>
+            <p className="text-xs text-muted-foreground">Highest weekly spend areas</p>
+          </div>
+          <div className="space-y-3">
             {categoryBreakdown.length > 0 ? (
               categoryBreakdown.map((item) => (
                 <div key={item.category} className="flex items-center justify-between">
-                  <div className="text-sm font-medium">{item.category}</div>
-                  <Badge variant="outline">{formatCurrency(item.amount)}</Badge>
+                  <span className="text-sm">{item.category}</span>
+                  <span className="text-sm font-semibold tabular-nums">{formatCurrency(item.amount)}</span>
                 </div>
               ))
             ) : (
               <p className="text-sm text-muted-foreground">No expenses this week.</p>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
       </div>
 
-      <Card className="border border-border/70">
-        <CardHeader>
-          <CardTitle>Top Expenses</CardTitle>
-          <CardDescription>Largest transactions this week</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
+      <div className="rounded-xl border border-border/60 bg-card p-5">
+        <div className="mb-4">
+          <h3 className="text-sm font-semibold">Top Expenses</h3>
+          <p className="text-xs text-muted-foreground">Largest transactions this week</p>
+        </div>
+        <div className="space-y-3">
           {topExpenses.length > 0 ? (
             topExpenses.map((txn) => (
-              <div key={txn.id} className="flex items-center justify-between border-b pb-3 last:border-0">
+              <div key={txn.id} className="flex items-center justify-between border-b border-border/30 pb-3 last:border-0">
                 <div>
-                  <p className="font-medium">{txn.description}</p>
-                  <p className="text-xs text-muted-foreground">
+                  <p className="text-sm font-medium">{txn.description}</p>
+                  <p className="text-[11px] text-muted-foreground">
                     {txn.merchant} · {txn.category}
                   </p>
                 </div>
-                <span className="text-rose-600 font-semibold">
+                <span className="text-sm font-semibold tabular-nums">
                   {formatCurrency(txn.amount)}
                 </span>
               </div>
@@ -316,8 +323,8 @@ export function WeeklyAnalyticsContent({ transactions }: WeeklyAnalyticsContentP
           ) : (
             <p className="text-sm text-muted-foreground">No expenses this week.</p>
           )}
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }

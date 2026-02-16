@@ -1,117 +1,113 @@
 "use client"
 
 import * as React from "react"
-import { useEffect, useState } from "react"
+import { useEffect, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { motion } from "motion/react"
 import {
-  Area,
-  AreaChart,
   Bar,
   BarChart,
   CartesianGrid,
-  Line,
-  LineChart,
   ResponsiveContainer,
   Tooltip,
   XAxis,
   YAxis,
 } from "recharts"
 import {
-  IconChartLine,
-  IconCreditCard,
-  IconDatabase,
-  IconHeartbeat,
-  IconPigMoney,
-  IconShieldCheck,
+  IconAlertCircle,
+  IconAlertTriangle,
+  IconArrowDownRight,
+  IconArrowRight,
+  IconArrowUpRight,
+  IconChartBar,
+  IconReceipt,
+  IconRefresh,
   IconTrendingUp,
   IconWallet,
+  IconScale,
 } from "@tabler/icons-react"
 
+import { stagger, fadeUp, fadeUpSmall, numberPop, listItem } from "@/lib/motion"
+import { getPartialMonthInfo } from "@/lib/edge-cases"
+import { ContextBanner } from "@/components/context-banner"
 import { useTransactions } from "@/hooks/use-transactions"
 import { useAuth } from "@/hooks/use-auth"
-import { transformTransactionsForTable } from "@/lib/transform-transactions"
+
 import {
   calculateMonthlyMetrics,
   getCurrentMonth,
   getMonthTransactions,
 } from "@/lib/monthly-utils"
-import {
-  calculateCategoryBreakdown,
-  calculateDailyTrends,
-  calculateMonthlyTrends,
-  calculatePaymentMethodBreakdown,
-  getTopMerchants,
-} from "@/lib/analytics"
-import {
-  calculateAccountSummary,
-  calculateBalanceTrend,
-  getBalanceAtDate,
-} from "@/lib/balance-utils"
-import { isCompletedStatus } from "@/lib/utils"
-import {
-  getCurrentWeek,
-  getWeekEndDate,
-  getWeekStartDate,
-  getWeekTransactions,
-} from "@/lib/weekly-utils"
+import { calculateCategoryBreakdown } from "@/lib/analytics"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SiteHeader } from "@/components/site-header"
-import { CategoryChart } from "@/components/category-chart"
-import { PaymentMethodChart } from "@/components/payment-method-chart"
-import { MetricTile } from "@/components/metric-tile"
 import { AiInsightsWidget } from "@/components/ai-insights-widget"
-import { PeriodBridge } from "@/components/period-bridge"
 import { SyncButtonCompact } from "@/components/sync-button"
+import { SectionErrorBoundary } from "@/components/error-boundary"
 import {
   SidebarInset,
   SidebarProvider,
 } from "@/components/ui/sidebar"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
 import { Skeleton } from "@/components/ui/skeleton"
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table"
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-  type ChartConfig,
-} from "@/components/ui/chart"
+import { formatINR as formatCurrency } from "@/lib/format"
 
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(amount)
-}
+/* ─── Category color palette ─── */
+const CATEGORY_COLORS = [
+  "bg-emerald-500",
+  "bg-blue-500",
+  "bg-amber-500",
+  "bg-rose-500",
+  "bg-violet-500",
+  "bg-cyan-500",
+  "bg-orange-500",
+  "bg-pink-500",
+]
 
-function formatCompactAxis(value: number): string {
-  if (Math.abs(value) < 1000) {
-    return `₹${value.toFixed(0)}`
-  }
-  return `₹${(value / 1000).toFixed(0)}k`
-}
+const CATEGORY_BAR_GRADIENTS = [
+  "from-emerald-500/80 to-emerald-500/40",
+  "from-blue-500/80 to-blue-500/40",
+  "from-amber-500/80 to-amber-500/40",
+  "from-rose-500/80 to-rose-500/40",
+  "from-violet-500/80 to-violet-500/40",
+  "from-cyan-500/80 to-cyan-500/40",
+  "from-orange-500/80 to-orange-500/40",
+  "from-pink-500/80 to-pink-500/40",
+]
 
-const trendConfig = {
-  income: {
+/* ─── Stat card config ─── */
+const STAT_CONFIG = [
+  {
+    key: "opening",
+    label: "Opening Balance",
+    icon: IconScale,
+    iconBg: "bg-blue-500/10 dark:bg-blue-500/15",
+    iconColor: "text-blue-600 dark:text-blue-400",
+  },
+  {
+    key: "income",
     label: "Income",
-    color: "hsl(var(--chart-2))",
+    icon: IconArrowUpRight,
+    iconBg: "bg-emerald-500/10 dark:bg-emerald-500/15",
+    iconColor: "text-emerald-600 dark:text-emerald-400",
   },
-  expenses: {
+  {
+    key: "expenses",
     label: "Expenses",
-    color: "hsl(var(--chart-5))",
+    icon: IconArrowDownRight,
+    iconBg: "bg-rose-500/10 dark:bg-rose-500/15",
+    iconColor: "text-rose-600 dark:text-rose-400",
   },
-} satisfies ChartConfig
+  {
+    key: "balance",
+    label: "Current Balance",
+    icon: IconWallet,
+    iconBg: "bg-amber-500/10 dark:bg-amber-500/15",
+    iconColor: "text-amber-600 dark:text-amber-400",
+  },
+] as const
 
 export default function DashboardPage() {
   const router = useRouter()
@@ -119,91 +115,13 @@ export default function DashboardPage() {
   const {
     transactions,
     isLoading: transactionsLoading,
+    error: transactionsError,
     syncFromSheets,
+    refresh,
   } = useTransactions()
 
-  const [nwiSplit, setNwiSplit] = useState<{
-    totalIncome: number
-    needs: { targetPercentage: number; actualPercentage: number; actualAmount: number; targetAmount: number }
-    wants: { targetPercentage: number; actualPercentage: number; actualAmount: number; targetAmount: number }
-    investments: { targetPercentage: number; actualPercentage: number; actualAmount: number; targetAmount: number }
-  } | null>(null)
-  const [healthMetrics, setHealthMetrics] = useState<{
-    financialFreedomScore: number
-    scoreBreakdown: { savingsRate: number; emergencyFund: number; nwiAdherence: number; investmentRate: number }
-    emergencyFundMonths: number
-    emergencyFundTarget: number
-  } | null>(null)
-
   const { year, month, label: monthLabel } = getCurrentMonth()
-  const currentWeek = getCurrentWeek()
   const monthTransactions = getMonthTransactions(transactions, year, month)
-
-  useEffect(() => {
-    if (!isAuthenticated) return
-    fetch("/api/nwi-config")
-      .then(res => res.json())
-      .then(data => {
-        if (!data.success || !data.config) return
-        // Compute NWI split from current month transactions
-        const config = data.config
-        const completed = monthTransactions.filter(
-          (t: { type: string; status: string }) => t.type === "expense" && isCompletedStatus(t.status)
-        )
-        const income = monthTransactions
-          .filter((t: { type: string; status: string }) => t.type === "income" && isCompletedStatus(t.status))
-          .reduce((s: number, t: { amount: number }) => s + t.amount, 0)
-
-        const classify = (cat: string) => {
-          if (config.needs.categories.includes(cat)) return "needs"
-          if (config.investments.categories.includes(cat)) return "investments"
-          return "wants"
-        }
-
-        const buckets = { needs: 0, wants: 0, investments: 0 }
-        for (const t of completed) {
-          buckets[classify(t.category)] += t.amount
-        }
-        const total = buckets.needs + buckets.wants + buckets.investments
-
-        setNwiSplit({
-          totalIncome: income,
-          needs: {
-            targetPercentage: config.needs.percentage,
-            actualPercentage: total > 0 ? (buckets.needs / total) * 100 : 0,
-            actualAmount: buckets.needs,
-            targetAmount: income * config.needs.percentage / 100,
-          },
-          wants: {
-            targetPercentage: config.wants.percentage,
-            actualPercentage: total > 0 ? (buckets.wants / total) * 100 : 0,
-            actualAmount: buckets.wants,
-            targetAmount: income * config.wants.percentage / 100,
-          },
-          investments: {
-            targetPercentage: config.investments.percentage,
-            actualPercentage: total > 0 ? (buckets.investments / total) * 100 : 0,
-            actualAmount: buckets.investments,
-            targetAmount: income * config.investments.percentage / 100,
-          },
-        })
-      })
-      .catch(() => {})
-
-    fetch("/api/financial-health")
-      .then(res => res.json())
-      .then(data => {
-        if (data.success && data.metrics) {
-          setHealthMetrics({
-            financialFreedomScore: data.metrics.financialFreedomScore,
-            scoreBreakdown: data.metrics.scoreBreakdown,
-            emergencyFundMonths: data.metrics.emergencyFundMonths,
-            emergencyFundTarget: data.metrics.emergencyFundTarget,
-          })
-        }
-      })
-      .catch(() => {})
-  }, [isAuthenticated, monthTransactions])
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -211,66 +129,157 @@ export default function DashboardPage() {
     }
   }, [isAuthenticated, authLoading, router])
 
-  const weekTransactions = getWeekTransactions(
-    transactions,
-    currentWeek.year,
-    currentWeek.weekNumber
-  )
-
   const monthlyMetrics = transactions.length > 0
     ? calculateMonthlyMetrics(transactions, year, month)
     : null
 
-  const weekStart = getWeekStartDate(currentWeek.year, currentWeek.weekNumber)
-  const weekEnd = getWeekEndDate(currentWeek.year, currentWeek.weekNumber)
-  const weekOpening = getBalanceAtDate(
-    transactions,
-    new Date(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate() - 1)
-  )
-  const weekClosing = getBalanceAtDate(transactions, weekEnd)
-  const weekIncome = weekTransactions
-    .filter((t) => t.type === "income" && isCompletedStatus(t.status))
-    .reduce((sum, t) => sum + t.amount, 0)
-  const weekExpenses = weekTransactions
-    .filter((t) => t.type === "expense" && isCompletedStatus(t.status))
-    .reduce((sum, t) => sum + t.amount, 0)
-
-  const accountSummary = calculateAccountSummary(transactions)
-  const monthlyTrends = calculateMonthlyTrends(transactions)
   const categoryBreakdown = calculateCategoryBreakdown(monthTransactions)
-  const paymentBreakdown = calculatePaymentMethodBreakdown(monthTransactions)
-  const dailyTrends = calculateDailyTrends(monthTransactions)
-  const balanceTrend = calculateBalanceTrend(transactions)
-  const topMerchants = getTopMerchants(monthTransactions, 6)
 
-  const lastSixMonths = monthlyTrends.slice(-6)
-  const hasMonthlyTrends = lastSixMonths.length > 0
-  const lastDaily = dailyTrends.slice(-14).map((item) => ({
-    date: new Date(item.date).toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    }),
-    income: item.income,
-    expenses: item.expenses,
-    net: item.net,
-  }))
+  // Check if current month has no income but previous month had salary
+  // (salary landed in previous month due to irregular pay cycles)
+  const noIncomeContext = useMemo(() => {
+    if (!monthlyMetrics || monthlyMetrics.totalIncome > 0) return null
+    // Check if previous month had income
+    let prevYear = year
+    let prevMonth = month - 1
+    if (prevMonth < 1) { prevMonth = 12; prevYear = year - 1 }
+    const prevMetrics = calculateMonthlyMetrics(transactions, prevYear, prevMonth)
+    if (prevMetrics.totalIncome > 0) {
+      return "Salary likely received in previous month"
+    }
+    return null
+  }, [transactions, year, month, monthlyMetrics])
 
-  const balanceRunwayData = balanceTrend.slice(-30).map((item) => ({
-    date: item.date.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-    }),
-    balance: item.balance,
-  }))
-  const hasBalanceRunway = balanceRunwayData.length > 0
-  const showBalanceDots = balanceRunwayData.length <= 1
-  const hasDailyTrends = lastDaily.length > 0
+  const monthlyTrendData = useMemo(() => {
+    if (transactions.length === 0) return []
+    const data: { name: string; income: number; expenses: number }[] = []
+    for (let i = 5; i >= 0; i--) {
+      let m = month - i
+      let y = year
+      while (m < 1) { m += 12; y -= 1 }
+      const metrics = calculateMonthlyMetrics(transactions, y, m)
+      const shortLabel = new Date(y, m - 1, 1).toLocaleDateString("en-US", { month: "short" })
+      data.push({ name: shortLabel, income: metrics.totalIncome, expenses: metrics.totalExpenses })
+    }
+    return data
+  }, [transactions, year, month])
 
-  const recentTransactions = transformTransactionsForTable(transactions)
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 6)
+  const recentTransactions = useMemo(() => {
+    return [...monthTransactions]
+      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+      .slice(0, 5)
+  }, [monthTransactions])
 
   const isLoading = authLoading || transactionsLoading
+  const totalIncome = monthlyMetrics?.totalIncome || 0
+  const totalExpenses = monthlyMetrics?.totalExpenses || 0
+  const openingBalance = monthlyMetrics?.openingBalance || 0
+  const closingBalance = monthlyMetrics?.closingBalance || 0
+  const netChange = monthlyMetrics?.netChange || 0
+
+  const VISIBLE_CATEGORIES = 6
+  const visibleCategories = categoryBreakdown.slice(0, VISIBLE_CATEGORIES)
+  const hiddenCount = Math.max(0, categoryBreakdown.length - VISIBLE_CATEGORIES)
+
+  const statValues = [
+    formatCurrency(openingBalance),
+    formatCurrency(totalIncome),
+    formatCurrency(totalExpenses),
+    formatCurrency(closingBalance),
+  ]
+
+  const statValueColors = [
+    "text-blue-600 dark:text-blue-400",
+    totalIncome === 0 ? "text-muted-foreground" : "",
+    "",
+    "",
+  ]
+
+  /* ─── Predictive Cashflow ─── */
+  const cashflowForecast = useMemo(() => {
+    const daysElapsed = Math.max(1, new Date().getDate())
+    const totalDaysInMonth = new Date(year, month, 0).getDate()
+    const projectedExpenses = (totalExpenses / daysElapsed) * totalDaysInMonth
+    const dailyAvgSpend = totalExpenses / daysElapsed
+    const remainingDays = Math.max(0, totalDaysInMonth - daysElapsed)
+    const remainingDailyBudget = totalIncome > 0 && remainingDays > 0
+      ? (totalIncome - totalExpenses) / remainingDays
+      : 0
+
+    let projectedColor = "text-emerald-600 dark:text-emerald-400"
+    if (totalIncome > 0) {
+      if (projectedExpenses > totalIncome) {
+        projectedColor = "text-rose-600 dark:text-rose-400"
+      } else if (projectedExpenses > totalIncome * 0.9) {
+        projectedColor = "text-amber-600 dark:text-amber-400"
+      }
+    }
+
+    return {
+      projectedExpenses,
+      dailyAvgSpend,
+      remainingDays,
+      remainingDailyBudget,
+      projectedColor,
+      totalDaysInMonth,
+    }
+  }, [totalExpenses, totalIncome, year, month])
+
+  /* ─── Smart Daily Summary ─── */
+  const dailySummary = useMemo(() => {
+    const todayStr = new Date().toISOString().slice(0, 10)
+    const todayTxns = monthTransactions.filter(
+      t => new Date(t.date).toISOString().slice(0, 10) === todayStr
+    ).filter(t => t.type === "expense")
+    const todaySpent = todayTxns.reduce((sum, t) => sum + t.amount, 0)
+
+    const topCategory = todayTxns.length > 0
+      ? Object.entries(
+          todayTxns.reduce<Record<string, number>>((acc, t) => {
+            acc[t.category] = (acc[t.category] || 0) + t.amount
+            return acc
+          }, {})
+        )
+          .sort((a, b) => b[1] - a[1])[0]?.[0] || ""
+      : ""
+
+    const budgetRemaining = totalIncome - totalExpenses
+    const totalDaysInMonth = new Date(year, month, 0).getDate()
+    const daysElapsed = Math.max(1, new Date().getDate())
+    const remainingDays = Math.max(0, totalDaysInMonth - daysElapsed)
+    const dailyBudget = remainingDays > 0 ? budgetRemaining / remainingDays : 0
+
+    return { todaySpent, topCategory, budgetRemaining, remainingDays, dailyBudget }
+  }, [monthTransactions, totalIncome, totalExpenses, year, month])
+
+  /* ─── Anomaly Detection ─── */
+  const anomalies = useMemo(() => {
+    if (!monthTransactions.length) return []
+
+    const expenses = monthTransactions.filter(t => t.type === "expense")
+    const categoryAmounts: Record<string, number[]> = {}
+    expenses.forEach(t => {
+      if (!categoryAmounts[t.category]) categoryAmounts[t.category] = []
+      categoryAmounts[t.category].push(t.amount)
+    })
+
+    const results: Array<{ description: string; amount: number; category: string; reason: string }> = []
+    expenses.forEach(t => {
+      const amounts = categoryAmounts[t.category] || []
+      if (amounts.length < 3) return
+      const avg = amounts.reduce((s, a) => s + a, 0) / amounts.length
+      const stddev = Math.sqrt(amounts.reduce((s, a) => s + (a - avg) ** 2, 0) / amounts.length)
+      if (stddev > 0 && t.amount > avg + 2 * stddev) {
+        results.push({
+          description: t.merchant || t.description,
+          amount: t.amount,
+          category: t.category,
+          reason: `${(t.amount / avg).toFixed(1)}x above average`,
+        })
+      }
+    })
+    return results.sort((a, b) => b.amount - a.amount).slice(0, 3)
+  }, [monthTransactions])
 
   if (authLoading) {
     return (
@@ -280,9 +289,7 @@ export default function DashboardPage() {
     )
   }
 
-  if (!isAuthenticated) {
-    return null
-  }
+  if (!isAuthenticated) return null
 
   return (
     <SidebarProvider
@@ -294,514 +301,436 @@ export default function DashboardPage() {
       <AppSidebar variant="inset" />
       <SidebarInset>
         <SiteHeader
-          title="Finance Command Center"
-          subtitle="Real-time overview of balances, cashflow, and trends"
+          title="Dashboard"
+          subtitle={monthLabel}
           actions={
-            <>
-              <Badge variant="outline" className="hidden sm:inline-flex">
-                {monthLabel}
-              </Badge>
-              <SyncButtonCompact onSync={async () => {
-                await syncFromSheets(false)
-              }} />
-            </>
+            <SyncButtonCompact onSync={async () => { await syncFromSheets(false) }} />
           }
         />
         <div className="flex flex-1 flex-col">
-          <div className="@container/main flex flex-1 flex-col gap-6 p-6">
+          <div className="@container/main flex flex-1 flex-col gap-5 p-4 md:p-6">
             {isLoading ? (
-              <div className="space-y-6">
-                <Skeleton className="h-24" />
-                <div className="grid gap-4 md:grid-cols-3">
-                  {[1, 2, 3].map((i) => (
-                    <Skeleton key={i} className="h-24" />
-                  ))}
+              <DashboardLoadingSkeleton />
+            ) : transactionsError ? (
+              <div className="flex flex-col items-center justify-center flex-1 min-h-[400px] gap-4">
+                <IconAlertCircle className="h-12 w-12 text-muted-foreground" />
+                <div className="text-center">
+                  <h3 className="text-lg font-semibold">Failed to load data</h3>
+                  <p className="text-sm text-muted-foreground mt-1">{transactionsError}</p>
                 </div>
-                <Skeleton className="h-80" />
+                <Button variant="outline" onClick={() => refresh()}>
+                  <IconRefresh className="mr-2 h-4 w-4" /> Try Again
+                </Button>
               </div>
             ) : (
-              <>
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                  <MetricTile
-                    label="Current Balance"
-                    value={formatCurrency(accountSummary.currentBalance)}
-                    trendLabel={`Opening: ${formatCurrency(accountSummary.openingBalance)}`}
-                    change={accountSummary.openingBalance !== 0 ? (accountSummary.netChange / Math.abs(accountSummary.openingBalance)) * 100 : 0}
-                    tone={accountSummary.netChange >= 0 ? "positive" : "negative"}
-                    icon={<IconWallet className="h-5 w-5" />}
-                  />
-                  <MetricTile
-                    label="Month Net Change"
-                    value={formatCurrency(monthlyMetrics?.netChange || 0)}
-                    change={monthlyMetrics?.growthRate || 0}
-                    trendLabel="vs opening balance"
-                    tone={(monthlyMetrics?.netChange || 0) >= 0 ? "positive" : "negative"}
-                    icon={<IconTrendingUp className="h-5 w-5" />}
-                  />
-                  <MetricTile
-                    label="Week Net Change"
-                    value={formatCurrency(weekClosing - weekOpening)}
-                    change={weekOpening !== 0 ? ((weekClosing - weekOpening) / Math.abs(weekOpening)) * 100 : 0}
-                    trendLabel={currentWeek.label}
-                    tone={weekClosing - weekOpening >= 0 ? "positive" : "negative"}
-                    icon={<IconChartLine className="h-5 w-5" />}
-                  />
-                  <MetricTile
-                    label="Monthly Expenses"
-                    value={formatCurrency(monthlyMetrics?.totalExpenses || 0)}
-                    trendLabel="Current month"
-                    icon={<IconCreditCard className="h-5 w-5" />}
-                    tone="negative"
-                  />
-                  <MetricTile
-                    label="Monthly Income"
-                    value={formatCurrency(monthlyMetrics?.totalIncome || 0)}
-                    trendLabel="Current month"
-                    icon={<IconDatabase className="h-5 w-5" />}
-                    tone="positive"
-                  />
-                  <MetricTile
-                    label={(monthlyMetrics?.savingsRate ?? 0) < 0 ? "Overspend Rate" : "Savings Rate"}
-                    value={
-                      (monthlyMetrics?.savingsRate ?? 0) < 0
-                        ? `Overspent by ${Math.abs(monthlyMetrics?.savingsRate ?? 0).toFixed(1)}%`
-                        : `${(monthlyMetrics?.savingsRate ?? 0).toFixed(1)}%`
-                    }
-                    trendLabel="Income saved"
-                    icon={<IconPigMoney className="h-5 w-5" />}
-                    tone={(monthlyMetrics?.savingsRate ?? 0) >= 0 ? "positive" : "negative"}
-                  />
-                </div>
+              <motion.div variants={stagger} initial="hidden" animate="show" className="flex flex-col gap-5">
+                {(() => {
+                  const partialInfo = getPartialMonthInfo(monthTransactions, year, month)
+                  return partialInfo.isPartial ? <ContextBanner variant="info" title={partialInfo.message} /> : null
+                })()}
 
-                <div className="grid gap-4 lg:grid-cols-2">
-                  <PeriodBridge
-                    title="Month Reference"
-                    periodLabel={monthLabel}
-                    openingBalance={monthlyMetrics?.openingBalance || 0}
-                    inflow={monthlyMetrics?.totalIncome || 0}
-                    outflow={monthlyMetrics?.totalExpenses || 0}
-                    closingBalance={monthlyMetrics?.closingBalance || 0}
-                  />
-                  <PeriodBridge
-                    title="Week Reference"
-                    periodLabel={currentWeek.label}
-                    openingBalance={weekOpening}
-                    inflow={weekIncome}
-                    outflow={weekExpenses}
-                    closingBalance={weekClosing}
-                  />
-                </div>
-
-                {/* Financial Health & NWI Strip */}
-                {(healthMetrics || nwiSplit) && (
-                  <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                    {/* Financial Freedom Score */}
-                    {healthMetrics && (
-                      <Card className="border border-border/70">
-                        <CardContent className="p-5">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-2">
-                              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                                <IconHeartbeat className="h-4 w-4" />
-                              </div>
-                              <div>
-                                <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">Freedom Score</p>
-                                <Link href="/financial-health" className="text-xs text-muted-foreground hover:underline">View details</Link>
-                              </div>
-                            </div>
-                            <span className={`text-3xl font-bold ${
-                              healthMetrics.financialFreedomScore >= 75 ? "text-emerald-600" :
-                              healthMetrics.financialFreedomScore >= 50 ? "text-amber-600" :
-                              "text-rose-600"
-                            }`}>
-                              {Math.round(healthMetrics.financialFreedomScore)}
-                            </span>
-                          </div>
-                          <Progress
-                            value={healthMetrics.financialFreedomScore}
-                            className={`h-2 ${
-                              healthMetrics.financialFreedomScore >= 75 ? "[&>div]:bg-emerald-500" :
-                              healthMetrics.financialFreedomScore >= 50 ? "[&>div]:bg-amber-500" :
-                              "[&>div]:bg-rose-500"
-                            }`}
-                          />
-                          <div className="mt-2 grid grid-cols-4 gap-1">
-                            {[
-                              { label: "Save", value: healthMetrics.scoreBreakdown.savingsRate, max: 25 },
-                              { label: "Fund", value: healthMetrics.scoreBreakdown.emergencyFund, max: 25 },
-                              { label: "NWI", value: healthMetrics.scoreBreakdown.nwiAdherence, max: 25 },
-                              { label: "Invest", value: healthMetrics.scoreBreakdown.investmentRate, max: 25 },
-                            ].map(item => (
-                              <div key={item.label} className="text-center">
-                                <p className="text-[10px] text-muted-foreground">{item.label}</p>
-                                <p className="text-xs font-semibold">{Math.round(item.value * 10) / 10}/{item.max}</p>
-                              </div>
-                            ))}
-                          </div>
-                        </CardContent>
-                      </Card>
+                {/* ─── Smart Daily Summary ─── */}
+                <motion.div
+                  variants={fadeUpSmall}
+                  className="rounded-xl bg-gradient-to-r from-primary/5 to-primary/10 border border-primary/10 px-4 py-3"
+                >
+                  <p className="text-sm text-foreground/80">
+                    {dailySummary.todaySpent > 0 ? (
+                      <>Spent <strong className="text-foreground">{formatCurrency(dailySummary.todaySpent)}</strong> today{dailySummary.topCategory ? ` on ${dailySummary.topCategory}` : ""}. {formatCurrency(dailySummary.budgetRemaining)} remaining ({formatCurrency(dailySummary.dailyBudget)}/day for {dailySummary.remainingDays} days).</>
+                    ) : (
+                      <>No spending today. <strong>{formatCurrency(dailySummary.dailyBudget)}</strong>/day budget available for {dailySummary.remainingDays} days.</>
                     )}
+                  </p>
+                </motion.div>
 
-                    {/* Emergency Fund */}
-                    {healthMetrics && (
-                      <Card className="border border-border/70">
-                        <CardContent className="p-5">
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="flex items-center gap-2">
-                              <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                                <IconShieldCheck className="h-4 w-4" />
-                              </div>
-                              <div>
-                                <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">Emergency Fund</p>
-                                <p className="text-xs text-muted-foreground">Target: {healthMetrics.emergencyFundTarget} months</p>
-                              </div>
-                            </div>
-                            <span className={`text-3xl font-bold ${
-                              healthMetrics.emergencyFundMonths >= 6 ? "text-emerald-600" :
-                              healthMetrics.emergencyFundMonths >= 3 ? "text-amber-600" :
-                              "text-rose-600"
-                            }`}>
-                              {healthMetrics.emergencyFundMonths.toFixed(1)}
-                            </span>
-                          </div>
-                          <Progress
-                            value={Math.min((healthMetrics.emergencyFundMonths / healthMetrics.emergencyFundTarget) * 100, 100)}
-                            className={`h-2 ${
-                              healthMetrics.emergencyFundMonths >= 6 ? "[&>div]:bg-emerald-500" :
-                              healthMetrics.emergencyFundMonths >= 3 ? "[&>div]:bg-amber-500" :
-                              "[&>div]:bg-rose-500"
-                            }`}
-                          />
-                          <p className="mt-2 text-xs text-muted-foreground">
-                            {healthMetrics.emergencyFundMonths >= healthMetrics.emergencyFundTarget
-                              ? "You've reached your emergency fund target!"
-                              : `${(healthMetrics.emergencyFundTarget - healthMetrics.emergencyFundMonths).toFixed(1)} months to go`}
+                {/* ─── Stat Bar ─── */}
+                <motion.div
+                  variants={fadeUp}
+                  className="grid grid-cols-2 lg:grid-cols-4 gap-3"
+                >
+                  {STAT_CONFIG.map((stat, i) => {
+                    const Icon = stat.icon
+                    return (
+                      <motion.div
+                        key={stat.key}
+                        variants={fadeUpSmall}
+                        className="card-elevated rounded-xl bg-card p-4 flex items-start gap-3.5"
+                      >
+                        <div className={`flex items-center justify-center h-10 w-10 rounded-xl ${stat.iconBg} shrink-0`}>
+                          <Icon className={`h-5 w-5 ${stat.iconColor}`} strokeWidth={1.8} />
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-0.5">
+                            {stat.label}
                           </p>
-                        </CardContent>
-                      </Card>
+                          <motion.p
+                            variants={numberPop}
+                            className={`text-xl font-bold tabular-nums truncate ${statValueColors[i]}`}
+                          >
+                            {statValues[i]}
+                          </motion.p>
+                        </div>
+                      </motion.div>
+                    )
+                  })}
+                </motion.div>
+
+                {/* ─── Predictive Cashflow ─── */}
+                <motion.div variants={fadeUp} className="card-elevated rounded-xl bg-card p-4">
+                  <div className="flex items-center gap-2 mb-3">
+                    <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-muted/60">
+                      <IconTrendingUp className="h-4 w-4 text-muted-foreground" />
+                    </div>
+                    <h3 className="text-sm font-semibold">Cashflow Forecast</h3>
+                  </div>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Projected Month-End</p>
+                      <p className={`text-lg font-bold tabular-nums ${cashflowForecast.projectedColor}`}>
+                        {formatCurrency(cashflowForecast.projectedExpenses)}
+                      </p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Daily Average</p>
+                      <p className="text-lg font-bold tabular-nums">{formatCurrency(cashflowForecast.dailyAvgSpend)}/day</p>
+                    </div>
+                    <div>
+                      <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Remaining Budget</p>
+                      <p className={`text-lg font-bold tabular-nums ${cashflowForecast.remainingDailyBudget > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600"}`}>
+                        {formatCurrency(Math.abs(cashflowForecast.remainingDailyBudget))}/day
+                      </p>
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* ─── Main Row: Spending Breakdown + Monthly Summary ─── */}
+                <motion.div variants={fadeUp} className="grid gap-5 lg:grid-cols-5">
+                  {/* Spending Breakdown */}
+                  <div className="lg:col-span-3 card-elevated rounded-xl bg-card p-5">
+                    <div className="flex items-center justify-between mb-5">
+                      <div className="flex items-center gap-2.5">
+                        <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-muted/60">
+                          <IconChartBar className="h-4 w-4 text-muted-foreground" />
+                        </div>
+                        <h3 className="text-sm font-semibold">Spending Breakdown</h3>
+                      </div>
+                      <span className="text-xs text-muted-foreground tabular-nums">{categoryBreakdown.length} categories</span>
+                    </div>
+
+                    <div className="space-y-2.5">
+                      {visibleCategories.map((cat, i) => {
+                        const anim = listItem(i)
+                        return (
+                          <motion.div
+                            key={cat.category}
+                            initial={anim.initial}
+                            animate={anim.animate}
+                            transition={anim.transition}
+                            className="group rounded-lg px-2.5 py-2 -mx-2.5 hover:bg-muted/40 transition-colors cursor-default"
+                          >
+                            <div className="flex items-center justify-between text-sm mb-1.5">
+                              <div className="flex items-center gap-2.5">
+                                <span className={`h-2 w-2 rounded-full ${CATEGORY_COLORS[i % CATEGORY_COLORS.length]} shrink-0`} />
+                                <span className="font-medium text-foreground/90">{cat.category}</span>
+                              </div>
+                              <div className="flex items-center gap-3">
+                                <span className="text-xs font-semibold tabular-nums">{formatCurrency(cat.amount)}</span>
+                                <span className="text-[11px] font-medium text-muted-foreground tabular-nums w-10 text-right bg-muted/50 px-1.5 py-0.5 rounded-md">
+                                  {cat.percentage.toFixed(0)}%
+                                </span>
+                              </div>
+                            </div>
+                            <div className="h-2 w-full rounded-full bg-muted/50 overflow-hidden">
+                              <motion.div
+                                className={`h-2 rounded-full bg-gradient-to-r ${CATEGORY_BAR_GRADIENTS[i % CATEGORY_BAR_GRADIENTS.length]}`}
+                                initial={{ width: 0 }}
+                                animate={{ width: `${Math.max(cat.percentage, 1)}%` }}
+                                transition={{ delay: 0.15 + i * 0.04, duration: 0.45, ease: [0, 0, 0.2, 1] as const }}
+                              />
+                            </div>
+                          </motion.div>
+                        )
+                      })}
+                    </div>
+
+                    {hiddenCount > 0 && (
+                      <p className="mt-4 text-xs text-muted-foreground pl-2.5">
+                        +{hiddenCount} more {hiddenCount === 1 ? "category" : "categories"}
+                      </p>
                     )}
 
-                    {/* NWI Split */}
-                    {nwiSplit && (
-                      <Card className="border border-border/70">
-                        <CardContent className="p-5">
-                          <div className="flex items-center gap-2 mb-3">
-                            <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                              <IconWallet className="h-4 w-4" />
-                            </div>
-                            <div>
-                              <p className="text-xs font-medium uppercase tracking-[0.12em] text-muted-foreground">N/W/I Split</p>
-                              <p className="text-xs text-muted-foreground">Target vs actual this month</p>
-                            </div>
-                          </div>
-                          <div className="space-y-2.5">
-                            {[
-                              { label: "Needs", data: nwiSplit.needs, color: "bg-blue-500" },
-                              { label: "Wants", data: nwiSplit.wants, color: "bg-orange-500" },
-                              { label: "Invest", data: nwiSplit.investments, color: "bg-emerald-500" },
-                            ].map(item => (
-                              <div key={item.label}>
-                                <div className="flex items-center justify-between text-xs mb-1">
-                                  <span className="font-medium">{item.label}</span>
-                                  <span className="text-muted-foreground">
-                                    {item.data.actualPercentage.toFixed(0)}% / {item.data.targetPercentage}%
-                                  </span>
-                                </div>
-                                <div className="flex h-2 rounded-full bg-muted overflow-hidden">
-                                  <div
-                                    className={`${item.color} rounded-full transition-all`}
-                                    style={{ width: `${Math.min(item.data.actualPercentage, 100)}%` }}
-                                  />
-                                </div>
-                              </div>
-                            ))}
-                          </div>
-                        </CardContent>
-                      </Card>
+                    {visibleCategories.length === 0 && (
+                      <p className="text-sm text-muted-foreground py-8 text-center">No expenses recorded this month.</p>
                     )}
                   </div>
+
+                  {/* ─── Monthly Summary ─── */}
+                  <div className="lg:col-span-2 card-elevated rounded-xl bg-card p-5 flex flex-col">
+                    <div className="flex items-center gap-2.5 mb-4">
+                      <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-muted/60">
+                        <IconReceipt className="h-4 w-4 text-muted-foreground" />
+                      </div>
+                      <h3 className="text-sm font-semibold">Balance Flow</h3>
+                    </div>
+
+                    <div className="flex-1 flex flex-col justify-center">
+                      <div className="text-center mb-6">
+                        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
+                          Net Change
+                        </p>
+                        <motion.span
+                          variants={numberPop}
+                          className={`text-4xl font-extrabold tabular-nums block ${
+                            netChange >= 0 ? "text-primary" : "text-destructive"
+                          }`}
+                        >
+                          {netChange >= 0 ? "+" : "-"}{formatCurrency(Math.abs(netChange))}
+                        </motion.span>
+                        <motion.p
+                          variants={fadeUpSmall}
+                          className="text-xs mt-1.5 font-medium text-muted-foreground"
+                        >
+                          {formatCurrency(openingBalance)} &rarr; {formatCurrency(closingBalance)}
+                        </motion.p>
+                        {noIncomeContext && (
+                          <motion.p
+                            variants={fadeUpSmall}
+                            className="text-[11px] mt-2 text-amber-600 dark:text-amber-400 font-medium"
+                          >
+                            {noIncomeContext}
+                          </motion.p>
+                        )}
+                      </div>
+
+                      <div className="space-y-3.5">
+                        <SummaryBar
+                          label="Income"
+                          value={formatCurrency(totalIncome)}
+                          pct={openingBalance + totalIncome > 0 ? (totalIncome / (openingBalance + totalIncome)) * 100 : 0}
+                          barClass="bg-primary"
+                          trackClass="bg-primary/10"
+                        />
+                        <SummaryBar
+                          label="Expenses"
+                          value={formatCurrency(totalExpenses)}
+                          pct={openingBalance + totalIncome > 0 ? Math.min((totalExpenses / (openingBalance + totalIncome)) * 100, 100) : 0}
+                          barClass={totalExpenses > openingBalance + totalIncome ? "bg-destructive" : "bg-muted-foreground/30"}
+                          trackClass="bg-muted/60"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+
+                {/* ─── Unusual Activity ─── */}
+                {anomalies.length > 0 && (
+                  <motion.div variants={fadeUp} className="card-elevated rounded-xl bg-card p-5">
+                    <div className="flex items-center gap-2 mb-4">
+                      <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-amber-500/10">
+                        <IconAlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                      </div>
+                      <h3 className="text-sm font-semibold">Unusual Activity</h3>
+                      <Badge variant="outline" className="ml-auto text-xs">{anomalies.length} flagged</Badge>
+                    </div>
+                    <div className="space-y-2.5">
+                      {anomalies.map((a, i) => (
+                        <div key={i} className="flex items-center justify-between py-2 px-2.5 rounded-lg bg-amber-500/5 border border-amber-500/10">
+                          <div>
+                            <p className="text-sm font-medium">{a.description}</p>
+                            <p className="text-xs text-muted-foreground">{a.category} &middot; {a.reason}</p>
+                          </div>
+                          <span className="text-sm font-semibold tabular-nums text-amber-600 dark:text-amber-400">
+                            {formatCurrency(a.amount)}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </motion.div>
                 )}
 
-                <div className="grid gap-4 lg:grid-cols-2">
-                  <Card className="border border-border/70">
-                    <CardHeader>
-                      <CardTitle>Monthly Cashflow</CardTitle>
-                      <p className="text-sm text-muted-foreground">
-                        Income vs expenses for the last 6 months
-                      </p>
-                    </CardHeader>
-                    <CardContent>
-                      {hasMonthlyTrends ? (
-                        <ChartContainer config={trendConfig} className="h-[300px] w-full">
-                          <AreaChart data={lastSixMonths}>
-                            <defs>
-                              <linearGradient id="incomeFill" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#22c55e" stopOpacity={0.4} />
-                                <stop offset="100%" stopColor="#22c55e" stopOpacity={0.05} />
-                              </linearGradient>
-                              <linearGradient id="expenseFill" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stopColor="#f43f5e" stopOpacity={0.4} />
-                                <stop offset="100%" stopColor="#f43f5e" stopOpacity={0.05} />
-                              </linearGradient>
-                            </defs>
-                            <CartesianGrid vertical={false} stroke="hsl(var(--border))" />
-                            <XAxis
-                              dataKey="monthName"
-                              tickLine={false}
-                              axisLine={false}
-                              tickMargin={8}
-                              tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
-                            />
-                            <ChartTooltip
-                              cursor={false}
-                              content={
-                                <ChartTooltipContent
-                                  indicator="dot"
-                                  formatter={(value: number) => formatCurrency(value)}
-                                />
-                              }
-                            />
-                            <Area
-                              dataKey="income"
-                              type="monotone"
-                              fill="url(#incomeFill)"
-                              stroke="#22c55e"
-                              strokeWidth={3}
-                              strokeOpacity={0.95}
-                              isAnimationActive={false}
-                            />
-                            <Area
-                              dataKey="expenses"
-                              type="monotone"
-                              fill="url(#expenseFill)"
-                              stroke="#f43f5e"
-                              strokeWidth={3}
-                              strokeOpacity={0.95}
-                              isAnimationActive={false}
-                            />
-                          </AreaChart>
-                        </ChartContainer>
-                      ) : (
-                        <div className="flex h-[300px] items-center justify-center text-sm text-muted-foreground">
-                          No monthly cashflow data yet.
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
+                {/* ─── Recent Transactions ─── */}
+                <motion.div variants={fadeUp} className="card-elevated rounded-xl bg-card p-5">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-sm font-semibold">Recent Transactions</h3>
+                    <Link
+                      href="/transactions"
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 group"
+                    >
+                      View All <IconArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
+                    </Link>
+                  </div>
 
-                  <Card className="border border-border/70">
-                    <CardHeader>
-                      <CardTitle>Balance Runway</CardTitle>
-                      <p className="text-sm text-muted-foreground">
-                        Running balance across recent activity
-                      </p>
-                    </CardHeader>
-                    <CardContent>
-                      {hasBalanceRunway ? (
-                        <ResponsiveContainer width="100%" height={300}>
-                          <LineChart data={balanceRunwayData}>
-                            <CartesianGrid vertical={false} stroke="hsl(var(--border))" />
-                            <XAxis
-                              dataKey="date"
-                              tickLine={false}
-                              axisLine={false}
-                              tickMargin={8}
-                              tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
-                            />
-                            <YAxis
-                              tickLine={false}
-                              axisLine={false}
-                              tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
-                              tickFormatter={formatCompactAxis}
-                            />
-                            <Tooltip
-                              formatter={(value: number) => formatCurrency(value)}
-                              contentStyle={{
-                                backgroundColor: "hsl(var(--card))",
-                                border: "1px solid hsl(var(--border))",
-                                borderRadius: 12,
-                              }}
-                            />
-                            <Line
-                              type="monotone"
-                              dataKey="balance"
-                              stroke="#0ea5e9"
-                              strokeWidth={3}
-                              strokeOpacity={0.95}
-                              connectNulls
-                              isAnimationActive={false}
-                              dot={showBalanceDots ? { r: 4, fill: "#0ea5e9" } : false}
-                              activeDot={{ r: 5, fill: "#0ea5e9" }}
-                            />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      ) : (
-                        <div className="flex h-[300px] items-center justify-center text-sm text-muted-foreground">
-                          No balance history available yet.
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                </div>
+                  {recentTransactions.length > 0 ? (
+                    <div className="divide-y divide-border/30">
+                      {recentTransactions.map((t, i) => {
+                        const txDate = new Date(t.date)
+                        const dateStr = txDate.toLocaleDateString("en-GB", {
+                          day: "numeric", month: "short", timeZone: "Asia/Kolkata",
+                        })
+                        const isIncome = t.type === "income"
+                        const anim = listItem(i)
+                        return (
+                          <motion.div
+                            key={t.id}
+                            initial={anim.initial}
+                            animate={anim.animate}
+                            transition={anim.transition}
+                            className="flex items-center justify-between py-3 gap-3 hover:bg-muted/30 -mx-3 px-3 rounded-lg transition-colors first:pt-0 last:pb-0"
+                          >
+                            <div className="flex items-center gap-3 min-w-0 flex-1">
+                              <span className="text-sm font-medium truncate">{t.merchant || t.description}</span>
+                              <span className="text-[10px] font-medium text-muted-foreground bg-muted/60 border border-border/40 px-2 py-0.5 rounded-full shrink-0 uppercase tracking-wide">
+                                {t.category}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-4 shrink-0">
+                              <span className="text-xs text-muted-foreground tabular-nums w-14 text-right">{dateStr}</span>
+                              <span className={`text-sm font-semibold tabular-nums min-w-[80px] text-right ${isIncome ? "text-emerald-600 dark:text-emerald-400" : ""}`}>
+                                {isIncome ? "+" : "-"}{formatCurrency(t.amount)}
+                              </span>
+                            </div>
+                          </motion.div>
+                        )
+                      })}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-muted-foreground py-6 text-center">No transactions this month.</p>
+                  )}
+                </motion.div>
 
-                <div className="grid gap-4 lg:grid-cols-3">
-                  <Card className="border border-border/70 lg:col-span-2">
-                    <CardHeader>
-                      <CardTitle>Daily Cashflow</CardTitle>
-                      <p className="text-sm text-muted-foreground">
-                        Last 14 days of inflow and outflow
-                      </p>
-                    </CardHeader>
-                    <CardContent>
-                      {hasDailyTrends ? (
-                        <ResponsiveContainer width="100%" height={260}>
-                          <BarChart data={lastDaily}>
-                            <CartesianGrid vertical={false} stroke="hsl(var(--border))" />
-                            <XAxis
-                              dataKey="date"
-                              tickLine={false}
-                              axisLine={false}
-                              tickMargin={8}
-                              tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
-                            />
-                            <YAxis
-                              tickLine={false}
-                              axisLine={false}
-                              tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
-                              tickFormatter={(value) => `₹${(value / 1000).toFixed(0)}k`}
-                            />
+                {/* ─── Monthly Trend ─── */}
+                <motion.div variants={fadeUp}>
+                  <SectionErrorBoundary name="monthly-trend">
+                    <div className="card-elevated rounded-xl bg-card p-5">
+                      <div className="flex items-center justify-between mb-1">
+                        <h3 className="text-sm font-semibold">Monthly Trend</h3>
+                        <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-1.5">
+                            <div className="h-2.5 w-2.5 rounded-[3px] bg-chart-1" />
+                            <span className="text-[11px] text-muted-foreground">Income</span>
+                          </div>
+                          <div className="flex items-center gap-1.5">
+                            <div className="h-2.5 w-2.5 rounded-[3px] bg-chart-5" />
+                            <span className="text-[11px] text-muted-foreground">Expenses</span>
+                          </div>
+                        </div>
+                      </div>
+                      <p className="text-xs text-muted-foreground mb-4">Last 6 months</p>
+
+                      {monthlyTrendData.some((d) => d.income > 0 || d.expenses > 0) ? (
+                        <ResponsiveContainer width="100%" height={220}>
+                          <BarChart data={monthlyTrendData} barGap={6}>
+                            <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" strokeOpacity={0.4} />
+                            <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={10} tick={{ fontSize: 12, fill: "var(--muted-foreground)" }} />
+                            <YAxis tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} tickFormatter={(v) => `₹${(v / 1000).toFixed(0)}k`} width={55} />
                             <Tooltip
-                              formatter={(value: number) => formatCurrency(value)}
+                              formatter={(value: number, name: string) => [formatCurrency(value), name === "income" ? "Income" : "Expenses"]}
                               contentStyle={{
-                                backgroundColor: "hsl(var(--card))",
-                                border: "1px solid hsl(var(--border))",
-                                borderRadius: 12,
+                                borderRadius: 10,
+                                fontSize: 12,
+                                border: "1px solid var(--border)",
+                                background: "var(--card)",
+                                color: "var(--card-foreground)",
+                                boxShadow: "0 4px 16px oklch(0 0 0 / 8%)",
                               }}
+                              cursor={{ fill: "var(--muted)", opacity: 0.3, radius: 6 }}
                             />
-                            <Bar dataKey="income" fill="#22c55e" radius={[6, 6, 0, 0]} isAnimationActive={false} />
-                            <Bar dataKey="expenses" fill="#f43f5e" radius={[6, 6, 0, 0]} isAnimationActive={false} />
+                            <Bar dataKey="income" fill="var(--chart-1)" radius={[6, 6, 0, 0]} />
+                            <Bar dataKey="expenses" fill="var(--chart-5)" radius={[6, 6, 0, 0]} />
                           </BarChart>
                         </ResponsiveContainer>
                       ) : (
-                        <div className="flex h-[260px] items-center justify-center text-sm text-muted-foreground">
-                          No recent cashflow data yet.
+                        <div className="flex h-[220px] items-center justify-center text-sm text-muted-foreground">
+                          No data available.
                         </div>
                       )}
-                    </CardContent>
-                  </Card>
-                  <CategoryChart data={categoryBreakdown} />
-                </div>
-
-                <div className="grid gap-4 lg:grid-cols-3">
-                  <PaymentMethodChart
-                    data={paymentBreakdown.map((item) => ({
-                      method: item.method,
-                      count: item.transactionCount,
-                      amount: item.amount,
-                    }))}
-                  />
-                  <Card className="border border-border/70 lg:col-span-2">
-                    <CardHeader>
-                      <CardTitle>Top Merchants</CardTitle>
-                      <p className="text-sm text-muted-foreground">
-                        Highest spending destinations this month
-                      </p>
-                    </CardHeader>
-                    <CardContent>
-                      <Table>
-                        <TableHeader>
-                          <TableRow>
-                            <TableHead>Merchant</TableHead>
-                            <TableHead>Category</TableHead>
-                            <TableHead className="text-right">Spend</TableHead>
-                          </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                          {topMerchants.map((merchant) => (
-                            <TableRow key={merchant.merchant}>
-                              <TableCell className="font-medium">
-                                {merchant.merchant || "Unknown"}
-                              </TableCell>
-                              <TableCell>{merchant.primaryCategory}</TableCell>
-                              <TableCell className="text-right font-semibold">
-                                {formatCurrency(merchant.totalAmount)}
-                              </TableCell>
-                            </TableRow>
-                          ))}
-                        </TableBody>
-                      </Table>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                <Card className="border border-border/70">
-                  <CardHeader className="flex flex-row items-center justify-between">
-                    <div>
-                      <CardTitle>Recent Transactions</CardTitle>
-                      <p className="text-sm text-muted-foreground">
-                        Latest activity across all accounts
-                      </p>
                     </div>
-                    <Button variant="outline" size="sm" asChild>
-                      <Link href="/transactions">View all</Link>
-                    </Button>
-                  </CardHeader>
-                  <CardContent>
-                    <Table>
-                      <TableHeader>
-                        <TableRow>
-                          <TableHead>Date</TableHead>
-                          <TableHead>Description</TableHead>
-                          <TableHead>Category</TableHead>
-                          <TableHead className="text-right">Amount</TableHead>
-                        </TableRow>
-                      </TableHeader>
-                      <TableBody>
-                        {recentTransactions.length > 0 ? (
-                          recentTransactions.map((transaction) => (
-                            <TableRow key={transaction.id}>
-                              <TableCell>
-                                {new Date(transaction.date).toLocaleDateString("en-IN", {
-                                  day: "2-digit",
-                                  month: "short",
-                                })}
-                              </TableCell>
-                              <TableCell className="font-medium">
-                                {transaction.description}
-                              </TableCell>
-                              <TableCell>{transaction.category}</TableCell>
-                              <TableCell className="text-right font-semibold">
-                                <span
-                                  className={
-                                    transaction.type === "income"
-                                      ? "text-emerald-600"
-                                      : "text-rose-600"
-                                  }
-                                >
-                                  {transaction.type === "income" ? "+" : "-"}
-                                  {formatCurrency(transaction.amount)}
-                                </span>
-                              </TableCell>
-                            </TableRow>
-                          ))
-                        ) : (
-                          <TableRow>
-                            <TableCell colSpan={4} className="h-24 text-center text-muted-foreground">
-                              No transactions available.
-                            </TableCell>
-                          </TableRow>
-                        )}
-                      </TableBody>
-                    </Table>
-                  </CardContent>
-                </Card>
+                  </SectionErrorBoundary>
+                </motion.div>
 
-                <AiInsightsWidget compact />
-              </>
+                {/* ─── AI Insights ─── */}
+                <motion.div variants={fadeUp}>
+                  <AiInsightsWidget compact />
+                </motion.div>
+              </motion.div>
             )}
           </div>
         </div>
       </SidebarInset>
     </SidebarProvider>
+  )
+}
+
+
+/* ─── Summary Bar (Income / Expenses comparison) ─── */
+function SummaryBar({ label, value, pct, barClass, trackClass }: {
+  label: string
+  value: string
+  pct: number
+  barClass: string
+  trackClass: string
+}) {
+  return (
+    <div>
+      <div className="flex items-center justify-between text-xs mb-1.5">
+        <span className="font-medium text-foreground/70">{label}</span>
+        <span className="font-semibold tabular-nums text-foreground/90">{value}</span>
+      </div>
+      <div className={`h-2.5 w-full rounded-full ${trackClass} overflow-hidden`}>
+        <motion.div
+          className={`h-2.5 rounded-full ${barClass}`}
+          initial={{ width: 0 }}
+          animate={{ width: `${pct}%` }}
+          transition={{ delay: 0.3, duration: 0.5, ease: [0, 0, 0.2, 1] as const }}
+        />
+      </div>
+    </div>
+  )
+}
+
+
+/* ─── Loading Skeleton ─── */
+function DashboardLoadingSkeleton() {
+  return (
+    <div className="space-y-5">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="card-elevated rounded-xl bg-card p-4 flex items-start gap-3.5">
+            <Skeleton className="h-10 w-10 rounded-xl shrink-0" />
+            <div className="space-y-1.5 flex-1">
+              <Skeleton className="h-3 w-16" />
+              <Skeleton className="h-6 w-24" />
+            </div>
+          </div>
+        ))}
+      </div>
+      <div className="grid gap-5 lg:grid-cols-5">
+        <div className="lg:col-span-3 card-elevated rounded-xl bg-card p-5 space-y-4">
+          <Skeleton className="h-5 w-36" />
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="space-y-2">
+              <div className="flex justify-between"><Skeleton className="h-4 w-24" /><Skeleton className="h-4 w-16" /></div>
+              <Skeleton className="h-2 w-full rounded-full" />
+            </div>
+          ))}
+        </div>
+        <div className="lg:col-span-2 card-elevated rounded-xl bg-card p-5 space-y-3">
+          <Skeleton className="h-5 w-28" />
+          <Skeleton className="h-12 w-36 mx-auto mt-4" />
+          <Skeleton className="h-2.5 w-full mt-4 rounded-full" />
+          <Skeleton className="h-2.5 w-3/4 rounded-full" />
+        </div>
+      </div>
+      <div className="card-elevated rounded-xl bg-card p-5 space-y-3">
+        <Skeleton className="h-5 w-36" />
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} className="h-10 w-full rounded-lg" />
+        ))}
+      </div>
+      <div className="card-elevated rounded-xl bg-card p-5">
+        <Skeleton className="h-5 w-28 mb-4" />
+        <Skeleton className="h-[220px] w-full rounded-lg" />
+      </div>
+    </div>
   )
 }

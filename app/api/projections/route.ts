@@ -90,26 +90,71 @@ export async function GET(request: NextRequest) {
       );
 
       const sips = sipDocs.map(doc => ({
-        name: (doc.name as string) || 'Unnamed SIP',
+        name: (doc.name as string) || (doc.schemeName as string) || 'Unnamed SIP',
         monthlyAmount: Number(doc.monthlyAmount) || 0,
-        currentValue: Number(doc.currentValue) || Number(doc.totalInvested) || 0,
-        totalInvested: Number(doc.totalInvested) || 0,
+        currentValue: Number(doc.currentValue) || Number(doc.investedValue) || 0,
+        totalInvested: Number(doc.investedValue) || Number(doc.totalInvested) || 0,
         expectedAnnualReturn: Number(doc.expectedAnnualReturn) || DEFAULT_SIP_RETURN,
         status: (doc.status as string) || 'active',
       }));
 
-      const stocks = stockDocs.map(doc => ({
-        symbol: (doc.symbol as string) || '',
-        companyName: (doc.companyName as string) || (doc.symbol as string) || 'Unknown',
-        currentValue: Number(doc.currentValue) || Number(doc.totalInvested) || 0,
-        totalInvested: Number(doc.totalInvested) || 0,
-        expectedAnnualReturn: Number(doc.expectedAnnualReturn) || DEFAULT_STOCK_RETURN,
-      }));
+      // Fetch live stock prices via internal quotes logic
+      const stockSymbolMap = new Map<string, { exchange: string }>();
+      for (const doc of stockDocs) {
+        const sym = (doc.symbol as string) || '';
+        const exch = (doc.exchange as string) || 'NSE';
+        if (sym) stockSymbolMap.set(sym, { exchange: exch });
+      }
+
+      // Try to fetch live prices for stocks
+      let liveQuotes: Record<string, number> = {};
+      if (stockSymbolMap.size > 0) {
+        try {
+          const symbols = Array.from(stockSymbolMap.keys()).join(',');
+          const origin = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
+          const quoteRes = await fetch(`${origin}/api/stocks/quotes?symbols=${symbols}`, {
+            headers: { Cookie: _req.headers.get('cookie') || '' },
+            signal: AbortSignal.timeout(15000),
+          });
+          if (quoteRes.ok) {
+            const quoteData = await quoteRes.json();
+            if (quoteData.success && quoteData.quotes) {
+              for (const [sym, q] of Object.entries(quoteData.quotes)) {
+                const quote = q as { current?: number };
+                if (quote.current && quote.current > 0) {
+                  liveQuotes[sym] = quote.current;
+                }
+              }
+            }
+          }
+        } catch {
+          // Fallback: use averageCost as price if live fetch fails
+        }
+      }
+
+      const stocks = stockDocs.map(doc => {
+        const symbol = (doc.symbol as string) || '';
+        const shares = Number(doc.shares) || 0;
+        const averageCost = Number(doc.averageCost) || 0;
+        const livePrice = liveQuotes[symbol] || Number(doc.currentPrice) || averageCost;
+        const totalInvested = shares * averageCost;
+        const currentValue = shares * livePrice;
+        return {
+          symbol,
+          companyName: (doc.companyName as string) || symbol || 'Unknown',
+          shares,
+          averageCost,
+          livePrice,
+          currentValue,
+          totalInvested,
+          expectedAnnualReturn: Number(doc.expectedAnnualReturn) || DEFAULT_STOCK_RETURN,
+        };
+      });
 
       const mutualFunds = mfDocs.map(doc => ({
-        fundName: (doc.fundName as string) || 'Unknown Fund',
-        currentValue: Number(doc.currentValue) || Number(doc.totalInvested) || 0,
-        totalInvested: Number(doc.totalInvested) || 0,
+        fundName: (doc.schemeName as string) || (doc.name as string) || 'Unknown Fund',
+        currentValue: Number(doc.currentValue) || Number(doc.investedValue) || 0,
+        totalInvested: Number(doc.investedValue) || Number(doc.totalInvested) || 0,
       }));
 
       // ----------------------------------------------------------------
@@ -144,7 +189,7 @@ export async function GET(request: NextRequest) {
       const currentNetWorth = bankBalance + totalInvestmentValue;
 
       // ----------------------------------------------------------------
-      // 5. SIP Projections
+      // 5. SIP Projections + Stock Projections (combined as investment projections)
       // ----------------------------------------------------------------
       const sipProjections = sips.map(sip => {
         const annualReturn = sip.expectedAnnualReturn || DEFAULT_SIP_RETURN;
@@ -154,6 +199,19 @@ export async function GET(request: NextRequest) {
           projected3y: sip.currentValue + projectSIPFutureValue(sip.monthlyAmount, annualReturn, 3),
           projected5y: sip.currentValue + projectSIPFutureValue(sip.monthlyAmount, annualReturn, 5),
           projected10y: sip.currentValue + projectSIPFutureValue(sip.monthlyAmount, annualReturn, 10),
+        };
+      });
+
+      // Stock projections (lump-sum compound growth)
+      const stockProjections = stocks.filter(s => s.currentValue > 0).map(stock => {
+        const annualReturn = stock.expectedAnnualReturn || DEFAULT_STOCK_RETURN;
+        const r = annualReturn / 100;
+        return {
+          name: `${stock.symbol} (${stock.shares} shares)`,
+          current: stock.currentValue,
+          projected3y: stock.currentValue * Math.pow(1 + r, 3),
+          projected5y: stock.currentValue * Math.pow(1 + r, 5),
+          projected10y: stock.currentValue * Math.pow(1 + r, 10),
         };
       });
 
@@ -223,7 +281,7 @@ export async function GET(request: NextRequest) {
       // 10. Assemble response
       // ----------------------------------------------------------------
       const projections: GrowthProjection = {
-        sipProjections,
+        sipProjections: [...sipProjections, ...stockProjections],
         emergencyFundProgress,
         netWorthProjection,
         fire,

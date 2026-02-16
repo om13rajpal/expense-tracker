@@ -4,13 +4,6 @@ import * as React from "react"
 import { Label, Pie, PieChart, Cell } from "recharts"
 
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
@@ -23,47 +16,20 @@ interface CategoryData {
   percentage: number
 }
 
+// Theme-aware palette using CSS variables
 const COLORS = [
-  "#0ea5e9",
-  "#22c55e",
-  "#f97316",
-  "#a855f7",
-  "#f43f5e",
-  "#0ea5e9",
-  "#22c55e",
+  "var(--chart-1)",
+  "var(--chart-2)",
+  "var(--chart-3)",
+  "var(--chart-4)",
+  "var(--chart-5)",
+  "var(--muted-foreground)",
+  "var(--primary)",
 ]
 
 const chartConfig = {
   amount: {
     label: "Amount",
-  },
-  "Food & Dining": {
-    label: "Food & Dining",
-    color: COLORS[0],
-  },
-  Transport: {
-    label: "Transport",
-    color: COLORS[1],
-  },
-  Shopping: {
-    label: "Shopping",
-    color: COLORS[2],
-  },
-  "Bills & Utilities": {
-    label: "Bills & Utilities",
-    color: COLORS[3],
-  },
-  Entertainment: {
-    label: "Entertainment",
-    color: COLORS[4],
-  },
-  Healthcare: {
-    label: "Healthcare",
-    color: COLORS[5],
-  },
-  Others: {
-    label: "Others",
-    color: COLORS[6],
   },
 } satisfies ChartConfig
 
@@ -80,107 +46,101 @@ export function CategoryChart({ data = [] }: { data?: CategoryData[] }) {
   const hasData = data.length > 0 && totalAmount > 0
 
   return (
-    <Card className="@container/card flex flex-col border border-border/70">
-      <CardHeader className="items-center pb-0">
-        <CardTitle>Expenses by Category</CardTitle>
-        <CardDescription>Current month breakdown</CardDescription>
-      </CardHeader>
-      <CardContent className="flex-1 pb-0">
-        {hasData ? (
-          <>
-            <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-[300px]">
-              <PieChart>
-                <ChartTooltip
-                  cursor={false}
-                  content={
-                    <ChartTooltipContent
-                      hideLabel
-                      className="backdrop-blur-xl bg-background/95 shadow-lg border-2"
-                      formatter={(value: number, name: string) => (
-                        <div className="flex items-center gap-2">
-                          <div className="font-medium">{name}:</div>
-                          <div className="font-semibold">{formatCurrency(value)}</div>
-                        </div>
-                      )}
-                    />
-                  }
-                />
-                <Pie
-                  data={data}
-                  dataKey="amount"
-                  nameKey="category"
-                  innerRadius={70}
-                  outerRadius={110}
-                  strokeWidth={2}
-                  paddingAngle={3}
-                  isAnimationActive={false}
-                >
-                  {data.map((_, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={COLORS[index % COLORS.length]}
-                      className="transition-opacity duration-200 hover:opacity-80"
-                    />
-                  ))}
-                  <Label
-                    content={({ viewBox }) => {
-                      if (viewBox && "cx" in viewBox && "cy" in viewBox) {
-                        return (
-                          <text
+    <div className="rounded-xl border border-border/60 bg-card p-5">
+      <div className="mb-2">
+        <h3 className="text-sm font-semibold">Expenses by Category</h3>
+        <p className="text-xs text-muted-foreground">Current month breakdown</p>
+      </div>
+      {hasData ? (
+        <>
+          <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-[260px]">
+            <PieChart>
+              <ChartTooltip
+                cursor={false}
+                content={
+                  <ChartTooltipContent
+                    hideLabel
+                    formatter={(value: number, name: string) => (
+                      <div className="flex items-center gap-2">
+                        <div className="text-xs">{name}:</div>
+                        <div className="text-xs font-semibold">{formatCurrency(value)}</div>
+                      </div>
+                    )}
+                  />
+                }
+              />
+              <Pie
+                data={data}
+                dataKey="amount"
+                nameKey="category"
+                innerRadius={65}
+                outerRadius={100}
+                strokeWidth={2}
+                paddingAngle={2}
+                isAnimationActive={false}
+              >
+                {data.map((_, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={COLORS[index % COLORS.length]}
+                  />
+                ))}
+                <Label
+                  content={({ viewBox }) => {
+                    if (viewBox && "cx" in viewBox && "cy" in viewBox) {
+                      return (
+                        <text
+                          x={viewBox.cx}
+                          y={viewBox.cy}
+                          textAnchor="middle"
+                          dominantBaseline="middle"
+                        >
+                          <tspan
                             x={viewBox.cx}
                             y={viewBox.cy}
-                            textAnchor="middle"
-                            dominantBaseline="middle"
+                            className="fill-foreground text-2xl font-bold"
                           >
-                            <tspan
-                              x={viewBox.cx}
-                              y={viewBox.cy}
-                              className="fill-foreground text-3xl font-bold"
-                            >
-                              {formatCurrency(totalAmount)}
-                            </tspan>
-                            <tspan
-                              x={viewBox.cx}
-                              y={(viewBox.cy || 0) + 24}
-                              className="fill-muted-foreground text-sm"
-                            >
-                              Total
-                            </tspan>
-                          </text>
-                        )
-                      }
-                      return null
-                    }}
-                  />
-                </Pie>
-              </PieChart>
-            </ChartContainer>
-            <div className="mt-4 grid grid-cols-2 gap-3 text-sm @lg/card:grid-cols-3">
-              {data.map((item, index) => (
+                            {formatCurrency(totalAmount)}
+                          </tspan>
+                          <tspan
+                            x={viewBox.cx}
+                            y={(viewBox.cy || 0) + 22}
+                            className="fill-muted-foreground text-xs"
+                          >
+                            Total
+                          </tspan>
+                        </text>
+                      )
+                    }
+                    return null
+                  }}
+                />
+              </Pie>
+            </PieChart>
+          </ChartContainer>
+          <div className="mt-3 grid grid-cols-2 gap-2 text-xs">
+            {data.map((item, index) => (
+              <div
+                key={item.category}
+                className="flex items-center gap-2 rounded-md p-1.5"
+              >
                 <div
-                  key={item.category}
-                  className="flex items-center gap-2 rounded-lg p-2 transition-colors hover:bg-muted/50"
-                >
-                  <div
-                    className="h-3 w-3 rounded-full shadow-sm"
-                    style={{ backgroundColor: COLORS[index % COLORS.length] }}
-                  />
-                  <div className="flex-1 truncate">
-                    <div className="font-medium text-xs truncate">{item.category}</div>
-                    <div className="text-muted-foreground text-xs font-semibold">
-                      {item.percentage.toFixed(1)}%
-                    </div>
-                  </div>
+                  className="h-2.5 w-2.5 rounded-sm shrink-0"
+                  style={{ backgroundColor: COLORS[index % COLORS.length] }}
+                />
+                <div className="flex-1 truncate">
+                  <span className="text-muted-foreground">{item.category}</span>
                 </div>
-              ))}
-            </div>
-          </>
-        ) : (
-          <div className="flex h-[300px] items-center justify-center text-sm text-muted-foreground">
-            No expense data available for this period.
+                <span className="text-muted-foreground tabular-nums shrink-0">{item.percentage.toFixed(0)}%</span>
+              </div>
+            ))}
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </>
+      ) : (
+        <div className="flex h-[260px] items-center justify-center text-sm text-muted-foreground">
+          No expense data available.
+        </div>
+      )}
+    </div>
   )
 }

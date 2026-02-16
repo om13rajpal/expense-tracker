@@ -4,13 +4,6 @@ import * as React from "react"
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis, Cell } from "recharts"
 
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
-import {
   ChartContainer,
   ChartTooltip,
   ChartTooltipContent,
@@ -33,11 +26,11 @@ interface PaymentMethodData {
 const chartConfig = {
   count: {
     label: "Transactions",
-    color: "#f97316",
+    color: "var(--muted-foreground)",
   },
   amount: {
     label: "Amount",
-    color: "#0ea5e9",
+    color: "var(--chart-1)",
   },
 } satisfies ChartConfig
 
@@ -61,141 +54,112 @@ export function PaymentMethodChart({ data = [] }: { data?: PaymentMethodData[] }
     viewMode === "count" ? b.count - a.count : b.amount - a.amount
   )
 
-  const gradientId = (index: number) => `barGradient-${index}`
+  const barColor = viewMode === "amount" ? "var(--chart-1)" : "var(--muted-foreground)"
 
   return (
-    <Card className="@container/card border border-border/70">
-      <CardHeader>
-        <div className="flex items-start justify-between gap-2">
-          <div>
-            <CardTitle>Payment Methods</CardTitle>
-            <CardDescription>Transaction analysis by payment type</CardDescription>
-          </div>
-          <Select value={viewMode} onValueChange={(value) => setViewMode(value as "count" | "amount")}>
-            <SelectTrigger className="w-32" size="sm">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="amount">By Amount</SelectItem>
-              <SelectItem value="count">By Count</SelectItem>
-            </SelectContent>
-          </Select>
+    <div className="rounded-xl border border-border/60 bg-card p-5">
+      <div className="flex items-start justify-between gap-2 mb-4">
+        <div>
+          <h3 className="text-sm font-semibold">Payment Methods</h3>
+          <p className="text-xs text-muted-foreground">Transaction analysis by payment type</p>
         </div>
-      </CardHeader>
-      <CardContent>
-        {hasData ? (
-          <>
-            <ChartContainer config={chartConfig} className="h-[300px] w-full">
-              <BarChart
-                data={sortedData}
-                layout="vertical"
-                margin={{ left: 10, right: 10, top: 10, bottom: 10 }}
-                onMouseMove={(state) => {
-                  if (state.isTooltipActive && state.activeTooltipIndex != null) {
-                    setActiveIndex(typeof state.activeTooltipIndex === "number" ? state.activeTooltipIndex : undefined)
-                  } else {
-                    setActiveIndex(undefined)
-                  }
-                }}
-                onMouseLeave={() => setActiveIndex(undefined)}
-              >
-                <defs>
-                  {sortedData.map((_, index) => (
-                    <linearGradient
-                      key={`gradient-${index}`}
-                      id={gradientId(index)}
-                      x1="0"
-                      y1="0"
-                      x2="1"
-                      y2="0"
-                    >
-                      <stop
-                        offset="0%"
-                        stopColor={viewMode === "amount" ? "var(--color-amount)" : "var(--color-count)"}
-                        stopOpacity={0.8}
-                      />
-                      <stop
-                        offset="100%"
-                        stopColor={viewMode === "amount" ? "var(--color-amount)" : "var(--color-count)"}
-                        stopOpacity={1}
-                      />
-                    </linearGradient>
-                  ))}
-                </defs>
-                <CartesianGrid horizontal={false} stroke="hsl(var(--border))" />
-                <XAxis
-                  type="number"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={8}
-                  tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }}
-                  tickFormatter={(value) =>
-                    viewMode === "amount" ? `₹${(value / 1000).toFixed(0)}k` : value.toString()
-                  }
-                />
-                <YAxis
-                  type="category"
-                  dataKey="method"
-                  tickLine={false}
-                  axisLine={false}
-                  tickMargin={10}
-                  width={60}
-                  tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))", fontWeight: 500 }}
-                />
-                <ChartTooltip
-                  cursor={{ fill: "hsl(var(--muted))", opacity: 0.1 }}
-                  content={
-                    <ChartTooltipContent
-                      hideLabel
-                      className="backdrop-blur-xl bg-background/95 shadow-lg border-2"
-                      formatter={(value: number, name: string) => {
-                        if (name === "amount") {
-                          return (
-                            <div className="flex items-center gap-2">
-                              <div className="font-medium">Amount:</div>
-                              <div className="font-semibold">{formatCurrency(value)}</div>
-                            </div>
-                          )
-                        }
+        <Select value={viewMode} onValueChange={(value) => setViewMode(value as "count" | "amount")}>
+          <SelectTrigger className="w-28 h-8 text-xs">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="amount" className="text-xs">By Amount</SelectItem>
+            <SelectItem value="count" className="text-xs">By Count</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+      {hasData ? (
+        <>
+          <ChartContainer config={chartConfig} className="h-[280px] w-full">
+            <BarChart
+              data={sortedData}
+              layout="vertical"
+              margin={{ left: 10, right: 10, top: 10, bottom: 10 }}
+              onMouseMove={(state) => {
+                if (state.isTooltipActive && state.activeTooltipIndex != null) {
+                  setActiveIndex(typeof state.activeTooltipIndex === "number" ? state.activeTooltipIndex : undefined)
+                } else {
+                  setActiveIndex(undefined)
+                }
+              }}
+              onMouseLeave={() => setActiveIndex(undefined)}
+            >
+              <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="var(--color-border)" strokeOpacity={0.5} />
+              <XAxis
+                type="number"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={8}
+                tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                tickFormatter={(value) =>
+                  viewMode === "amount" ? `₹${(value / 1000).toFixed(0)}k` : value.toString()
+                }
+              />
+              <YAxis
+                type="category"
+                dataKey="method"
+                tickLine={false}
+                axisLine={false}
+                tickMargin={10}
+                width={60}
+                tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+              />
+              <ChartTooltip
+                cursor={{ fill: "var(--color-muted)", opacity: 0.1 }}
+                content={
+                  <ChartTooltipContent
+                    hideLabel
+                    formatter={(value: number, name: string) => {
+                      if (name === "amount") {
                         return (
-                          <div className="flex items-center gap-2">
-                            <div className="font-medium">Transactions:</div>
-                            <div className="font-semibold">{value}</div>
+                          <div className="flex items-center gap-2 text-xs">
+                            <span>Amount:</span>
+                            <span className="font-semibold">{formatCurrency(value)}</span>
                           </div>
                         )
-                      }}
-                    />
-                  }
-                />
-                <Bar dataKey={viewMode} radius={[0, 8, 8, 0]} isAnimationActive={false}>
-                  {sortedData.map((_, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={`url(#${gradientId(index)})`}
-                      opacity={activeIndex === undefined || activeIndex === index ? 1 : 0.6}
-                      className="transition-opacity duration-200"
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ChartContainer>
-            <div className="mt-4 grid grid-cols-2 gap-4 border-t pt-4">
-              <div>
-                <div className="text-sm text-muted-foreground">Total Transactions</div>
-                <div className="text-2xl font-bold">{totalTransactions}</div>
-              </div>
-              <div>
-                <div className="text-sm text-muted-foreground">Total Amount</div>
-                <div className="text-2xl font-bold">{formatCurrency(totalAmount)}</div>
-              </div>
+                      }
+                      return (
+                        <div className="flex items-center gap-2 text-xs">
+                          <span>Transactions:</span>
+                          <span className="font-semibold">{value}</span>
+                        </div>
+                      )
+                    }}
+                  />
+                }
+              />
+              <Bar dataKey={viewMode} radius={[0, 6, 6, 0]} isAnimationActive={false}>
+                {sortedData.map((_, index) => (
+                  <Cell
+                    key={`cell-${index}`}
+                    fill={barColor}
+                    opacity={activeIndex === undefined || activeIndex === index ? 1 : 0.5}
+                  />
+                ))}
+              </Bar>
+            </BarChart>
+          </ChartContainer>
+          <div className="mt-3 grid grid-cols-2 gap-4 border-t border-border/30 pt-3">
+            <div>
+              <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Total Transactions</p>
+              <p className="text-lg font-semibold tabular-nums">{totalTransactions}</p>
             </div>
-          </>
-        ) : (
-          <div className="flex h-[300px] items-center justify-center text-sm text-muted-foreground">
-            No payment method data available for this period.
+            <div>
+              <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Total Amount</p>
+              <p className="text-lg font-semibold tabular-nums">{formatCurrency(totalAmount)}</p>
+            </div>
           </div>
-        )}
-      </CardContent>
-    </Card>
+        </>
+      ) : (
+        <div className="flex h-[280px] items-center justify-center text-sm text-muted-foreground">
+          No payment method data available.
+        </div>
+      )}
+    </div>
   )
 }

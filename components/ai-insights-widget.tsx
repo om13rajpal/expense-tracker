@@ -4,6 +4,7 @@ import * as React from "react"
 import { IconSparkles, IconRefresh, IconArrowRight } from "@tabler/icons-react"
 import Link from "next/link"
 
+import { useAiInsight } from "@/hooks/use-ai-insights"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -13,43 +14,18 @@ interface AiInsightsWidgetProps {
 }
 
 export function AiInsightsWidget({ compact = false }: AiInsightsWidgetProps) {
-  const [analysis, setAnalysis] = React.useState<string | null>(null)
-  const [isLoading, setIsLoading] = React.useState(false)
-  const [error, setError] = React.useState<string | null>(null)
-  const [generatedAt, setGeneratedAt] = React.useState<string | null>(null)
+  const insight = useAiInsight("spending_analysis")
 
-  const fetchAnalysis = React.useCallback(async () => {
-    setIsLoading(true)
-    setError(null)
-    try {
-      const response = await fetch("/api/ai/analyze", {
-        method: "POST",
-        credentials: "include",
-        headers: { "Content-Type": "application/json" },
-      })
-      const data = await response.json()
-      if (data.success) {
-        setAnalysis(data.analysis)
-        setGeneratedAt(data.generatedAt)
-      } else {
-        setError(data.message || "Failed to generate insights")
-      }
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Network error")
-    } finally {
-      setIsLoading(false)
-    }
-  }, [])
-
-  // Truncate analysis for compact widget view
+  // Truncate content for compact widget view
   const displayText = React.useMemo(() => {
-    if (!analysis) return null
-    if (!compact) return analysis
-    // Show first ~300 chars for compact mode
-    const truncated = analysis.slice(0, 300)
+    if (!insight.content) return null
+    if (!compact) return insight.content
+    const truncated = insight.content.slice(0, 300)
     const lastNewline = truncated.lastIndexOf("\n")
     return (lastNewline > 100 ? truncated.slice(0, lastNewline) : truncated) + "..."
-  }, [analysis, compact])
+  }, [insight.content, compact])
+
+  const isWorking = insight.isLoading || insight.isRegenerating
 
   return (
     <Card className="border border-border/70">
@@ -62,12 +38,12 @@ export function AiInsightsWidget({ compact = false }: AiInsightsWidgetProps) {
           <Button
             variant="ghost"
             size="sm"
-            onClick={fetchAnalysis}
-            disabled={isLoading}
+            onClick={insight.regenerate}
+            disabled={isWorking}
             className="h-8 px-2"
           >
-            <IconRefresh className={`h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
-            <span className="ml-1 text-xs">{analysis ? "Refresh" : "Generate"}</span>
+            <IconRefresh className={`h-4 w-4 ${isWorking ? "animate-spin" : ""}`} />
+            <span className="ml-1 text-xs">Refresh</span>
           </Button>
           {compact && (
             <Button variant="ghost" size="sm" asChild className="h-8 px-2">
@@ -79,37 +55,46 @@ export function AiInsightsWidget({ compact = false }: AiInsightsWidgetProps) {
         </div>
       </CardHeader>
       <CardContent>
-        {isLoading ? (
+        {insight.isLoading ? (
           <div className="space-y-2">
             <Skeleton className="h-4 w-full" />
             <Skeleton className="h-4 w-3/4" />
             <Skeleton className="h-4 w-5/6" />
             <Skeleton className="h-4 w-2/3" />
           </div>
-        ) : error ? (
+        ) : insight.error && !insight.content ? (
           <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 dark:border-rose-900 dark:bg-rose-950">
-            <p className="text-sm text-rose-700 dark:text-rose-300">{error}</p>
+            <p className="text-sm text-rose-700 dark:text-rose-300">{insight.error}</p>
             <p className="mt-1 text-xs text-muted-foreground">
               Make sure OPENROUTER_API_KEY is configured in your .env.local
             </p>
+            <Button
+              variant="outline"
+              size="sm"
+              className="mt-2"
+              onClick={insight.regenerate}
+            >
+              <IconRefresh className="mr-1 h-3 w-3" />
+              Retry
+            </Button>
           </div>
         ) : displayText ? (
           <div className="space-y-2">
             <div className="prose prose-sm dark:prose-invert max-w-none text-sm leading-relaxed [&>h1]:text-base [&>h2]:text-sm [&>h2]:font-semibold [&>h3]:text-sm [&>ul]:my-1 [&>ol]:my-1 [&>p]:my-1">
               <MarkdownRenderer content={displayText} />
             </div>
-            {generatedAt && (
+            {insight.generatedAt && (
               <p className="text-xs text-muted-foreground pt-2">
-                Generated {new Date(generatedAt).toLocaleString("en-IN")}
+                Generated {new Date(insight.generatedAt).toLocaleString("en-IN")}
               </p>
             )}
           </div>
         ) : (
-          <div className="flex flex-col items-center justify-center py-6 text-center">
-            <IconSparkles className="h-8 w-8 text-muted-foreground/40" />
-            <p className="mt-2 text-sm text-muted-foreground">
-              Click Generate to get AI-powered insights on your finances
-            </p>
+          <div className="space-y-2">
+            <Skeleton className="h-4 w-full" />
+            <Skeleton className="h-4 w-3/4" />
+            <Skeleton className="h-4 w-5/6" />
+            <Skeleton className="h-4 w-2/3" />
           </div>
         )}
       </CardContent>
@@ -117,10 +102,6 @@ export function AiInsightsWidget({ compact = false }: AiInsightsWidgetProps) {
   )
 }
 
-/**
- * Simple markdown renderer for AI output
- * Handles headers, lists, bold, and paragraphs
- */
 function MarkdownRenderer({ content }: { content: string }) {
   const lines = content.split("\n")
   const elements: React.ReactNode[] = []

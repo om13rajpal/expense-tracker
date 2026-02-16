@@ -4,6 +4,7 @@ import { TransactionType } from './types';
 
 export interface DataTableTransaction {
   id: string;
+  _id?: string;
   date: string;
   description: string;
   category: string;
@@ -30,6 +31,7 @@ export function transformTransactionForTable(transaction: Transaction): DataTabl
 
   return {
     id: transaction.id,
+    _id: (transaction as unknown as Record<string, unknown>)._id as string | undefined,
     date: dateStr,
     description: transaction.description || '',
     category: transaction.category || 'Uncategorized',

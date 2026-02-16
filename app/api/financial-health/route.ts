@@ -10,6 +10,9 @@
  *   - Income profile / stability
  */
 
+// Enable Next.js caching for this route
+export const revalidate = 300; // 5 minutes
+
 import { NextRequest, NextResponse } from 'next/server';
 import { getMongoDb } from '@/lib/mongodb';
 import { corsHeaders, handleOptions, withAuth } from '@/lib/middleware';
@@ -147,6 +150,9 @@ export async function GET(request: NextRequest) {
             const investmentCategories = (
               nwiDoc.investments as { categories: string[] }
             ).categories;
+            const savingsCategories = (
+              nwiDoc.savings as { categories: string[] } | undefined
+            )?.categories ?? [];
 
             const completedTransactions = transactions.filter(
               t => t.status === 'completed' || !t.status
@@ -156,6 +162,7 @@ export async function GET(request: NextRequest) {
             let needsActual = 0;
             let wantsActual = 0;
             let investmentsActual = 0;
+            let savingsActual = 0;
 
             for (const txn of completedTransactions) {
               if (
@@ -164,10 +171,12 @@ export async function GET(request: NextRequest) {
               ) {
                 if (needsCategories.includes(txn.category)) {
                   needsActual += txn.amount;
-                } else if (wantsCategories.includes(txn.category)) {
-                  wantsActual += txn.amount;
+                } else if (savingsCategories.includes(txn.category)) {
+                  savingsActual += txn.amount;
                 } else if (investmentCategories.includes(txn.category)) {
                   investmentsActual += txn.amount;
+                } else if (wantsCategories.includes(txn.category)) {
+                  wantsActual += txn.amount;
                 } else {
                   // Uncategorised expenses go to wants by default
                   wantsActual += txn.amount;
@@ -175,7 +184,7 @@ export async function GET(request: NextRequest) {
               }
             }
 
-            const totalBuckets = needsActual + wantsActual + investmentsActual;
+            const totalBuckets = needsActual + wantsActual + investmentsActual + savingsActual;
 
             if (totalBuckets > 0) {
               const needsTarget = (nwiDoc.needs as { percentage: number })
@@ -185,18 +194,26 @@ export async function GET(request: NextRequest) {
               const investmentsTarget = (
                 nwiDoc.investments as { percentage: number }
               ).percentage;
+              const savingsTarget = (
+                nwiDoc.savings as { percentage: number } | undefined
+              )?.percentage ?? 0;
 
               const needsActualPct = (needsActual / totalBuckets) * 100;
               const wantsActualPct = (wantsActual / totalBuckets) * 100;
               const investmentsActualPct =
                 (investmentsActual / totalBuckets) * 100;
+              const savingsActualPct = (savingsActual / totalBuckets) * 100;
 
-              // Average absolute deviation from targets
-              const avgDeviation =
-                (Math.abs(needsTarget - needsActualPct) +
-                  Math.abs(wantsTarget - wantsActualPct) +
-                  Math.abs(investmentsTarget - investmentsActualPct)) /
-                3;
+              // Average absolute deviation from targets (4 buckets)
+              const bucketCount = savingsTarget > 0 ? 4 : 3;
+              let totalDeviation =
+                Math.abs(needsTarget - needsActualPct) +
+                Math.abs(wantsTarget - wantsActualPct) +
+                Math.abs(investmentsTarget - investmentsActualPct);
+              if (savingsTarget > 0) {
+                totalDeviation += Math.abs(savingsTarget - savingsActualPct);
+              }
+              const avgDeviation = totalDeviation / bucketCount;
 
               // Invert: 0 deviation = 100 adherence, 33.3+ deviation = 0
               nwiAdherence = Math.max(0, Math.min(100, 100 - avgDeviation * 3));
@@ -310,9 +327,12 @@ export async function GET(request: NextRequest) {
         incomeProfile,
       };
 
+      const headers = new Headers(corsHeaders());
+      headers.set('Cache-Control', 'public, max-age=300, s-maxage=300'); // 5 minutes
+
       return NextResponse.json(
         { success: true, metrics },
-        { status: 200, headers: corsHeaders() }
+        { status: 200, headers }
       );
     } catch (error: unknown) {
       console.error('Financial health error:', getErrorMessage(error));

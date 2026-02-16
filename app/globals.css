@@ -49,73 +49,74 @@
 
 :root {
   --radius: 0.75rem;
-  --card: oklch(0.995 0.004 95);
-  --card-foreground: oklch(0.18 0.02 250);
-  --popover: oklch(0.995 0.004 95);
-  --popover-foreground: oklch(0.18 0.02 250);
-  --primary: oklch(0.35 0.08 215);
-  --primary-foreground: oklch(0.985 0.01 95);
-  --secondary: oklch(0.965 0.01 95);
-  --secondary-foreground: oklch(0.22 0.02 250);
-  --muted: oklch(0.965 0.01 95);
-  --muted-foreground: oklch(0.52 0.02 240);
-  --accent: oklch(0.94 0.03 195);
-  --accent-foreground: oklch(0.2 0.02 250);
-  --destructive: oklch(0.62 0.21 27.325);
+  --background: oklch(0.975 0.008 85);
+  --foreground: oklch(0.15 0.02 75);
+  --card: oklch(0.995 0.003 85);
+  --card-foreground: oklch(0.15 0.02 75);
+  --popover: oklch(0.995 0.003 85);
+  --popover-foreground: oklch(0.15 0.02 75);
+  --primary: oklch(0.40 0.11 145);
+  --primary-foreground: oklch(0.98 0.005 85);
+  --secondary: oklch(0.96 0.008 85);
+  --secondary-foreground: oklch(0.22 0.02 75);
+  --muted: oklch(0.96 0.008 85);
+  --muted-foreground: oklch(0.48 0.015 75);
+  --accent: oklch(0.94 0.015 85);
+  --accent-foreground: oklch(0.18 0.02 75);
+  --destructive: oklch(0.60 0.20 27);
   --destructive-foreground: 0 0% 98%;
-  --border: oklch(0.9 0.01 95);
-  --input: oklch(0.9 0.01 95);
-  --ring: oklch(0.7 0.04 210);
-  --chart-1: oklch(0.7 0.12 195);
-  --chart-2: oklch(0.72 0.12 145);
-  --chart-3: oklch(0.72 0.12 60);
-  --chart-4: oklch(0.62 0.12 250);
-  --chart-5: oklch(0.68 0.14 25);
-  --sidebar: oklch(0.99 0.006 95);
-  --sidebar-foreground: oklch(0.2 0.02 250);
-  --sidebar-primary: oklch(0.35 0.08 215);
-  --sidebar-primary-foreground: oklch(0.985 0.01 95);
-  --sidebar-accent: oklch(0.965 0.01 95);
-  --sidebar-accent-foreground: oklch(0.2 0.02 250);
-  --sidebar-border: oklch(0.9 0.01 95);
-  --sidebar-ring: oklch(0.7 0.04 210);
-  --background: oklch(0.985 0.008 95);
-  --foreground: oklch(0.18 0.02 250);
+  --border: oklch(0.92 0.008 85);
+  --input: oklch(0.92 0.008 85);
+  --ring: oklch(0.45 0.1 145);
+  /* Chart palette — earthy-premium: olive, sage, gold, slate-blue, terracotta */
+  --chart-1: oklch(0.42 0.12 145);
+  --chart-2: oklch(0.52 0.10 145);
+  --chart-3: oklch(0.68 0.10 70);
+  --chart-4: oklch(0.52 0.08 255);
+  --chart-5: oklch(0.58 0.12 30);
+  --sidebar: oklch(0.98 0.006 85);
+  --sidebar-foreground: oklch(0.18 0.02 75);
+  --sidebar-primary: oklch(0.40 0.11 145);
+  --sidebar-primary-foreground: oklch(0.98 0.005 85);
+  --sidebar-accent: oklch(0.96 0.008 85);
+  --sidebar-accent-foreground: oklch(0.18 0.02 75);
+  --sidebar-border: oklch(0.92 0.008 85);
+  --sidebar-ring: oklch(0.45 0.1 145);
 }
 
 .dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.7 0.08 215);
-  --primary-foreground: oklch(0.145 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
+  --background: oklch(0.14 0.008 75);
+  --foreground: oklch(0.93 0.008 85);
+  --card: oklch(0.18 0.008 75);
+  --card-foreground: oklch(0.93 0.008 85);
+  --popover: oklch(0.18 0.008 75);
+  --popover-foreground: oklch(0.93 0.008 85);
+  --primary: oklch(0.60 0.11 145);
+  --primary-foreground: oklch(0.14 0.008 75);
+  --secondary: oklch(0.24 0.008 75);
+  --secondary-foreground: oklch(0.93 0.008 85);
+  --muted: oklch(0.24 0.008 75);
+  --muted-foreground: oklch(0.62 0.008 85);
+  --accent: oklch(0.24 0.008 75);
+  --accent-foreground: oklch(0.93 0.008 85);
+  --destructive: oklch(0.68 0.18 25);
   --destructive-foreground: 0 0% 98%;
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.55 0.16 195);
-  --chart-2: oklch(0.65 0.14 145);
-  --chart-3: oklch(0.68 0.14 60);
-  --chart-4: oklch(0.58 0.14 250);
-  --chart-5: oklch(0.62 0.16 25);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.6 0.12 215);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+  --border: oklch(1 0 0 / 8%);
+  --input: oklch(1 0 0 / 12%);
+  --ring: oklch(0.45 0.1 145);
+  --chart-1: oklch(0.48 0.12 145);
+  --chart-2: oklch(0.55 0.10 145);
+  --chart-3: oklch(0.62 0.10 70);
+  --chart-4: oklch(0.52 0.10 255);
+  --chart-5: oklch(0.55 0.12 30);
+  --sidebar: oklch(0.18 0.008 75);
+  --sidebar-foreground: oklch(0.93 0.008 85);
+  --sidebar-primary: oklch(0.52 0.11 145);
+  --sidebar-primary-foreground: oklch(0.93 0.008 85);
+  --sidebar-accent: oklch(0.24 0.008 75);
+  --sidebar-accent-foreground: oklch(0.93 0.008 85);
+  --sidebar-border: oklch(1 0 0 / 8%);
+  --sidebar-ring: oklch(0.45 0.1 145);
 }
 
 @layer base {
@@ -125,9 +126,86 @@
   body {
     @apply bg-background text-foreground;
     background-image:
-      radial-gradient(1200px 600px at -10% -10%, rgba(55, 125, 160, 0.08), transparent 60%),
-      radial-gradient(900px 450px at 110% -20%, rgba(208, 135, 65, 0.08), transparent 55%),
-      linear-gradient(180deg, rgba(255, 255, 255, 0.7), rgba(255, 255, 255, 0));
+      radial-gradient(1200px 600px at -10% -10%, rgba(74, 90, 43, 0.05), transparent 60%),
+      radial-gradient(900px 450px at 110% -20%, rgba(120, 110, 70, 0.04), transparent 55%),
+      linear-gradient(180deg, rgba(255, 253, 245, 0.4), rgba(255, 255, 255, 0));
     background-attachment: fixed;
   }
+  .dark body {
+    background-image:
+      radial-gradient(1200px 600px at -10% -10%, rgba(74, 90, 43, 0.03), transparent 60%),
+      radial-gradient(900px 450px at 110% -20%, rgba(120, 110, 70, 0.02), transparent 55%),
+      linear-gradient(180deg, rgba(0, 0, 0, 0), rgba(0, 0, 0, 0));
+  }
+
+  /* Scrollbar — thin, matches theme */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb {
+    background: oklch(0.7 0.01 85);
+    border-radius: 100px;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: oklch(0.6 0.01 85); }
+  .dark ::-webkit-scrollbar-thumb { background: oklch(0.35 0.01 85); }
+  .dark ::-webkit-scrollbar-thumb:hover { background: oklch(0.4 0.01 85); }
+
+  /* Selection */
+  ::selection {
+    background: oklch(0.45 0.1 145 / 25%);
+  }
+  .dark ::selection {
+    background: oklch(0.55 0.1 145 / 30%);
+  }
+}
+
+/* ─── Card treatments ─── */
+
+.card-elevated {
+  box-shadow:
+    0 0 0 1px oklch(0.92 0.005 85),
+    0 1px 2px oklch(0 0 0 / 3%),
+    0 4px 16px oklch(0 0 0 / 2%);
+}
+.dark .card-elevated {
+  box-shadow:
+    0 0 0 1px oklch(1 0 0 / 6%),
+    0 1px 2px oklch(0 0 0 / 15%),
+    0 4px 16px oklch(0 0 0 / 10%);
+}
+
+/* Subtle hover lift for interactive cards */
+.card-interactive {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.card-interactive:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 0 0 1px oklch(0.9 0.01 85),
+    0 4px 20px oklch(0 0 0 / 5%),
+    0 1px 3px oklch(0 0 0 / 4%);
+}
+.dark .card-interactive:hover {
+  box-shadow:
+    0 0 0 1px oklch(1 0 0 / 8%),
+    0 4px 20px oklch(0 0 0 / 20%),
+    0 1px 3px oklch(0 0 0 / 15%);
+}
+
+/* ─── Prose refinements for AI content ─── */
+
+.prose-finance h1 { @apply text-lg font-semibold tracking-tight mt-0 mb-3; }
+.prose-finance h2 { @apply text-base font-semibold tracking-tight mt-5 mb-2; }
+.prose-finance h3 { @apply text-sm font-semibold mt-4 mb-1.5; }
+.prose-finance p { @apply text-sm leading-relaxed my-2 text-foreground/85; }
+.prose-finance ul,
+.prose-finance ol { @apply my-2 space-y-1; }
+.prose-finance li { @apply text-sm leading-relaxed text-foreground/85; }
+.prose-finance strong { @apply font-semibold text-foreground; }
+.prose-finance code {
+  @apply rounded-md bg-muted px-1.5 py-0.5 text-xs font-medium;
+}
+
+::view-transition-old(root), ::view-transition-new(root) {
+    animation: none;
+    mix-blend-mode: normal;
 }

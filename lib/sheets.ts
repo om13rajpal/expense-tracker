@@ -276,6 +276,7 @@ function parseTransaction(row: string[], index: number): Transaction | null {
       tags: [],
       recurring: false,
       balance: normalizedBalance,
+      sequence: index,
     };
   } catch (error) {
     console.error('Error parsing transaction row:', error);

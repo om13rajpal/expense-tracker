@@ -72,7 +72,12 @@ export {
 
 export {
   categorizeTransaction,
+  categorizeWithRules,
   bulkCategorize,
   getSuggestedCategories,
   merchantMatchesCategory,
+  stripSpaces,
+  fuzzyMatch,
+  cleanBankText,
+  isSimilarMerchant,
 } from './categorizer';

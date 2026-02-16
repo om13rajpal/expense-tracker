@@ -1,50 +1,118 @@
 "use client"
 
+import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
-import { type Icon } from "@tabler/icons-react"
+import { motion, AnimatePresence } from "motion/react"
+import { type Icon, IconChevronRight } from "@tabler/icons-react"
+import { cn } from "@/lib/utils"
 
 import {
   SidebarGroup,
   SidebarGroupContent,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
-export function NavMain({
-  items,
-}: {
+export interface NavGroup {
+  label: string
+  icon: Icon
   items: {
     title: string
     url: string
     icon?: Icon
+    description?: string
   }[]
-}) {
+}
+
+const smoothEase = [0.16, 1, 0.3, 1] as const
+
+function CollapsibleNavGroup({ group }: { group: NavGroup }) {
   const pathname = usePathname()
+  const hasActiveItem = group.items.some((item) => pathname === item.url)
+  const [open, setOpen] = React.useState(true)
+
+  React.useEffect(() => {
+    if (hasActiveItem && !open) setOpen(true)
+  }, [hasActiveItem]) // eslint-disable-line react-hooks/exhaustive-deps
+
+  const SectionIcon = group.icon
 
   return (
-    <SidebarGroup>
-      <SidebarGroupContent>
-        <SidebarMenu>
-          {items.map((item) => {
-            const isActive = pathname === item.url
-            return (
-              <SidebarMenuItem key={item.title}>
-                <SidebarMenuButton
-                  asChild
-                  tooltip={item.title}
-                  isActive={isActive}
-                >
-                  <Link href={item.url}>
-                    {item.icon && <item.icon />}
-                    <span>{item.title}</span>
+    <div className="space-y-0.5">
+      {/* Section header */}
+      <button
+        onClick={() => setOpen(!open)}
+        className="group flex w-full items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-sidebar-foreground/60 transition-colors duration-150 hover:text-sidebar-foreground"
+      >
+        <SectionIcon className="h-4 w-4 shrink-0 text-sidebar-foreground/40" />
+        <span className="flex-1 text-left">{group.label}</span>
+        <IconChevronRight
+          className={cn(
+            "h-3.5 w-3.5 shrink-0 text-sidebar-foreground/30 transition-transform duration-200",
+            open && "rotate-90"
+          )}
+        />
+      </button>
+
+      {/* Collapsible content */}
+      <AnimatePresence initial={false}>
+        {open && (
+          <motion.div
+            initial={{ height: 0, opacity: 0 }}
+            animate={{ height: "auto", opacity: 1 }}
+            exit={{ height: 0, opacity: 0 }}
+            transition={{ duration: 0.15, ease: smoothEase }}
+            className="overflow-hidden ml-0.5"
+          >
+            {group.items.map((item, idx) => {
+              const isActive = pathname === item.url
+              const isLast = idx === group.items.length - 1
+
+              return (
+                <div key={item.title} className="relative">
+                  {/* Tree connector — vertical line */}
+                  <div
+                    className={cn(
+                      "absolute left-[11px] top-0 w-px",
+                      isLast ? "h-[14px]" : "h-full",
+                      isActive ? "bg-primary/40" : "bg-border"
+                    )}
+                  />
+                  {/* Tree connector — horizontal branch */}
+                  <div
+                    className={cn(
+                      "absolute left-[11px] top-[14px] h-px w-2",
+                      isActive ? "bg-primary/40" : "bg-border"
+                    )}
+                  />
+
+                  <Link
+                    href={item.url}
+                    className={cn(
+                      "block rounded-md py-1 pl-6 pr-2.5 text-sm transition-colors duration-150",
+                      isActive
+                        ? "font-medium text-primary"
+                        : "text-sidebar-foreground/50 hover:text-sidebar-foreground/80"
+                    )}
+                  >
+                    {item.title}
                   </Link>
-                </SidebarMenuButton>
-              </SidebarMenuItem>
-            )
-          })}
-        </SidebarMenu>
+                </div>
+              )
+            })}
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+export function NavMain({ groups }: { groups: NavGroup[] }) {
+  return (
+    <SidebarGroup>
+      <SidebarGroupContent className="space-y-1">
+        {groups.map((group) => (
+          <CollapsibleNavGroup key={group.label} group={group} />
+        ))}
       </SidebarGroupContent>
     </SidebarGroup>
   )

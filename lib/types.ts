@@ -25,6 +25,7 @@ export interface Transaction {
   recurring: boolean;
   relatedTransactionId?: string;
   balance?: number;
+  sequence?: number; // Row index from sheet — preserves original ordering for same-day transactions
 }
 
 /**
@@ -547,13 +548,14 @@ export interface InvestmentProjectionData {
 // Needs/Wants/Investments (NWI) Classification
 // ============================================================================
 
-export type NWIBucketType = 'needs' | 'wants' | 'investments';
+export type NWIBucketType = 'needs' | 'wants' | 'investments' | 'savings';
 
 export interface NWIConfig {
   userId: string;
   needs: { percentage: number; categories: TransactionCategory[] };
   wants: { percentage: number; categories: TransactionCategory[] };
   investments: { percentage: number; categories: TransactionCategory[] };
+  savings: { percentage: number; categories: TransactionCategory[] };
   updatedAt?: string;
 }
 
@@ -572,6 +574,7 @@ export interface NWISplit {
   needs: NWIBucket;
   wants: NWIBucket;
   investments: NWIBucket;
+  savings: NWIBucket;
 }
 
 // ============================================================================
@@ -666,8 +669,18 @@ export interface SavingsGoalConfig {
   monthlyContribution: number;
   autoTrack: boolean;
   category?: string; // "Emergency Fund", "Car", "Vacation", etc.
+  linkedCategories?: string[]; // Transaction categories that count as contributions
+  linkedKeywords?: string[]; // Keywords to match in transaction descriptions
   createdAt: string;
   updatedAt: string;
+}
+
+export interface LinkedTransaction {
+  id: string;
+  date: string;
+  amount: number;
+  description: string;
+  matchReason: string; // e.g. "Category: Savings" or "Keyword: PPF"
 }
 
 export interface SavingsGoalProgress extends SavingsGoalConfig {
@@ -676,4 +689,6 @@ export interface SavingsGoalProgress extends SavingsGoalConfig {
   requiredMonthly: number;
   projectedCompletionDate: string | null;
   monthsRemaining: number;
+  autoLinkedAmount?: number;
+  linkedTransactions?: LinkedTransaction[];
 }

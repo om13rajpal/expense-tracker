@@ -121,6 +121,8 @@ export function getBudgetCategories(): string[] {
 
 /**
  * Get transaction categories for a budget category.
+ * "Others" is a catch-all: it includes every TransactionCategory not claimed
+ * by any other budget category in the mapping.
  * Accepts an optional dynamic mapping to check first (from user's DB config).
  */
 export function getTransactionCategoriesForBudget(
@@ -129,7 +131,20 @@ export function getTransactionCategoriesForBudget(
 ): TransactionCategory[] {
   const mapping = dynamicMapping || BUDGET_CATEGORY_MAPPING;
   const config = mapping[budgetCategory];
-  return config ? config.transactionCategories : [];
+  if (!config) return [];
+
+  // For "Others", dynamically include all categories not mapped elsewhere
+  if (budgetCategory === 'Others') {
+    const claimed = new Set<TransactionCategory>();
+    for (const [name, cfg] of Object.entries(mapping)) {
+      if (name === 'Others') continue;
+      for (const cat of cfg.transactionCategories) claimed.add(cat);
+    }
+    const allExpenseCategories = Object.values(TransactionCategory);
+    return allExpenseCategories.filter(cat => !claimed.has(cat));
+  }
+
+  return config.transactionCategories;
 }
 
 /**
@@ -185,6 +200,53 @@ export function docsToRuntime(docs: BudgetCategoryDoc[]): {
   }
 
   return { budgets, mapping };
+}
+
+/**
+ * Build a reverse lookup: raw transaction category -> budget category name.
+ * Pass budget category docs from MongoDB. Categories not mapped to any budget
+ * are assigned to the "Others" bucket (if it exists).
+ *
+ * Income/financial categories (Salary, Investment, etc.) are excluded — they
+ * should never be remapped to a budget category.
+ */
+const INCOME_CATEGORIES = new Set([
+  'Salary', 'Freelance', 'Business', 'Investment Income', 'Other Income',
+]);
+const FINANCIAL_CATEGORIES = new Set([
+  'Savings', 'Investment', 'Loan Payment', 'Credit Card', 'Tax',
+]);
+
+export function buildReverseCategoryMap(
+  docs: Pick<BudgetCategoryDoc, 'name' | 'transactionCategories'>[]
+): Record<string, string> {
+  const map: Record<string, string> = {};
+  let othersName: string | null = null;
+
+  for (const doc of docs) {
+    if (doc.name.toLowerCase() === 'others') othersName = doc.name;
+    for (const cat of doc.transactionCategories) {
+      map[cat] = doc.name;
+    }
+  }
+
+  return map;
+}
+
+/**
+ * Map a raw transaction category to its budget category name.
+ * Returns the original category unchanged if it's an income/financial
+ * category or already a budget name.
+ */
+export function mapToBudgetCategory(
+  rawCategory: string,
+  reverseMap: Record<string, string>,
+  budgetNames: Set<string>
+): string {
+  if (budgetNames.has(rawCategory)) return rawCategory;
+  if (INCOME_CATEGORIES.has(rawCategory)) return rawCategory;
+  if (FINANCIAL_CATEGORIES.has(rawCategory)) return rawCategory;
+  return reverseMap[rawCategory] || rawCategory;
 }
 
 /**

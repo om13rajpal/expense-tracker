@@ -13,6 +13,32 @@ import { Transaction, TransactionType } from './types';
 import { isCompletedStatus } from './utils';
 
 /**
+ * Sort comparator for transactions by date ascending, with sequence as tie-breaker.
+ * Preserves original sheet row ordering for same-day transactions so that
+ * running balance values are read in the correct sequence.
+ */
+function sortByDateAsc(a: Transaction, b: Transaction): number {
+  const dateA = new Date(a.date);
+  const dateB = new Date(b.date);
+  const diff = dateA.getTime() - dateB.getTime();
+  if (diff !== 0) return diff;
+  if (a.sequence != null && b.sequence != null) return a.sequence - b.sequence;
+  return (a.id || '').localeCompare(b.id || '');
+}
+
+/**
+ * Sort comparator for transactions by date descending, with sequence as tie-breaker.
+ */
+function sortByDateDesc(a: Transaction, b: Transaction): number {
+  const dateA = new Date(a.date);
+  const dateB = new Date(b.date);
+  const diff = dateB.getTime() - dateA.getTime();
+  if (diff !== 0) return diff;
+  if (a.sequence != null && b.sequence != null) return b.sequence - a.sequence;
+  return (b.id || '').localeCompare(a.id || '');
+}
+
+/**
  * Month identifier interface
  */
 export interface MonthIdentifier {
@@ -145,12 +171,8 @@ export function getMonthOpeningBalance(
     return 0;
   }
 
-  // Sort transactions by date ascending
-  const sorted = [...filtered].sort((a, b) => {
-    const dateA = new Date(a.date);
-    const dateB = new Date(b.date);
-    return dateA.getTime() - dateB.getTime();
-  });
+  // Sort transactions by date ascending (with id tie-breaker for same-day txns)
+  const sorted = [...filtered].sort(sortByDateAsc);
 
   // Find the last transaction of the previous month
   const previousMonthEnd = new Date(year, month - 1, 0); // Last day of previous month
@@ -171,7 +193,8 @@ export function getMonthOpeningBalance(
   }
 
   // If no previous transactions, find first transaction of this month
-  const thisMonthTransactions = getMonthTransactions(sorted, year, month);
+  const thisMonthTransactions = getMonthTransactions(sorted, year, month)
+    .sort(sortByDateAsc);
   if (thisMonthTransactions.length > 0) {
     // For first transaction of first month, calculate opening balance
     // by working backwards from the first transaction's balance
@@ -226,12 +249,8 @@ export function getMonthClosingBalance(
     return getMonthOpeningBalance(transactions, year, month);
   }
 
-  // Sort by date descending and get last known balance
-  const sorted = [...monthTransactions].sort((a, b) => {
-    const dateA = new Date(a.date);
-    const dateB = new Date(b.date);
-    return dateB.getTime() - dateA.getTime();
-  });
+  // Sort by date descending (with id tie-breaker) and get last known balance
+  const sorted = [...monthTransactions].sort(sortByDateDesc);
 
   const lastWithBalance = sorted.find(
     t => t.balance !== undefined && t.balance !== null
@@ -272,11 +291,7 @@ export function isPartialMonth(
   }
 
   // Get first and last transaction dates
-  const sorted = [...monthTransactions].sort((a, b) => {
-    const dateA = new Date(a.date);
-    const dateB = new Date(b.date);
-    return dateA.getTime() - dateB.getTime();
-  });
+  const sorted = [...monthTransactions].sort(sortByDateAsc);
 
   const firstDate = new Date(sorted[0].date);
   const lastDate = new Date(sorted[sorted.length - 1].date);
@@ -313,11 +328,7 @@ export function getMonthPeriodDays(
     return 0;
   }
 
-  const sorted = [...monthTransactions].sort((a, b) => {
-    const dateA = new Date(a.date);
-    const dateB = new Date(b.date);
-    return dateA.getTime() - dateB.getTime();
-  });
+  const sorted = [...monthTransactions].sort(sortByDateAsc);
 
   const firstDate = new Date(sorted[0].date);
   const lastDate = new Date(sorted[sorted.length - 1].date);
@@ -354,11 +365,7 @@ export function calculateMonthlyMetrics(
   month: number
 ): MonthlyMetrics {
   const monthTransactions = getMonthTransactions(transactions, year, month);
-  const sorted = [...monthTransactions].sort((a, b) => {
-    const dateA = new Date(a.date);
-    const dateB = new Date(b.date);
-    return dateA.getTime() - dateB.getTime();
-  });
+  const sorted = [...monthTransactions].sort(sortByDateAsc);
 
   // Balance calculations (from running balance)
   const openingBalance = getMonthOpeningBalance(transactions, year, month);
@@ -383,10 +390,9 @@ export function calculateMonthlyMetrics(
     ? (netChange / Math.abs(openingBalance)) * 100
     : 0;
 
-  const rawSavingsRate = totalIncome !== 0
+  const savingsRate = totalIncome !== 0
     ? (netSavings / totalIncome) * 100
     : 0;
-  const savingsRate = Math.max(-100, Math.min(100, rawSavingsRate));
 
   // Period information
   let startDate: Date;

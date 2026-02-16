@@ -53,11 +53,11 @@ const dailyData = Array.from({ length: 26 }, (_, i) => {
 const chartConfig = {
   expenses: {
     label: "Expenses",
-    color: "#f97316",
+    color: "var(--chart-5)",
   },
   income: {
     label: "Income",
-    color: "#0ea5e9",
+    color: "var(--chart-1)",
   },
 } satisfies ChartConfig
 
@@ -121,17 +121,17 @@ export function ChartAreaInteractive() {
               <linearGradient id="fillExpenses" x1="0" y1="0" x2="0" y2="1">
                 <stop
                   offset="0%"
-                  stopColor="#f97316"
+                  stopColor="var(--chart-5)"
                   stopOpacity={0.6}
                 />
                 <stop
                   offset="50%"
-                  stopColor="#f97316"
+                  stopColor="var(--chart-5)"
                   stopOpacity={0.3}
                 />
                 <stop
                   offset="100%"
-                  stopColor="#f97316"
+                  stopColor="var(--chart-5)"
                   stopOpacity={0.05}
                 />
               </linearGradient>
@@ -139,17 +139,17 @@ export function ChartAreaInteractive() {
               <linearGradient id="fillIncome" x1="0" y1="0" x2="0" y2="1">
                 <stop
                   offset="0%"
-                  stopColor="#0ea5e9"
+                  stopColor="var(--chart-1)"
                   stopOpacity={0.6}
                 />
                 <stop
                   offset="50%"
-                  stopColor="#0ea5e9"
+                  stopColor="var(--chart-1)"
                   stopOpacity={0.3}
                 />
                 <stop
                   offset="100%"
-                  stopColor="#0ea5e9"
+                  stopColor="var(--chart-1)"
                   stopOpacity={0.05}
                 />
               </linearGradient>
@@ -164,8 +164,8 @@ export function ChartAreaInteractive() {
             </defs>
             <CartesianGrid
               vertical={false}
-              stroke="#374151"
-              strokeOpacity={0.3}
+              stroke="var(--border)"
+              strokeOpacity={0.4}
               strokeDasharray="3 3"
             />
             <XAxis
@@ -174,7 +174,7 @@ export function ChartAreaInteractive() {
               axisLine={false}
               tickMargin={8}
               minTickGap={32}
-              tick={{ fontSize: 12, fill: '#9ca3af' }}
+              tick={{ fontSize: 12, fill: 'var(--muted-foreground)' }}
               tickFormatter={(value) => {
                 const date = new Date(value)
                 if (viewType === "monthly") {
@@ -227,7 +227,7 @@ export function ChartAreaInteractive() {
                 dataKey="income"
                 type="natural"
                 fill="url(#fillIncome)"
-                stroke="#0ea5e9"
+                stroke="var(--chart-1)"
                 strokeWidth={3}
                 filter="url(#lineGlow)"
                 strokeOpacity={0.95}
@@ -238,7 +238,7 @@ export function ChartAreaInteractive() {
               dataKey="expenses"
               type="natural"
               fill="url(#fillExpenses)"
-              stroke="#f97316"
+              stroke="var(--chart-5)"
               strokeWidth={3}
               filter="url(#lineGlow)"
               strokeOpacity={0.95}

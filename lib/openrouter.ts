@@ -43,7 +43,7 @@ export async function chatCompletion(
   }
 
   const model = options?.model || 'anthropic/claude-sonnet-4.5';
-  const maxTokens = options?.maxTokens || 2048;
+  const maxTokens = options?.maxTokens || 3000;
   const temperature = options?.temperature ?? 0.3;
 
   const response = await fetch(OPENROUTER_API_URL, {

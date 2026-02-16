@@ -1,8 +1,9 @@
 /**
  * Savings Goals API endpoints
  * CRUD operations for user savings goals with progress calculations.
+ * Supports auto-contribution linking via linkedCategories and linkedKeywords.
  *
- * GET    - List all goals with computed progress
+ * GET    - List all goals with computed progress + auto-linked contributions
  * POST   - Create a new savings goal
  * PUT    - Update an existing goal (or increment currentAmount via addAmount)
  * DELETE - Delete a goal by query param ?id=xxx
@@ -13,17 +14,115 @@ import { ObjectId } from 'mongodb';
 import { getMongoDb } from '@/lib/mongodb';
 import { corsHeaders, handleOptions, withAuth } from '@/lib/middleware';
 import { calculateGoalProgress } from '@/lib/savings-goals';
-import type { SavingsGoalConfig } from '@/lib/types';
+import type { SavingsGoalConfig, LinkedTransaction, SavingsGoalProgress } from '@/lib/types';
 
 const COLLECTION = 'savings_goals';
+const TRANSACTIONS_COLLECTION = 'transactions';
 
 export async function OPTIONS() {
   return handleOptions();
 }
 
 /**
+ * Compute auto-linked contributions for a goal by scanning transactions.
+ * Matches transactions where:
+ *   - category is in linkedCategories, OR
+ *   - description or merchant contains any keyword (case-insensitive)
+ * Only considers transactions within the goal's creation date to target date.
+ */
+async function computeAutoLinkedContributions(
+  goal: SavingsGoalConfig,
+  db: Awaited<ReturnType<typeof getMongoDb>>
+): Promise<{ autoLinkedAmount: number; linkedTransactions: LinkedTransaction[] }> {
+  const categories = goal.linkedCategories || [];
+  const keywords = goal.linkedKeywords || [];
+
+  // If no linking config, skip the query
+  if (categories.length === 0 && keywords.length === 0) {
+    return { autoLinkedAmount: 0, linkedTransactions: [] };
+  }
+
+  // Build date range: from goal creation to target date (or now, whichever is earlier)
+  const startDate = new Date(goal.createdAt);
+  const targetDate = new Date(goal.targetDate);
+  const now = new Date();
+  const endDate = targetDate < now ? targetDate : now;
+
+  // Build MongoDB query: category match OR keyword match in description/merchant
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const orConditions: any[] = [];
+
+  if (categories.length > 0) {
+    orConditions.push({ category: { $in: categories } });
+  }
+
+  if (keywords.length > 0) {
+    // Build regex patterns for keyword matching (case-insensitive)
+    const keywordPatterns = keywords.map((kw) => new RegExp(kw.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i'));
+    orConditions.push({ description: { $in: keywordPatterns } });
+    orConditions.push({ merchant: { $in: keywordPatterns } });
+  }
+
+  const col = db.collection(TRANSACTIONS_COLLECTION);
+  const transactions = await col
+    .find({
+      userId: goal.userId,
+      date: { $gte: startDate, $lte: endDate },
+      $or: orConditions,
+      // Only consider expense/transfer/investment types that represent money going out
+      // towards savings -- we use amount > 0 to catch credit entries, but since savings
+      // transactions are typically stored as positive amounts in their category, we
+      // don't filter by type
+    })
+    .sort({ date: -1 })
+    .limit(100) // Cap at 100 transactions to avoid huge payloads
+    .toArray();
+
+  let autoLinkedAmount = 0;
+  const linkedTransactions: LinkedTransaction[] = [];
+
+  for (const txn of transactions) {
+    const amount = Math.abs(txn.amount || 0);
+    if (amount === 0) continue;
+
+    // Determine match reason
+    let matchReason = '';
+    const txnCategory = txn.category || '';
+    const txnDesc = (txn.description || '').toLowerCase();
+    const txnMerchant = (txn.merchant || '').toLowerCase();
+
+    if (categories.includes(txnCategory)) {
+      matchReason = `Category: ${txnCategory}`;
+    } else {
+      // Check keywords
+      for (const kw of keywords) {
+        const kwLower = kw.toLowerCase();
+        if (txnDesc.includes(kwLower) || txnMerchant.includes(kwLower)) {
+          matchReason = `Keyword: ${kw}`;
+          break;
+        }
+      }
+    }
+
+    if (!matchReason) continue; // Safety: skip if no match (shouldn't happen)
+
+    autoLinkedAmount += amount;
+    linkedTransactions.push({
+      id: txn._id.toString(),
+      date: txn.date instanceof Date ? txn.date.toISOString() : String(txn.date),
+      amount,
+      description: txn.description || txn.merchant || 'Unknown',
+      matchReason,
+    });
+  }
+
+  return { autoLinkedAmount, linkedTransactions };
+}
+
+/**
  * GET /api/savings-goals
- * Retrieve all savings goals for the authenticated user, enriched with progress data.
+ * Retrieve all savings goals for the authenticated user, enriched with progress data
+ * and auto-linked contribution amounts.
  */
 export async function GET(request: NextRequest) {
   return withAuth(async (_req, { user }) => {
@@ -33,22 +132,44 @@ export async function GET(request: NextRequest) {
 
       const docs = await col.find({ userId: user.userId }).toArray();
 
-      const goals = docs.map((doc) => {
-        const goal: SavingsGoalConfig = {
-          id: doc._id.toString(),
-          userId: doc.userId,
-          name: doc.name,
-          targetAmount: doc.targetAmount,
-          currentAmount: doc.currentAmount,
-          targetDate: doc.targetDate,
-          monthlyContribution: doc.monthlyContribution,
-          autoTrack: doc.autoTrack,
-          category: doc.category,
-          createdAt: doc.createdAt,
-          updatedAt: doc.updatedAt,
-        };
-        return calculateGoalProgress(goal);
-      });
+      const goals: SavingsGoalProgress[] = await Promise.all(
+        docs.map(async (doc) => {
+          const goal: SavingsGoalConfig = {
+            id: doc._id.toString(),
+            userId: doc.userId,
+            name: doc.name,
+            targetAmount: doc.targetAmount,
+            currentAmount: doc.currentAmount,
+            targetDate: doc.targetDate,
+            monthlyContribution: doc.monthlyContribution,
+            autoTrack: doc.autoTrack,
+            category: doc.category,
+            linkedCategories: Array.isArray(doc.linkedCategories) ? doc.linkedCategories : [],
+            linkedKeywords: Array.isArray(doc.linkedKeywords) ? doc.linkedKeywords : [],
+            createdAt: doc.createdAt,
+            updatedAt: doc.updatedAt,
+          };
+
+          const progress = calculateGoalProgress(goal);
+
+          // Compute auto-linked contributions if the goal has linking config
+          const hasLinks =
+            (goal.linkedCategories && goal.linkedCategories.length > 0) ||
+            (goal.linkedKeywords && goal.linkedKeywords.length > 0);
+
+          if (hasLinks) {
+            const { autoLinkedAmount, linkedTransactions } =
+              await computeAutoLinkedContributions(goal, db);
+            return {
+              ...progress,
+              autoLinkedAmount,
+              linkedTransactions,
+            };
+          }
+
+          return { ...progress, autoLinkedAmount: 0, linkedTransactions: [] };
+        })
+      );
 
       return NextResponse.json(
         { success: true, goals },
@@ -67,7 +188,8 @@ export async function GET(request: NextRequest) {
 /**
  * POST /api/savings-goals
  * Create a new savings goal.
- * Body: { name, targetAmount, targetDate, monthlyContribution?, currentAmount?, autoTrack?, category? }
+ * Body: { name, targetAmount, targetDate, monthlyContribution?, currentAmount?,
+ *         autoTrack?, category?, linkedCategories?, linkedKeywords? }
  */
 export async function POST(request: NextRequest) {
   return withAuth(async (req, { user }) => {
@@ -81,6 +203,8 @@ export async function POST(request: NextRequest) {
         currentAmount,
         autoTrack,
         category,
+        linkedCategories,
+        linkedKeywords,
       } = body;
 
       // Validation
@@ -124,6 +248,12 @@ export async function POST(request: NextRequest) {
         ...(category && typeof category === 'string'
           ? { category: category.trim() }
           : {}),
+        linkedCategories: Array.isArray(linkedCategories)
+          ? linkedCategories.filter((c: unknown) => typeof c === 'string')
+          : [],
+        linkedKeywords: Array.isArray(linkedKeywords)
+          ? linkedKeywords.filter((k: unknown) => typeof k === 'string' && k.trim().length > 0)
+          : [],
         createdAt: now,
         updatedAt: now,
       };
@@ -191,12 +321,21 @@ export async function PUT(request: NextRequest) {
         'monthlyContribution',
         'autoTrack',
         'category',
+        'linkedCategories',
+        'linkedKeywords',
       ];
 
       const setFields: Record<string, unknown> = { updatedAt: now };
       for (const key of allowedFields) {
         if (fields[key] !== undefined) {
-          setFields[key] = fields[key];
+          // Validate array fields
+          if (key === 'linkedCategories' || key === 'linkedKeywords') {
+            if (Array.isArray(fields[key])) {
+              setFields[key] = fields[key].filter((v: unknown) => typeof v === 'string');
+            }
+          } else {
+            setFields[key] = fields[key];
+          }
         }
       }
       updateOps.$set = setFields;
@@ -234,6 +373,8 @@ export async function PUT(request: NextRequest) {
         monthlyContribution: result.monthlyContribution,
         autoTrack: result.autoTrack,
         category: result.category,
+        linkedCategories: Array.isArray(result.linkedCategories) ? result.linkedCategories : [],
+        linkedKeywords: Array.isArray(result.linkedKeywords) ? result.linkedKeywords : [],
         createdAt: result.createdAt,
         updatedAt: result.updatedAt,
       };

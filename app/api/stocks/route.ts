@@ -56,7 +56,7 @@ export async function POST(request: NextRequest) {
           const exchange = typeof item.exchange === "string" ? item.exchange.trim() : ""
           const shares = Number(item.shares)
           const averageCost = Number(item.averageCost)
-          const expectedAnnualReturn = item.expectedAnnualReturn === "" || item.expectedAnnualReturn === null
+          const expectedAnnualReturn = item.expectedAnnualReturn === "" || item.expectedAnnualReturn == null
             ? undefined
             : Number(item.expectedAnnualReturn)
           const notes = typeof item.notes === "string" ? item.notes.trim() : undefined

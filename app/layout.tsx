@@ -1,5 +1,9 @@
 import type { Metadata } from "next";
 import { Sora, JetBrains_Mono } from "next/font/google";
+import { ThemeProvider } from "next-themes";
+import { QueryProvider } from "@/components/providers/query-provider";
+import { KeyboardShortcutsProvider } from "@/components/keyboard-shortcuts-provider";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 const sora = Sora({
@@ -25,9 +29,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${sora.variable} ${jetbrainsMono.variable} antialiased`}>
-        {children}
+        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+          <QueryProvider>
+            <KeyboardShortcutsProvider>
+              {children}
+            </KeyboardShortcutsProvider>
+            <Toaster position="bottom-right" richColors closeButton />
+          </QueryProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

@@ -3,16 +3,20 @@
 import * as React from "react"
 import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
+import { motion } from "motion/react"
 import {
   IconArrowDown,
   IconArrowUp,
   IconChartBar,
   IconChartLine,
+  IconChartPie,
   IconCoin,
   IconEdit,
+  IconFileSpreadsheet,
   IconPlus,
   IconRefresh,
   IconReplace,
+  IconStack2,
   IconTrash,
   IconTrendingUp,
   IconUpload,
@@ -34,6 +38,7 @@ import {
   YAxis,
 } from "recharts"
 
+import { toast } from "sonner"
 import { useAuth } from "@/hooks/use-auth"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SiteHeader } from "@/components/site-header"
@@ -72,6 +77,7 @@ import {
 import type { StockHolding, StockQuote, MutualFundHolding, MutualFundTransaction, SipEntry, StockTransaction } from "@/lib/sips-stocks"
 import { calculateInvestmentXIRR, calculateCAGR } from "@/lib/xirr"
 import { isGrowwTransaction } from "@/lib/groww-parser"
+import { stagger, fadeUp, fadeUpSmall } from "@/lib/motion"
 
 // ─── Helpers ───
 
@@ -155,9 +161,9 @@ function CustomPieTooltip({ active, payload }: { active?: boolean; payload?: Arr
   if (!active || !payload?.length) return null
   const d = payload[0]
   return (
-    <div className="rounded-lg border bg-background px-3 py-2 shadow-md">
-      <div className="text-sm font-medium">{d.payload.name}</div>
-      <div className="text-xs text-muted-foreground">{fmt(d.value)}</div>
+    <div className="rounded-xl border border-border/60 bg-background/95 backdrop-blur-sm px-3.5 py-2.5 shadow-lg shadow-black/5">
+      <div className="text-sm font-semibold">{d.payload.name}</div>
+      <div className="text-xs text-muted-foreground mt-0.5">{fmt(d.value)}</div>
     </div>
   )
 }
@@ -165,8 +171,8 @@ function CustomPieTooltip({ active, payload }: { active?: boolean; payload?: Arr
 function CustomBarTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; dataKey: string }>; label?: string }) {
   if (!active || !payload?.length) return null
   return (
-    <div className="rounded-lg border bg-background px-3 py-2 shadow-md">
-      <div className="text-sm font-medium mb-1">{label}</div>
+    <div className="rounded-xl border border-border/60 bg-background/95 backdrop-blur-sm px-3.5 py-2.5 shadow-lg shadow-black/5">
+      <div className="text-sm font-semibold mb-1">{label}</div>
       {payload.map((p) => (
         <div key={p.dataKey} className="text-xs text-muted-foreground">
           {p.name}: {fmt(p.value)}
@@ -713,7 +719,7 @@ export default function InvestmentsPage() {
     setCrudError(null)
     try {
       const res = await fetch(`/api/stocks?id=${editingStock._id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ symbol: editStockForm.symbol, exchange: editStockForm.exchange, shares: editStockForm.shares, averageCost: editStockForm.averageCost, expectedAnnualReturn: editStockForm.expectedAnnualReturn || null }) })
-      if (res.ok) { setEditingStock(null); loadAll() }
+      if (res.ok) { setEditingStock(null); loadAll(); toast.success("Stock updated") }
       else { const d = await res.json().catch(() => null); setCrudError(d?.message || "Failed to update stock.") }
     } catch { setCrudError("Network error updating stock.") }
     finally { setIsSavingEdit(false) }
@@ -729,7 +735,7 @@ export default function InvestmentsPage() {
     setCrudError(null)
     try {
       const res = await fetch(`/api/mutual-funds?id=${editingFund._id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ schemeName: editFundForm.schemeName, amc: editFundForm.amc, category: editFundForm.category, units: editFundForm.units, investedValue: editFundForm.investedValue, currentValue: editFundForm.currentValue }) })
-      if (res.ok) { setEditingFund(null); loadAll() }
+      if (res.ok) { setEditingFund(null); loadAll(); toast.success("Mutual fund updated") }
       else { const d = await res.json().catch(() => null); setCrudError(d?.message || "Failed to update fund.") }
     } catch { setCrudError("Network error updating fund.") }
     finally { setIsSavingEdit(false) }
@@ -745,7 +751,7 @@ export default function InvestmentsPage() {
     setCrudError(null)
     try {
       const res = await fetch(`/api/sips?id=${editingSip._id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: editSipForm.name, provider: editSipForm.provider, monthlyAmount: editSipForm.monthlyAmount, startDate: editSipForm.startDate, expectedAnnualReturn: editSipForm.expectedAnnualReturn || null, status: editSipForm.status }) })
-      if (res.ok) { setEditingSip(null); loadAll() }
+      if (res.ok) { setEditingSip(null); loadAll(); toast.success("SIP updated") }
       else { const d = await res.json().catch(() => null); setCrudError(d?.message || "Failed to update SIP.") }
     } catch { setCrudError("Network error updating SIP.") }
     finally { setIsSavingEdit(false) }
@@ -757,31 +763,31 @@ export default function InvestmentsPage() {
     setCrudError(null)
     try {
       const res = await fetch("/api/stocks", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(stockForm) })
-      if (res.ok) { setStockForm({ symbol: "", exchange: "NSE", shares: "", averageCost: "", expectedAnnualReturn: "" }); setShowAddStock(false); loadAll() }
+      if (res.ok) { setStockForm({ symbol: "", exchange: "NSE", shares: "", averageCost: "", expectedAnnualReturn: "" }); setShowAddStock(false); loadAll(); toast.success("Stock added") }
       else { const d = await res.json().catch(() => null); setCrudError(d?.message || "Failed to add stock. Check all fields are valid.") }
     } catch { setCrudError("Network error adding stock.") }
   }
   const handleDeleteStock = async (id?: string) => {
     if (!id) return
-    try { await fetch(`/api/stocks?id=${id}`, { method: "DELETE" }); loadAll() }
-    catch { setCrudError("Failed to delete stock.") }
+    try { await fetch(`/api/stocks?id=${id}`, { method: "DELETE" }); loadAll(); toast.success("Stock deleted") }
+    catch { setCrudError("Failed to delete stock."); toast.error("Failed to delete stock") }
   }
   const handleDeleteFund = async (id?: string) => {
     if (!id) return
-    try { await fetch(`/api/mutual-funds?id=${id}`, { method: "DELETE" }); loadAll() }
-    catch { setCrudError("Failed to delete fund.") }
+    try { await fetch(`/api/mutual-funds?id=${id}`, { method: "DELETE" }); loadAll(); toast.success("Mutual fund deleted") }
+    catch { setCrudError("Failed to delete fund."); toast.error("Failed to delete fund") }
   }
   const handleDeleteSip = async (id?: string) => {
     if (!id) return
-    try { await fetch(`/api/sips?id=${id}`, { method: "DELETE" }); loadAll() }
-    catch { setCrudError("Failed to delete SIP.") }
+    try { await fetch(`/api/sips?id=${id}`, { method: "DELETE" }); loadAll(); toast.success("SIP deleted") }
+    catch { setCrudError("Failed to delete SIP."); toast.error("Failed to delete SIP") }
   }
 
   const handleAddSip = async () => {
     setCrudError(null)
     try {
       const res = await fetch("/api/sips", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(sipForm) })
-      if (res.ok) { setSipForm({ name: "", provider: "", monthlyAmount: "", startDate: "", expectedAnnualReturn: "", status: "active" }); setShowAddSip(false); loadAll() }
+      if (res.ok) { setSipForm({ name: "", provider: "", monthlyAmount: "", startDate: "", expectedAnnualReturn: "", status: "active" }); setShowAddSip(false); loadAll(); toast.success("SIP added") }
       else { const d = await res.json().catch(() => null); setCrudError(d?.message || "Failed to add SIP. Check all fields are valid.") }
     } catch { setCrudError("Network error adding SIP.") }
   }
@@ -1016,220 +1022,270 @@ export default function InvestmentsPage() {
             {/* ══════════════════════════════════════════════════════════════
                 SECTION 1: Portfolio Hero
             ══════════════════════════════════════════════════════════════ */}
-            <div className="grid gap-4 @[640px]/main:grid-cols-2 @[1200px]/main:grid-cols-12">
+            <motion.div variants={stagger} initial="hidden" animate="show" className="grid gap-4 @[640px]/main:grid-cols-2 @[1200px]/main:grid-cols-12">
               {/* Main portfolio card - spans wider */}
-              <Card className="border border-border/70 @[1200px]/main:col-span-4 bg-gradient-to-br from-background to-muted/30">
-                <CardContent className="p-5">
-                  <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Total Portfolio</div>
-                  <div className="mt-2 text-3xl font-bold tabular-nums tracking-tight">{fmt(portfolioTotal.current)}</div>
-                  <div className="mt-1 flex items-center gap-2">
-                    <span className={`flex items-center gap-0.5 text-sm font-semibold ${portfolioTotal.pl >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
-                      {portfolioTotal.pl >= 0 ? <IconArrowUp className="size-3.5" /> : <IconArrowDown className="size-3.5" />}
-                      {fmt(portfolioTotal.pl)}
-                    </span>
-                    <Badge variant="outline" className={`text-[10px] ${portfolioTotal.plPercent >= 0 ? "text-emerald-600 border-emerald-200" : "text-rose-600 border-rose-200"}`}>
-                      {portfolioTotal.plPercent >= 0 ? "+" : ""}{portfolioTotal.plPercent.toFixed(2)}%
-                    </Badge>
-                  </div>
-                  <div className="mt-3 grid grid-cols-3 gap-3 border-t border-border/50 pt-3">
-                    <div>
-                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Invested</div>
-                      <div className="text-sm font-semibold tabular-nums">{fmt(portfolioTotal.invested)}</div>
+              <motion.div variants={fadeUp} className="@[1200px]/main:col-span-4">
+                <Card className="card-elevated @[1200px]/main:h-full bg-gradient-to-br from-background via-background to-primary/[0.03] dark:to-primary/[0.06]">
+                  <CardContent className="p-5">
+                    <div className="flex items-center gap-2 mb-3">
+                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                        <IconWallet className="size-4 text-primary" />
+                      </div>
+                      <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Total Portfolio</span>
                     </div>
-                    <div>
-                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Day Change</div>
-                      <div className={`text-sm font-semibold tabular-nums ${dayChange >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
-                        {dayChange >= 0 ? "+" : ""}{fmt(dayChange)}
+                    <div className="text-3xl font-bold tabular-nums tracking-tight">{fmt(portfolioTotal.current)}</div>
+                    <div className="mt-1.5 flex items-center gap-2">
+                      <span className={`flex items-center gap-0.5 text-sm font-semibold ${portfolioTotal.pl >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                        {portfolioTotal.pl >= 0 ? <IconArrowUp className="size-3.5" /> : <IconArrowDown className="size-3.5" />}
+                        {fmt(portfolioTotal.pl)}
+                      </span>
+                      <Badge variant="outline" className={`text-[10px] font-semibold ${portfolioTotal.plPercent >= 0 ? "text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800 bg-emerald-500/5" : "text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800 bg-rose-500/5"}`}>
+                        {portfolioTotal.plPercent >= 0 ? "+" : ""}{portfolioTotal.plPercent.toFixed(2)}%
+                      </Badge>
+                    </div>
+                    <div className="mt-4 grid grid-cols-3 gap-3 border-t border-border/40 pt-3">
+                      <div>
+                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Invested</div>
+                        <div className="text-sm font-semibold tabular-nums">{fmt(portfolioTotal.invested)}</div>
+                      </div>
+                      <div>
+                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Day Change</div>
+                        <div className={`text-sm font-semibold tabular-nums ${dayChange >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                          {dayChange >= 0 ? "+" : ""}{fmt(dayChange)}
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-[10px] uppercase tracking-wider text-muted-foreground">XIRR</div>
+                        <div className={`text-sm font-semibold tabular-nums ${(portfolioXIRR || 0) >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                          {portfolioXIRR !== null ? `${portfolioXIRR >= 0 ? "+" : ""}${portfolioXIRR.toFixed(1)}%` : <span className="text-muted-foreground text-xs">N/A</span>}
+                        </div>
                       </div>
                     </div>
-                    <div>
-                      <div className="text-[10px] uppercase tracking-wider text-muted-foreground">XIRR</div>
-                      <div className={`text-sm font-semibold tabular-nums ${(portfolioXIRR || 0) >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
-                        {portfolioXIRR !== null ? `${portfolioXIRR >= 0 ? "+" : ""}${portfolioXIRR.toFixed(1)}%` : <span className="text-muted-foreground text-xs">N/A</span>}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </motion.div>
 
               {/* Quick metric tiles */}
-              <div className="@[1200px]/main:col-span-8 grid grid-cols-2 @[640px]/main:grid-cols-4 gap-3">
-                <Card className="border border-border/70">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <IconChartLine className="size-4" />
-                      <span className="text-[10px] uppercase tracking-wider font-medium">Stocks</span>
-                    </div>
-                    <div className="mt-1.5 text-xl font-bold tabular-nums">{fmt(stockTotals.totalValue)}</div>
-                    <div className={`text-xs font-medium ${stockTotals.totalPL >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
-                      {stockTotals.totalPL >= 0 ? "+" : ""}{stockTotals.plPercent.toFixed(1)}% ({stocks.length})
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="border border-border/70">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <IconChartBar className="size-4" />
-                      <span className="text-[10px] uppercase tracking-wider font-medium">Mutual Funds</span>
-                    </div>
-                    <div className="mt-1.5 text-xl font-bold tabular-nums">{fmt(fundTotals.current)}</div>
-                    <div className={`text-xs font-medium ${fundTotals.returns >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
-                      {fundTotals.returns >= 0 ? "+" : ""}{fundTotals.plPercent.toFixed(1)}% ({mutualFunds.length})
-                    </div>
-                  </CardContent>
-                </Card>
-                <Card className="border border-border/70">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <IconCoin className="size-4" />
-                      <span className="text-[10px] uppercase tracking-wider font-medium">Monthly SIP</span>
-                    </div>
-                    <div className="mt-1.5 text-xl font-bold tabular-nums">{fmt(sipTotals.monthlyTotal)}</div>
-                    <div className="text-xs text-muted-foreground">{sipTotals.active} active of {sipTotals.total}</div>
-                  </CardContent>
-                </Card>
-                <Card className="border border-border/70">
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-2 text-muted-foreground">
-                      <IconTrendingUp className="size-4" />
-                      <span className="text-[10px] uppercase tracking-wider font-medium">Realized P&L</span>
-                    </div>
-                    <div className={`mt-1.5 text-xl font-bold tabular-nums ${realizedPL >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
-                      {realizedPL >= 0 ? "+" : ""}{fmt(realizedPL)}
-                    </div>
-                    <div className="text-xs text-muted-foreground">{exitedStocks.length} exited positions</div>
-                  </CardContent>
-                </Card>
-              </div>
-            </div>
+              <motion.div variants={stagger} className="@[1200px]/main:col-span-8 grid grid-cols-2 @[640px]/main:grid-cols-4 gap-3">
+                <motion.div variants={fadeUpSmall}>
+                  <Card className="card-elevated h-full">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] uppercase tracking-wider font-medium text-muted-foreground">Stocks</span>
+                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-500/10">
+                          <IconChartLine className="size-3.5 text-indigo-500" />
+                        </div>
+                      </div>
+                      <div className="mt-2 text-xl font-bold tabular-nums">{fmt(stockTotals.totalValue)}</div>
+                      <div className={`mt-0.5 text-xs font-medium ${stockTotals.totalPL >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                        {stockTotals.totalPL >= 0 ? "+" : ""}{stockTotals.plPercent.toFixed(1)}%
+                        <span className="text-muted-foreground font-normal ml-1">({stocks.length})</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+                <motion.div variants={fadeUpSmall}>
+                  <Card className="card-elevated h-full">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] uppercase tracking-wider font-medium text-muted-foreground">Mutual Funds</span>
+                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/10">
+                          <IconChartBar className="size-3.5 text-amber-500" />
+                        </div>
+                      </div>
+                      <div className="mt-2 text-xl font-bold tabular-nums">{fmt(fundTotals.current)}</div>
+                      <div className={`mt-0.5 text-xs font-medium ${fundTotals.returns >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                        {fundTotals.returns >= 0 ? "+" : ""}{fundTotals.plPercent.toFixed(1)}%
+                        <span className="text-muted-foreground font-normal ml-1">({mutualFunds.length})</span>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+                <motion.div variants={fadeUpSmall}>
+                  <Card className="card-elevated h-full">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] uppercase tracking-wider font-medium text-muted-foreground">Monthly SIP</span>
+                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/10">
+                          <IconCoin className="size-3.5 text-emerald-500" />
+                        </div>
+                      </div>
+                      <div className="mt-2 text-xl font-bold tabular-nums">{fmt(sipTotals.monthlyTotal)}</div>
+                      <div className="mt-0.5 text-xs text-muted-foreground">{sipTotals.active} active of {sipTotals.total}</div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+                <motion.div variants={fadeUpSmall}>
+                  <Card className="card-elevated h-full">
+                    <CardContent className="p-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] uppercase tracking-wider font-medium text-muted-foreground">Realized P&L</span>
+                        <div className={`flex h-7 w-7 items-center justify-center rounded-lg ${realizedPL >= 0 ? "bg-emerald-500/10" : "bg-rose-500/10"}`}>
+                          <IconTrendingUp className={`size-3.5 ${realizedPL >= 0 ? "text-emerald-500" : "text-rose-500"}`} />
+                        </div>
+                      </div>
+                      <div className={`mt-2 text-xl font-bold tabular-nums ${realizedPL >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                        {realizedPL >= 0 ? "+" : ""}{fmt(realizedPL)}
+                      </div>
+                      <div className="mt-0.5 text-xs text-muted-foreground">{exitedStocks.length} exited positions</div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              </motion.div>
+            </motion.div>
 
             {/* ══════════════════════════════════════════════════════════════
                 SECTION 2: Charts Dashboard
             ══════════════════════════════════════════════════════════════ */}
             {(allocationData.length > 0 || stockBarData.length > 0 || fundCategoryData.length > 0) && (
-              <div className="grid gap-4 @[640px]/main:grid-cols-2 @[1200px]/main:grid-cols-12">
+              <motion.div variants={stagger} initial="hidden" animate="show" className="grid gap-4 @[640px]/main:grid-cols-2 @[1200px]/main:grid-cols-12">
 
                 {/* Asset Allocation + Stock Weight combined */}
-                <Card className="border border-border/70 @[1200px]/main:col-span-4">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium">Asset Allocation</CardTitle>
-                    <CardDescription className="text-xs">Portfolio breakdown by asset type</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    {allocationData.length > 0 && (
-                      <div className="flex items-center gap-4">
-                        <div className="h-[140px] w-[140px] flex-shrink-0">
-                          <ResponsiveContainer width="100%" height="100%">
-                            <PieChart>
-                              <Pie data={allocationData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={42} outerRadius={65} strokeWidth={0} paddingAngle={3}>
-                                {allocationData.map((_, i) => (
-                                  <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
-                                ))}
-                              </Pie>
-                              <Tooltip content={<CustomPieTooltip />} />
-                            </PieChart>
-                          </ResponsiveContainer>
+                <motion.div variants={fadeUp} className="@[1200px]/main:col-span-4">
+                  <Card className="card-elevated h-full">
+                    <CardHeader className="pb-2">
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-500/10">
+                          <IconChartPie className="size-3.5 text-violet-500" />
                         </div>
-                        <div className="space-y-2 flex-1 min-w-0">
-                          {allocationData.map((d, i) => {
-                            const pct = portfolioTotal.current > 0 ? (d.value / portfolioTotal.current) * 100 : 0
-                            return (
-                              <div key={d.name}>
-                                <div className="flex items-center justify-between mb-1">
-                                  <div className="flex items-center gap-1.5">
-                                    <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
-                                    <span className="text-xs font-medium">{d.name}</span>
+                        <div>
+                          <CardTitle className="text-sm font-medium">Asset Allocation</CardTitle>
+                          <CardDescription className="text-[11px]">Portfolio breakdown</CardDescription>
+                        </div>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      {allocationData.length > 0 && (
+                        <div className="flex items-center gap-4">
+                          <div className="h-[140px] w-[140px] flex-shrink-0">
+                            <ResponsiveContainer width="100%" height="100%">
+                              <PieChart>
+                                <Pie data={allocationData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={42} outerRadius={65} strokeWidth={2} stroke="var(--background)" paddingAngle={2}>
+                                  {allocationData.map((_, i) => (
+                                    <Cell key={i} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                                  ))}
+                                </Pie>
+                                <Tooltip content={<CustomPieTooltip />} />
+                              </PieChart>
+                            </ResponsiveContainer>
+                          </div>
+                          <div className="space-y-2.5 flex-1 min-w-0">
+                            {allocationData.map((d, i) => {
+                              const pct = portfolioTotal.current > 0 ? (d.value / portfolioTotal.current) * 100 : 0
+                              return (
+                                <div key={d.name}>
+                                  <div className="flex items-center justify-between mb-1">
+                                    <div className="flex items-center gap-1.5">
+                                      <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
+                                      <span className="text-xs font-medium">{d.name}</span>
+                                    </div>
+                                    <span className="text-xs font-semibold tabular-nums">{pct.toFixed(0)}%</span>
                                   </div>
-                                  <span className="text-xs text-muted-foreground">{pct.toFixed(0)}%</span>
+                                  <Progress value={pct} className="h-1.5" />
                                 </div>
-                                <Progress value={pct} className="h-1.5" />
-                              </div>
-                            )
-                          })}
-                          <div className="border-t border-border/40 pt-2 mt-2">
-                            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Total Invested</div>
-                            <div className="text-sm font-semibold">{fmt(portfolioTotal.invested)}</div>
+                              )
+                            })}
+                            <div className="rounded-lg bg-muted/40 px-2.5 py-2 mt-2">
+                              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Total Invested</div>
+                              <div className="text-sm font-semibold">{fmt(portfolioTotal.invested)}</div>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                    {/* Stock weight breakdown */}
-                    {stockWeightData.length > 0 && (
-                      <div className="mt-4 pt-3 border-t border-border/40">
-                        <div className="text-xs font-medium mb-2 text-muted-foreground">Stock Weights</div>
-                        <div className="space-y-1.5">
-                          {stockWeightData.slice(0, 5).map((s, i) => {
-                            const pct = stockTotals.totalValue > 0 ? (s.value / stockTotals.totalValue) * 100 : 0
-                            return (
-                              <div key={s.name} className="flex items-center gap-2">
-                                <div className="h-2 w-2 rounded-full" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
-                                <span className="text-xs font-medium w-20 truncate">{s.name}</span>
-                                <div className="flex-1">
-                                  <Progress value={pct} className="h-1" />
+                      {/* Stock weight breakdown */}
+                      {stockWeightData.length > 0 && (
+                        <div className="mt-4 pt-3 border-t border-border/40">
+                          <div className="text-xs font-medium mb-2.5 text-muted-foreground">Stock Weights</div>
+                          <div className="space-y-2">
+                            {stockWeightData.slice(0, 5).map((s, i) => {
+                              const pct = stockTotals.totalValue > 0 ? (s.value / stockTotals.totalValue) * 100 : 0
+                              return (
+                                <div key={s.name} className="flex items-center gap-2">
+                                  <div className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: PIE_COLORS[i % PIE_COLORS.length] }} />
+                                  <span className="text-xs font-medium w-20 truncate">{s.name}</span>
+                                  <div className="flex-1">
+                                    <div className="h-1.5 w-full rounded-full bg-muted/60 overflow-hidden">
+                                      <div className="h-full rounded-full transition-all duration-500" style={{ width: `${pct}%`, backgroundColor: PIE_COLORS[i % PIE_COLORS.length], opacity: 0.7 }} />
+                                    </div>
+                                  </div>
+                                  <span className="text-[10px] font-medium text-muted-foreground tabular-nums w-10 text-right">{pct.toFixed(0)}%</span>
                                 </div>
-                                <span className="text-[10px] text-muted-foreground tabular-nums w-10 text-right">{pct.toFixed(0)}%</span>
-                              </div>
-                            )
-                          })}
+                              )
+                            })}
+                          </div>
                         </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+                      )}
+                    </CardContent>
+                  </Card>
+                </motion.div>
 
                 {/* Stock P&L */}
                 {stockPLData.length > 0 && (
-                  <Card className="border border-border/70 @[1200px]/main:col-span-4">
-                    <CardHeader className="pb-1">
-                      <CardTitle className="text-sm font-medium">Stock P&L</CardTitle>
-                      <CardDescription className="text-xs">Unrealized profit / loss per stock</CardDescription>
-                    </CardHeader>
-                    <CardContent className="pt-2">
-                      <div className="space-y-2.5">
-                        {(() => {
-                          const maxAbsPL = Math.max(...stockPLData.map((d) => Math.abs(d.pl)), 1)
-                          return stockPLData.map((entry) => {
-                          const barWidth = Math.max((Math.abs(entry.pl) / maxAbsPL) * 100, 4)
-                          const isPositive = entry.pl >= 0
-                          return (
-                            <div key={entry.name} className="group/bar">
-                              <div className="flex items-center justify-between mb-1">
-                                <span className="text-xs font-medium">{entry.name}</span>
-                                <div className="flex items-center gap-1.5">
-                                  <span className={`text-xs font-semibold tabular-nums ${isPositive ? "text-emerald-600" : "text-rose-600"}`}>
-                                    {isPositive ? "+" : ""}{fmt(entry.pl)}
-                                  </span>
-                                  <Badge variant="outline" className={`text-[9px] px-1 py-0 h-4 ${isPositive ? "text-emerald-600 border-emerald-200/60" : "text-rose-600 border-rose-200/60"}`}>
-                                    {isPositive ? "+" : ""}{entry.plPct}%
-                                  </Badge>
+                  <motion.div variants={fadeUp} className="@[1200px]/main:col-span-4">
+                    <Card className="card-elevated h-full">
+                      <CardHeader className="pb-1">
+                        <div className="flex items-center gap-2">
+                          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/10">
+                            <IconTrendingUp className="size-3.5 text-emerald-500" />
+                          </div>
+                          <div>
+                            <CardTitle className="text-sm font-medium">Stock P&L</CardTitle>
+                            <CardDescription className="text-[11px]">Unrealized profit / loss</CardDescription>
+                          </div>
+                        </div>
+                      </CardHeader>
+                      <CardContent className="pt-2">
+                        <div className="space-y-3">
+                          {(() => {
+                            const maxAbsPL = Math.max(...stockPLData.map((d) => Math.abs(d.pl)), 1)
+                            return stockPLData.map((entry) => {
+                            const barWidth = Math.max((Math.abs(entry.pl) / maxAbsPL) * 100, 4)
+                            const isPositive = entry.pl >= 0
+                            return (
+                              <div key={entry.name}>
+                                <div className="flex items-center justify-between mb-1">
+                                  <span className="text-xs font-medium">{entry.name}</span>
+                                  <div className="flex items-center gap-1.5">
+                                    <span className={`text-xs font-semibold tabular-nums ${isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                                      {isPositive ? "+" : ""}{fmt(entry.pl)}
+                                    </span>
+                                    <span className={`text-[10px] tabular-nums font-medium px-1.5 py-0.5 rounded-md ${isPositive ? "text-emerald-700 dark:text-emerald-300 bg-emerald-500/10" : "text-rose-700 dark:text-rose-300 bg-rose-500/10"}`}>
+                                      {isPositive ? "+" : ""}{entry.plPct}%
+                                    </span>
+                                  </div>
+                                </div>
+                                <div className="h-1.5 w-full rounded-full bg-muted/50 overflow-hidden">
+                                  <div
+                                    className={`h-full rounded-full transition-all duration-700 ease-out ${isPositive ? "bg-gradient-to-r from-emerald-500 to-emerald-400" : "bg-gradient-to-r from-rose-500 to-rose-400"}`}
+                                    style={{ width: `${barWidth}%` }}
+                                  />
                                 </div>
                               </div>
-                              <div className="h-2 w-full rounded-full bg-muted/60 overflow-hidden">
-                                <div
-                                  className={`h-full rounded-full transition-all duration-500 ${isPositive ? "bg-gradient-to-r from-emerald-500 to-emerald-400" : "bg-gradient-to-r from-rose-500 to-rose-400"}`}
-                                  style={{ width: `${barWidth}%` }}
-                                />
-                              </div>
-                            </div>
-                          )
-                        })
-                        })()}
-                      </div>
-                    </CardContent>
-                  </Card>
+                            )
+                          })
+                          })()}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
                 )}
 
                 {/* Holdings Value (invested vs current) + MF Category */}
-                <div className="@[1200px]/main:col-span-4 grid gap-4">
+                <motion.div variants={fadeUp} className="@[1200px]/main:col-span-4 grid gap-4">
                   {stockBarData.length > 0 && (
-                    <Card className="border border-border/70">
+                    <Card className="card-elevated">
                       <CardHeader className="flex flex-row items-center justify-between pb-2">
-                        <div>
-                          <CardTitle className="text-sm font-medium">Holdings Value</CardTitle>
-                          <CardDescription className="text-xs">Invested vs Current</CardDescription>
+                        <div className="flex items-center gap-2">
+                          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-500/10">
+                            <IconStack2 className="size-3.5 text-indigo-500" />
+                          </div>
+                          <div>
+                            <CardTitle className="text-sm font-medium">Holdings Value</CardTitle>
+                            <CardDescription className="text-[11px]">Invested vs Current</CardDescription>
+                          </div>
                         </div>
-                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => refreshQuotes(stocks)} disabled={isRefreshing}>
+                        <Button variant="ghost" size="sm" className="h-7 w-7 p-0 rounded-lg" onClick={() => refreshQuotes(stocks)} disabled={isRefreshing}>
                           <IconRefresh className={`size-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
                         </Button>
                       </CardHeader>
@@ -1237,11 +1293,11 @@ export default function InvestmentsPage() {
                         <div className="h-[120px]">
                           <ResponsiveContainer width="100%" height="100%">
                             <BarChart data={stockBarData} layout="vertical" margin={{ left: 0, right: 5, top: 0, bottom: 0 }}>
-                              <XAxis type="number" tickFormatter={(v: number) => fmtCompact(v)} fontSize={9} axisLine={false} tickLine={false} />
-                              <YAxis type="category" dataKey="name" width={60} fontSize={10} axisLine={false} tickLine={false} />
-                              <Tooltip content={<CustomBarTooltip />} />
-                              <Bar dataKey="invested" name="Invested" fill="#94a3b8" radius={[0, 0, 0, 0]} barSize={8} />
-                              <Bar dataKey="current" name="Current" fill={COLORS.indigo} radius={[0, 3, 3, 0]} barSize={8} />
+                              <XAxis type="number" tickFormatter={(v: number) => fmtCompact(v)} tick={{ fontSize: 9, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
+                              <YAxis type="category" dataKey="name" width={60} tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} axisLine={false} tickLine={false} />
+                              <Tooltip content={<CustomBarTooltip />} cursor={{ fill: "var(--muted)", opacity: 0.3, rx: 4 }} />
+                              <Bar dataKey="invested" name="Invested" fill="var(--muted-foreground)" radius={[0, 0, 0, 0]} barSize={8} />
+                              <Bar dataKey="current" name="Current" fill="var(--chart-4)" radius={[0, 3, 3, 0]} barSize={8} />
                             </BarChart>
                           </ResponsiveContainer>
                         </div>
@@ -1250,16 +1306,21 @@ export default function InvestmentsPage() {
                   )}
 
                   {fundCategoryData.length > 0 && (
-                    <Card className="border border-border/70">
+                    <Card className="card-elevated">
                       <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">MF Category Split</CardTitle>
+                        <div className="flex items-center gap-2">
+                          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-cyan-500/10">
+                            <IconChartPie className="size-3.5 text-cyan-500" />
+                          </div>
+                          <CardTitle className="text-sm font-medium">MF Category Split</CardTitle>
+                        </div>
                       </CardHeader>
                       <CardContent>
                         <div className="flex items-center gap-4">
                           <div className="h-[100px] w-[100px] flex-shrink-0">
                             <ResponsiveContainer width="100%" height="100%">
                               <PieChart>
-                                <Pie data={fundCategoryData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={30} outerRadius={48} strokeWidth={0} paddingAngle={3}>
+                                <Pie data={fundCategoryData} dataKey="value" nameKey="name" cx="50%" cy="50%" innerRadius={30} outerRadius={48} strokeWidth={2} stroke="var(--background)" paddingAngle={2}>
                                   {fundCategoryData.map((_, i) => (
                                     <Cell key={i} fill={PIE_COLORS[(i + 2) % PIE_COLORS.length]} />
                                   ))}
@@ -1268,7 +1329,7 @@ export default function InvestmentsPage() {
                               </PieChart>
                             </ResponsiveContainer>
                           </div>
-                          <div className="space-y-1 flex-1 min-w-0">
+                          <div className="space-y-1.5 flex-1 min-w-0">
                             {fundCategoryData.map((d, i) => {
                               const total = fundCategoryData.reduce((s, x) => s + x.value, 0)
                               const pct = total > 0 ? (d.value / total) * 100 : 0
@@ -1276,7 +1337,7 @@ export default function InvestmentsPage() {
                                 <div key={d.name} className="flex items-center gap-1.5">
                                   <div className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: PIE_COLORS[(i + 2) % PIE_COLORS.length] }} />
                                   <span className="text-xs truncate flex-1">{d.name}</span>
-                                  <span className="text-[10px] text-muted-foreground tabular-nums">{pct.toFixed(0)}%</span>
+                                  <span className="text-[10px] font-medium text-muted-foreground tabular-nums">{pct.toFixed(0)}%</span>
                                 </div>
                               )
                             })}
@@ -1285,52 +1346,53 @@ export default function InvestmentsPage() {
                       </CardContent>
                     </Card>
                   )}
-                </div>
-              </div>
+                </motion.div>
+              </motion.div>
             )}
 
             {/* CRUD Error Banner */}
             {crudError && (
-              <div className="rounded-lg border border-rose-200 bg-rose-50 dark:bg-rose-950/20 dark:border-rose-800 px-4 py-3 text-sm text-rose-700 dark:text-rose-400 flex items-center justify-between">
+              <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="rounded-xl border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/20 px-4 py-3 text-sm text-rose-700 dark:text-rose-400 flex items-center justify-between">
                 <span>{crudError}</span>
-                <button onClick={() => setCrudError(null)} className="text-rose-500 hover:text-rose-700 text-xs font-medium ml-4">Dismiss</button>
-              </div>
+                <button onClick={() => setCrudError(null)} className="text-rose-500 hover:text-rose-700 dark:hover:text-rose-300 text-xs font-medium ml-4 px-2 py-1 rounded-md hover:bg-rose-100 dark:hover:bg-rose-900/30 transition-colors">Dismiss</button>
+              </motion.div>
             )}
 
             {/* ══════════════════════════════════════════════════════════════
                 SECTION 3: Tabs
             ══════════════════════════════════════════════════════════════ */}
+            <motion.div variants={fadeUp} initial="hidden" animate="show">
             <Tabs defaultValue="stocks" className="space-y-4">
-              <TabsList>
-                <TabsTrigger value="stocks">Stocks ({stocks.length})</TabsTrigger>
-                <TabsTrigger value="stock-txns">Stock Orders ({stockTxns.length})</TabsTrigger>
-                <TabsTrigger value="funds">Mutual Funds ({mutualFunds.length})</TabsTrigger>
-                <TabsTrigger value="sips">SIPs ({sips.length})</TabsTrigger>
+              <TabsList className="bg-muted/50 p-1 rounded-xl h-auto">
+                <TabsTrigger value="stocks" className="rounded-lg data-[state=active]:shadow-sm text-xs px-4 py-2">Stocks ({stocks.length})</TabsTrigger>
+                <TabsTrigger value="stock-txns" className="rounded-lg data-[state=active]:shadow-sm text-xs px-4 py-2">Stock Orders ({stockTxns.length})</TabsTrigger>
+                <TabsTrigger value="funds" className="rounded-lg data-[state=active]:shadow-sm text-xs px-4 py-2">Mutual Funds ({mutualFunds.length})</TabsTrigger>
+                <TabsTrigger value="sips" className="rounded-lg data-[state=active]:shadow-sm text-xs px-4 py-2">SIPs ({sips.length})</TabsTrigger>
               </TabsList>
 
               {/* ── STOCKS TAB ── */}
               <TabsContent value="stocks" className="space-y-4">
-                <div className="flex flex-wrap items-center gap-3">
-                  <Button size="sm" variant="outline" onClick={() => setShowAddStock(!showAddStock)}>
-                    <IconPlus className="mr-1 size-4" /> Add Stock
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button size="sm" variant="outline" className="rounded-lg" onClick={() => setShowAddStock(!showAddStock)}>
+                    <IconPlus className="mr-1.5 size-3.5" /> Add Stock
                   </Button>
-                  <label className="flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-border/70 px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent">
-                    <IconUpload className="size-4" />
-                    Import Holdings CSV
+                  <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-border/60 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:border-border">
+                    <IconUpload className="size-3.5" />
+                    Import CSV
                     <input type="file" accept=".csv" className="hidden" onChange={(e) => handleImportStocks(e.target.files?.[0])} />
                   </label>
                   <ReplaceToggle checked={replaceStocks} onChange={setReplaceStocks} label="Replace existing on import" />
-                  <Button variant="ghost" size="sm" onClick={() => refreshQuotes(stocks)} disabled={isRefreshing}>
-                    <IconRefresh className={`mr-1 size-4 ${isRefreshing ? "animate-spin" : ""}`} /> Refresh
+                  <Button variant="ghost" size="sm" className="rounded-lg ml-auto" onClick={() => refreshQuotes(stocks)} disabled={isRefreshing}>
+                    <IconRefresh className={`mr-1.5 size-3.5 ${isRefreshing ? "animate-spin" : ""}`} /> Refresh Quotes
                   </Button>
                 </div>
-                {stockImportMsg && <div className="rounded-md border border-border/60 bg-muted/50 px-3 py-2 text-xs text-muted-foreground">{stockImportMsg}</div>}
+                {stockImportMsg && <div className="rounded-lg border border-border/50 bg-muted/40 px-3 py-2 text-xs text-muted-foreground">{stockImportMsg}</div>}
 
                 {showAddStock && (
-                  <Card className="border border-border/70">
+                  <Card className="card-elevated">
                     <CardContent className="pt-4 space-y-3">
                       <div className="grid gap-3 sm:grid-cols-5">
-                        <div className="space-y-1"><Label className="text-xs">Symbol</Label><Input placeholder="RELIANCE" value={stockForm.symbol} onChange={(e) => setStockForm({ ...stockForm, symbol: e.target.value })} /></div>
+                        <div className="space-y-1"><Label className="text-xs">Symbol</Label><Input placeholder="e.g. RELIANCE" value={stockForm.symbol} onChange={(e) => setStockForm({ ...stockForm, symbol: e.target.value })} /></div>
                         <div className="space-y-1"><Label className="text-xs">Exchange</Label>
                           <Select value={stockForm.exchange} onValueChange={(v) => setStockForm({ ...stockForm, exchange: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="NSE">NSE</SelectItem><SelectItem value="BSE">BSE</SelectItem><SelectItem value="NASDAQ">NASDAQ</SelectItem><SelectItem value="NYSE">NYSE</SelectItem></SelectContent></Select>
                         </div>
@@ -1338,26 +1400,39 @@ export default function InvestmentsPage() {
                         <div className="space-y-1"><Label className="text-xs">Avg Cost</Label><Input type="number" value={stockForm.averageCost} onChange={(e) => setStockForm({ ...stockForm, averageCost: e.target.value })} /></div>
                         <div className="space-y-1"><Label className="text-xs">Exp. Return %</Label><Input type="number" value={stockForm.expectedAnnualReturn} onChange={(e) => setStockForm({ ...stockForm, expectedAnnualReturn: e.target.value })} /></div>
                       </div>
-                      <Button size="sm" onClick={handleAddStock}><IconPlus className="mr-1 size-4" /> Add</Button>
+                      <Button size="sm" className="rounded-lg" onClick={handleAddStock}><IconPlus className="mr-1 size-4" /> Add</Button>
                     </CardContent>
                   </Card>
                 )}
 
-                {isLoading ? <Skeleton className="h-40" /> : stocks.length === 0 ? (
-                  <Card className="border border-dashed border-border/70"><CardContent className="py-12 text-center text-sm text-muted-foreground">No stocks yet. Add manually or import a CSV from Groww.</CardContent></Card>
+                {isLoading ? (
+                  <div className="space-y-3">
+                    <Skeleton className="h-10 rounded-lg" />
+                    <Skeleton className="h-40 rounded-lg" />
+                  </div>
+                ) : stocks.length === 0 ? (
+                  <Card className="card-elevated border-dashed">
+                    <CardContent className="py-16 text-center">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted/60 mx-auto mb-3">
+                        <IconChartLine className="size-6 text-muted-foreground/60" />
+                      </div>
+                      <p className="text-sm font-medium text-muted-foreground">No stocks yet</p>
+                      <p className="text-xs text-muted-foreground/70 mt-1">Add manually or import a CSV from Groww</p>
+                    </CardContent>
+                  </Card>
                 ) : (
-                  <Card className="border border-border/70 overflow-hidden">
+                  <Card className="card-elevated overflow-hidden">
                     <Table>
                       <TableHeader>
-                        <TableRow className="bg-muted/30">
-                          <TableHead className="font-medium">Stock</TableHead>
-                          <TableHead className="text-right font-medium">Shares</TableHead>
-                          <TableHead className="text-right font-medium">Avg Cost</TableHead>
-                          <TableHead className="text-right font-medium">CMP</TableHead>
-                          <TableHead className="text-right font-medium">Invested</TableHead>
-                          <TableHead className="text-right font-medium">Current</TableHead>
-                          <TableHead className="text-right font-medium">P&L</TableHead>
-                          <TableHead className="text-right font-medium">Change</TableHead>
+                        <TableRow className="bg-muted/30 hover:bg-muted/30">
+                          <TableHead className="font-semibold text-xs">Stock</TableHead>
+                          <TableHead className="text-right font-semibold text-xs">Shares</TableHead>
+                          <TableHead className="text-right font-semibold text-xs">Avg Cost</TableHead>
+                          <TableHead className="text-right font-semibold text-xs">CMP</TableHead>
+                          <TableHead className="text-right font-semibold text-xs">Invested</TableHead>
+                          <TableHead className="text-right font-semibold text-xs">Current</TableHead>
+                          <TableHead className="text-right font-semibold text-xs">P&L</TableHead>
+                          <TableHead className="text-right font-semibold text-xs">Change</TableHead>
                           <TableHead className="w-[80px]" />
                         </TableRow>
                       </TableHeader>
@@ -1370,32 +1445,32 @@ export default function InvestmentsPage() {
                           const pl = current - invested
                           const plPct = invested > 0 ? (pl / invested) * 100 : 0
                           return (
-                            <TableRow key={s._id} className="group">
+                            <TableRow key={s._id} className="group hover:bg-muted/20 transition-colors">
                               <TableCell>
-                                <div className="font-medium">{s.symbol}</div>
-                                <div className="text-xs text-muted-foreground">{s.exchange}</div>
+                                <div className="font-semibold text-sm">{s.symbol}</div>
+                                <div className="text-[11px] text-muted-foreground">{s.exchange}</div>
                               </TableCell>
-                              <TableCell className="text-right tabular-nums">{s.shares}</TableCell>
-                              <TableCell className="text-right tabular-nums">{fmt(s.averageCost)}</TableCell>
-                              <TableCell className="text-right tabular-nums">{q?.current ? fmt(cmp) : <span className="text-muted-foreground" title="Using avg cost">{fmt(cmp)}*</span>}</TableCell>
-                              <TableCell className="text-right tabular-nums">{fmt(invested)}</TableCell>
-                              <TableCell className="text-right tabular-nums">{fmt(current)}{!q?.current && <span className="text-muted-foreground">*</span>}</TableCell>
+                              <TableCell className="text-right tabular-nums text-sm">{s.shares}</TableCell>
+                              <TableCell className="text-right tabular-nums text-sm">{fmt(s.averageCost)}</TableCell>
+                              <TableCell className="text-right tabular-nums text-sm">{q?.current ? fmt(cmp) : <span className="text-muted-foreground" title="Using avg cost">{fmt(cmp)}*</span>}</TableCell>
+                              <TableCell className="text-right tabular-nums text-sm">{fmt(invested)}</TableCell>
+                              <TableCell className="text-right tabular-nums text-sm">{fmt(current)}{!q?.current && <span className="text-muted-foreground">*</span>}</TableCell>
                               <TableCell className="text-right">
-                                <span className={pl >= 0 ? "text-emerald-600" : "text-rose-600"}>
-                                  {fmt(pl)} <span className="text-xs">({plPct.toFixed(1)}%)</span>
+                                <span className={`inline-flex items-center gap-1 text-sm font-medium px-2 py-0.5 rounded-md ${pl >= 0 ? "text-emerald-700 dark:text-emerald-300 bg-emerald-500/8" : "text-rose-700 dark:text-rose-300 bg-rose-500/8"}`}>
+                                  {fmt(pl)} <span className="text-[11px] opacity-75">({plPct.toFixed(1)}%)</span>
                                 </span>
                               </TableCell>
                               <TableCell className="text-right">
                                 {q ? (
-                                  <Badge variant="outline" className={`text-xs ${q.changePercent >= 0 ? "text-emerald-600 border-emerald-200" : "text-rose-600 border-rose-200"}`}>
+                                  <span className={`text-xs font-medium tabular-nums px-1.5 py-0.5 rounded-md ${q.changePercent >= 0 ? "text-emerald-700 dark:text-emerald-300 bg-emerald-500/10" : "text-rose-700 dark:text-rose-300 bg-rose-500/10"}`}>
                                     {q.changePercent >= 0 ? "+" : ""}{q.changePercent.toFixed(2)}%
-                                  </Badge>
+                                  </span>
                                 ) : null}
                               </TableCell>
                               <TableCell>
-                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditStock(s)}><IconEdit className="size-3.5" /></Button>
-                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteStock(s._id)}><IconTrash className="size-3.5" /></Button>
+                                <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => openEditStock(s)}><IconEdit className="size-3.5" /></Button>
+                                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-destructive hover:text-destructive" onClick={() => handleDeleteStock(s._id)}><IconTrash className="size-3.5" /></Button>
                                 </div>
                               </TableCell>
                             </TableRow>
@@ -1403,16 +1478,16 @@ export default function InvestmentsPage() {
                         })}
                       </TableBody>
                     </Table>
-                    <div className="flex items-center justify-between border-t bg-muted/30 px-4 py-2 text-sm">
-                      <span className="font-medium">Total</span>
-                      <div className="flex gap-6">
-                        <span>Invested: <strong>{fmt(stockTotals.totalInvested)}</strong></span>
-                        <span>Current: <strong>{fmt(stockTotals.totalValue)}</strong></span>
-                        <span className={stockTotals.totalPL >= 0 ? "text-emerald-600 font-semibold" : "text-rose-600 font-semibold"}>
+                    <div className="flex items-center justify-between border-t bg-muted/20 px-4 py-2.5 text-sm">
+                      <span className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Total</span>
+                      <div className="flex gap-5 text-xs">
+                        <span>Invested: <strong className="font-semibold">{fmt(stockTotals.totalInvested)}</strong></span>
+                        <span>Current: <strong className="font-semibold">{fmt(stockTotals.totalValue)}</strong></span>
+                        <span className={`font-semibold ${stockTotals.totalPL >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
                           P&L: {fmt(stockTotals.totalPL)} ({stockTotals.plPercent.toFixed(1)}%)
                         </span>
                         {stockXIRR !== null && (
-                          <span className={stockXIRR >= 0 ? "text-emerald-600 font-semibold" : "text-rose-600 font-semibold"}>
+                          <span className={`font-semibold ${stockXIRR >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
                             XIRR: {stockXIRR >= 0 ? "+" : ""}{stockXIRR.toFixed(1)}%
                           </span>
                         )}
@@ -1424,33 +1499,40 @@ export default function InvestmentsPage() {
 
               {/* ── STOCK ORDERS TAB ── */}
               <TabsContent value="stock-txns" className="space-y-4">
-                <div className="flex flex-wrap items-center gap-3">
-                  <label className="flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-border/70 px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent">
-                    <IconUpload className="size-4" /> Import Order History CSV
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-border/60 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:border-border">
+                    <IconUpload className="size-3.5" /> Import Order History CSV
                     <input type="file" accept=".csv" className="hidden" onChange={(e) => handleImportStockTxns(e.target.files?.[0])} />
                   </label>
                   <ReplaceToggle checked={replaceStockTxns} onChange={setReplaceStockTxns} label="Replace existing on import" />
                 </div>
-                {stockTxnImportMsg && <div className="rounded-md border border-border/60 bg-muted/50 px-3 py-2 text-xs text-muted-foreground">{stockTxnImportMsg}</div>}
+                {stockTxnImportMsg && <div className="rounded-lg border border-border/50 bg-muted/40 px-3 py-2 text-xs text-muted-foreground">{stockTxnImportMsg}</div>}
 
                 {/* Exited positions summary */}
                 {exitedStocks.length > 0 && (
-                  <Card className="border border-border/70">
+                  <Card className="card-elevated">
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium">Exited Positions</CardTitle>
-                      <CardDescription className="text-xs">Stocks fully sold - realized P&L</CardDescription>
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/10">
+                          <IconTrendingUp className="size-3.5 text-amber-500" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-sm font-medium">Exited Positions</CardTitle>
+                          <CardDescription className="text-[11px]">Realized P&L from fully sold stocks</CardDescription>
+                        </div>
+                      </div>
                     </CardHeader>
                     <CardContent>
                       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                         {exitedStocks.map((e) => (
-                          <div key={e.symbol} className="flex items-center justify-between rounded-lg border border-border/50 px-3 py-2">
+                          <div key={e.symbol} className="flex items-center justify-between rounded-xl border border-border/40 bg-muted/20 px-3 py-2.5 hover:bg-muted/30 transition-colors">
                             <div>
-                              <div className="text-sm font-medium">{e.symbol}</div>
+                              <div className="text-sm font-semibold">{e.symbol}</div>
                               <div className="text-[10px] text-muted-foreground">Buy: {fmtPrecise(e.buyValue)} → Sell: {fmtPrecise(e.sellValue)}</div>
                             </div>
-                            <Badge variant="outline" className={`text-xs ${e.realizedPL >= 0 ? "text-emerald-600 border-emerald-200" : "text-rose-600 border-rose-200"}`}>
+                            <span className={`text-xs font-semibold tabular-nums px-2 py-1 rounded-lg ${e.realizedPL >= 0 ? "text-emerald-700 dark:text-emerald-300 bg-emerald-500/10" : "text-rose-700 dark:text-rose-300 bg-rose-500/10"}`}>
                               {e.realizedPL >= 0 ? "+" : ""}{fmtPrecise(e.realizedPL)}
-                            </Badge>
+                            </span>
                           </div>
                         ))}
                       </div>
@@ -1459,51 +1541,61 @@ export default function InvestmentsPage() {
                 )}
 
                 {/* Transaction list */}
-                {isLoading ? <Skeleton className="h-40" /> : stockTxns.length === 0 ? (
-                  <Card className="border border-dashed border-border/70"><CardContent className="py-12 text-center text-sm text-muted-foreground">No stock transactions yet. Import your Groww Order History CSV.</CardContent></Card>
+                {isLoading ? (
+                  <div className="space-y-3"><Skeleton className="h-10 rounded-lg" /><Skeleton className="h-40 rounded-lg" /></div>
+                ) : stockTxns.length === 0 ? (
+                  <Card className="card-elevated border-dashed">
+                    <CardContent className="py-16 text-center">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted/60 mx-auto mb-3">
+                        <IconFileSpreadsheet className="size-6 text-muted-foreground/60" />
+                      </div>
+                      <p className="text-sm font-medium text-muted-foreground">No stock transactions yet</p>
+                      <p className="text-xs text-muted-foreground/70 mt-1">Import your Groww Order History CSV</p>
+                    </CardContent>
+                  </Card>
                 ) : (
-                  <Card className="border border-border/70 overflow-hidden">
+                  <Card className="card-elevated overflow-hidden">
                     <Table>
                       <TableHeader>
-                        <TableRow className="bg-muted/30">
-                          <TableHead className="font-medium">Stock</TableHead>
-                          <TableHead className="font-medium">Type</TableHead>
-                          <TableHead className="text-right font-medium">Qty</TableHead>
-                          <TableHead className="text-right font-medium">Value</TableHead>
-                          <TableHead className="text-right font-medium">Price/Unit</TableHead>
-                          <TableHead className="font-medium">Exchange</TableHead>
-                          <TableHead className="font-medium">Date</TableHead>
+                        <TableRow className="bg-muted/30 hover:bg-muted/30">
+                          <TableHead className="font-semibold text-xs">Stock</TableHead>
+                          <TableHead className="font-semibold text-xs">Type</TableHead>
+                          <TableHead className="text-right font-semibold text-xs">Qty</TableHead>
+                          <TableHead className="text-right font-semibold text-xs">Value</TableHead>
+                          <TableHead className="text-right font-semibold text-xs">Price/Unit</TableHead>
+                          <TableHead className="font-semibold text-xs">Exchange</TableHead>
+                          <TableHead className="font-semibold text-xs">Date</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {stockTxns.map((txn) => {
                           const pricePerUnit = txn.quantity > 0 ? txn.value / txn.quantity : 0
                           return (
-                            <TableRow key={txn._id}>
+                            <TableRow key={txn._id} className="hover:bg-muted/20 transition-colors">
                               <TableCell>
-                                <div className="font-medium">{txn.symbol}</div>
-                                <div className="text-xs text-muted-foreground max-w-[200px] truncate">{txn.stockName}</div>
+                                <div className="font-semibold text-sm">{txn.symbol}</div>
+                                <div className="text-[11px] text-muted-foreground max-w-[200px] truncate">{txn.stockName}</div>
                               </TableCell>
                               <TableCell>
-                                <Badge variant="outline" className={`text-xs ${txn.type === "BUY" ? "text-emerald-600 border-emerald-200" : "text-rose-600 border-rose-200"}`}>
+                                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-md ${txn.type === "BUY" ? "text-emerald-700 dark:text-emerald-300 bg-emerald-500/10" : "text-rose-700 dark:text-rose-300 bg-rose-500/10"}`}>
                                   {txn.type}
-                                </Badge>
+                                </span>
                               </TableCell>
-                              <TableCell className="text-right tabular-nums">{txn.quantity}</TableCell>
-                              <TableCell className="text-right tabular-nums font-medium">{fmtPrecise(txn.value)}</TableCell>
-                              <TableCell className="text-right tabular-nums text-muted-foreground">{fmtPrecise(pricePerUnit)}</TableCell>
-                              <TableCell className="text-muted-foreground">{txn.exchange}</TableCell>
+                              <TableCell className="text-right tabular-nums text-sm">{txn.quantity}</TableCell>
+                              <TableCell className="text-right tabular-nums font-medium text-sm">{fmtPrecise(txn.value)}</TableCell>
+                              <TableCell className="text-right tabular-nums text-sm text-muted-foreground">{fmtPrecise(pricePerUnit)}</TableCell>
+                              <TableCell className="text-muted-foreground text-sm">{txn.exchange}</TableCell>
                               <TableCell className="text-muted-foreground text-xs">{txn.executionDate}</TableCell>
                             </TableRow>
                           )
                         })}
                       </TableBody>
                     </Table>
-                    <div className="flex items-center justify-between border-t bg-muted/30 px-4 py-2 text-sm">
-                      <span className="font-medium">{stockTxns.length} transaction(s)</span>
-                      <div className="flex gap-4">
-                        <span className="text-emerald-600">Buy: {fmt(stockTxns.filter((t) => t.type === "BUY").reduce((s, t) => s + t.value, 0))}</span>
-                        <span className="text-rose-600">Sell: {fmt(stockTxns.filter((t) => t.type === "SELL").reduce((s, t) => s + t.value, 0))}</span>
+                    <div className="flex items-center justify-between border-t bg-muted/20 px-4 py-2.5 text-xs">
+                      <span className="font-semibold uppercase tracking-wider text-muted-foreground">{stockTxns.length} transaction(s)</span>
+                      <div className="flex gap-4 font-medium">
+                        <span className="text-emerald-600 dark:text-emerald-400">Buy: {fmt(stockTxns.filter((t) => t.type === "BUY").reduce((s, t) => s + t.value, 0))}</span>
+                        <span className="text-rose-600 dark:text-rose-400">Sell: {fmt(stockTxns.filter((t) => t.type === "SELL").reduce((s, t) => s + t.value, 0))}</span>
                       </div>
                     </div>
                   </Card>
@@ -1512,58 +1604,83 @@ export default function InvestmentsPage() {
 
               {/* ── MUTUAL FUNDS TAB ── */}
               <TabsContent value="funds" className="space-y-4">
-                <div className="flex flex-wrap items-center gap-3">
-                  <label className="flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-border/70 px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent">
-                    <IconUpload className="size-4" /> Import Holdings CSV
+                <div className="flex flex-wrap items-center gap-2">
+                  <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-border/60 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:border-border">
+                    <IconUpload className="size-3.5" /> Import Holdings CSV
                     <input type="file" accept=".csv" className="hidden" onChange={(e) => handleImportFunds(e.target.files?.[0])} />
                   </label>
-                  <label className="flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-border/70 px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent">
-                    <IconUpload className="size-4" /> Import Order History
+                  <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-border/60 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:border-border">
+                    <IconUpload className="size-3.5" /> Import Order History
                     <input type="file" accept=".csv" className="hidden" onChange={(e) => handleImportFundTxns(e.target.files?.[0])} />
                   </label>
                   <ReplaceToggle checked={replaceFunds} onChange={setReplaceFunds} label="Replace holdings on import" />
                   <ReplaceToggle checked={replaceFundTxns} onChange={setReplaceFundTxns} label="Replace transactions on import" />
                 </div>
-                {fundImportMsg && <div className="rounded-md border border-border/60 bg-muted/50 px-3 py-2 text-xs text-muted-foreground">{fundImportMsg}</div>}
-                {fundTxnImportMsg && <div className="rounded-md border border-border/60 bg-muted/50 px-3 py-2 text-xs text-muted-foreground">{fundTxnImportMsg}</div>}
+                {fundImportMsg && <div className="rounded-lg border border-border/50 bg-muted/40 px-3 py-2 text-xs text-muted-foreground">{fundImportMsg}</div>}
+                {fundTxnImportMsg && <div className="rounded-lg border border-border/50 bg-muted/40 px-3 py-2 text-xs text-muted-foreground">{fundTxnImportMsg}</div>}
 
                 {/* Fund summary row */}
-                <div className="grid gap-4 sm:grid-cols-3">
-                  <Card className="border border-border/70">
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <Card className="card-elevated">
                     <CardContent className="p-4">
-                      <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Invested</div>
-                      <div className="mt-1 text-2xl font-semibold tabular-nums">{fmt(fundTotals.invested)}</div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Invested</span>
+                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-500/10">
+                          <IconArrowUp className="size-3.5 text-slate-500" />
+                        </div>
+                      </div>
+                      <div className="mt-2 text-2xl font-bold tabular-nums">{fmt(fundTotals.invested)}</div>
                     </CardContent>
                   </Card>
-                  <Card className="border border-border/70">
+                  <Card className="card-elevated">
                     <CardContent className="p-4">
-                      <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Current Value</div>
-                      <div className="mt-1 text-2xl font-semibold tabular-nums">{fmt(fundTotals.current)}</div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Current Value</span>
+                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-500/10">
+                          <IconChartBar className="size-3.5 text-indigo-500" />
+                        </div>
+                      </div>
+                      <div className="mt-2 text-2xl font-bold tabular-nums">{fmt(fundTotals.current)}</div>
                     </CardContent>
                   </Card>
-                  <Card className="border border-border/70">
+                  <Card className="card-elevated">
                     <CardContent className="p-4">
-                      <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Returns</div>
-                      <div className={`mt-1 text-2xl font-semibold tabular-nums ${fundTotals.returns >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
-                        {fmt(fundTotals.returns)} <span className="text-sm">({fundTotals.plPercent.toFixed(1)}%)</span>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Returns</span>
+                        <div className={`flex h-7 w-7 items-center justify-center rounded-lg ${fundTotals.returns >= 0 ? "bg-emerald-500/10" : "bg-rose-500/10"}`}>
+                          <IconTrendingUp className={`size-3.5 ${fundTotals.returns >= 0 ? "text-emerald-500" : "text-rose-500"}`} />
+                        </div>
+                      </div>
+                      <div className={`mt-2 text-2xl font-bold tabular-nums ${fundTotals.returns >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                        {fmt(fundTotals.returns)} <span className="text-sm font-semibold">({fundTotals.plPercent.toFixed(1)}%)</span>
                       </div>
                     </CardContent>
                   </Card>
                 </div>
 
-                {isLoading ? <Skeleton className="h-40" /> : mutualFunds.length === 0 ? (
-                  <Card className="border border-dashed border-border/70"><CardContent className="py-12 text-center text-sm text-muted-foreground">No mutual funds yet. Import your Groww holdings CSV.</CardContent></Card>
+                {isLoading ? (
+                  <div className="space-y-3"><Skeleton className="h-10 rounded-lg" /><Skeleton className="h-40 rounded-lg" /></div>
+                ) : mutualFunds.length === 0 ? (
+                  <Card className="card-elevated border-dashed">
+                    <CardContent className="py-16 text-center">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted/60 mx-auto mb-3">
+                        <IconChartBar className="size-6 text-muted-foreground/60" />
+                      </div>
+                      <p className="text-sm font-medium text-muted-foreground">No mutual funds yet</p>
+                      <p className="text-xs text-muted-foreground/70 mt-1">Import your Groww holdings CSV</p>
+                    </CardContent>
+                  </Card>
                 ) : (
-                  <Card className="border border-border/70 overflow-hidden">
+                  <Card className="card-elevated overflow-hidden">
                     <Table>
                       <TableHeader>
-                        <TableRow className="bg-muted/30">
-                          <TableHead className="font-medium">Scheme</TableHead>
-                          <TableHead className="text-right font-medium">Units</TableHead>
-                          <TableHead className="text-right font-medium">Invested</TableHead>
-                          <TableHead className="text-right font-medium">Current</TableHead>
-                          <TableHead className="text-right font-medium">P&L</TableHead>
-                          <TableHead className="text-right font-medium">Returns %</TableHead>
+                        <TableRow className="bg-muted/30 hover:bg-muted/30">
+                          <TableHead className="font-semibold text-xs">Scheme</TableHead>
+                          <TableHead className="text-right font-semibold text-xs">Units</TableHead>
+                          <TableHead className="text-right font-semibold text-xs">Invested</TableHead>
+                          <TableHead className="text-right font-semibold text-xs">Current</TableHead>
+                          <TableHead className="text-right font-semibold text-xs">P&L</TableHead>
+                          <TableHead className="text-right font-semibold text-xs">Returns %</TableHead>
                           <TableHead className="w-[80px]" />
                         </TableRow>
                       </TableHeader>
@@ -1572,26 +1689,26 @@ export default function InvestmentsPage() {
                           const ret = f.currentValue - f.investedValue
                           const retPct = f.investedValue > 0 ? (ret / f.investedValue) * 100 : 0
                           return (
-                            <TableRow key={f._id} className="group">
+                            <TableRow key={f._id} className="group hover:bg-muted/20 transition-colors">
                               <TableCell>
-                                <div className="font-medium max-w-[280px] truncate">{f.schemeName}</div>
-                                <div className="text-xs text-muted-foreground">{[f.amc, f.category].filter(Boolean).join(" - ") || "Mutual Fund"}</div>
+                                <div className="font-semibold text-sm max-w-[280px] truncate">{f.schemeName}</div>
+                                <div className="text-[11px] text-muted-foreground">{[f.amc, f.category].filter(Boolean).join(" - ") || "Mutual Fund"}</div>
                               </TableCell>
-                              <TableCell className="text-right tabular-nums">{Number(f.units).toFixed(3)}</TableCell>
-                              <TableCell className="text-right tabular-nums">{fmt(f.investedValue)}</TableCell>
-                              <TableCell className="text-right tabular-nums">{fmt(f.currentValue)}</TableCell>
+                              <TableCell className="text-right tabular-nums text-sm">{Number(f.units).toFixed(3)}</TableCell>
+                              <TableCell className="text-right tabular-nums text-sm">{fmt(f.investedValue)}</TableCell>
+                              <TableCell className="text-right tabular-nums text-sm">{fmt(f.currentValue)}</TableCell>
                               <TableCell className="text-right">
-                                <span className={ret >= 0 ? "text-emerald-600" : "text-rose-600"}>{fmt(ret)}</span>
+                                <span className={`text-sm font-medium px-2 py-0.5 rounded-md ${ret >= 0 ? "text-emerald-700 dark:text-emerald-300 bg-emerald-500/8" : "text-rose-700 dark:text-rose-300 bg-rose-500/8"}`}>{fmt(ret)}</span>
                               </TableCell>
                               <TableCell className="text-right">
-                                <Badge variant="outline" className={`text-xs ${retPct >= 0 ? "text-emerald-600 border-emerald-200" : "text-rose-600 border-rose-200"}`}>
+                                <span className={`text-xs font-medium tabular-nums px-1.5 py-0.5 rounded-md ${retPct >= 0 ? "text-emerald-700 dark:text-emerald-300 bg-emerald-500/10" : "text-rose-700 dark:text-rose-300 bg-rose-500/10"}`}>
                                   {retPct >= 0 ? "+" : ""}{retPct.toFixed(1)}%
-                                </Badge>
+                                </span>
                               </TableCell>
                               <TableCell>
-                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                  <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditFund(f)}><IconEdit className="size-3.5" /></Button>
-                                  <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteFund(f._id)}><IconTrash className="size-3.5" /></Button>
+                                <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => openEditFund(f)}><IconEdit className="size-3.5" /></Button>
+                                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-destructive hover:text-destructive" onClick={() => handleDeleteFund(f._id)}><IconTrash className="size-3.5" /></Button>
                                 </div>
                               </TableCell>
                             </TableRow>
@@ -1599,16 +1716,16 @@ export default function InvestmentsPage() {
                         })}
                       </TableBody>
                     </Table>
-                    <div className="flex items-center justify-between border-t bg-muted/30 px-4 py-2 text-sm">
-                      <span className="font-medium">Total ({mutualFunds.length} schemes)</span>
-                      <div className="flex gap-6">
-                        <span>Invested: <strong>{fmt(fundTotals.invested)}</strong></span>
-                        <span>Current: <strong>{fmt(fundTotals.current)}</strong></span>
-                        <span className={fundTotals.returns >= 0 ? "text-emerald-600 font-semibold" : "text-rose-600 font-semibold"}>
+                    <div className="flex items-center justify-between border-t bg-muted/20 px-4 py-2.5 text-xs">
+                      <span className="font-semibold uppercase tracking-wider text-muted-foreground">Total ({mutualFunds.length} schemes)</span>
+                      <div className="flex gap-5">
+                        <span>Invested: <strong className="font-semibold">{fmt(fundTotals.invested)}</strong></span>
+                        <span>Current: <strong className="font-semibold">{fmt(fundTotals.current)}</strong></span>
+                        <span className={`font-semibold ${fundTotals.returns >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
                           P&L: {fmt(fundTotals.returns)} ({fundTotals.plPercent.toFixed(1)}%)
                         </span>
                         {fundXIRR !== null && (
-                          <span className={fundXIRR >= 0 ? "text-emerald-600 font-semibold" : "text-rose-600 font-semibold"}>
+                          <span className={`font-semibold ${fundXIRR >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
                             XIRR: {fundXIRR >= 0 ? "+" : ""}{fundXIRR.toFixed(1)}%
                           </span>
                         )}
@@ -1619,27 +1736,34 @@ export default function InvestmentsPage() {
 
                 {/* Recent Transactions */}
                 {mutualFundTxns.length > 0 && (
-                  <Card className="border border-border/70">
+                  <Card className="card-elevated">
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium">Recent MF Transactions</CardTitle>
-                      <CardDescription>{mutualFundTxns.length} total entries</CardDescription>
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-500/10">
+                          <IconFileSpreadsheet className="size-3.5 text-sky-500" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-sm font-medium">Recent MF Transactions</CardTitle>
+                          <CardDescription className="text-[11px]">{mutualFundTxns.length} total entries</CardDescription>
+                        </div>
+                      </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="space-y-2">
+                      <div className="space-y-1">
                         {mutualFundTxns.slice(0, 8).map((txn) => (
-                          <div key={txn._id} className="flex items-center justify-between border-b border-border/40 pb-2 last:border-0 last:pb-0">
+                          <div key={txn._id} className="flex items-center justify-between rounded-lg px-3 py-2.5 hover:bg-muted/30 transition-colors border-b border-border/30 last:border-0">
                             <div>
                               <div className="text-sm font-medium max-w-[300px] truncate">{txn.schemeName}</div>
-                              <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                                <Badge variant="outline" className={`text-[10px] px-1.5 py-0 ${txn.transactionType === "PURCHASE" ? "text-emerald-600 border-emerald-200" : "text-rose-600 border-rose-200"}`}>
+                              <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                                <span className={`text-[10px] font-semibold px-1.5 py-0 rounded ${txn.transactionType === "PURCHASE" ? "text-emerald-700 dark:text-emerald-300 bg-emerald-500/10" : "text-rose-700 dark:text-rose-300 bg-rose-500/10"}`}>
                                   {txn.transactionType}
-                                </Badge>
+                                </span>
                                 {txn.date}
                               </div>
                             </div>
                             <div className="text-right">
                               <div className="text-sm font-semibold tabular-nums">{fmt(Number(txn.amount || 0))}</div>
-                              {Number(txn.units) > 0 && <div className="text-xs text-muted-foreground">{Number(txn.units).toFixed(3)} units</div>}
+                              {Number(txn.units) > 0 && <div className="text-[11px] text-muted-foreground">{Number(txn.units).toFixed(3)} units</div>}
                             </div>
                           </div>
                         ))}
@@ -1651,23 +1775,23 @@ export default function InvestmentsPage() {
 
               {/* ── SIPs TAB ── */}
               <TabsContent value="sips" className="space-y-4">
-                <div className="flex flex-wrap items-center gap-3">
-                  <Button size="sm" variant="outline" onClick={() => setShowAddSip(!showAddSip)}>
-                    <IconPlus className="mr-1 size-4" /> Add SIP
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button size="sm" variant="outline" className="rounded-lg" onClick={() => setShowAddSip(!showAddSip)}>
+                    <IconPlus className="mr-1.5 size-3.5" /> Add SIP
                   </Button>
-                  <label className="flex cursor-pointer items-center gap-2 rounded-md border border-dashed border-border/70 px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-accent">
-                    <IconUpload className="size-4" /> Import from MF Order History
+                  <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-border/60 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:border-border">
+                    <IconUpload className="size-3.5" /> Import from MF Order History
                     <input type="file" accept=".csv" className="hidden" onChange={(e) => handleImportSips(e.target.files?.[0])} />
                   </label>
                   <ReplaceToggle checked={replaceSips} onChange={setReplaceSips} label="Replace existing on import" />
                 </div>
-                {sipImportMsg && <div className="rounded-md border border-border/60 bg-muted/50 px-3 py-2 text-xs text-muted-foreground">{sipImportMsg}</div>}
-                <div className="text-xs text-muted-foreground">
-                  SIPs are auto-detected from Groww MF Order History: schemes with 2+ PURCHASE transactions are treated as SIPs. XIRR from transaction data: {fundXIRR !== null ? `${fundXIRR >= 0 ? "+" : ""}${fundXIRR.toFixed(1)}%` : "N/A"}.
+                {sipImportMsg && <div className="rounded-lg border border-border/50 bg-muted/40 px-3 py-2 text-xs text-muted-foreground">{sipImportMsg}</div>}
+                <div className="text-[11px] text-muted-foreground/80 leading-relaxed">
+                  SIPs auto-detected from Groww MF Order History (2+ PURCHASE transactions per scheme). XIRR: {fundXIRR !== null ? <span className={`font-semibold ${fundXIRR >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>{fundXIRR >= 0 ? "+" : ""}{fundXIRR.toFixed(1)}%</span> : <span className="text-muted-foreground">N/A</span>}
                 </div>
 
                 {showAddSip && (
-                  <Card className="border border-border/70">
+                  <Card className="card-elevated">
                     <CardContent className="pt-4 space-y-3">
                       <div className="grid gap-3 sm:grid-cols-3">
                         <div className="space-y-1"><Label className="text-xs">Scheme Name</Label><Input placeholder="Axis Gold Fund" value={sipForm.name} onChange={(e) => setSipForm({ ...sipForm, name: e.target.value })} /></div>
@@ -1681,106 +1805,147 @@ export default function InvestmentsPage() {
                           <Select value={sipForm.status} onValueChange={(v) => setSipForm({ ...sipForm, status: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="active">Active</SelectItem><SelectItem value="paused">Paused</SelectItem><SelectItem value="cancelled">Cancelled</SelectItem></SelectContent></Select>
                         </div>
                       </div>
-                      <Button size="sm" onClick={handleAddSip}><IconPlus className="mr-1 size-4" /> Add</Button>
+                      <Button size="sm" className="rounded-lg" onClick={handleAddSip}><IconPlus className="mr-1 size-4" /> Add</Button>
                     </CardContent>
                   </Card>
                 )}
 
                 {/* SIP Summary */}
-                <div className="grid gap-4 sm:grid-cols-3">
-                  <Card className="border border-border/70">
+                <div className="grid gap-3 sm:grid-cols-3">
+                  <Card className="card-elevated">
                     <CardContent className="p-4">
-                      <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Monthly Outflow</div>
-                      <div className="mt-1 text-2xl font-semibold tabular-nums">{fmt(sipTotals.monthlyTotal)}</div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Monthly Outflow</span>
+                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-500/10">
+                          <IconCoin className="size-3.5 text-violet-500" />
+                        </div>
+                      </div>
+                      <div className="mt-2 text-2xl font-bold tabular-nums">{fmt(sipTotals.monthlyTotal)}</div>
                     </CardContent>
                   </Card>
-                  <Card className="border border-border/70">
+                  <Card className="card-elevated">
                     <CardContent className="p-4">
-                      <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Yearly Outflow</div>
-                      <div className="mt-1 text-2xl font-semibold tabular-nums">{fmt(sipTotals.yearlyTotal)}</div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Yearly Outflow</span>
+                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-500/10">
+                          <IconWallet className="size-3.5 text-orange-500" />
+                        </div>
+                      </div>
+                      <div className="mt-2 text-2xl font-bold tabular-nums">{fmt(sipTotals.yearlyTotal)}</div>
                     </CardContent>
                   </Card>
-                  <Card className="border border-border/70">
+                  <Card className="card-elevated">
                     <CardContent className="p-4">
-                      <div className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Active SIPs</div>
-                      <div className="mt-1 text-2xl font-semibold">{sipTotals.active} <span className="text-sm text-muted-foreground font-normal">of {sipTotals.total}</span></div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">Active SIPs</span>
+                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/10">
+                          <IconTrendingUp className="size-3.5 text-emerald-500" />
+                        </div>
+                      </div>
+                      <div className="mt-2 text-2xl font-bold">{sipTotals.active} <span className="text-sm text-muted-foreground font-normal">of {sipTotals.total}</span></div>
                     </CardContent>
                   </Card>
                 </div>
 
-                {isLoading ? <Skeleton className="h-40" /> : sips.length === 0 ? (
-                  <Card className="border border-dashed border-border/70"><CardContent className="py-12 text-center text-sm text-muted-foreground">No SIPs yet. Add manually or import your Groww MF Order History CSV.</CardContent></Card>
+                {isLoading ? (
+                  <div className="space-y-3"><Skeleton className="h-10 rounded-lg" /><Skeleton className="h-40 rounded-lg" /></div>
+                ) : sips.length === 0 ? (
+                  <Card className="card-elevated border-dashed">
+                    <CardContent className="py-16 text-center">
+                      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted/60 mx-auto mb-3">
+                        <IconCoin className="size-6 text-muted-foreground/60" />
+                      </div>
+                      <p className="text-sm font-medium text-muted-foreground">No SIPs yet</p>
+                      <p className="text-xs text-muted-foreground/70 mt-1">Add manually or import your Groww MF Order History CSV</p>
+                    </CardContent>
+                  </Card>
                 ) : (
-                  <Card className="border border-border/70 overflow-hidden">
+                  <Card className="card-elevated overflow-hidden">
                     <Table>
                       <TableHeader>
-                        <TableRow className="bg-muted/30">
-                          <TableHead className="font-medium">Scheme</TableHead>
-                          <TableHead className="font-medium">Provider</TableHead>
-                          <TableHead className="text-right font-medium">Monthly</TableHead>
-                          <TableHead className="font-medium">Start Date</TableHead>
-                          <TableHead className="font-medium">Status</TableHead>
+                        <TableRow className="bg-muted/30 hover:bg-muted/30">
+                          <TableHead className="font-semibold text-xs">Scheme</TableHead>
+                          <TableHead className="font-semibold text-xs">Provider</TableHead>
+                          <TableHead className="text-right font-semibold text-xs">Monthly</TableHead>
+                          <TableHead className="font-semibold text-xs">Start Date</TableHead>
+                          <TableHead className="font-semibold text-xs">Status</TableHead>
                           <TableHead className="w-[80px]" />
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {sips.map((s) => (
-                          <TableRow key={s._id} className="group">
+                          <TableRow key={s._id} className="group hover:bg-muted/20 transition-colors">
                             <TableCell>
-                              <div className="font-medium max-w-[260px] truncate">{s.name}</div>
-                              {s.expectedAnnualReturn && <div className="text-xs text-muted-foreground">Exp. {s.expectedAnnualReturn}% p.a.</div>}
+                              <div className="font-semibold text-sm max-w-[260px] truncate">{s.name}</div>
+                              {s.expectedAnnualReturn && <div className="text-[11px] text-muted-foreground">Exp. {s.expectedAnnualReturn}% p.a.</div>}
                             </TableCell>
-                            <TableCell className="text-muted-foreground">{s.provider}</TableCell>
-                            <TableCell className="text-right font-semibold tabular-nums">{fmt(s.monthlyAmount)}</TableCell>
-                            <TableCell className="text-muted-foreground">{s.startDate}</TableCell>
+                            <TableCell className="text-muted-foreground text-sm">{s.provider}</TableCell>
+                            <TableCell className="text-right font-bold tabular-nums text-sm">{fmt(s.monthlyAmount)}</TableCell>
+                            <TableCell className="text-muted-foreground text-sm">{s.startDate}</TableCell>
                             <TableCell>
-                              <Badge variant="outline" className={`text-xs ${s.status === "active" ? "text-emerald-600 border-emerald-200" : s.status === "paused" ? "text-amber-600 border-amber-200" : "text-rose-600 border-rose-200"}`}>
+                              <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-md ${s.status === "active" ? "text-emerald-700 dark:text-emerald-300 bg-emerald-500/10" : s.status === "paused" ? "text-amber-700 dark:text-amber-300 bg-amber-500/10" : "text-rose-700 dark:text-rose-300 bg-rose-500/10"}`}>
                                 {s.status}
-                              </Badge>
+                              </span>
                             </TableCell>
                             <TableCell>
-                              <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => openEditSip(s)}><IconEdit className="size-3.5" /></Button>
-                                <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteSip(s._id)}><IconTrash className="size-3.5" /></Button>
+                              <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => openEditSip(s)}><IconEdit className="size-3.5" /></Button>
+                                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-destructive hover:text-destructive" onClick={() => handleDeleteSip(s._id)}><IconTrash className="size-3.5" /></Button>
                               </div>
                             </TableCell>
                           </TableRow>
                         ))}
                       </TableBody>
                     </Table>
-                    <div className="flex items-center justify-between border-t bg-muted/30 px-4 py-2 text-sm">
-                      <span className="font-medium">{sips.length} SIP(s)</span>
-                      <span>Monthly total: <strong>{fmt(sipTotals.monthlyTotal)}</strong></span>
+                    <div className="flex items-center justify-between border-t bg-muted/20 px-4 py-2.5 text-xs">
+                      <span className="font-semibold uppercase tracking-wider text-muted-foreground">{sips.length} SIP(s)</span>
+                      <span>Monthly total: <strong className="font-semibold">{fmt(sipTotals.monthlyTotal)}</strong></span>
                     </div>
                   </Card>
                 )}
 
                 {/* SIP Projection Calculator */}
                 {sipProjections && (
-                  <Card className="border border-border/70">
+                  <Card className="card-elevated">
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium flex items-center gap-2">
-                        <IconTrendingUp className="size-4" /> SIP Projection Calculator
-                      </CardTitle>
-                      <CardDescription className="text-xs">
-                        Projected growth at {sipProjections.avgReturn}% annualized return with {fmt(sipProjections.monthlyTotal)}/month SIP
-                      </CardDescription>
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/10">
+                          <IconTrendingUp className="size-3.5 text-emerald-500" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-sm font-medium">SIP Projection Calculator</CardTitle>
+                          <CardDescription className="text-[11px]">
+                            {sipProjections.avgReturn}% annualized return, {fmt(sipProjections.monthlyTotal)}/month
+                          </CardDescription>
+                        </div>
+                      </div>
                     </CardHeader>
                     <CardContent>
                       <div className="grid gap-4 @[640px]/main:grid-cols-2">
                         {/* Projection Chart */}
-                        <div className="h-[200px]">
+                        <div className="h-[220px]">
                           <ResponsiveContainer width="100%" height="100%">
                             <AreaChart data={sipProjections.chartData} margin={{ left: 0, right: 5, top: 5, bottom: 0 }}>
-                              <CartesianGrid strokeDasharray="3 3" className="stroke-muted" />
-                              <XAxis dataKey="year" fontSize={10} tickFormatter={(v: number) => `${v}Y`} axisLine={false} tickLine={false} />
-                              <YAxis fontSize={9} tickFormatter={(v: number) => fmtCompact(v)} axisLine={false} tickLine={false} />
+                              <defs>
+                                <linearGradient id="sipInvestedGrad" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="var(--muted-foreground)" stopOpacity={0.2} />
+                                  <stop offset="95%" stopColor="var(--muted-foreground)" stopOpacity={0} />
+                                </linearGradient>
+                                <linearGradient id="sipProjectedGrad" x1="0" y1="0" x2="0" y2="1">
+                                  <stop offset="5%" stopColor="var(--chart-1)" stopOpacity={0.25} />
+                                  <stop offset="95%" stopColor="var(--chart-1)" stopOpacity={0} />
+                                </linearGradient>
+                              </defs>
+                              <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" strokeOpacity={0.4} />
+                              <XAxis dataKey="year" tick={{ fontSize: 10, fill: "var(--muted-foreground)" }} tickFormatter={(v: number) => `${v}Y`} axisLine={false} tickLine={false} />
+                              <YAxis tick={{ fontSize: 9, fill: "var(--muted-foreground)" }} tickFormatter={(v: number) => fmtCompact(v)} axisLine={false} tickLine={false} />
                               <Tooltip
+                                contentStyle={{ borderRadius: 12, border: "1px solid var(--border)", background: "var(--card)", color: "var(--card-foreground)", boxShadow: "0 4px 12px oklch(0 0 0 / 8%)" }}
                                 formatter={(value: number, name: string) => [fmt(value), name === "invested" ? "Invested" : "Projected"]}
                                 labelFormatter={(label: number) => `Year ${label}`}
                               />
-                              <Area type="monotone" dataKey="invested" name="Invested" stroke="#94a3b8" fill="#94a3b8" fillOpacity={0.15} strokeWidth={1.5} />
-                              <Area type="monotone" dataKey="projected" name="Projected" stroke={COLORS.emerald} fill={COLORS.emerald} fillOpacity={0.15} strokeWidth={2} />
+                              <Area type="monotone" dataKey="invested" name="Invested" stroke="var(--muted-foreground)" fill="url(#sipInvestedGrad)" strokeWidth={1.5} />
+                              <Area type="monotone" dataKey="projected" name="Projected" stroke="var(--chart-1)" fill="url(#sipProjectedGrad)" strokeWidth={2} />
                             </AreaChart>
                           </ResponsiveContainer>
                         </div>
@@ -1788,14 +1953,14 @@ export default function InvestmentsPage() {
                         {/* Projection Table */}
                         <div className="space-y-2">
                           {sipProjections.projections.map((p) => (
-                            <div key={p.years} className="flex items-center justify-between rounded-lg border border-border/50 px-3 py-2">
+                            <div key={p.years} className="flex items-center justify-between rounded-xl bg-muted/20 border border-border/30 px-3.5 py-2.5 hover:bg-muted/30 transition-colors">
                               <div>
-                                <div className="text-sm font-medium">{p.years} Years</div>
+                                <div className="text-sm font-semibold">{p.years} Years</div>
                                 <div className="text-[10px] text-muted-foreground">Invested: {fmt(p.invested)}</div>
                               </div>
                               <div className="text-right">
-                                <div className="text-sm font-bold tabular-nums text-emerald-600">{fmt(p.projected)}</div>
-                                <div className="text-[10px] text-emerald-600">+{fmt(p.returns)} ({p.returnPct.toFixed(0)}%)</div>
+                                <div className="text-sm font-bold tabular-nums text-emerald-600 dark:text-emerald-400">{fmt(p.projected)}</div>
+                                <div className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400">+{fmt(p.returns)} ({p.returnPct.toFixed(0)}%)</div>
                               </div>
                             </div>
                           ))}
@@ -1807,31 +1972,36 @@ export default function InvestmentsPage() {
 
                 {/* SIP Deduction Matching */}
                 {(sipMatches.length > 0 || unmatchedGrowwTxns.length > 0) && (
-                  <Card className="border border-border/70">
+                  <Card className="card-elevated">
                     <CardHeader className="pb-2">
-                      <CardTitle className="text-sm font-medium flex items-center gap-2">
-                        <IconWallet className="size-4" /> SIP Deduction Matching
-                      </CardTitle>
-                      <CardDescription className="text-xs">
-                        Bank transactions matched to registered SIPs ({sipMatches.length} matched, {unmatchedGrowwTxns.length} unmatched)
-                      </CardDescription>
+                      <div className="flex items-center gap-2">
+                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-500/10">
+                          <IconWallet className="size-3.5 text-sky-500" />
+                        </div>
+                        <div>
+                          <CardTitle className="text-sm font-medium">SIP Deduction Matching</CardTitle>
+                          <CardDescription className="text-[11px]">
+                            {sipMatches.length} matched, {unmatchedGrowwTxns.length} unmatched bank transactions
+                          </CardDescription>
+                        </div>
+                      </div>
                     </CardHeader>
-                    <CardContent className="space-y-3">
+                    <CardContent className="space-y-4">
                       {sipMatches.length > 0 && (
                         <div>
-                          <div className="text-xs font-medium text-muted-foreground mb-2">Matched Deductions</div>
+                          <div className="text-xs font-semibold text-muted-foreground mb-2">Matched Deductions</div>
                           <div className="space-y-1.5">
                             {sipMatches.slice(0, 10).map((m, i) => (
-                              <div key={i} className="flex items-center justify-between rounded-lg border border-emerald-200/60 bg-emerald-50/30 dark:bg-emerald-950/10 px-3 py-2">
+                              <div key={i} className="flex items-center justify-between rounded-xl border border-emerald-200/50 dark:border-emerald-800/30 bg-emerald-50/40 dark:bg-emerald-950/10 px-3.5 py-2.5">
                                 <div>
-                                  <div className="text-xs font-medium max-w-[260px] truncate">{m.sipName}</div>
-                                  <div className="text-[10px] text-muted-foreground">{m.bankTxn.date} - {m.bankTxn.description.slice(0, 40)}</div>
+                                  <div className="text-xs font-semibold max-w-[260px] truncate">{m.sipName}</div>
+                                  <div className="text-[10px] text-muted-foreground mt-0.5">{m.bankTxn.date} - {m.bankTxn.description.slice(0, 40)}</div>
                                 </div>
-                                <div className="text-right">
-                                  <div className="text-xs font-semibold tabular-nums">{fmt(m.bankTxn.amount)}</div>
-                                  <Badge variant="outline" className="text-[9px] text-emerald-600 border-emerald-200">
+                                <div className="text-right flex items-center gap-2">
+                                  <div className="text-xs font-bold tabular-nums">{fmt(m.bankTxn.amount)}</div>
+                                  <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-md text-emerald-700 dark:text-emerald-300 bg-emerald-500/15">
                                     matched
-                                  </Badge>
+                                  </span>
                                 </div>
                               </div>
                             ))}
@@ -1840,19 +2010,19 @@ export default function InvestmentsPage() {
                       )}
                       {unmatchedGrowwTxns.length > 0 && (
                         <div>
-                          <div className="text-xs font-medium text-muted-foreground mb-2">Unmatched Groww Transactions</div>
+                          <div className="text-xs font-semibold text-muted-foreground mb-2">Unmatched Groww Transactions</div>
                           <div className="space-y-1.5">
                             {unmatchedGrowwTxns.slice(0, 8).map((txn, i) => (
-                              <div key={i} className="flex items-center justify-between rounded-lg border border-amber-200/60 bg-amber-50/30 dark:bg-amber-950/10 px-3 py-2">
+                              <div key={i} className="flex items-center justify-between rounded-xl border border-amber-200/50 dark:border-amber-800/30 bg-amber-50/40 dark:bg-amber-950/10 px-3.5 py-2.5">
                                 <div>
                                   <div className="text-xs text-muted-foreground">{txn.date}</div>
-                                  <div className="text-[10px] text-muted-foreground max-w-[300px] truncate">{txn.description}</div>
+                                  <div className="text-[10px] text-muted-foreground max-w-[300px] truncate mt-0.5">{txn.description}</div>
                                 </div>
-                                <div className="text-right">
-                                  <div className="text-xs font-semibold tabular-nums">{fmt(txn.amount)}</div>
-                                  <Badge variant="outline" className="text-[9px] text-amber-600 border-amber-200">
+                                <div className="text-right flex items-center gap-2">
+                                  <div className="text-xs font-bold tabular-nums">{fmt(txn.amount)}</div>
+                                  <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-md text-amber-700 dark:text-amber-300 bg-amber-500/15">
                                     unmatched
-                                  </Badge>
+                                  </span>
                                 </div>
                               </div>
                             ))}
@@ -1864,70 +2034,80 @@ export default function InvestmentsPage() {
                 )}
               </TabsContent>
             </Tabs>
+            </motion.div>
           </div>
         </div>
       </SidebarInset>
 
       {/* ── Edit Stock Dialog ── */}
       <Dialog open={!!editingStock} onOpenChange={(open) => { if (!open) setEditingStock(null) }}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Edit Stock</DialogTitle><DialogDescription>Update holding details</DialogDescription></DialogHeader>
-          <div className="space-y-3">
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><IconEdit className="size-4 text-primary" /> Edit Stock</DialogTitle>
+            <DialogDescription>Update holding details for {editStockForm.symbol}</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1"><Label>Symbol</Label><Input value={editStockForm.symbol} onChange={(e) => setEditStockForm({ ...editStockForm, symbol: e.target.value })} /></div>
-              <div className="space-y-1"><Label>Exchange</Label>
+              <div className="space-y-1.5"><Label className="text-xs font-medium">Symbol</Label><Input value={editStockForm.symbol} onChange={(e) => setEditStockForm({ ...editStockForm, symbol: e.target.value })} /></div>
+              <div className="space-y-1.5"><Label className="text-xs font-medium">Exchange</Label>
                 <Select value={editStockForm.exchange} onValueChange={(v) => setEditStockForm({ ...editStockForm, exchange: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="NSE">NSE</SelectItem><SelectItem value="BSE">BSE</SelectItem><SelectItem value="NASDAQ">NASDAQ</SelectItem><SelectItem value="NYSE">NYSE</SelectItem></SelectContent></Select>
               </div>
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
-              <div className="space-y-1"><Label>Shares</Label><Input type="number" value={editStockForm.shares} onChange={(e) => setEditStockForm({ ...editStockForm, shares: e.target.value })} /></div>
-              <div className="space-y-1"><Label>Avg Cost</Label><Input type="number" value={editStockForm.averageCost} onChange={(e) => setEditStockForm({ ...editStockForm, averageCost: e.target.value })} /></div>
-              <div className="space-y-1"><Label>Exp. Return %</Label><Input type="number" value={editStockForm.expectedAnnualReturn} onChange={(e) => setEditStockForm({ ...editStockForm, expectedAnnualReturn: e.target.value })} /></div>
+              <div className="space-y-1.5"><Label className="text-xs font-medium">Shares</Label><Input type="number" value={editStockForm.shares} onChange={(e) => setEditStockForm({ ...editStockForm, shares: e.target.value })} /></div>
+              <div className="space-y-1.5"><Label className="text-xs font-medium">Avg Cost</Label><Input type="number" value={editStockForm.averageCost} onChange={(e) => setEditStockForm({ ...editStockForm, averageCost: e.target.value })} /></div>
+              <div className="space-y-1.5"><Label className="text-xs font-medium">Exp. Return %</Label><Input type="number" value={editStockForm.expectedAnnualReturn} onChange={(e) => setEditStockForm({ ...editStockForm, expectedAnnualReturn: e.target.value })} /></div>
             </div>
           </div>
-          <DialogFooter><Button variant="outline" onClick={() => setEditingStock(null)}>Cancel</Button><Button onClick={saveEditStock} disabled={isSavingEdit}>{isSavingEdit ? "Saving..." : "Save"}</Button></DialogFooter>
+          <DialogFooter className="gap-2"><Button variant="outline" className="rounded-lg" onClick={() => setEditingStock(null)}>Cancel</Button><Button className="rounded-lg" onClick={saveEditStock} disabled={isSavingEdit}>{isSavingEdit ? "Saving..." : "Save Changes"}</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* ── Edit MF Dialog ── */}
       <Dialog open={!!editingFund} onOpenChange={(open) => { if (!open) setEditingFund(null) }}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Edit Mutual Fund</DialogTitle><DialogDescription>Update fund details</DialogDescription></DialogHeader>
-          <div className="space-y-3">
-            <div className="space-y-1"><Label>Scheme Name</Label><Input value={editFundForm.schemeName} onChange={(e) => setEditFundForm({ ...editFundForm, schemeName: e.target.value })} /></div>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><IconEdit className="size-4 text-primary" /> Edit Mutual Fund</DialogTitle>
+            <DialogDescription>Update fund details</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div className="space-y-1.5"><Label className="text-xs font-medium">Scheme Name</Label><Input value={editFundForm.schemeName} onChange={(e) => setEditFundForm({ ...editFundForm, schemeName: e.target.value })} /></div>
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1"><Label>AMC</Label><Input value={editFundForm.amc} onChange={(e) => setEditFundForm({ ...editFundForm, amc: e.target.value })} /></div>
-              <div className="space-y-1"><Label>Category</Label><Input value={editFundForm.category} onChange={(e) => setEditFundForm({ ...editFundForm, category: e.target.value })} /></div>
+              <div className="space-y-1.5"><Label className="text-xs font-medium">AMC</Label><Input value={editFundForm.amc} onChange={(e) => setEditFundForm({ ...editFundForm, amc: e.target.value })} /></div>
+              <div className="space-y-1.5"><Label className="text-xs font-medium">Category</Label><Input value={editFundForm.category} onChange={(e) => setEditFundForm({ ...editFundForm, category: e.target.value })} /></div>
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
-              <div className="space-y-1"><Label>Units</Label><Input type="number" step="0.001" value={editFundForm.units} onChange={(e) => setEditFundForm({ ...editFundForm, units: e.target.value })} /></div>
-              <div className="space-y-1"><Label>Invested</Label><Input type="number" value={editFundForm.investedValue} onChange={(e) => setEditFundForm({ ...editFundForm, investedValue: e.target.value })} /></div>
-              <div className="space-y-1"><Label>Current Value</Label><Input type="number" value={editFundForm.currentValue} onChange={(e) => setEditFundForm({ ...editFundForm, currentValue: e.target.value })} /></div>
+              <div className="space-y-1.5"><Label className="text-xs font-medium">Units</Label><Input type="number" step="0.001" value={editFundForm.units} onChange={(e) => setEditFundForm({ ...editFundForm, units: e.target.value })} /></div>
+              <div className="space-y-1.5"><Label className="text-xs font-medium">Invested</Label><Input type="number" value={editFundForm.investedValue} onChange={(e) => setEditFundForm({ ...editFundForm, investedValue: e.target.value })} /></div>
+              <div className="space-y-1.5"><Label className="text-xs font-medium">Current Value</Label><Input type="number" value={editFundForm.currentValue} onChange={(e) => setEditFundForm({ ...editFundForm, currentValue: e.target.value })} /></div>
             </div>
           </div>
-          <DialogFooter><Button variant="outline" onClick={() => setEditingFund(null)}>Cancel</Button><Button onClick={saveEditFund} disabled={isSavingEdit}>{isSavingEdit ? "Saving..." : "Save"}</Button></DialogFooter>
+          <DialogFooter className="gap-2"><Button variant="outline" className="rounded-lg" onClick={() => setEditingFund(null)}>Cancel</Button><Button className="rounded-lg" onClick={saveEditFund} disabled={isSavingEdit}>{isSavingEdit ? "Saving..." : "Save Changes"}</Button></DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* ── Edit SIP Dialog ── */}
       <Dialog open={!!editingSip} onOpenChange={(open) => { if (!open) setEditingSip(null) }}>
-        <DialogContent>
-          <DialogHeader><DialogTitle>Edit SIP</DialogTitle><DialogDescription>Update SIP details</DialogDescription></DialogHeader>
-          <div className="space-y-3">
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2"><IconEdit className="size-4 text-primary" /> Edit SIP</DialogTitle>
+            <DialogDescription>Update SIP details</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1"><Label>Scheme Name</Label><Input value={editSipForm.name} onChange={(e) => setEditSipForm({ ...editSipForm, name: e.target.value })} /></div>
-              <div className="space-y-1"><Label>Provider</Label><Input value={editSipForm.provider} onChange={(e) => setEditSipForm({ ...editSipForm, provider: e.target.value })} /></div>
+              <div className="space-y-1.5"><Label className="text-xs font-medium">Scheme Name</Label><Input value={editSipForm.name} onChange={(e) => setEditSipForm({ ...editSipForm, name: e.target.value })} /></div>
+              <div className="space-y-1.5"><Label className="text-xs font-medium">Provider</Label><Input value={editSipForm.provider} onChange={(e) => setEditSipForm({ ...editSipForm, provider: e.target.value })} /></div>
             </div>
             <div className="grid gap-3 sm:grid-cols-3">
-              <div className="space-y-1"><Label>Monthly Amount</Label><Input type="number" value={editSipForm.monthlyAmount} onChange={(e) => setEditSipForm({ ...editSipForm, monthlyAmount: e.target.value })} /></div>
-              <div className="space-y-1"><Label>Start Date</Label><Input type="date" value={editSipForm.startDate} onChange={(e) => setEditSipForm({ ...editSipForm, startDate: e.target.value })} /></div>
-              <div className="space-y-1"><Label>Exp. Return %</Label><Input type="number" value={editSipForm.expectedAnnualReturn} onChange={(e) => setEditSipForm({ ...editSipForm, expectedAnnualReturn: e.target.value })} /></div>
+              <div className="space-y-1.5"><Label className="text-xs font-medium">Monthly Amount</Label><Input type="number" value={editSipForm.monthlyAmount} onChange={(e) => setEditSipForm({ ...editSipForm, monthlyAmount: e.target.value })} /></div>
+              <div className="space-y-1.5"><Label className="text-xs font-medium">Start Date</Label><Input type="date" value={editSipForm.startDate} onChange={(e) => setEditSipForm({ ...editSipForm, startDate: e.target.value })} /></div>
+              <div className="space-y-1.5"><Label className="text-xs font-medium">Exp. Return %</Label><Input type="number" value={editSipForm.expectedAnnualReturn} onChange={(e) => setEditSipForm({ ...editSipForm, expectedAnnualReturn: e.target.value })} /></div>
             </div>
-            <div className="space-y-1"><Label>Status</Label>
+            <div className="space-y-1.5"><Label className="text-xs font-medium">Status</Label>
               <Select value={editSipForm.status} onValueChange={(v) => setEditSipForm({ ...editSipForm, status: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="active">Active</SelectItem><SelectItem value="paused">Paused</SelectItem><SelectItem value="cancelled">Cancelled</SelectItem></SelectContent></Select>
             </div>
           </div>
-          <DialogFooter><Button variant="outline" onClick={() => setEditingSip(null)}>Cancel</Button><Button onClick={saveEditSip} disabled={isSavingEdit}>{isSavingEdit ? "Saving..." : "Save"}</Button></DialogFooter>
+          <DialogFooter className="gap-2"><Button variant="outline" className="rounded-lg" onClick={() => setEditingSip(null)}>Cancel</Button><Button className="rounded-lg" onClick={saveEditSip} disabled={isSavingEdit}>{isSavingEdit ? "Saving..." : "Save Changes"}</Button></DialogFooter>
         </DialogContent>
       </Dialog>
     </SidebarProvider>

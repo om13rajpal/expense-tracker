@@ -162,6 +162,21 @@ export async function DELETE(request: NextRequest) {
     try {
       const { searchParams } = new URL(req.url)
       const id = searchParams.get("id")
+      const all = searchParams.get("all")
+
+      const db = await getMongoDb()
+
+      // Bulk delete all rules for user
+      if (all === "true") {
+        const result = await db.collection("categorization_rules").deleteMany({
+          userId: user.userId,
+        })
+        return NextResponse.json(
+          { success: true, deleted: result.deletedCount },
+          { status: 200, headers: corsHeaders() }
+        )
+      }
+
       if (!id || !isValidObjectId(id)) {
         return NextResponse.json(
           { success: false, message: "Missing or invalid rule id." },
@@ -169,7 +184,6 @@ export async function DELETE(request: NextRequest) {
         )
       }
 
-      const db = await getMongoDb()
       const result = await db.collection("categorization_rules").deleteOne({
         _id: new ObjectId(id),
         userId: user.userId,

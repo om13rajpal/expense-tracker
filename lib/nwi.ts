@@ -33,10 +33,13 @@ const DEFAULT_WANTS_CATEGORIES: TransactionCategory[] = [
 ];
 
 const DEFAULT_INVESTMENTS_CATEGORIES: TransactionCategory[] = [
-  TransactionCategory.SAVINGS,
   TransactionCategory.INVESTMENT,
   TransactionCategory.LOAN_PAYMENT,
   TransactionCategory.TAX,
+];
+
+const DEFAULT_SAVINGS_CATEGORIES: TransactionCategory[] = [
+  TransactionCategory.SAVINGS,
 ];
 
 export function getDefaultNWIConfig(userId: string): NWIConfig {
@@ -44,7 +47,8 @@ export function getDefaultNWIConfig(userId: string): NWIConfig {
     userId,
     needs: { percentage: 50, categories: [...DEFAULT_NEEDS_CATEGORIES] },
     wants: { percentage: 30, categories: [...DEFAULT_WANTS_CATEGORIES] },
-    investments: { percentage: 20, categories: [...DEFAULT_INVESTMENTS_CATEGORIES] },
+    investments: { percentage: 10, categories: [...DEFAULT_INVESTMENTS_CATEGORIES] },
+    savings: { percentage: 10, categories: [...DEFAULT_SAVINGS_CATEGORIES] },
     updatedAt: new Date().toISOString(),
   };
 }
@@ -66,6 +70,7 @@ export function classifyTransaction(
   const { category } = transaction;
 
   if (config.needs.categories.includes(category)) return 'needs';
+  if (config.savings.categories.includes(category)) return 'savings';
   if (config.investments.categories.includes(category)) return 'investments';
   if (config.wants.categories.includes(category)) return 'wants';
 
@@ -147,5 +152,6 @@ export function calculateNWISplit(
     needs: buildBucket('Needs', config.needs.percentage, totalIncome, completedExpenseInvestment, config, 'needs'),
     wants: buildBucket('Wants', config.wants.percentage, totalIncome, completedExpenseInvestment, config, 'wants'),
     investments: buildBucket('Investments', config.investments.percentage, totalIncome, completedExpenseInvestment, config, 'investments'),
+    savings: buildBucket('Savings', config.savings.percentage, totalIncome, completedExpenseInvestment, config, 'savings'),
   };
 }

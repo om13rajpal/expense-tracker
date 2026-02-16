@@ -1,12 +1,19 @@
 "use client"
 
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { MonthlyMetrics } from "@/lib/monthly-utils"
-import { IconTrendingUp, IconTrendingDown, IconAlertCircle, IconCoin, IconReceipt, IconPigMoney } from "@tabler/icons-react"
+import { IconTrendingUp, IconTrendingDown, IconAlertCircle } from "@tabler/icons-react"
 
 interface MonthlySummaryCardProps {
   metrics: MonthlyMetrics
+}
+
+function formatCurrency(amount: number): string {
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
+    maximumFractionDigits: 0,
+  }).format(amount)
 }
 
 export function MonthlySummaryCard({ metrics }: MonthlySummaryCardProps) {
@@ -14,101 +21,84 @@ export function MonthlySummaryCard({ metrics }: MonthlySummaryCardProps) {
   const isPartialMonth = metrics.isPartialMonth
 
   return (
-    <Card className="col-span-full border border-border/70">
-      <CardHeader>
-        <div className="flex flex-wrap items-center justify-between gap-4">
-          <div>
-            <CardTitle className="text-xl font-semibold">Monthly Summary</CardTitle>
-            <CardDescription>Snapshot for {metrics.monthLabel}</CardDescription>
-          </div>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="border-border/60">
-              {metrics.monthLabel}
+    <div className="rounded-xl border border-border/60 bg-card p-5 space-y-5">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div>
+          <h3 className="text-sm font-semibold">Monthly Summary</h3>
+          <p className="text-xs text-muted-foreground">Snapshot for {metrics.monthLabel}</p>
+        </div>
+        <div className="flex items-center gap-2">
+          <Badge variant="outline" className="text-xs">{metrics.monthLabel}</Badge>
+          {isPartialMonth && (
+            <Badge variant="secondary" className="text-[10px]">
+              <IconAlertCircle className="mr-1 size-3" />
+              Partial Month
             </Badge>
-            {isPartialMonth && (
-              <Badge variant="secondary" className="border border-warning/30 bg-warning/10 text-warning-foreground">
-                <IconAlertCircle className="mr-1 size-3" />
-                Partial Month
-              </Badge>
+          )}
+        </div>
+      </div>
+
+      {isPartialMonth && (
+        <p className="text-[11px] text-muted-foreground">
+          {metrics.daysInPeriod} days covered ({metrics.startDate.toLocaleDateString()} - {metrics.endDate.toLocaleDateString()})
+        </p>
+      )}
+
+      {/* Top row: Opening, Closing, Net Change, Growth */}
+      <div className="rounded-lg border border-border/40 divide-x divide-border/40 grid grid-cols-4">
+        <div className="px-4 py-3">
+          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Opening</p>
+          <p className="text-lg font-semibold tabular-nums mt-0.5">{formatCurrency(metrics.openingBalance)}</p>
+        </div>
+        <div className="px-4 py-3">
+          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Closing</p>
+          <p className="text-lg font-semibold tabular-nums mt-0.5">{formatCurrency(metrics.closingBalance)}</p>
+        </div>
+        <div className="px-4 py-3">
+          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Net Change</p>
+          <div className="flex items-center gap-1.5 mt-0.5">
+            <p className={`text-lg font-semibold tabular-nums ${isPositiveGrowth ? "text-primary" : "text-destructive"}`}>
+              {isPositiveGrowth ? "+" : ""}{formatCurrency(metrics.netChange)}
+            </p>
+            {isPositiveGrowth ? (
+              <IconTrendingUp className="size-4 text-primary" />
+            ) : (
+              <IconTrendingDown className="size-4 text-destructive" />
             )}
           </div>
         </div>
-        <div className="text-sm text-muted-foreground">
-          {isPartialMonth
-            ? `${metrics.daysInPeriod} days • ${metrics.startDate.toLocaleDateString()} - ${metrics.endDate.toLocaleDateString()}`
-            : "Full month coverage"}
+        <div className="px-4 py-3">
+          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Growth</p>
+          <p className={`text-lg font-semibold tabular-nums mt-0.5 ${isPositiveGrowth ? "text-primary" : "text-destructive"}`}>
+            {metrics.growthRate.toFixed(2)}%
+          </p>
         </div>
-      </CardHeader>
+      </div>
 
-      <CardContent>
-        <div className="grid gap-4 md:grid-cols-4">
-          <div className="rounded-lg border border-border/60 p-4">
-            <p className="text-xs text-muted-foreground">Opening Balance</p>
-            <p className="mt-2 text-2xl font-semibold">₹{metrics.openingBalance.toLocaleString()}</p>
-          </div>
-          <div className="rounded-lg border border-border/60 p-4">
-            <p className="text-xs text-muted-foreground">Closing Balance</p>
-            <p className="mt-2 text-2xl font-semibold">₹{metrics.closingBalance.toLocaleString()}</p>
-          </div>
-          <div className={`rounded-lg border p-4 ${
-            isPositiveGrowth
-              ? "border-emerald-500/30 bg-emerald-500/5"
-              : "border-rose-500/30 bg-rose-500/5"
-          }`}>
-            <p className="text-xs text-muted-foreground">Net Change</p>
-            <div className="mt-2 flex items-center gap-2">
-              <p className={`text-2xl font-semibold ${isPositiveGrowth ? "text-emerald-600" : "text-rose-600"}`}>
-                {isPositiveGrowth ? "+" : ""}₹{metrics.netChange.toLocaleString()}
-              </p>
-              {isPositiveGrowth ? (
-                <IconTrendingUp className="size-5 text-emerald-600" />
-              ) : (
-                <IconTrendingDown className="size-5 text-rose-600" />
-              )}
-            </div>
-          </div>
-          <div className={`rounded-lg border p-4 ${
-            isPositiveGrowth
-              ? "border-emerald-500/30 bg-emerald-500/5"
-              : "border-rose-500/30 bg-rose-500/5"
-          }`}>
-            <p className="text-xs text-muted-foreground">Growth Rate</p>
-            <p className={`mt-2 text-2xl font-semibold ${isPositiveGrowth ? "text-emerald-600" : "text-rose-600"}`}>
-              {metrics.growthRate.toFixed(2)}%
-            </p>
-          </div>
+      {/* Bottom row: Income, Expenses, Savings Rate */}
+      <div className="rounded-lg border border-border/40 divide-x divide-border/40 grid grid-cols-3">
+        <div className="px-4 py-3">
+          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Income</p>
+          <p className="text-lg font-semibold text-primary tabular-nums mt-0.5">{formatCurrency(metrics.totalIncome)}</p>
+          <p className="text-[10px] text-muted-foreground">{metrics.incomeTransactionCount} transactions</p>
         </div>
-
-        <div className="mt-6 grid gap-4 md:grid-cols-3">
-          <div className="rounded-lg border border-border/60 p-4">
-            <p className="text-xs text-muted-foreground">Total Income</p>
-            <p className="mt-2 text-xl font-semibold">₹{metrics.totalIncome.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground">{metrics.incomeTransactionCount} transactions</p>
-          </div>
-          <div className="rounded-lg border border-border/60 p-4">
-            <p className="text-xs text-muted-foreground">Total Expenses</p>
-            <p className="mt-2 text-xl font-semibold">₹{metrics.totalExpenses.toLocaleString()}</p>
-            <p className="text-xs text-muted-foreground">{metrics.expenseTransactionCount} transactions</p>
-          </div>
-          <div className={`rounded-lg border p-4 ${
-            metrics.savingsRate >= 0
-              ? "border-border/60"
-              : "border-rose-500/30 bg-rose-500/5"
-          }`}>
-            <p className="text-xs text-muted-foreground">
-              {metrics.savingsRate < 0 ? "Overspend Rate" : "Savings Rate"}
-            </p>
-            <p className={`mt-2 text-xl font-semibold ${metrics.savingsRate < 0 ? "text-rose-600" : ""}`}>
-              {metrics.savingsRate < 0
-                ? `Overspent by ${Math.abs(metrics.savingsRate).toFixed(1)}%`
-                : `${metrics.savingsRate.toFixed(1)}%`}
-            </p>
-            <p className="text-xs text-muted-foreground">
-              {metrics.savingsRate < 0 ? "Expenses exceed income" : "Of income saved"}
-            </p>
-          </div>
+        <div className="px-4 py-3">
+          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Expenses</p>
+          <p className="text-lg font-semibold tabular-nums mt-0.5">{formatCurrency(metrics.totalExpenses)}</p>
+          <p className="text-[10px] text-muted-foreground">{metrics.expenseTransactionCount} transactions</p>
         </div>
-      </CardContent>
-    </Card>
+        <div className="px-4 py-3">
+          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">
+            Net Change
+          </p>
+          <p className={`text-lg font-semibold tabular-nums mt-0.5 ${metrics.netChange >= 0 ? "text-primary" : "text-destructive"}`}>
+            {metrics.netChange >= 0 ? "+" : ""}{formatCurrency(metrics.netChange)}
+          </p>
+          <p className="text-[10px] text-muted-foreground">
+            Balance change this month
+          </p>
+        </div>
+      </div>
+    </div>
   )
 }

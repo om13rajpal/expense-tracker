@@ -1,5 +1,8 @@
+"use client"
+
 import * as React from "react"
 
+import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 
@@ -15,23 +18,38 @@ export function SiteHeader({
   actions,
 }: SiteHeaderProps) {
   return (
-    <header className="flex h-(--header-height) shrink-0 items-center gap-2 border-b/70 bg-card/70 backdrop-blur-md transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
+    <header className="sticky top-0 z-30 flex h-(--header-height) shrink-0 items-center border-b border-border/40 bg-background/60 backdrop-blur-xl backdrop-saturate-150 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
       <div className="flex w-full items-center gap-2 px-4 lg:px-6">
-        <SidebarTrigger className="-ml-1" />
+        <SidebarTrigger className="-ml-1 text-muted-foreground hover:text-foreground transition-colors" />
         <Separator
           orientation="vertical"
-          className="mx-2 data-[orientation=vertical]:h-4"
+          className="mx-2 data-[orientation=vertical]:h-4 opacity-50"
         />
         <div className="flex flex-1 items-center justify-between gap-4">
-          <div className="flex flex-col">
-            <h1 className="text-base font-semibold tracking-tight text-foreground">
-              {title}
-            </h1>
+          <div className="min-w-0">
+            <div className="flex items-baseline gap-2">
+              <h1 className="text-base font-semibold tracking-tight text-foreground truncate">
+                {title}
+              </h1>
+              {subtitle && (
+                <>
+                  <span className="hidden sm:inline text-muted-foreground/40 text-sm select-none" aria-hidden="true">&middot;</span>
+                  <span className="hidden sm:inline text-xs font-normal text-muted-foreground/70 truncate">
+                    {subtitle}
+                  </span>
+                </>
+              )}
+            </div>
             {subtitle && (
-              <span className="text-xs text-muted-foreground">{subtitle}</span>
+              <span className="block sm:hidden text-[11px] font-normal text-muted-foreground/60 truncate">
+                {subtitle}
+              </span>
             )}
           </div>
-          {actions && <div className="flex items-center gap-2">{actions}</div>}
+          <div className="flex items-center gap-3">
+            {actions}
+            <AnimatedThemeToggler />
+          </div>
         </div>
       </div>
     </header>

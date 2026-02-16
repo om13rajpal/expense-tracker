@@ -3,6 +3,7 @@
 import * as React from "react"
 import { useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
+import { motion, AnimatePresence } from "motion/react"
 import {
   Area,
   AreaChart,
@@ -15,34 +16,43 @@ import {
   YAxis,
 } from "recharts"
 import {
+  IconCalendarEvent,
   IconCash,
   IconChartLine,
+  IconCheck,
+  IconChevronDown,
+  IconChevronUp,
+  IconClockHour4,
+  IconCoin,
   IconEdit,
   IconFlame,
+  IconHomeDollar,
+  IconLink,
   IconPigMoney,
+  IconPlane,
   IconPlus,
+  IconSchool,
+  IconShieldCheck,
   IconTarget,
+  IconTrendingUp,
   IconTrash,
+  IconCar,
+  IconHeart,
+  IconDots,
 } from "@tabler/icons-react"
 
+import { toast } from "sonner"
 import { useAuth } from "@/hooks/use-auth"
 import { AppSidebar } from "@/components/app-sidebar"
+import { InfoTooltip } from "@/components/info-tooltip"
 import { SiteHeader } from "@/components/site-header"
-import { MetricTile } from "@/components/metric-tile"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
-import { Progress } from "@/components/ui/progress"
 import { Skeleton } from "@/components/ui/skeleton"
+import { Checkbox } from "@/components/ui/checkbox"
 import {
   Dialog,
   DialogContent,
@@ -67,8 +77,17 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { stagger, fadeUp, fadeUpSmall, scaleIn, numberPop, listItem } from "@/lib/motion"
 
 // ─── Types ───
+
+interface LinkedTransaction {
+  id: string
+  date: string
+  amount: number
+  description: string
+  matchReason: string
+}
 
 interface SavingsGoal {
   id: string
@@ -80,6 +99,8 @@ interface SavingsGoal {
   monthlyContribution: number
   autoTrack: boolean
   category?: string
+  linkedCategories?: string[]
+  linkedKeywords?: string[]
   createdAt: string
   updatedAt: string
   percentageComplete: number
@@ -87,6 +108,8 @@ interface SavingsGoal {
   requiredMonthly: number
   projectedCompletionDate: string | null
   monthsRemaining: number
+  autoLinkedAmount?: number
+  linkedTransactions?: LinkedTransaction[]
 }
 
 interface SipProjection {
@@ -146,27 +169,7 @@ interface GoalFormData {
 
 // ─── Helpers ───
 
-function formatCurrency(amount: number): string {
-  return new Intl.NumberFormat("en-IN", {
-    style: "currency",
-    currency: "INR",
-    maximumFractionDigits: 0,
-  }).format(amount)
-}
-
-function formatCompact(value: number): string {
-  if (value >= 10000000) return `₹${(value / 10000000).toFixed(2)}Cr`
-  if (value >= 100000) return `₹${(value / 100000).toFixed(1)}L`
-  if (value >= 1000) return `₹${(value / 1000).toFixed(0)}K`
-  return `₹${value.toFixed(0)}`
-}
-
-function formatCompactAxis(value: number): string {
-  if (Math.abs(value) >= 10000000) return `₹${(value / 10000000).toFixed(1)}Cr`
-  if (Math.abs(value) >= 100000) return `₹${(value / 100000).toFixed(0)}L`
-  if (Math.abs(value) >= 1000) return `₹${(value / 1000).toFixed(0)}K`
-  return `₹${value.toFixed(0)}`
-}
+import { formatINR as formatCurrency, formatCompact, formatCompactAxis } from "@/lib/format"
 
 const GOAL_CATEGORIES = [
   "Emergency Fund",
@@ -178,6 +181,53 @@ const GOAL_CATEGORIES = [
   "Other",
 ]
 
+// Transaction categories available for linking (from TransactionCategory enum)
+const LINKABLE_CATEGORIES = [
+  "Savings",
+  "Investment",
+  "Education",
+  "Insurance",
+  "Loan Payment",
+  "Investment Income",
+  "Other Income",
+]
+
+// Default linking config based on goal category
+const LINK_DEFAULTS: Record<string, { categories: string[]; keywords: string[] }> = {
+  "Emergency Fund": {
+    categories: ["Savings"],
+    keywords: ["savings", "FD", "RD", "emergency"],
+  },
+  "Investment": {
+    categories: ["Investment"],
+    keywords: ["mutual fund", "SIP", "ELSS", "PPF"],
+  },
+  "Education": {
+    categories: ["Education"],
+    keywords: ["education", "course", "tuition"],
+  },
+  "House": {
+    categories: ["Savings", "Investment"],
+    keywords: ["house", "home loan", "down payment"],
+  },
+  "Car": {
+    categories: ["Savings"],
+    keywords: ["car", "vehicle", "auto"],
+  },
+  "Vacation": {
+    categories: ["Savings"],
+    keywords: ["travel", "vacation", "trip"],
+  },
+  "Wedding": {
+    categories: ["Savings"],
+    keywords: ["wedding", "marriage"],
+  },
+  "default": {
+    categories: ["Savings"],
+    keywords: [],
+  },
+}
+
 const EMPTY_FORM: GoalFormData = {
   name: "",
   targetAmount: "",
@@ -185,6 +235,136 @@ const EMPTY_FORM: GoalFormData = {
   monthlyContribution: "",
   currentAmount: "",
   category: "",
+}
+
+function formatTimeline(dateStr: string): string | null {
+  if (!dateStr) return null
+  const target = new Date(dateStr)
+  const now = new Date()
+  now.setHours(0, 0, 0, 0)
+  target.setHours(0, 0, 0, 0)
+  const diffMs = target.getTime() - now.getTime()
+  if (diffMs <= 0) return "Date is in the past"
+  const totalDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24))
+  const years = Math.floor(totalDays / 365)
+  const remainingAfterYears = totalDays - years * 365
+  const months = Math.floor(remainingAfterYears / 30)
+  const days = remainingAfterYears - months * 30
+  const parts: string[] = []
+  if (years > 0) parts.push(`${years}y`)
+  if (months > 0) parts.push(`${months}mo`)
+  if (days > 0 && years === 0) parts.push(`${days}d`)
+  return parts.join(" ") || "Today"
+}
+
+// Category color + icon mapping
+const CATEGORY_CONFIG: Record<string, { color: string; ring: string; bg: string; icon: React.ElementType; border: string }> = {
+  "Emergency Fund": {
+    color: "text-emerald-600 dark:text-emerald-400",
+    ring: "stroke-emerald-500",
+    bg: "bg-emerald-500/10",
+    border: "border-emerald-500/20",
+    icon: IconShieldCheck,
+  },
+  Car: {
+    color: "text-blue-600 dark:text-blue-400",
+    ring: "stroke-blue-500",
+    bg: "bg-blue-500/10",
+    border: "border-blue-500/20",
+    icon: IconCar,
+  },
+  Vacation: {
+    color: "text-amber-600 dark:text-amber-400",
+    ring: "stroke-amber-500",
+    bg: "bg-amber-500/10",
+    border: "border-amber-500/20",
+    icon: IconPlane,
+  },
+  House: {
+    color: "text-violet-600 dark:text-violet-400",
+    ring: "stroke-violet-500",
+    bg: "bg-violet-500/10",
+    border: "border-violet-500/20",
+    icon: IconHomeDollar,
+  },
+  Education: {
+    color: "text-cyan-600 dark:text-cyan-400",
+    ring: "stroke-cyan-500",
+    bg: "bg-cyan-500/10",
+    border: "border-cyan-500/20",
+    icon: IconSchool,
+  },
+  Wedding: {
+    color: "text-pink-600 dark:text-pink-400",
+    ring: "stroke-pink-500",
+    bg: "bg-pink-500/10",
+    border: "border-pink-500/20",
+    icon: IconHeart,
+  },
+  Other: {
+    color: "text-slate-600 dark:text-slate-400",
+    ring: "stroke-slate-500",
+    bg: "bg-slate-500/10",
+    border: "border-slate-500/20",
+    icon: IconTarget,
+  },
+}
+
+function getCategoryConfig(category?: string) {
+  return CATEGORY_CONFIG[category || "Other"] || CATEGORY_CONFIG.Other
+}
+
+// ─── Circular Progress Ring ───
+
+function ProgressRing({
+  percent,
+  size = 56,
+  strokeWidth = 4,
+  className = "",
+  ringClass = "stroke-primary",
+  delay = 0,
+}: {
+  percent: number
+  size?: number
+  strokeWidth?: number
+  className?: string
+  ringClass?: string
+  delay?: number
+}) {
+  const radius = (size - strokeWidth) / 2
+  const circumference = 2 * Math.PI * radius
+  const clamped = Math.min(Math.max(percent, 0), 100)
+
+  return (
+    <div className={`relative inline-flex items-center justify-center ${className}`}>
+      <svg width={size} height={size} className="-rotate-90">
+        <circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          stroke="var(--border)"
+          strokeWidth={strokeWidth}
+        />
+        <motion.circle
+          cx={size / 2}
+          cy={size / 2}
+          r={radius}
+          fill="none"
+          className={ringClass}
+          strokeWidth={strokeWidth}
+          strokeLinecap="round"
+          strokeDasharray={circumference}
+          initial={{ strokeDashoffset: circumference }}
+          animate={{ strokeDashoffset: circumference - (clamped / 100) * circumference }}
+          transition={{ delay, duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+        />
+      </svg>
+      <div className="absolute flex flex-col items-center">
+        <span className="text-xs font-bold tabular-nums">{Math.round(clamped)}%</span>
+      </div>
+    </div>
+  )
 }
 
 // ─── Component ───
@@ -203,10 +383,18 @@ export default function GoalsPage() {
   const [showEditDialog, setShowEditDialog] = useState(false)
   const [showContributionDialog, setShowContributionDialog] = useState(false)
   const [showDeleteDialog, setShowDeleteDialog] = useState(false)
+  const [showLinkSettingsDialog, setShowLinkSettingsDialog] = useState(false)
   const [selectedGoal, setSelectedGoal] = useState<SavingsGoal | null>(null)
   const [formData, setFormData] = useState<GoalFormData>(EMPTY_FORM)
   const [contributionAmount, setContributionAmount] = useState("")
   const [isSaving, setIsSaving] = useState(false)
+
+  // Link settings state
+  const [linkCategories, setLinkCategories] = useState<string[]>([])
+  const [linkKeywords, setLinkKeywords] = useState("")
+
+  // Expanded linked transactions per goal
+  const [expandedGoals, setExpandedGoals] = useState<Set<string>>(new Set())
 
   // ─── Data Loading ───
 
@@ -270,9 +458,13 @@ export default function GoalsPage() {
         await loadGoals()
         setShowAddDialog(false)
         setFormData(EMPTY_FORM)
+        toast.success("Goal created", { description: `"${formData.name}" added to your goals` })
+      } else {
+        toast.error("Failed to create goal")
       }
     } catch (err) {
       console.error("Failed to create goal:", err)
+      toast.error("Network error creating goal")
     } finally {
       setIsSaving(false)
     }
@@ -305,9 +497,13 @@ export default function GoalsPage() {
         setShowEditDialog(false)
         setSelectedGoal(null)
         setFormData(EMPTY_FORM)
+        toast.success("Goal updated")
+      } else {
+        toast.error("Failed to update goal")
       }
     } catch (err) {
       console.error("Failed to update goal:", err)
+      toast.error("Network error updating goal")
     } finally {
       setIsSaving(false)
     }
@@ -324,10 +520,14 @@ export default function GoalsPage() {
       if (data.success) {
         await loadGoals()
         setShowDeleteDialog(false)
+        toast.success("Goal deleted", { description: `"${selectedGoal.name}" has been removed` })
         setSelectedGoal(null)
+      } else {
+        toast.error("Failed to delete goal")
       }
     } catch (err) {
       console.error("Failed to delete goal:", err)
+      toast.error("Network error deleting goal")
     } finally {
       setIsSaving(false)
     }
@@ -349,11 +549,52 @@ export default function GoalsPage() {
       if (data.success) {
         await loadGoals()
         setShowContributionDialog(false)
+        toast.success("Contribution added", { description: `${formatCurrency(Number(contributionAmount))} added to "${selectedGoal.name}"` })
         setSelectedGoal(null)
         setContributionAmount("")
+      } else {
+        toast.error("Failed to add contribution")
       }
     } catch (err) {
       console.error("Failed to add contribution:", err)
+      toast.error("Network error adding contribution")
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const saveLinkSettings = async () => {
+    if (!selectedGoal) return
+    setIsSaving(true)
+    try {
+      const keywords = linkKeywords
+        .split(",")
+        .map((k) => k.trim())
+        .filter((k) => k.length > 0)
+
+      const res = await fetch("/api/savings-goals", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          id: selectedGoal.id,
+          linkedCategories: linkCategories,
+          linkedKeywords: keywords,
+        }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        await loadGoals()
+        setShowLinkSettingsDialog(false)
+        setSelectedGoal(null)
+        toast.success("Link settings saved", {
+          description: `Auto-contribution linking updated for "${selectedGoal.name}"`,
+        })
+      } else {
+        toast.error("Failed to save link settings")
+      }
+    } catch (err) {
+      console.error("Failed to save link settings:", err)
+      toast.error("Network error saving link settings")
     } finally {
       setIsSaving(false)
     }
@@ -390,9 +631,44 @@ export default function GoalsPage() {
     setShowAddDialog(true)
   }
 
+  const openLinkSettingsDialog = (goal: SavingsGoal) => {
+    setSelectedGoal(goal)
+    setLinkCategories(goal.linkedCategories || [])
+    setLinkKeywords((goal.linkedKeywords || []).join(", "))
+    setShowLinkSettingsDialog(true)
+  }
+
+  const toggleLinkCategory = (cat: string, checked: boolean | "indeterminate") => {
+    if (checked === true) {
+      setLinkCategories((prev) => [...prev, cat])
+    } else {
+      setLinkCategories((prev) => prev.filter((c) => c !== cat))
+    }
+  }
+
+  const applyLinkDefaults = () => {
+    if (!selectedGoal) return
+    const goalCat = selectedGoal.category || "default"
+    const defaults = LINK_DEFAULTS[goalCat] || LINK_DEFAULTS["default"]
+    setLinkCategories(defaults.categories)
+    setLinkKeywords(defaults.keywords.join(", "))
+  }
+
+  const toggleExpandedGoal = (goalId: string) => {
+    setExpandedGoals((prev) => {
+      const next = new Set(prev)
+      if (next.has(goalId)) {
+        next.delete(goalId)
+      } else {
+        next.add(goalId)
+      }
+      return next
+    })
+  }
+
   // ─── Derived Values ───
 
-  const totalSaved = goals.reduce((sum, g) => sum + g.currentAmount, 0)
+  const totalSaved = goals.reduce((sum, g) => sum + g.currentAmount + (g.autoLinkedAmount || 0), 0)
   const totalTarget = goals.reduce((sum, g) => sum + g.targetAmount, 0)
   const onTrackCount = goals.filter((g) => g.onTrack).length
   const overallProgress =
@@ -430,638 +706,694 @@ export default function GoalsPage() {
           subtitle="Track savings goals and visualize your financial future"
         />
         <div className="flex flex-1 flex-col">
-          <div className="@container/main flex flex-1 flex-col gap-6 p-6">
+          <div className="@container/main flex flex-1 flex-col gap-5 p-4 md:p-6">
             {loading ? (
-              <div className="space-y-4">
-                <div className="grid gap-4 md:grid-cols-4">
-                  {[1, 2, 3, 4].map((i) => (
-                    <Skeleton key={i} className="h-24" />
-                  ))}
-                </div>
-                <Skeleton className="h-96" />
-              </div>
+              <GoalsLoadingSkeleton />
             ) : (
-              <>
-                {/* Summary Metrics */}
-                <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                  <MetricTile
-                    label="Total Saved"
-                    value={formatCurrency(totalSaved)}
-                    trendLabel={`${goals.length} active goal${goals.length !== 1 ? "s" : ""}`}
-                    icon={<IconPigMoney className="h-5 w-5" />}
-                    tone="positive"
-                  />
-                  <MetricTile
-                    label="Total Target"
-                    value={formatCurrency(totalTarget)}
-                    trendLabel={`${overallProgress.toFixed(1)}% overall`}
-                    icon={<IconTarget className="h-5 w-5" />}
-                    tone="neutral"
-                  />
-                  <MetricTile
-                    label="On Track"
-                    value={`${onTrackCount} / ${goals.length}`}
-                    trendLabel={
-                      goals.length > 0
-                        ? `${((onTrackCount / goals.length) * 100).toFixed(0)}% on track`
-                        : "No goals yet"
-                    }
-                    icon={<IconChartLine className="h-5 w-5" />}
-                    tone={
-                      goals.length > 0 && onTrackCount >= goals.length / 2
-                        ? "positive"
-                        : "negative"
-                    }
-                  />
-                  <MetricTile
-                    label="FIRE Progress"
-                    value={
-                      projections?.fire
-                        ? `${projections.fire.progressPercent.toFixed(1)}%`
-                        : "N/A"
-                    }
-                    trendLabel={
-                      projections?.fire
-                        ? `${projections.fire.yearsToFIRE.toFixed(1)} years to FIRE`
-                        : "No projection data"
-                    }
-                    icon={<IconFlame className="h-5 w-5" />}
-                    tone={
-                      projections?.fire && projections.fire.progressPercent >= 25
-                        ? "positive"
-                        : "neutral"
-                    }
-                  />
-                </div>
-
-                {/* Tabs */}
-                <Tabs defaultValue="goals" className="space-y-4">
-                  <TabsList className="flex flex-wrap gap-2">
-                    <TabsTrigger value="goals">Savings Goals</TabsTrigger>
-                    <TabsTrigger value="fire">FIRE Calculator</TabsTrigger>
-                    <TabsTrigger value="investments">
-                      Investment Projections
-                    </TabsTrigger>
-                    <TabsTrigger value="networth">
-                      Net Worth Projection
-                    </TabsTrigger>
-                  </TabsList>
-
-                  {/* ─── Tab 1: Savings Goals ─── */}
-                  <TabsContent value="goals" className="space-y-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h2 className="text-lg font-semibold">
-                          Savings Goals
-                        </h2>
-                        <p className="text-sm text-muted-foreground">
-                          Track progress toward your financial milestones
-                        </p>
-                      </div>
-                      <Button onClick={openAddDialog} size="sm">
-                        <IconPlus className="mr-1 h-4 w-4" />
-                        Add Goal
-                      </Button>
+              <motion.div variants={stagger} initial="hidden" animate="show" className="flex flex-col gap-5">
+                {/* ─── Stat Bar ─── */}
+                <motion.div
+                  variants={fadeUp}
+                  className="card-elevated rounded-xl bg-card grid grid-cols-2 sm:grid-cols-4 divide-x divide-border/40"
+                >
+                  <div className="px-5 py-4">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <IconCoin className="h-3.5 w-3.5 text-emerald-500" />
+                      <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Total Saved</p>
                     </div>
+                    <motion.p variants={numberPop} className="text-xl font-bold tabular-nums">{formatCurrency(totalSaved)}</motion.p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">{goals.length} active goal{goals.length !== 1 ? "s" : ""}</p>
+                  </div>
+                  <div className="px-5 py-4">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <IconTarget className="h-3.5 w-3.5 text-blue-500" />
+                      <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Total Target</p>
+                    </div>
+                    <motion.p variants={numberPop} className="text-xl font-bold tabular-nums">{formatCurrency(totalTarget)}</motion.p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">{overallProgress.toFixed(1)}% overall</p>
+                  </div>
+                  <div className="px-5 py-4 max-sm:border-t max-sm:border-border/40">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <IconCheck className="h-3.5 w-3.5 text-teal-500" />
+                      <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">On Track</p>
+                    </div>
+                    <motion.p variants={numberPop} className="text-xl font-bold tabular-nums">{onTrackCount} / {goals.length}</motion.p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      {goals.length > 0
+                        ? `${((onTrackCount / goals.length) * 100).toFixed(0)}% on track`
+                        : "No goals yet"}
+                    </p>
+                  </div>
+                  <div className="px-5 py-4 max-sm:border-t max-sm:border-border/40">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <IconFlame className="h-3.5 w-3.5 text-orange-500" />
+                      <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">FIRE Progress</p>
+                    </div>
+                    <motion.p variants={numberPop} className="text-xl font-bold tabular-nums">
+                      {projections?.fire
+                        ? `${projections.fire.progressPercent.toFixed(1)}%`
+                        : "N/A"}
+                    </motion.p>
+                    <p className="text-[11px] text-muted-foreground mt-0.5">
+                      {projections?.fire
+                        ? `${projections.fire.yearsToFIRE.toFixed(1)} years to goal`
+                        : "No projection data"}
+                    </p>
+                  </div>
+                </motion.div>
 
-                    {goals.length === 0 ? (
-                      <Card className="border border-border/70">
-                        <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-                          <IconTarget className="mb-4 h-12 w-12 text-muted-foreground/40" />
-                          <p className="text-sm font-medium text-muted-foreground">
-                            No savings goals yet
+                {/* ─── Tabs ─── */}
+                <motion.div variants={fadeUpSmall}>
+                  <Tabs defaultValue="goals" className="space-y-5">
+                    <TabsList className="h-10 p-1 bg-muted/50 rounded-lg">
+                      <TabsTrigger value="goals" className="rounded-md px-4 text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                        <IconPigMoney className="mr-1.5 h-4 w-4" />
+                        Savings Goals
+                      </TabsTrigger>
+                      <TabsTrigger value="fire" className="rounded-md px-4 text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                        <IconFlame className="mr-1.5 h-4 w-4" />
+                        Early Retirement
+                      </TabsTrigger>
+                      <TabsTrigger value="projections" className="rounded-md px-4 text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
+                        <IconTrendingUp className="mr-1.5 h-4 w-4" />
+                        Projections
+                      </TabsTrigger>
+                    </TabsList>
+
+                    {/* ─── Tab 1: Savings Goals ─── */}
+                    <TabsContent value="goals" className="space-y-5">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <div className="flex items-center gap-1.5">
+                            <IconPigMoney className="h-4 w-4 text-muted-foreground" />
+                            <h2 className="text-sm font-semibold">Savings Goals</h2>
+                            <InfoTooltip text="Set a target amount and date for each financial milestone. The app tracks whether you're saving enough each month to reach your goal on time." />
+                          </div>
+                          <p className="text-xs text-muted-foreground mt-0.5">
+                            Track progress toward your financial milestones
                           </p>
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            Create your first goal to start tracking progress
-                          </p>
-                          <Button
-                            onClick={openAddDialog}
-                            size="sm"
-                            className="mt-4"
-                          >
-                            <IconPlus className="mr-1 h-4 w-4" />
-                            Create Goal
-                          </Button>
-                        </CardContent>
-                      </Card>
-                    ) : (
-                      <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
-                        {goals.map((goal) => (
-                          <Card
-                            key={goal.id}
-                            className="border border-border/70"
-                          >
-                            <CardHeader className="pb-3">
-                              <div className="flex items-start justify-between">
-                                <div className="space-y-1">
-                                  <CardTitle className="text-base">
-                                    {goal.name}
-                                  </CardTitle>
-                                  <div className="flex items-center gap-2">
-                                    {goal.category && (
-                                      <Badge
-                                        variant="secondary"
-                                        className="text-xs"
+                        </div>
+                        <Button onClick={openAddDialog} size="sm" className="gap-1.5">
+                          <IconPlus className="h-4 w-4" />
+                          Add Goal
+                        </Button>
+                      </div>
+
+                      {goals.length === 0 ? (
+                        <div className="card-elevated rounded-xl bg-card">
+                          <div className="flex flex-col items-center justify-center py-20 text-center">
+                            <div className="mb-5 rounded-2xl bg-primary/5 p-4">
+                              <IconTarget className="h-10 w-10 text-primary/40" />
+                            </div>
+                            <p className="text-base font-semibold text-foreground">
+                              No savings goals yet
+                            </p>
+                            <p className="mt-1.5 text-sm text-muted-foreground max-w-xs">
+                              Create your first goal to start tracking progress toward your financial milestones
+                            </p>
+                            <Button
+                              onClick={openAddDialog}
+                              size="sm"
+                              className="mt-5 gap-1.5"
+                            >
+                              <IconPlus className="h-4 w-4" />
+                              Create Your First Goal
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+                          {goals.map((goal, i) => {
+                            const autoLinked = goal.autoLinkedAmount || 0
+                            const totalAmount = goal.currentAmount + autoLinked
+                            const totalPct = Math.min(
+                              goal.targetAmount > 0
+                                ? (totalAmount / goal.targetAmount) * 100
+                                : 0,
+                              100
+                            )
+                            const config = getCategoryConfig(goal.category)
+                            const CategoryIcon = config.icon
+                            const hasLinkedConfig =
+                              (goal.linkedCategories && goal.linkedCategories.length > 0) ||
+                              (goal.linkedKeywords && goal.linkedKeywords.length > 0)
+                            const isExpanded = expandedGoals.has(goal.id)
+                            const linkedTxns = goal.linkedTransactions || []
+
+                            return (
+                              <div
+                                key={goal.id}
+                                className={`card-elevated rounded-xl bg-card overflow-hidden border border-border/60`}
+                              >
+                                <div className="p-5">
+                                  {/* Header */}
+                                  <div className="flex items-start justify-between mb-4">
+                                    <div className="flex items-start gap-3">
+                                      <div className={`mt-0.5 rounded-lg p-2 ${config.bg} ${config.border} border`}>
+                                        <CategoryIcon className={`h-4 w-4 ${config.color}`} />
+                                      </div>
+                                      <div className="space-y-1">
+                                        <h3 className="text-sm font-semibold leading-tight">{goal.name}</h3>
+                                        <div className="flex items-center gap-1.5">
+                                          {goal.category && (
+                                            <Badge
+                                              variant="secondary"
+                                              className={`text-[10px] px-1.5 py-0 font-medium ${config.bg} ${config.color} border-0`}
+                                            >
+                                              {goal.category}
+                                            </Badge>
+                                          )}
+                                          <Badge
+                                            variant="outline"
+                                            className={`text-[10px] px-2 py-0.5 font-medium ${
+                                              goal.onTrack
+                                                ? "border-emerald-200 bg-emerald-500/10 text-emerald-700 dark:border-emerald-800 dark:text-emerald-400"
+                                                : "border-rose-200 bg-rose-500/10 text-rose-700 dark:border-rose-800 dark:text-rose-400"
+                                            }`}
+                                          >
+                                            {goal.onTrack ? (
+                                              <><IconCheck className="mr-0.5 h-3 w-3" /> On Track</>
+                                            ) : (
+                                              <><IconClockHour4 className="mr-0.5 h-3 w-3" /> Behind</>
+                                            )}
+                                          </Badge>
+                                          {hasLinkedConfig && (
+                                            <Badge
+                                              variant="outline"
+                                              className="text-[10px] px-1.5 py-0.5 font-medium border-blue-200 bg-blue-500/10 text-blue-700 dark:border-blue-800 dark:text-blue-400"
+                                            >
+                                              <IconLink className="mr-0.5 h-3 w-3" /> Linked
+                                            </Badge>
+                                          )}
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <div className="flex items-center gap-0.5">
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-7 w-7"
+                                        title="Link Settings"
+                                        onClick={() => openLinkSettingsDialog(goal)}
                                       >
-                                        {goal.category}
-                                      </Badge>
-                                    )}
-                                    <Badge
-                                      variant="outline"
-                                      className={
-                                        goal.onTrack
-                                          ? "border-emerald-200 bg-emerald-500/10 text-emerald-700"
-                                          : "border-rose-200 bg-rose-500/10 text-rose-700"
-                                      }
-                                    >
-                                      {goal.onTrack ? "On Track" : "Behind"}
-                                    </Badge>
+                                        <IconLink className="h-3.5 w-3.5" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-7 w-7"
+                                        onClick={() => openEditDialog(goal)}
+                                      >
+                                        <IconEdit className="h-3.5 w-3.5" />
+                                      </Button>
+                                      <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        className="h-7 w-7 text-destructive hover:text-destructive"
+                                        onClick={() => openDeleteDialog(goal)}
+                                      >
+                                        <IconTrash className="h-3.5 w-3.5" />
+                                      </Button>
+                                    </div>
                                   </div>
-                                </div>
-                                <div className="flex items-center gap-1">
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-7 w-7"
-                                    onClick={() => openEditDialog(goal)}
-                                  >
-                                    <IconEdit className="h-3.5 w-3.5" />
-                                  </Button>
-                                  <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    className="h-7 w-7 text-destructive hover:text-destructive"
-                                    onClick={() => openDeleteDialog(goal)}
-                                  >
-                                    <IconTrash className="h-3.5 w-3.5" />
-                                  </Button>
-                                </div>
-                              </div>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                              {/* Progress */}
-                              <div className="space-y-2">
-                                <div className="flex items-center justify-between text-sm">
-                                  <span className="text-muted-foreground">
-                                    Progress
-                                  </span>
-                                  <span className="font-semibold">
-                                    {goal.percentageComplete.toFixed(1)}%
-                                  </span>
-                                </div>
-                                <Progress
-                                  value={Math.min(goal.percentageComplete, 100)}
-                                  className="h-2"
-                                />
-                                <div className="flex items-center justify-between text-xs text-muted-foreground">
-                                  <span>
-                                    {formatCurrency(goal.currentAmount)}
-                                  </span>
-                                  <span>
-                                    {formatCurrency(goal.targetAmount)}
-                                  </span>
-                                </div>
-                              </div>
 
-                              {/* Details */}
-                              <div className="grid grid-cols-2 gap-3 text-sm">
-                                <div>
-                                  <p className="text-xs text-muted-foreground">
-                                    Target Date
-                                  </p>
-                                  <p className="font-medium">
-                                    {new Date(
-                                      goal.targetDate
-                                    ).toLocaleDateString("en-IN", {
-                                      month: "short",
-                                      year: "numeric",
-                                    })}
-                                  </p>
-                                </div>
-                                <div>
-                                  <p className="text-xs text-muted-foreground">
-                                    Months Left
-                                  </p>
-                                  <p className="font-medium">
-                                    {goal.monthsRemaining > 0
-                                      ? `${goal.monthsRemaining} months`
-                                      : "Overdue"}
-                                  </p>
-                                </div>
-                                <div>
-                                  <p className="text-xs text-muted-foreground">
-                                    Required Monthly
-                                  </p>
-                                  <p className="font-medium">
-                                    {formatCurrency(goal.requiredMonthly)}
-                                  </p>
-                                </div>
-                                <div>
-                                  <p className="text-xs text-muted-foreground">
-                                    Projected Completion
-                                  </p>
-                                  <p className="font-medium">
-                                    {goal.projectedCompletionDate
-                                      ? new Date(
-                                          goal.projectedCompletionDate
-                                        ).toLocaleDateString("en-IN", {
+                                  {/* Progress ring + amounts */}
+                                  <div className="flex items-center gap-4 mb-4">
+                                    <ProgressRing
+                                      percent={totalPct}
+                                      size={60}
+                                      strokeWidth={5}
+                                      ringClass={config.ring}
+                                      delay={0.1 + i * 0.04}
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                      <div className="flex items-baseline justify-between">
+                                        <span className="text-lg font-bold tabular-nums">
+                                          {formatCurrency(totalAmount)}
+                                        </span>
+                                      </div>
+                                      <p className="text-xs text-muted-foreground mt-0.5">
+                                        of {formatCurrency(goal.targetAmount)} target
+                                      </p>
+
+                                      {/* Auto-linked breakdown */}
+                                      {autoLinked > 0 && (
+                                        <div className="text-[11px] text-muted-foreground mt-1.5 space-y-0.5">
+                                          <div className="flex items-center gap-1">
+                                            <IconCash className="h-3 w-3 shrink-0" />
+                                            <span>Manual: {formatCurrency(goal.currentAmount)}</span>
+                                          </div>
+                                          <div className="flex items-center gap-1">
+                                            <IconLink className="h-3 w-3 shrink-0 text-blue-500" />
+                                            <span>Auto-linked: {formatCurrency(autoLinked)}</span>
+                                          </div>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+
+                                  {/* Details grid */}
+                                  <div className="grid grid-cols-2 gap-2 mb-4">
+                                    <div className="rounded-lg bg-muted/40 px-3 py-2">
+                                      <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Target Date</p>
+                                      <p className="text-sm font-semibold mt-0.5 tabular-nums">
+                                        {new Date(goal.targetDate).toLocaleDateString("en-IN", {
                                           month: "short",
                                           year: "numeric",
-                                        })
-                                      : "N/A"}
-                                  </p>
+                                        })}
+                                      </p>
+                                    </div>
+                                    <div className="rounded-lg bg-muted/40 px-3 py-2">
+                                      <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Months Left</p>
+                                      <p className="text-sm font-semibold mt-0.5 tabular-nums">
+                                        {goal.monthsRemaining > 0
+                                          ? `${goal.monthsRemaining}`
+                                          : "Overdue"}
+                                      </p>
+                                    </div>
+                                    <div className="rounded-lg bg-muted/40 px-3 py-2">
+                                      <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Required/mo</p>
+                                      <p className="text-sm font-semibold mt-0.5 tabular-nums">{formatCurrency(goal.requiredMonthly)}</p>
+                                    </div>
+                                    <div className="rounded-lg bg-muted/40 px-3 py-2">
+                                      <p className="text-[10px] font-medium text-muted-foreground uppercase tracking-wider">Projected</p>
+                                      <p className="text-sm font-semibold mt-0.5 tabular-nums">
+                                        {goal.projectedCompletionDate
+                                          ? new Date(goal.projectedCompletionDate).toLocaleDateString("en-IN", {
+                                              month: "short",
+                                              year: "numeric",
+                                            })
+                                          : "N/A"}
+                                      </p>
+                                    </div>
+                                  </div>
+
+                                  {/* Add Contribution */}
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="w-full gap-1.5 hover:bg-primary/5 hover:border-primary/30 transition-colors"
+                                    onClick={() => openContributionDialog(goal)}
+                                  >
+                                    <IconCash className="h-4 w-4" />
+                                    Add Contribution
+                                  </Button>
+
+                                  {/* Linked Transactions Expandable */}
+                                  {linkedTxns.length > 0 && (
+                                    <div className="mt-3">
+                                      <button
+                                        onClick={() => toggleExpandedGoal(goal.id)}
+                                        className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors w-full"
+                                      >
+                                        <IconLink className="h-3 w-3 text-blue-500" />
+                                        <span>
+                                          {isExpanded ? "Hide" : "Show"} {linkedTxns.length} linked transaction{linkedTxns.length !== 1 ? "s" : ""}
+                                        </span>
+                                        {isExpanded ? (
+                                          <IconChevronUp className="h-3 w-3 ml-auto" />
+                                        ) : (
+                                          <IconChevronDown className="h-3 w-3 ml-auto" />
+                                        )}
+                                      </button>
+                                      <AnimatePresence>
+                                        {isExpanded && (
+                                          <motion.div
+                                            initial={{ height: 0, opacity: 0 }}
+                                            animate={{ height: "auto", opacity: 1 }}
+                                            exit={{ height: 0, opacity: 0 }}
+                                            transition={{ duration: 0.2, ease: [0.25, 0.1, 0.25, 1] }}
+                                            className="overflow-hidden"
+                                          >
+                                            <div className="mt-2 rounded-lg border border-border/40 overflow-hidden">
+                                              <div className="max-h-48 overflow-y-auto">
+                                                {linkedTxns.map((txn, idx) => (
+                                                  <div
+                                                    key={txn.id}
+                                                    className={`flex items-center justify-between px-3 py-2 text-[11px] ${
+                                                      idx !== linkedTxns.length - 1 ? "border-b border-border/30" : ""
+                                                    }`}
+                                                  >
+                                                    <div className="flex-1 min-w-0 mr-2">
+                                                      <p className="font-medium truncate">{txn.description}</p>
+                                                      <div className="flex items-center gap-2 text-muted-foreground mt-0.5">
+                                                        <span>
+                                                          {new Date(txn.date).toLocaleDateString("en-IN", {
+                                                            day: "numeric",
+                                                            month: "short",
+                                                            year: "2-digit",
+                                                          })}
+                                                        </span>
+                                                        <Badge
+                                                          variant="outline"
+                                                          className="text-[9px] px-1 py-0 font-normal border-blue-200/50 text-blue-600 dark:text-blue-400"
+                                                        >
+                                                          {txn.matchReason}
+                                                        </Badge>
+                                                      </div>
+                                                    </div>
+                                                    <span className="font-semibold tabular-nums text-emerald-600 dark:text-emerald-400 shrink-0">
+                                                      {formatCurrency(txn.amount)}
+                                                    </span>
+                                                  </div>
+                                                ))}
+                                              </div>
+                                            </div>
+                                          </motion.div>
+                                        )}
+                                      </AnimatePresence>
+                                    </div>
+                                  )}
                                 </div>
                               </div>
-
-                              {/* Add Contribution */}
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="w-full"
-                                onClick={() =>
-                                  openContributionDialog(goal)
-                                }
-                              >
-                                <IconCash className="mr-1 h-4 w-4" />
-                                Add Contribution
-                              </Button>
-                            </CardContent>
-                          </Card>
-                        ))}
-                      </div>
-                    )}
-                  </TabsContent>
-
-                  {/* ─── Tab 2: FIRE Calculator ─── */}
-                  <TabsContent value="fire" className="space-y-4">
-                    {projections?.fire ? (
-                      <>
-                        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
-                          <MetricTile
-                            label="FIRE Number"
-                            value={formatCurrency(projections.fire.fireNumber)}
-                            trendLabel={`25x annual expenses`}
-                            icon={<IconFlame className="h-5 w-5" />}
-                            tone="neutral"
-                          />
-                          <MetricTile
-                            label="Current Progress"
-                            value={`${projections.fire.progressPercent.toFixed(1)}%`}
-                            trendLabel={formatCurrency(projections.fire.currentNetWorth)}
-                            icon={<IconTarget className="h-5 w-5" />}
-                            tone={
-                              projections.fire.progressPercent >= 50
-                                ? "positive"
-                                : "neutral"
-                            }
-                          />
-                          <MetricTile
-                            label="Years to FIRE"
-                            value={
-                              projections.fire.yearsToFIRE < 100
-                                ? `${projections.fire.yearsToFIRE.toFixed(1)} years`
-                                : "100+ years"
-                            }
-                            trendLabel="At current rate"
-                            icon={<IconChartLine className="h-5 w-5" />}
-                            tone={
-                              projections.fire.yearsToFIRE <= 15
-                                ? "positive"
-                                : "negative"
-                            }
-                          />
-                          <MetricTile
-                            label="Monthly Required"
-                            value={formatCurrency(
-                              projections.fire.monthlyRequired
-                            )}
-                            trendLabel="To stay on track"
-                            icon={<IconCash className="h-5 w-5" />}
-                            tone="neutral"
-                          />
+                            )
+                          })}
                         </div>
+                      )}
+                    </TabsContent>
 
-                        <div className="grid gap-4 lg:grid-cols-3">
-                          <Card className="border border-border/70 lg:col-span-2">
-                            <CardHeader>
-                              <CardTitle>FIRE Projection</CardTitle>
-                              <CardDescription>
-                                Projected net worth vs FIRE target over time
-                              </CardDescription>
-                            </CardHeader>
-                            <CardContent>
+                    {/* ─── Tab 2: FIRE Calculator ─── */}
+                    <TabsContent value="fire" className="space-y-5">
+                      {/* FIRE Info Banner */}
+                      <div
+                        className="relative overflow-hidden rounded-xl border border-orange-500/20 bg-gradient-to-br from-orange-500/5 via-amber-500/5 to-yellow-500/5 p-5"
+                      >
+                        <div className="absolute top-3 right-3 opacity-[0.06]">
+                          <IconFlame className="h-24 w-24" />
+                        </div>
+                        <div className="relative">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="rounded-lg bg-orange-500/10 p-1.5">
+                              <IconFlame className="h-4 w-4 text-orange-500" />
+                            </div>
+                            <p className="text-sm font-semibold">What is Early Retirement?</p>
+                          </div>
+                          <p className="text-xs text-muted-foreground leading-relaxed max-w-2xl">
+                            Early Retirement means having enough invested that you can live off the returns without working. Your target amount = 25x your annual expenses. This is based on the 4% safe withdrawal rate -- if you withdraw 4% of your portfolio each year, it should last indefinitely.
+                          </p>
+                        </div>
+                      </div>
+
+                      <div
+                        className="card-elevated rounded-xl bg-card px-5 py-3"
+                      >
+                        <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1">Assumptions</p>
+                        <p className="text-xs text-muted-foreground">
+                          12% annual return for equities, 8% for debt instruments, 6% inflation rate, 4% safe withdrawal rate.
+                        </p>
+                      </div>
+
+                      {projections?.fire ? (
+                        <>
+                          {/* FIRE stat bar */}
+                          <div className="card-elevated rounded-xl bg-card grid grid-cols-2 sm:grid-cols-4 divide-x divide-border/40">
+                            <div className="px-5 py-4">
+                              <div className="flex items-center gap-1.5 mb-1">
+                                <IconTarget className="h-3.5 w-3.5 text-orange-500" />
+                                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Target Amount</p>
+                              </div>
+                              <p className="text-lg font-bold tabular-nums">{formatCompact(projections.fire.fireNumber)}</p>
+                              <p className="text-[11px] text-muted-foreground mt-0.5">25x annual expenses</p>
+                            </div>
+                            <div className="px-5 py-4">
+                              <div className="flex items-center gap-1.5 mb-1">
+                                <IconTrendingUp className="h-3.5 w-3.5 text-emerald-500" />
+                                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Current Progress</p>
+                              </div>
+                              <p className="text-lg font-bold tabular-nums">{projections.fire.progressPercent.toFixed(1)}%</p>
+                              <p className="text-[11px] text-muted-foreground mt-0.5">{formatCompact(projections.fire.currentNetWorth)}</p>
+                            </div>
+                            <div className="px-5 py-4 max-sm:border-t max-sm:border-border/40">
+                              <div className="flex items-center gap-1.5 mb-1">
+                                <IconCalendarEvent className="h-3.5 w-3.5 text-blue-500" />
+                                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Years to Goal</p>
+                              </div>
+                              <p className="text-lg font-bold tabular-nums">
+                                {projections.fire.yearsToFIRE < 100
+                                  ? `${projections.fire.yearsToFIRE.toFixed(1)}`
+                                  : "100+"}
+                              </p>
+                              <p className="text-[11px] text-muted-foreground mt-0.5">At current rate</p>
+                            </div>
+                            <div className="px-5 py-4 max-sm:border-t max-sm:border-border/40">
+                              <div className="flex items-center gap-1.5 mb-1">
+                                <IconCash className="h-3.5 w-3.5 text-violet-500" />
+                                <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Monthly Required</p>
+                              </div>
+                              <p className="text-lg font-bold tabular-nums">{formatCompact(projections.fire.monthlyRequired)}</p>
+                              <p className="text-[11px] text-muted-foreground mt-0.5">To stay on track</p>
+                            </div>
+                          </div>
+
+                          <div className="grid gap-5 lg:grid-cols-3">
+                            {/* FIRE Chart */}
+                            <div className="lg:col-span-2 card-elevated rounded-xl bg-card p-5">
+                              <div className="flex items-center gap-1.5 mb-1">
+                                <IconFlame className="h-4 w-4 text-orange-500" />
+                                <h3 className="text-sm font-semibold">Early Retirement Projection</h3>
+                                <InfoTooltip text="Financial Independence means having 25x your annual expenses invested, so you can live off 4% annual returns." />
+                              </div>
+                              <p className="text-xs text-muted-foreground mb-4">
+                                Projected net worth vs retirement target over time
+                              </p>
                               {projections.fire.projectionData.length > 0 ? (
-                                <ResponsiveContainer
-                                  width="100%"
-                                  height={320}
-                                >
-                                  <LineChart
-                                    data={projections.fire.projectionData}
-                                  >
-                                    <CartesianGrid
-                                      vertical={false}
-                                      stroke="hsl(var(--border))"
-                                    />
+                                <ResponsiveContainer width="100%" height={320}>
+                                  <AreaChart data={projections.fire.projectionData}>
+                                    <defs>
+                                      <linearGradient id="fireNwFill" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="var(--chart-2)" stopOpacity={0.3} />
+                                        <stop offset="100%" stopColor="var(--chart-2)" stopOpacity={0.02} />
+                                      </linearGradient>
+                                      <linearGradient id="fireTargetFill" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="var(--chart-5)" stopOpacity={0.15} />
+                                        <stop offset="100%" stopColor="var(--chart-5)" stopOpacity={0.02} />
+                                      </linearGradient>
+                                    </defs>
+                                    <CartesianGrid vertical={false} stroke="var(--border)" />
                                     <XAxis
                                       dataKey="year"
                                       tickLine={false}
                                       axisLine={false}
                                       tickMargin={8}
-                                      tick={{
-                                        fontSize: 12,
-                                        fill: "hsl(var(--muted-foreground))",
-                                      }}
+                                      tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
                                     />
                                     <YAxis
                                       tickLine={false}
                                       axisLine={false}
-                                      tick={{
-                                        fontSize: 12,
-                                        fill: "hsl(var(--muted-foreground))",
-                                      }}
+                                      tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
                                       tickFormatter={formatCompactAxis}
                                     />
                                     <Tooltip
-                                      formatter={(value: number) =>
-                                        formatCurrency(value)
-                                      }
+                                      formatter={(value: number) => formatCurrency(value)}
                                       contentStyle={{
-                                        backgroundColor: "hsl(var(--card))",
-                                        border: "1px solid hsl(var(--border))",
+                                        backgroundColor: "var(--card)",
+                                        color: "var(--card-foreground)",
+                                        border: "1px solid var(--border)",
                                         borderRadius: 12,
                                       }}
                                     />
-                                    <Line
+                                    <Area
                                       type="monotone"
                                       dataKey="netWorth"
                                       name="Net Worth"
-                                      stroke="#22c55e"
+                                      stroke="var(--chart-2)"
+                                      fill="url(#fireNwFill)"
                                       strokeWidth={3}
                                       strokeOpacity={0.95}
                                       isAnimationActive={false}
                                       dot={false}
-                                      activeDot={{ r: 5, fill: "#22c55e" }}
+                                      activeDot={{ r: 5, fill: "var(--chart-2)" }}
                                     />
-                                    <Line
+                                    <Area
                                       type="monotone"
                                       dataKey="fireTarget"
-                                      name="FIRE Target"
-                                      stroke="#f43f5e"
+                                      name="Retirement Target"
+                                      stroke="var(--chart-5)"
+                                      fill="url(#fireTargetFill)"
                                       strokeWidth={2}
                                       strokeDasharray="8 4"
                                       strokeOpacity={0.8}
                                       isAnimationActive={false}
                                       dot={false}
-                                      activeDot={{ r: 5, fill: "#f43f5e" }}
+                                      activeDot={{ r: 5, fill: "var(--chart-5)" }}
                                     />
-                                  </LineChart>
+                                  </AreaChart>
                                 </ResponsiveContainer>
                               ) : (
                                 <div className="flex h-[320px] items-center justify-center text-sm text-muted-foreground">
-                                  No FIRE projection data available.
+                                  No retirement projection data available.
                                 </div>
                               )}
-                            </CardContent>
-                          </Card>
+                            </div>
 
-                          <Card className="border border-border/70">
-                            <CardHeader>
-                              <CardTitle>FIRE Breakdown</CardTitle>
-                              <CardDescription>
+                            {/* Retirement Breakdown */}
+                            <div className="card-elevated rounded-xl bg-card p-5">
+                              <div className="flex items-center gap-1.5 mb-1">
+                                <IconTarget className="h-4 w-4 text-muted-foreground" />
+                                <h3 className="text-sm font-semibold">Retirement Breakdown</h3>
+                                <InfoTooltip text="The 25x rule: if you can accumulate 25 times your annual expenses and withdraw 4% per year, you can sustain your lifestyle indefinitely." />
+                              </div>
+                              <p className="text-xs text-muted-foreground mb-4">
                                 Key financial independence metrics
-                              </CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-4">
-                              <div className="rounded-xl border border-border/70 p-4">
-                                <p className="text-xs text-muted-foreground">
-                                  Annual Expenses
-                                </p>
-                                <p className="text-xl font-semibold">
-                                  {formatCurrency(
-                                    projections.fire.annualExpenses
-                                  )}
-                                </p>
-                              </div>
-                              <div className="rounded-xl border border-border/70 p-4">
-                                <p className="text-xs text-muted-foreground">
-                                  Current Net Worth
-                                </p>
-                                <p className="text-xl font-semibold">
-                                  {formatCurrency(
-                                    projections.fire.currentNetWorth
-                                  )}
-                                </p>
-                              </div>
-                              <div className="rounded-xl border border-border/70 p-4">
-                                <p className="text-xs text-muted-foreground">
-                                  Remaining to FIRE
-                                </p>
-                                <p className="text-xl font-semibold">
-                                  {formatCurrency(
-                                    projections.fire.fireNumber -
-                                      projections.fire.currentNetWorth
-                                  )}
-                                </p>
-                              </div>
-                              <div className="space-y-2">
-                                <div className="flex items-center justify-between text-sm">
-                                  <span className="text-muted-foreground">
-                                    FIRE Progress
-                                  </span>
-                                  <span className="font-semibold">
-                                    {projections.fire.progressPercent.toFixed(1)}
-                                    %
-                                  </span>
+                              </p>
+
+                              <div className="space-y-3">
+                                <div className="rounded-lg border border-border/40 bg-muted/30 px-4 py-3">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <IconCash className="h-3.5 w-3.5 text-muted-foreground" />
+                                    <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Annual Expenses</p>
+                                  </div>
+                                  <p className="text-xl font-semibold mt-0.5 tabular-nums">{formatCurrency(projections.fire.annualExpenses)}</p>
                                 </div>
-                                <Progress
-                                  value={Math.min(
-                                    projections.fire.progressPercent,
-                                    100
-                                  )}
-                                  className="h-2.5"
-                                />
+                                <div className="rounded-lg border border-border/40 bg-muted/30 px-4 py-3">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <IconTrendingUp className="h-3.5 w-3.5 text-emerald-500" />
+                                    <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Current Net Worth</p>
+                                  </div>
+                                  <p className="text-xl font-semibold mt-0.5 tabular-nums">{formatCurrency(projections.fire.currentNetWorth)}</p>
+                                </div>
+                                <div className="rounded-lg border border-border/40 bg-muted/30 px-4 py-3">
+                                  <div className="flex items-center gap-2 mb-1">
+                                    <IconTarget className="h-3.5 w-3.5 text-orange-500" />
+                                    <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Remaining to Goal</p>
+                                  </div>
+                                  <p className="text-xl font-semibold mt-0.5 tabular-nums">
+                                    {formatCurrency(projections.fire.fireNumber - projections.fire.currentNetWorth)}
+                                  </p>
+                                </div>
+
+                                <div className="pt-1">
+                                  <div className="flex items-center justify-between text-xs mb-1.5">
+                                    <span className="text-muted-foreground">Progress to FIRE</span>
+                                    <span className="font-semibold tabular-nums">{projections.fire.progressPercent.toFixed(1)}%</span>
+                                  </div>
+                                  <div className="h-2 w-full rounded-full bg-muted/70 overflow-hidden">
+                                    <motion.div
+                                      className="h-2 rounded-full bg-gradient-to-r from-orange-500 to-amber-400"
+                                      initial={{ width: 0 }}
+                                      animate={{ width: `${Math.min(projections.fire.progressPercent, 100)}%` }}
+                                      transition={{ delay: 0.2, duration: 0.5, ease: [0, 0, 0.2, 1] as const }}
+                                    />
+                                  </div>
+                                </div>
                               </div>
-                            </CardContent>
-                          </Card>
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <div className="card-elevated rounded-xl bg-card">
+                          <div className="flex flex-col items-center justify-center py-20 text-center">
+                            <div className="mb-5 rounded-2xl bg-orange-500/5 p-4">
+                              <IconFlame className="h-10 w-10 text-orange-400/40" />
+                            </div>
+                            <p className="text-base font-semibold text-foreground">
+                              No retirement projection data available
+                            </p>
+                            <p className="mt-1.5 text-sm text-muted-foreground max-w-xs">
+                              Add investments and expense data to generate retirement projections
+                            </p>
+                          </div>
                         </div>
-                      </>
-                    ) : (
-                      <Card className="border border-border/70">
-                        <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-                          <IconFlame className="mb-4 h-12 w-12 text-muted-foreground/40" />
-                          <p className="text-sm font-medium text-muted-foreground">
-                            No FIRE projection data available
-                          </p>
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            Add investments and expense data to generate FIRE
-                            projections
-                          </p>
-                        </CardContent>
-                      </Card>
-                    )}
-                  </TabsContent>
+                      )}
+                    </TabsContent>
 
-                  {/* ─── Tab 3: Investment Projections ─── */}
-                  <TabsContent value="investments" className="space-y-4">
-                    {projections ? (
-                      <>
-                        {/* SIP Projections Table */}
-                        {projections.sipProjections.length > 0 && (
-                          <Card className="border border-border/70">
-                            <CardHeader>
-                              <CardTitle>SIP Projections</CardTitle>
-                              <CardDescription>
+                    {/* ─── Tab 3: Projections (Investment + Net Worth) ─── */}
+                    <TabsContent value="projections" className="space-y-5">
+                      {projections ? (
+                        <>
+                          {/* SIP Projections Table */}
+                          {projections.sipProjections.length > 0 && (
+                            <div className="card-elevated rounded-xl bg-card p-5">
+                              <div className="flex items-center gap-1.5 mb-1">
+                                <IconChartLine className="h-4 w-4 text-muted-foreground" />
+                                <h3 className="text-sm font-semibold">SIP Projections</h3>
+                                <InfoTooltip text="SIP (Systematic Investment Plan) projections estimate how your recurring mutual fund investments will grow, assuming historical average returns." />
+                              </div>
+                              <p className="text-xs text-muted-foreground mb-4">
                                 Projected growth of your SIP investments
-                              </CardDescription>
-                            </CardHeader>
-                            <CardContent>
-                              <Table>
-                                <TableHeader>
-                                  <TableRow>
-                                    <TableHead>Name</TableHead>
-                                    <TableHead className="text-right">
-                                      Current Value
-                                    </TableHead>
-                                    <TableHead className="text-right">
-                                      3Y Projection
-                                    </TableHead>
-                                    <TableHead className="text-right">
-                                      5Y Projection
-                                    </TableHead>
-                                    <TableHead className="text-right">
-                                      10Y Projection
-                                    </TableHead>
-                                  </TableRow>
-                                </TableHeader>
-                                <TableBody>
-                                  {projections.sipProjections.map((sip) => (
-                                    <TableRow key={sip.name}>
-                                      <TableCell className="font-medium">
-                                        {sip.name.length > 40
-                                          ? `${sip.name.substring(0, 40)}...`
-                                          : sip.name}
-                                      </TableCell>
-                                      <TableCell className="text-right">
-                                        {formatCurrency(sip.current)}
-                                      </TableCell>
-                                      <TableCell className="text-right text-emerald-600">
-                                        {formatCurrency(sip.projected3y)}
-                                      </TableCell>
-                                      <TableCell className="text-right text-emerald-600">
-                                        {formatCurrency(sip.projected5y)}
-                                      </TableCell>
-                                      <TableCell className="text-right font-semibold text-emerald-600">
-                                        {formatCurrency(sip.projected10y)}
-                                      </TableCell>
+                              </p>
+                              <div className="rounded-lg border border-border/40 overflow-hidden">
+                                <Table>
+                                  <TableHeader>
+                                    <TableRow className="bg-muted/30 hover:bg-muted/30">
+                                      <TableHead className="font-semibold">Name</TableHead>
+                                      <TableHead className="text-right font-semibold">Current Value</TableHead>
+                                      <TableHead className="text-right font-semibold">3Y Projection</TableHead>
+                                      <TableHead className="text-right font-semibold">5Y Projection</TableHead>
+                                      <TableHead className="text-right font-semibold">10Y Projection</TableHead>
                                     </TableRow>
-                                  ))}
-                                </TableBody>
-                              </Table>
-                            </CardContent>
-                          </Card>
-                        )}
+                                  </TableHeader>
+                                  <TableBody>
+                                    {projections.sipProjections.map((sip, idx) => (
+                                      <motion.tr
+                                        key={sip.name}
+                                        {...listItem(idx)}
+                                        className="border-b border-border/40 last:border-0"
+                                      >
+                                        <TableCell className="font-medium">
+                                          {sip.name.length > 40
+                                            ? `${sip.name.substring(0, 40)}...`
+                                            : sip.name}
+                                        </TableCell>
+                                        <TableCell className="text-right tabular-nums">{formatCurrency(sip.current)}</TableCell>
+                                        <TableCell className="text-right tabular-nums text-emerald-600 dark:text-emerald-400">{formatCurrency(sip.projected3y)}</TableCell>
+                                        <TableCell className="text-right tabular-nums text-emerald-600 dark:text-emerald-400">{formatCurrency(sip.projected5y)}</TableCell>
+                                        <TableCell className="text-right tabular-nums font-semibold text-emerald-600 dark:text-emerald-400">{formatCurrency(sip.projected10y)}</TableCell>
+                                      </motion.tr>
+                                    ))}
+                                  </TableBody>
+                                </Table>
+                              </div>
+                            </div>
+                          )}
 
-                        {/* Portfolio Projection Chart */}
-                        {projections.portfolioProjection.length > 0 && (
-                          <Card className="border border-border/70">
-                            <CardHeader>
-                              <CardTitle>Portfolio Projection</CardTitle>
-                              <CardDescription>
+                          {/* Portfolio Projection Chart */}
+                          {projections.portfolioProjection.length > 0 && (
+                            <div className="card-elevated rounded-xl bg-card p-5">
+                              <div className="flex items-center gap-1.5 mb-1">
+                                <IconChartLine className="h-4 w-4 text-muted-foreground" />
+                                <h3 className="text-sm font-semibold">Portfolio Projection</h3>
+                                <InfoTooltip text="Projects how your total portfolio (stocks, mutual funds, SIPs) may grow over the next several years based on historical return assumptions." />
+                              </div>
+                              <p className="text-xs text-muted-foreground mb-4">
                                 Projected growth by asset class over time
-                              </CardDescription>
-                            </CardHeader>
-                            <CardContent>
+                              </p>
                               <ResponsiveContainer width="100%" height={350}>
-                                <AreaChart
-                                  data={projections.portfolioProjection}
-                                >
+                                <AreaChart data={projections.portfolioProjection}>
                                   <defs>
-                                    <linearGradient
-                                      id="stocksFill"
-                                      x1="0"
-                                      y1="0"
-                                      x2="0"
-                                      y2="1"
-                                    >
-                                      <stop
-                                        offset="0%"
-                                        stopColor="#6366f1"
-                                        stopOpacity={0.4}
-                                      />
-                                      <stop
-                                        offset="100%"
-                                        stopColor="#6366f1"
-                                        stopOpacity={0.05}
-                                      />
+                                    <linearGradient id="stocksFill" x1="0" y1="0" x2="0" y2="1">
+                                      <stop offset="0%" stopColor="var(--chart-4)" stopOpacity={0.4} />
+                                      <stop offset="100%" stopColor="var(--chart-4)" stopOpacity={0.02} />
                                     </linearGradient>
-                                    <linearGradient
-                                      id="mfFill"
-                                      x1="0"
-                                      y1="0"
-                                      x2="0"
-                                      y2="1"
-                                    >
-                                      <stop
-                                        offset="0%"
-                                        stopColor="#0ea5e9"
-                                        stopOpacity={0.4}
-                                      />
-                                      <stop
-                                        offset="100%"
-                                        stopColor="#0ea5e9"
-                                        stopOpacity={0.05}
-                                      />
+                                    <linearGradient id="mfFill" x1="0" y1="0" x2="0" y2="1">
+                                      <stop offset="0%" stopColor="var(--chart-1)" stopOpacity={0.4} />
+                                      <stop offset="100%" stopColor="var(--chart-1)" stopOpacity={0.02} />
                                     </linearGradient>
-                                    <linearGradient
-                                      id="sipsFill"
-                                      x1="0"
-                                      y1="0"
-                                      x2="0"
-                                      y2="1"
-                                    >
-                                      <stop
-                                        offset="0%"
-                                        stopColor="#22c55e"
-                                        stopOpacity={0.4}
-                                      />
-                                      <stop
-                                        offset="100%"
-                                        stopColor="#22c55e"
-                                        stopOpacity={0.05}
-                                      />
+                                    <linearGradient id="sipsFill" x1="0" y1="0" x2="0" y2="1">
+                                      <stop offset="0%" stopColor="var(--chart-2)" stopOpacity={0.4} />
+                                      <stop offset="100%" stopColor="var(--chart-2)" stopOpacity={0.02} />
                                     </linearGradient>
                                   </defs>
-                                  <CartesianGrid
-                                    vertical={false}
-                                    stroke="hsl(var(--border))"
-                                  />
+                                  <CartesianGrid vertical={false} stroke="var(--border)" />
                                   <XAxis
                                     dataKey="year"
                                     tickLine={false}
                                     axisLine={false}
                                     tickMargin={8}
-                                    tick={{
-                                      fontSize: 12,
-                                      fill: "hsl(var(--muted-foreground))",
-                                    }}
+                                    tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
                                   />
                                   <YAxis
                                     tickLine={false}
                                     axisLine={false}
-                                    tick={{
-                                      fontSize: 12,
-                                      fill: "hsl(var(--muted-foreground))",
-                                    }}
+                                    tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
                                     tickFormatter={formatCompactAxis}
                                   />
                                   <Tooltip
-                                    formatter={(value: number) =>
-                                      formatCurrency(value)
-                                    }
+                                    formatter={(value: number) => formatCurrency(value)}
                                     contentStyle={{
-                                      backgroundColor: "hsl(var(--card))",
-                                      border:
-                                        "1px solid hsl(var(--border))",
+                                      backgroundColor: "var(--card)",
+                                      color: "var(--card-foreground)",
+                                      border: "1px solid var(--border)",
                                       borderRadius: 12,
                                     }}
                                   />
@@ -1070,7 +1402,7 @@ export default function GoalsPage() {
                                     dataKey="stocks"
                                     name="Stocks"
                                     stackId="1"
-                                    stroke="#6366f1"
+                                    stroke="var(--chart-4)"
                                     fill="url(#stocksFill)"
                                     strokeWidth={2}
                                     strokeOpacity={0.95}
@@ -1081,7 +1413,7 @@ export default function GoalsPage() {
                                     dataKey="mutualFunds"
                                     name="Mutual Funds"
                                     stackId="1"
-                                    stroke="#0ea5e9"
+                                    stroke="var(--chart-1)"
                                     fill="url(#mfFill)"
                                     strokeWidth={2}
                                     strokeOpacity={0.95}
@@ -1092,7 +1424,7 @@ export default function GoalsPage() {
                                     dataKey="sips"
                                     name="SIPs"
                                     stackId="1"
-                                    stroke="#22c55e"
+                                    stroke="var(--chart-2)"
                                     fill="url(#sipsFill)"
                                     strokeWidth={2}
                                     strokeOpacity={0.95}
@@ -1100,129 +1432,53 @@ export default function GoalsPage() {
                                   />
                                 </AreaChart>
                               </ResponsiveContainer>
-                            </CardContent>
-                          </Card>
-                        )}
-
-                        {projections.sipProjections.length === 0 &&
-                          projections.portfolioProjection.length === 0 && (
-                            <Card className="border border-border/70">
-                              <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-                                <IconChartLine className="mb-4 h-12 w-12 text-muted-foreground/40" />
-                                <p className="text-sm font-medium text-muted-foreground">
-                                  No investment projection data available
-                                </p>
-                                <p className="mt-1 text-xs text-muted-foreground">
-                                  Add stocks, mutual funds, or SIPs to see
-                                  projections
-                                </p>
-                              </CardContent>
-                            </Card>
+                            </div>
                           )}
-                      </>
-                    ) : (
-                      <Card className="border border-border/70">
-                        <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-                          <IconChartLine className="mb-4 h-12 w-12 text-muted-foreground/40" />
-                          <p className="text-sm font-medium text-muted-foreground">
-                            Loading projection data...
-                          </p>
-                        </CardContent>
-                      </Card>
-                    )}
-                  </TabsContent>
 
-                  {/* ─── Tab 4: Net Worth Projection ─── */}
-                  <TabsContent value="networth" className="space-y-4">
-                    {projections ? (
-                      <>
-                        <div className="grid gap-4 lg:grid-cols-3">
-                          {/* Net Worth Chart */}
-                          <Card className="border border-border/70 lg:col-span-2">
-                            <CardHeader>
-                              <CardTitle>Net Worth Trajectory</CardTitle>
-                              <CardDescription>
+                          {/* Net Worth Trajectory + Emergency Fund */}
+                          <div className="grid gap-5 lg:grid-cols-3">
+                            {/* Net Worth Chart */}
+                            <div className="lg:col-span-2 card-elevated rounded-xl bg-card p-5">
+                              <div className="flex items-center gap-1.5 mb-1">
+                                <IconChartLine className="h-4 w-4 text-muted-foreground" />
+                                <h3 className="text-sm font-semibold">Net Worth Trajectory</h3>
+                              </div>
+                              <p className="text-xs text-muted-foreground mb-4">
                                 Invested amount vs projected growth over time
-                              </CardDescription>
-                            </CardHeader>
-                            <CardContent>
+                              </p>
                               {projections.netWorthProjection.length > 0 ? (
-                                <ResponsiveContainer
-                                  width="100%"
-                                  height={350}
-                                >
-                                  <AreaChart
-                                    data={projections.netWorthProjection}
-                                  >
+                                <ResponsiveContainer width="100%" height={350}>
+                                  <AreaChart data={projections.netWorthProjection}>
                                     <defs>
-                                      <linearGradient
-                                        id="investedFill"
-                                        x1="0"
-                                        y1="0"
-                                        x2="0"
-                                        y2="1"
-                                      >
-                                        <stop
-                                          offset="0%"
-                                          stopColor="#94a3b8"
-                                          stopOpacity={0.3}
-                                        />
-                                        <stop
-                                          offset="100%"
-                                          stopColor="#94a3b8"
-                                          stopOpacity={0.05}
-                                        />
+                                      <linearGradient id="investedFill" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="var(--muted-foreground)" stopOpacity={0.3} />
+                                        <stop offset="100%" stopColor="var(--muted-foreground)" stopOpacity={0.02} />
                                       </linearGradient>
-                                      <linearGradient
-                                        id="projectedFill"
-                                        x1="0"
-                                        y1="0"
-                                        x2="0"
-                                        y2="1"
-                                      >
-                                        <stop
-                                          offset="0%"
-                                          stopColor="#22c55e"
-                                          stopOpacity={0.4}
-                                        />
-                                        <stop
-                                          offset="100%"
-                                          stopColor="#22c55e"
-                                          stopOpacity={0.05}
-                                        />
+                                      <linearGradient id="projectedFill" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stopColor="var(--chart-2)" stopOpacity={0.4} />
+                                        <stop offset="100%" stopColor="var(--chart-2)" stopOpacity={0.02} />
                                       </linearGradient>
                                     </defs>
-                                    <CartesianGrid
-                                      vertical={false}
-                                      stroke="hsl(var(--border))"
-                                    />
+                                    <CartesianGrid vertical={false} stroke="var(--border)" />
                                     <XAxis
                                       dataKey="year"
                                       tickLine={false}
                                       axisLine={false}
                                       tickMargin={8}
-                                      tick={{
-                                        fontSize: 12,
-                                        fill: "hsl(var(--muted-foreground))",
-                                      }}
+                                      tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
                                     />
                                     <YAxis
                                       tickLine={false}
                                       axisLine={false}
-                                      tick={{
-                                        fontSize: 12,
-                                        fill: "hsl(var(--muted-foreground))",
-                                      }}
+                                      tick={{ fontSize: 12, fill: "var(--muted-foreground)" }}
                                       tickFormatter={formatCompactAxis}
                                     />
                                     <Tooltip
-                                      formatter={(value: number) =>
-                                        formatCurrency(value)
-                                      }
+                                      formatter={(value: number) => formatCurrency(value)}
                                       contentStyle={{
-                                        backgroundColor: "hsl(var(--card))",
-                                        border:
-                                          "1px solid hsl(var(--border))",
+                                        backgroundColor: "var(--card)",
+                                        color: "var(--card-foreground)",
+                                        border: "1px solid var(--border)",
                                         borderRadius: 12,
                                       }}
                                     />
@@ -1230,7 +1486,7 @@ export default function GoalsPage() {
                                       type="monotone"
                                       dataKey="invested"
                                       name="Invested"
-                                      stroke="#94a3b8"
+                                      stroke="var(--muted-foreground)"
                                       fill="url(#investedFill)"
                                       strokeWidth={2}
                                       strokeOpacity={0.8}
@@ -1240,7 +1496,7 @@ export default function GoalsPage() {
                                       type="monotone"
                                       dataKey="projected"
                                       name="Projected"
-                                      stroke="#22c55e"
+                                      stroke="var(--chart-2)"
                                       fill="url(#projectedFill)"
                                       strokeWidth={3}
                                       strokeOpacity={0.95}
@@ -1253,24 +1509,34 @@ export default function GoalsPage() {
                                   No net worth projection data available.
                                 </div>
                               )}
-                            </CardContent>
-                          </Card>
+                            </div>
 
-                          {/* Emergency Fund Progress */}
-                          <Card className="border border-border/70">
-                            <CardHeader>
-                              <CardTitle>Emergency Fund</CardTitle>
-                              <CardDescription>
+                            {/* Emergency Fund Progress */}
+                            <div className="card-elevated rounded-xl bg-card p-5">
+                              <div className="flex items-center gap-1.5 mb-1">
+                                <IconPigMoney className="h-4 w-4 text-muted-foreground" />
+                                <h3 className="text-sm font-semibold">Emergency Fund</h3>
+                                <InfoTooltip text="An emergency fund covers unexpected expenses. The target is typically 3-6 months of your average monthly expenses held in liquid savings." />
+                              </div>
+                              <p className="text-xs text-muted-foreground mb-4">
                                 Progress toward your safety net
-                              </CardDescription>
-                            </CardHeader>
-                            <CardContent className="space-y-6">
+                              </p>
                               {projections.emergencyFundProgress ? (
-                                <>
-                                  <div className="flex flex-col items-center justify-center py-4">
-                                    <div className="relative flex h-32 w-32 items-center justify-center">
+                                <div className="space-y-5">
+                                  <div className="flex flex-col items-center justify-center py-2">
+                                    <div className="relative flex h-36 w-36 items-center justify-center">
+                                      {/* Subtle glow */}
+                                      <div
+                                        className="absolute inset-0 rounded-full opacity-20 blur-xl"
+                                        style={{
+                                          background:
+                                            projections.emergencyFundProgress.currentMonths >= projections.emergencyFundProgress.targetMonths
+                                              ? "var(--chart-2)"
+                                              : "var(--chart-3)",
+                                        }}
+                                      />
                                       <svg
-                                        className="h-32 w-32 -rotate-90"
+                                        className="h-36 w-36 -rotate-90 relative"
                                         viewBox="0 0 120 120"
                                       >
                                         <circle
@@ -1278,110 +1544,112 @@ export default function GoalsPage() {
                                           cy="60"
                                           r="52"
                                           fill="none"
-                                          stroke="hsl(var(--border))"
+                                          stroke="var(--border)"
                                           strokeWidth="8"
                                         />
-                                        <circle
+                                        <motion.circle
                                           cx="60"
                                           cy="60"
                                           r="52"
                                           fill="none"
                                           stroke={
-                                            projections.emergencyFundProgress
-                                              .currentMonths >=
-                                            projections.emergencyFundProgress
-                                              .targetMonths
-                                              ? "#22c55e"
-                                              : "#f59e0b"
+                                            projections.emergencyFundProgress.currentMonths >=
+                                            projections.emergencyFundProgress.targetMonths
+                                              ? "var(--chart-2)"
+                                              : "var(--chart-3)"
                                           }
                                           strokeWidth="8"
                                           strokeLinecap="round"
-                                          strokeDasharray={`${
-                                            Math.min(
-                                              (projections
-                                                .emergencyFundProgress
-                                                .currentMonths /
-                                                projections
-                                                  .emergencyFundProgress
-                                                  .targetMonths) *
+                                          initial={{ strokeDasharray: "0 326.73" }}
+                                          animate={{
+                                            strokeDasharray: `${Math.min(
+                                              (projections.emergencyFundProgress.currentMonths /
+                                                projections.emergencyFundProgress.targetMonths) *
                                                 326.73,
                                               326.73
-                                            )
-                                          } 326.73`}
+                                            )} 326.73`,
+                                          }}
+                                          transition={{ delay: 0.3, duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
                                         />
                                       </svg>
                                       <div className="absolute flex flex-col items-center">
-                                        <span className="text-2xl font-bold">
-                                          {projections.emergencyFundProgress.currentMonths.toFixed(
-                                            1
-                                          )}
-                                        </span>
-                                        <span className="text-xs text-muted-foreground">
-                                          months
+                                        <motion.span
+                                          variants={numberPop}
+                                          className="text-2xl font-bold tabular-nums"
+                                        >
+                                          {Math.min(
+                                            Math.round((projections.emergencyFundProgress.currentMonths / projections.emergencyFundProgress.targetMonths) * 100),
+                                            100
+                                          )}%
+                                        </motion.span>
+                                        <span className="text-[11px] text-muted-foreground font-medium">
+                                          {projections.emergencyFundProgress.currentMonths.toFixed(1)} of {projections.emergencyFundProgress.targetMonths} mo
                                         </span>
                                       </div>
                                     </div>
                                   </div>
 
-                                  <div className="space-y-3">
-                                    <div className="flex items-center justify-between text-sm">
-                                      <span className="text-muted-foreground">
-                                        Target
-                                      </span>
-                                      <span className="font-medium">
-                                        {
-                                          projections.emergencyFundProgress
-                                            .targetMonths
-                                        }{" "}
-                                        months
-                                      </span>
+                                  <div className="space-y-2">
+                                    <div className="flex items-center justify-between text-xs rounded-lg bg-muted/40 px-3 py-2">
+                                      <span className="text-muted-foreground">Target</span>
+                                      <span className="font-semibold tabular-nums">{projections.emergencyFundProgress.targetMonths} months</span>
                                     </div>
-                                    <div className="flex items-center justify-between text-sm">
-                                      <span className="text-muted-foreground">
-                                        Current
-                                      </span>
-                                      <span className="font-medium">
-                                        {projections.emergencyFundProgress.currentMonths.toFixed(
-                                          1
-                                        )}{" "}
-                                        months
-                                      </span>
+                                    <div className="flex items-center justify-between text-xs rounded-lg bg-muted/40 px-3 py-2">
+                                      <span className="text-muted-foreground">Current</span>
+                                      <span className="font-semibold tabular-nums">{projections.emergencyFundProgress.currentMonths.toFixed(1)} months</span>
                                     </div>
-                                    <div className="flex items-center justify-between text-sm">
-                                      <span className="text-muted-foreground">
-                                        Remaining
-                                      </span>
-                                      <span className="font-medium">
-                                        {projections.emergencyFundProgress
-                                          .monthsToTarget > 0
+                                    <div className="flex items-center justify-between text-xs rounded-lg bg-muted/40 px-3 py-2">
+                                      <span className="text-muted-foreground">Remaining</span>
+                                      <span className="font-semibold">
+                                        {projections.emergencyFundProgress.monthsToTarget > 0
                                           ? `${projections.emergencyFundProgress.monthsToTarget} months to build`
                                           : "Target reached"}
                                       </span>
                                     </div>
                                   </div>
-                                </>
+                                </div>
                               ) : (
                                 <div className="flex h-40 items-center justify-center text-sm text-muted-foreground">
                                   No emergency fund data available.
                                 </div>
                               )}
-                            </CardContent>
-                          </Card>
+                            </div>
+                          </div>
+
+                          {projections.sipProjections.length === 0 &&
+                            projections.portfolioProjection.length === 0 &&
+                            projections.netWorthProjection.length === 0 && (
+                              <div className="card-elevated rounded-xl bg-card">
+                                <div className="flex flex-col items-center justify-center py-20 text-center">
+                                  <div className="mb-5 rounded-2xl bg-primary/5 p-4">
+                                    <IconChartLine className="h-10 w-10 text-primary/40" />
+                                  </div>
+                                  <p className="text-base font-semibold text-foreground">
+                                    No projection data available
+                                  </p>
+                                  <p className="mt-1.5 text-sm text-muted-foreground max-w-xs">
+                                    Add stocks, mutual funds, or SIPs to see projections
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                        </>
+                      ) : (
+                        <div className="card-elevated rounded-xl bg-card">
+                          <div className="flex flex-col items-center justify-center py-20 text-center">
+                            <div className="mb-5 rounded-2xl bg-primary/5 p-4">
+                              <IconChartLine className="h-10 w-10 text-primary/40" />
+                            </div>
+                            <p className="text-base font-semibold text-foreground">
+                              Loading projection data...
+                            </p>
+                          </div>
                         </div>
-                      </>
-                    ) : (
-                      <Card className="border border-border/70">
-                        <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-                          <IconPigMoney className="mb-4 h-12 w-12 text-muted-foreground/40" />
-                          <p className="text-sm font-medium text-muted-foreground">
-                            Loading net worth data...
-                          </p>
-                        </CardContent>
-                      </Card>
-                    )}
-                  </TabsContent>
-                </Tabs>
-              </>
+                      )}
+                    </TabsContent>
+                  </Tabs>
+                </motion.div>
+              </motion.div>
             )}
           </div>
         </div>
@@ -1454,6 +1722,16 @@ export default function GoalsPage() {
                     }))
                   }
                 />
+                {formData.targetDate && (
+                  <p className={`text-[11px] font-medium ${
+                    formatTimeline(formData.targetDate) === "Date is in the past"
+                      ? "text-rose-500"
+                      : "text-muted-foreground"
+                  }`}>
+                    <IconClockHour4 className="inline h-3 w-3 mr-0.5 -mt-px" />
+                    {formatTimeline(formData.targetDate)}
+                  </p>
+                )}
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="goal-monthly">Monthly Contribution</Label>
@@ -1578,6 +1856,16 @@ export default function GoalsPage() {
                     }))
                   }
                 />
+                {formData.targetDate && (
+                  <p className={`text-[11px] font-medium ${
+                    formatTimeline(formData.targetDate) === "Date is in the past"
+                      ? "text-rose-500"
+                      : "text-muted-foreground"
+                  }`}>
+                    <IconClockHour4 className="inline h-3 w-3 mr-0.5 -mt-px" />
+                    {formatTimeline(formData.targetDate)}
+                  </p>
+                )}
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="edit-monthly">Monthly Contribution</Label>
@@ -1699,6 +1987,88 @@ export default function GoalsPage() {
         </DialogContent>
       </Dialog>
 
+      {/* ─── Link Settings Dialog ─── */}
+      <Dialog open={showLinkSettingsDialog} onOpenChange={setShowLinkSettingsDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Link Settings{selectedGoal ? `: ${selectedGoal.name}` : ""}</DialogTitle>
+            <DialogDescription>
+              Auto-detect contributions from your transactions
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-2">
+            <div>
+              <Label className="text-sm">Categories</Label>
+              <p className="text-[11px] text-muted-foreground mb-2">
+                Transactions in these categories will count as contributions
+              </p>
+              <div className="grid grid-cols-2 gap-2">
+                {LINKABLE_CATEGORIES.map((cat) => (
+                  <label key={cat} className="flex items-center gap-2 text-sm cursor-pointer rounded-md px-2 py-1.5 hover:bg-muted/50 transition-colors">
+                    <Checkbox
+                      checked={linkCategories.includes(cat)}
+                      onCheckedChange={(checked) => toggleLinkCategory(cat, checked)}
+                    />
+                    {cat}
+                  </label>
+                ))}
+              </div>
+            </div>
+
+            <div>
+              <Label htmlFor="link-keywords" className="text-sm">Keywords</Label>
+              <p className="text-[11px] text-muted-foreground mb-2">
+                Match transactions where description or merchant contains these terms
+              </p>
+              <Input
+                id="link-keywords"
+                placeholder="PPF, FD, savings (comma-separated)"
+                value={linkKeywords}
+                onChange={(e) => setLinkKeywords(e.target.value)}
+              />
+            </div>
+
+            <Button
+              variant="outline"
+              size="sm"
+              className="gap-1.5"
+              onClick={applyLinkDefaults}
+            >
+              <IconTarget className="h-3.5 w-3.5" />
+              Apply Defaults for {selectedGoal?.category || "General"}
+            </Button>
+
+            {(linkCategories.length > 0 || linkKeywords.trim().length > 0) && (
+              <div className="rounded-lg bg-blue-500/5 border border-blue-500/20 px-3 py-2">
+                <p className="text-[11px] font-medium text-blue-600 dark:text-blue-400 mb-1">
+                  Current linking config
+                </p>
+                {linkCategories.length > 0 && (
+                  <p className="text-[11px] text-muted-foreground">
+                    Categories: {linkCategories.join(", ")}
+                  </p>
+                )}
+                {linkKeywords.trim().length > 0 && (
+                  <p className="text-[11px] text-muted-foreground">
+                    Keywords: {linkKeywords}
+                  </p>
+                )}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowLinkSettingsDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={saveLinkSettings} disabled={isSaving}>
+              {isSaving ? "Saving..." : "Save"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* ─── Delete Confirmation Dialog ─── */}
       <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <DialogContent className="sm:max-w-sm">
@@ -1727,5 +2097,57 @@ export default function GoalsPage() {
         </DialogContent>
       </Dialog>
     </SidebarProvider>
+  )
+}
+
+// ─── Loading Skeleton ───
+
+function GoalsLoadingSkeleton() {
+  return (
+    <div className="space-y-5">
+      {/* Stat bar skeleton */}
+      <div className="card-elevated rounded-xl grid grid-cols-2 sm:grid-cols-4 divide-x divide-border/40">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="px-5 py-4 space-y-1.5">
+            <Skeleton className="h-3 w-16" />
+            <Skeleton className="h-6 w-24" />
+            <Skeleton className="h-3 w-20" />
+          </div>
+        ))}
+      </div>
+      {/* Tabs skeleton */}
+      <div className="space-y-5">
+        <Skeleton className="h-10 w-80 rounded-lg" />
+        <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="card-elevated rounded-xl overflow-hidden">
+              <Skeleton className="h-1 w-full" />
+              <div className="p-5 space-y-4">
+                <div className="flex gap-3">
+                  <Skeleton className="h-9 w-9 rounded-lg" />
+                  <div className="space-y-2 flex-1">
+                    <Skeleton className="h-4 w-28" />
+                    <Skeleton className="h-4 w-20" />
+                  </div>
+                </div>
+                <div className="flex items-center gap-4">
+                  <Skeleton className="h-[60px] w-[60px] rounded-full" />
+                  <div className="space-y-1.5 flex-1">
+                    <Skeleton className="h-5 w-24" />
+                    <Skeleton className="h-3 w-32" />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {Array.from({ length: 4 }).map((_, j) => (
+                    <Skeleton key={j} className="h-12 rounded-lg" />
+                  ))}
+                </div>
+                <Skeleton className="h-9 w-full rounded-md" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   )
 }

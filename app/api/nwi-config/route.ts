@@ -6,6 +6,9 @@ import { TransactionCategory, NWIConfig } from '@/lib/types';
 
 const COLLECTION = 'nwi_config';
 
+// Enable Next.js caching for this route
+export const revalidate = 300; // 5 minutes
+
 export async function OPTIONS() {
   return handleOptions();
 }
@@ -24,6 +27,36 @@ export async function GET(request: NextRequest) {
         doc = await col.findOne({ userId: user.userId });
       }
 
+      const headers = new Headers(corsHeaders());
+      headers.set('Cache-Control', 'public, max-age=300, s-maxage=300'); // 5 minutes
+
+      // Backfill savings bucket for existing configs that don't have it
+      if (!doc!.savings) {
+        const defaultSavings = { percentage: 0, categories: ['Savings'] };
+        const investmentCats = (doc!.investments?.categories || []).filter(
+          (c: string) => c !== 'Savings'
+        );
+        await col.updateOne(
+          { userId: user.userId },
+          { $set: { savings: defaultSavings, 'investments.categories': investmentCats } }
+        );
+        doc!.savings = defaultSavings;
+        doc!.investments.categories = investmentCats;
+      } else {
+        // Fix duplicate: remove 'Savings' from investments if it also exists in savings bucket
+        const savingsCats: string[] = doc!.savings?.categories || [];
+        const investCats: string[] = doc!.investments?.categories || [];
+        const dupes = investCats.filter((c: string) => savingsCats.includes(c));
+        if (dupes.length > 0) {
+          const fixedInvestCats = investCats.filter((c: string) => !savingsCats.includes(c));
+          await col.updateOne(
+            { userId: user.userId },
+            { $set: { 'investments.categories': fixedInvestCats } }
+          );
+          doc!.investments.categories = fixedInvestCats;
+        }
+      }
+
       return NextResponse.json(
         {
           success: true,
@@ -31,9 +64,10 @@ export async function GET(request: NextRequest) {
             needs: doc!.needs,
             wants: doc!.wants,
             investments: doc!.investments,
+            savings: doc!.savings,
           },
         },
-        { headers: corsHeaders() }
+        { headers }
       );
     } catch (error) {
       const message = error instanceof Error ? error.message : 'Unknown error';
@@ -50,13 +84,13 @@ export async function PUT(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {
       const body = await req.json();
-      const { needs, wants, investments } = body as Partial<
-        Pick<NWIConfig, 'needs' | 'wants' | 'investments'>
+      const { needs, wants, investments, savings } = body as Partial<
+        Pick<NWIConfig, 'needs' | 'wants' | 'investments' | 'savings'>
       >;
 
-      // Validate percentages sum to 100 when all three are provided
-      if (needs?.percentage != null && wants?.percentage != null && investments?.percentage != null) {
-        const total = needs.percentage + wants.percentage + investments.percentage;
+      // Validate percentages sum to 100 when all four are provided
+      if (needs?.percentage != null && wants?.percentage != null && investments?.percentage != null && savings?.percentage != null) {
+        const total = needs.percentage + wants.percentage + investments.percentage + savings.percentage;
         if (total !== 100) {
           return NextResponse.json(
             { success: false, error: `Percentages must sum to 100 (got ${total})` },
@@ -65,21 +99,18 @@ export async function PUT(request: NextRequest) {
         }
       }
 
-      // Validate no duplicate categories across buckets
-      const allCategories: TransactionCategory[] = [
-        ...(needs?.categories ?? []),
-        ...(wants?.categories ?? []),
-        ...(investments?.categories ?? []),
-      ];
-      const seen = new Set<TransactionCategory>();
-      for (const cat of allCategories) {
-        if (seen.has(cat)) {
-          return NextResponse.json(
-            { success: false, error: `Duplicate category across buckets: ${cat}` },
-            { status: 400, headers: corsHeaders() }
-          );
+      // Auto-deduplicate categories across buckets (savings > investments > wants > needs)
+      // Higher-priority buckets keep the category; lower-priority ones have it removed
+      const buckets = [savings, investments, wants, needs]; // priority order
+      const claimed = new Set<string>();
+      for (const bucket of buckets) {
+        if (bucket?.categories) {
+          bucket.categories = bucket.categories.filter((c: TransactionCategory) => {
+            if (claimed.has(c)) return false;
+            claimed.add(c);
+            return true;
+          });
         }
-        seen.add(cat);
       }
 
       const db = await getMongoDb();
@@ -91,6 +122,7 @@ export async function PUT(request: NextRequest) {
       if (needs) updateFields.needs = needs;
       if (wants) updateFields.wants = wants;
       if (investments) updateFields.investments = investments;
+      if (savings) updateFields.savings = savings;
 
       await col.updateOne(
         { userId: user.userId },
@@ -106,6 +138,7 @@ export async function PUT(request: NextRequest) {
             needs: updatedDoc!.needs,
             wants: updatedDoc!.wants,
             investments: updatedDoc!.investments,
+            savings: updatedDoc!.savings,
           },
         },
         { headers: corsHeaders() }

@@ -51,7 +51,7 @@ export function calculateAnalytics(transactions: Transaction[]): Analytics {
   );
   const netSavings = totalIncome - totalExpenses;
   const rawSavingsRate = totalIncome > 0 ? (netSavings / totalIncome) * 100 : 0;
-  const savingsRate = Math.max(-100, Math.min(100, rawSavingsRate));
+  const savingsRate = rawSavingsRate;
 
   // Calculate monthly averages
   const monthlyTrends = calculateMonthlyTrends(completedTransactions);
@@ -242,7 +242,7 @@ export function calculateMonthlyTrends(
         income,
         expenses,
         savings,
-        savingsRate: Math.max(-100, Math.min(100, income > 0 ? (savings / income) * 100 : 0)),
+        savingsRate: income > 0 ? (savings / income) * 100 : 0,
         transactionCount: txns.length,
       };
     }
@@ -447,8 +447,7 @@ export function calculateFinancialSummary(
 
   // Calculate savings
   const savings = totalIncome - totalExpenses;
-  const rawSavingsRate = totalIncome > 0 ? (savings / totalIncome) * 100 : 0;
-  const savingsRate = Math.max(-100, Math.min(100, rawSavingsRate));
+  const savingsRate = totalIncome > 0 ? (savings / totalIncome) * 100 : 0;
 
   // Calculate transaction counts by type
   const byType: Record<TransactionType, number> = {

@@ -19,6 +19,12 @@ function getErrorMessage(error: unknown) {
 /**
  * Persist an array of parsed transactions into MongoDB.
  * Uses the sheet's txn_id (transaction.id) as a dedupe key.
+ *
+ * Category handling:
+ *  - Existing transactions: category preserved (never overwritten by sync)
+ *  - New transactions: categorized via user rules + built-in categorizer
+ *
+ * To re-apply rules to existing transactions, use POST /api/transactions/recategorize.
  */
 async function persistTransactions(userId: string, transactions: Transaction[]) {
   if (!transactions.length) return
@@ -26,14 +32,49 @@ async function persistTransactions(userId: string, transactions: Transaction[]) 
   const db = await getMongoDb()
   const col = db.collection("transactions")
 
-  // Fetch user rules so we can apply them on import
+  // Load user rules for categorizing NEW transactions
   const rules = await db
     .collection("categorization_rules")
     .find({ userId, enabled: true })
     .toArray()
 
+  // Load ALL existing txnIds
+  const existingDocs = await col
+    .find({ userId }, { projection: { txnId: 1 } })
+    .toArray()
+  const existingIds = new Set(existingDocs.map((d) => d.txnId as string))
+
   const ops = transactions.map((txn) => {
-    // Apply categorization rules — rules override auto-categorization
+    const dateStr = txn.date instanceof Date ? txn.date.toISOString() : String(txn.date)
+
+    const baseFields = {
+      date: dateStr,
+      description: txn.description,
+      merchant: txn.merchant,
+      amount: txn.amount,
+      type: txn.type,
+      paymentMethod: txn.paymentMethod,
+      account: txn.account,
+      status: txn.status,
+      tags: txn.tags,
+      recurring: txn.recurring,
+      balance: txn.balance,
+      sequence: txn.sequence,
+      updatedAt: new Date().toISOString(),
+    }
+
+    if (existingIds.has(txn.id)) {
+      // EXISTING transaction — update non-category fields only
+      return {
+        updateOne: {
+          filter: { userId, txnId: txn.id },
+          update: { $set: baseFields },
+          upsert: false,
+        },
+      }
+    }
+
+    // NEW transaction — apply rules, fall back to built-in categorizer
     let category = txn.category
     for (const rule of rules) {
       const pattern = rule.pattern as string
@@ -50,12 +91,9 @@ async function persistTransactions(userId: string, transactions: Transaction[]) 
 
       if (haystack.includes(needle)) {
         category = rule.category as TransactionCategory
-        break // first matching rule wins
+        break
       }
     }
-
-    // Serialize Date objects
-    const dateStr = txn.date instanceof Date ? txn.date.toISOString() : String(txn.date)
 
     return {
       updateOne: {
@@ -64,19 +102,8 @@ async function persistTransactions(userId: string, transactions: Transaction[]) 
           $set: {
             userId,
             txnId: txn.id,
-            date: dateStr,
-            description: txn.description,
-            merchant: txn.merchant,
+            ...baseFields,
             category,
-            amount: txn.amount,
-            type: txn.type,
-            paymentMethod: txn.paymentMethod,
-            account: txn.account,
-            status: txn.status,
-            tags: txn.tags,
-            recurring: txn.recurring,
-            balance: txn.balance,
-            updatedAt: new Date().toISOString(),
           },
           $setOnInsert: {
             createdAt: new Date().toISOString(),
@@ -177,6 +204,7 @@ export async function GET(request: NextRequest) {
         tags: doc.tags || [],
         recurring: doc.recurring || false,
         balance: doc.balance,
+        sequence: doc.sequence,
       }))
 
       return NextResponse.json(
@@ -323,13 +351,92 @@ export async function PATCH(request: NextRequest) {
 /**
  * DELETE /api/transactions
  *
- * Delete transactions before a specified date.
- * Body: { before: "2026-01-01" }
+ * Supports three modes:
+ *   1. Single delete by ID:   ?id=<ObjectId>
+ *   2. Bulk delete by IDs:    ?ids=<id1>,<id2>,<id3>
+ *   3. Date-range delete:     body { before: "2026-01-01" }
+ *
+ * Query-param modes are checked first. If neither `id` nor `ids` is present,
+ * falls back to body-based `{ before }` delete.
  */
 export async function DELETE(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {
-      const body = await req.json()
+      const searchParams = req.nextUrl.searchParams
+      const singleId = searchParams.get("id")
+      const bulkIds = searchParams.get("ids")
+
+      const db = await getMongoDb()
+      const col = db.collection("transactions")
+
+      // --- Mode 1: Single delete by _id ---
+      if (singleId) {
+        const id = singleId.trim()
+        if (!/^[0-9a-fA-F]{24}$/.test(id)) {
+          return NextResponse.json(
+            { success: false, message: "Invalid ObjectId format." },
+            { status: 400, headers: corsHeaders() }
+          )
+        }
+
+        const result = await col.deleteOne({
+          _id: new ObjectId(id),
+          userId: user.userId,
+        })
+
+        return NextResponse.json(
+          { success: true, deletedCount: result.deletedCount },
+          { status: 200, headers: corsHeaders() }
+        )
+      }
+
+      // --- Mode 2: Bulk delete by _ids ---
+      if (bulkIds) {
+        const rawIds = bulkIds.split(",").map((s) => s.trim()).filter(Boolean)
+        const validIds: ObjectId[] = []
+        const invalidIds: string[] = []
+
+        for (const id of rawIds) {
+          if (/^[0-9a-fA-F]{24}$/.test(id)) {
+            validIds.push(new ObjectId(id))
+          } else {
+            invalidIds.push(id)
+          }
+        }
+
+        if (validIds.length === 0) {
+          return NextResponse.json(
+            { success: false, message: "No valid ObjectIds provided.", invalidIds },
+            { status: 400, headers: corsHeaders() }
+          )
+        }
+
+        const result = await col.deleteMany({
+          _id: { $in: validIds },
+          userId: user.userId,
+        })
+
+        return NextResponse.json(
+          {
+            success: true,
+            deletedCount: result.deletedCount,
+            ...(invalidIds.length > 0 ? { invalidIds } : {}),
+          },
+          { status: 200, headers: corsHeaders() }
+        )
+      }
+
+      // --- Mode 3: Body-based date-range delete (legacy) ---
+      let body: Record<string, unknown> = {}
+      try {
+        body = await req.json()
+      } catch {
+        return NextResponse.json(
+          { success: false, message: "Provide ?id=, ?ids=, or body { before: \"date\" }." },
+          { status: 400, headers: corsHeaders() }
+        )
+      }
+
       const before = typeof body.before === "string" ? body.before.trim() : ""
 
       if (!before) {
@@ -346,9 +453,6 @@ export async function DELETE(request: NextRequest) {
           { status: 400, headers: corsHeaders() }
         )
       }
-
-      const db = await getMongoDb()
-      const col = db.collection("transactions")
 
       const result = await col.deleteMany({
         userId: user.userId,
@@ -430,6 +534,76 @@ export async function PUT(request: NextRequest) {
       console.error("Transaction update error:", getErrorMessage(error))
       return NextResponse.json(
         { success: false, message: "Failed to update transaction." },
+        { status: 500, headers: corsHeaders() }
+      )
+    }
+  })(request)
+}
+
+/**
+ * POST /api/transactions
+ *
+ * Manually add a new transaction.
+ * Body: { description, amount, type, date, category, paymentMethod }
+ */
+export async function POST(request: NextRequest) {
+  return withAuth(async (req, { user }) => {
+    try {
+      const body = await req.json()
+      const description = typeof body.description === "string" ? body.description.trim() : ""
+      const amount = typeof body.amount === "number" ? body.amount : parseFloat(body.amount)
+      const type = typeof body.type === "string" ? body.type.trim() : ""
+      const date = typeof body.date === "string" ? body.date.trim() : ""
+      const category = typeof body.category === "string" ? body.category.trim() : "Uncategorized"
+      const paymentMethod = typeof body.paymentMethod === "string" ? body.paymentMethod.trim() : "Other"
+
+      if (!description || isNaN(amount) || amount <= 0 || !type || !date) {
+        return NextResponse.json(
+          { success: false, message: "description, amount (>0), type, and date are required." },
+          { status: 400, headers: corsHeaders() }
+        )
+      }
+
+      if (!["income", "expense"].includes(type)) {
+        return NextResponse.json(
+          { success: false, message: "type must be 'income' or 'expense'." },
+          { status: 400, headers: corsHeaders() }
+        )
+      }
+
+      const db = await getMongoDb()
+      const col = db.collection("transactions")
+      const now = new Date().toISOString()
+      const txnId = `manual-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`
+
+      const doc = {
+        userId: user.userId,
+        txnId,
+        date: new Date(date).toISOString(),
+        description,
+        merchant: "",
+        category,
+        amount,
+        type,
+        paymentMethod,
+        account: "",
+        status: "completed",
+        tags: [],
+        recurring: false,
+        createdAt: now,
+        updatedAt: now,
+      }
+
+      await col.insertOne(doc)
+
+      return NextResponse.json(
+        { success: true, transaction: { id: txnId, ...doc } },
+        { status: 201, headers: corsHeaders() }
+      )
+    } catch (error: unknown) {
+      console.error("Transaction create error:", getErrorMessage(error))
+      return NextResponse.json(
+        { success: false, message: "Failed to create transaction." },
         { status: 500, headers: corsHeaders() }
       )
     }
