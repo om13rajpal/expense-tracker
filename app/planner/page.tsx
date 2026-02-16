@@ -51,6 +51,7 @@ import { Label } from "@/components/ui/label"
 import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Progress } from "@/components/ui/progress"
+import { InsightMarkdown } from "@/components/insight-markdown"
 import { stagger, fadeUp, fadeUpSmall } from "@/lib/motion"
 import { formatINR, formatCompact } from "@/lib/format"
 
@@ -101,23 +102,6 @@ const INVESTMENT_COLORS = [
 ]
 
 // ─── Helpers ───
-
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-}
-
-function inlineMd(text: string): string {
-  const escaped = escapeHtml(text)
-  return escaped
-    .replace(/^#{1,3}\s+(.+?)(?:\n|$)/gm, "<strong>$1</strong> ")
-    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*(.+?)\*/g, "<em>$1</em>")
-    .replace(/`(.+?)`/g, '<code class="rounded bg-muted px-1 py-0.5 text-xs">$1</code>')
-}
 
 function pct(amount: number, total: number): number {
   if (total <= 0) return 0
@@ -977,10 +961,9 @@ export default function PlannerPage() {
                   </Link>
                 </div>
                 <div className="rounded-lg bg-muted/30 p-3">
-                  <p
-                    className="text-sm text-muted-foreground leading-relaxed"
-                    dangerouslySetInnerHTML={{ __html: inlineMd(linked.aiRecommendation.content) }}
-                  />
+                  <div className="text-sm text-muted-foreground leading-relaxed">
+                    <InsightMarkdown content={linked.aiRecommendation.content} />
+                  </div>
                   <p className="text-[11px] text-muted-foreground/60 mt-2" suppressHydrationWarning>
                     Generated {new Date(linked.aiRecommendation.generatedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" })}
                   </p>

@@ -31,6 +31,7 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Button } from "@/components/ui/button"
+import { InsightMarkdown } from "@/components/insight-markdown"
 import { fadeUp } from "@/lib/motion"
 import type { AiInsightType, InsightSection } from "@/lib/ai-types"
 
@@ -370,9 +371,7 @@ function InsightCard({
           {insight.sections && insight.sections.length > 0 ? (
             <SectionRenderer sections={insight.sections} />
           ) : (
-            <div className="prose-finance max-w-none">
-              <MarkdownRenderer content={insight.content} />
-            </div>
+            <InsightMarkdown content={insight.content} />
           )}
         </div>
       ) : (
@@ -409,10 +408,9 @@ function SectionCard({ section }: { section: InsightSection }) {
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {section.title}
             </p>
-            <p
-              className="text-sm font-medium leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: inlineMd(section.highlight || "") }}
-            />
+            <div className="text-sm font-medium leading-relaxed">
+              <InsightMarkdown content={section.highlight || ""} />
+            </div>
           </div>
         </div>
       </div>
@@ -430,10 +428,9 @@ function SectionCard({ section }: { section: InsightSection }) {
             <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
               {section.title}
             </p>
-            <p
-              className="text-sm leading-relaxed text-foreground/90"
-              dangerouslySetInnerHTML={{ __html: inlineMd(section.text || "") }}
-            />
+            <div className="text-sm leading-relaxed text-foreground/90">
+              <InsightMarkdown content={section.text || ""} />
+            </div>
           </div>
         </div>
       </div>
@@ -453,10 +450,9 @@ function SectionCard({ section }: { section: InsightSection }) {
             {section.title}
           </p>
           {section.text && (
-            <p
-              className="text-sm leading-relaxed text-foreground/90"
-              dangerouslySetInnerHTML={{ __html: inlineMd(section.text) }}
-            />
+            <div className="text-sm leading-relaxed text-foreground/90">
+              <InsightMarkdown content={section.text} />
+            </div>
           )}
           {section.items && section.items.length > 0 && (
             <ul className="space-y-1.5">
@@ -465,10 +461,9 @@ function SectionCard({ section }: { section: InsightSection }) {
                   <span className="mt-0.5 shrink-0 text-xs font-medium text-muted-foreground/70">
                     {isNumbered ? `${i + 1}.` : "\u2022"}
                   </span>
-                  <span
-                    className="text-foreground/90"
-                    dangerouslySetInnerHTML={{ __html: inlineMd(item) }}
-                  />
+                  <span className="text-foreground/90">
+                    <InsightMarkdown content={item} />
+                  </span>
                 </li>
               ))}
             </ul>
@@ -567,61 +562,3 @@ function EmptyState() {
   )
 }
 
-/* ─── Markdown renderer (fallback for non-structured responses) ─── */
-
-function MarkdownRenderer({ content }: { content: string }) {
-  const lines = content.split("\n")
-  const elements: React.ReactNode[] = []
-  let key = 0
-
-  for (const line of lines) {
-    const trimmed = line.trim()
-    if (!trimmed) {
-      elements.push(<br key={key++} />)
-    } else if (trimmed.startsWith("### ")) {
-      elements.push(<h3 key={key++}>{trimmed.slice(4)}</h3>)
-    } else if (trimmed.startsWith("## ")) {
-      elements.push(<h2 key={key++}>{trimmed.slice(3)}</h2>)
-    } else if (trimmed.startsWith("# ")) {
-      elements.push(<h1 key={key++}>{trimmed.slice(2)}</h1>)
-    } else if (trimmed.startsWith("- ") || trimmed.startsWith("* ")) {
-      elements.push(
-        <div key={key++} className="flex gap-2 pl-2">
-          <span className="shrink-0 text-muted-foreground">-</span>
-          <span dangerouslySetInnerHTML={{ __html: inlineMd(trimmed.slice(2)) }} />
-        </div>
-      )
-    } else if (/^\d+\.\s/.test(trimmed)) {
-      const text = trimmed.replace(/^\d+\.\s/, "")
-      const num = trimmed.match(/^(\d+)\./)?.[1]
-      elements.push(
-        <div key={key++} className="flex gap-2 pl-2">
-          <span className="shrink-0 text-muted-foreground">{num}.</span>
-          <span dangerouslySetInnerHTML={{ __html: inlineMd(text) }} />
-        </div>
-      )
-    } else {
-      elements.push(
-        <p key={key++} dangerouslySetInnerHTML={{ __html: inlineMd(trimmed) }} />
-      )
-    }
-  }
-
-  return <>{elements}</>
-}
-
-function escapeHtml(text: string): string {
-  return text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-}
-
-function inlineMd(text: string): string {
-  const escaped = escapeHtml(text)
-  return escaped
-    .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
-    .replace(/\*(.+?)\*/g, "<em>$1</em>")
-    .replace(/`(.+?)`/g, '<code class="rounded bg-muted px-1 py-0.5 text-xs">$1</code>')
-}
