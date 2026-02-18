@@ -1,3 +1,11 @@
+/**
+ * Stock Quotes API
+ *
+ * GET /api/stocks/quotes?symbols=RELIANCE,TCS,...
+ * Fetches live stock prices using a multi-source fallback strategy:
+ *   Indian stocks: Google Finance -> Yahoo Finance -> Finnhub
+ *   US stocks:     Finnhub -> Yahoo Finance -> Google Finance
+ */
 import { NextRequest, NextResponse } from "next/server"
 
 import { corsHeaders, handleOptions, withAuth } from "@/lib/middleware"

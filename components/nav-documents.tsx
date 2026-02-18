@@ -1,3 +1,7 @@
+/**
+ * Sidebar document list with context menus for open, share, and delete actions.
+ * @module components/nav-documents
+ */
 "use client"
 
 import {
@@ -25,6 +29,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 
+/** Renders a sidebar group of document links with dropdown action menus. */
 export function NavDocuments({
   items,
 }: {

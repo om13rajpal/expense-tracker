@@ -1,3 +1,8 @@
+/**
+ * Global command palette (Ctrl+K / Cmd+K) for quick page navigation and actions.
+ * Built on top of the cmdk-based `CommandDialog` component.
+ * @module components/command-palette
+ */
 "use client"
 
 import * as React from "react"
@@ -152,6 +157,7 @@ const actions: CommandEntry[] = [
 
 // ─── Component ───────────────────────────────────────────────────────
 
+/** Renders the search trigger button and the command dialog overlay. */
 export function CommandPalette() {
   const [open, setOpen] = React.useState(false)
   const router = useRouter()

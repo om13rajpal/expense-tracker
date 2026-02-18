@@ -1,3 +1,9 @@
+/**
+ * Context provider that wires global keyboard shortcuts to the quick-add dialog
+ * and provides an `openQuickAdd` function via React context.
+ * Also renders the mobile floating action button.
+ * @module components/keyboard-shortcuts-provider
+ */
 "use client"
 
 import { useState, createContext, useContext, useCallback } from "react"
@@ -13,10 +19,12 @@ const ShortcutsContext = createContext<ShortcutsContextType>({
   openQuickAdd: () => {},
 })
 
+/** Accesses the keyboard shortcuts context (e.g. `openQuickAdd`). */
 export function useShortcuts() {
   return useContext(ShortcutsContext)
 }
 
+/** Wraps children with global keyboard shortcut listeners and the quick-add dialog. */
 export function KeyboardShortcutsProvider({
   children,
 }: {

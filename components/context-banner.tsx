@@ -1,3 +1,7 @@
+/**
+ * Dismissible context banner for inline info, warning, success, and error messages.
+ * @module components/context-banner
+ */
 "use client"
 
 import * as React from "react"
@@ -35,6 +39,12 @@ interface ContextBannerProps {
   className?: string
 }
 
+/**
+ * Renders a colored banner with icon, title, optional description, and dismiss button.
+ * @param variant - Visual severity: info, warning, success, or error.
+ * @param title - Primary message.
+ * @param dismissible - Whether the user can dismiss the banner (default true).
+ */
 export function ContextBanner({
   variant,
   title,

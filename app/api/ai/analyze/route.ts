@@ -1,3 +1,10 @@
+/**
+ * AI Spending Analysis API
+ *
+ * POST /api/ai/analyze
+ * Triggers a forced spending analysis via the AI pipeline.
+ * Legacy/backward-compatible endpoint; prefer /api/ai/insights for new code.
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { corsHeaders, handleOptions, withAuth } from '@/lib/middleware';
 import { runAiPipeline } from '@/lib/ai-pipeline';
@@ -8,7 +15,7 @@ function getErrorMessage(error: unknown) {
 
 /**
  * POST /api/ai/analyze
- * Backward-compatible wrapper — delegates to AI pipeline (spending_analysis)
+ * Backward-compatible wrapper -- delegates to AI pipeline (spending_analysis)
  */
 export async function POST(request: NextRequest) {
   return withAuth(async (_req, { user }) => {

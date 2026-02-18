@@ -1,3 +1,9 @@
+/**
+ * Slide-out notification panel triggered from the site header bell icon.
+ * Groups notifications by Today / Yesterday / Earlier and supports
+ * mark-as-read, delete, and deep-link navigation.
+ * @module components/notification-center
+ */
 "use client"
 
 import * as React from "react"
@@ -180,6 +186,7 @@ function EmptyState() {
 
 // ─── Notification Center ─────────────────────────────────────────────
 
+/** Notification bell icon with unread badge and a slide-out sheet of grouped notifications. */
 export function NotificationCenter() {
   const router = useRouter()
   const [open, setOpen] = React.useState(false)

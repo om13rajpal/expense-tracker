@@ -1,3 +1,8 @@
+/**
+ * Month-over-month spending comparison with a grouped bar chart and
+ * detailed category breakdown. Highlights biggest increases and decreases.
+ * @module components/spending-comparison
+ */
 "use client"
 
 import * as React from "react"
@@ -67,6 +72,10 @@ function ComparisonTooltip({ active, payload, label }: any) {
   )
 }
 
+/**
+ * Compares current month vs previous month spending by category.
+ * @param transactions - All transactions; the component filters by month internally.
+ */
 export function SpendingComparison({ transactions }: SpendingComparisonProps) {
   const now = new Date()
   const currentYear = now.getFullYear()

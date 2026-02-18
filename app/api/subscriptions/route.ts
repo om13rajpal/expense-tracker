@@ -1,3 +1,12 @@
+/**
+ * Subscriptions CRUD API
+ * Manages recurring subscription entries (Netflix, Spotify, etc.) in MongoDB.
+ *
+ * GET    /api/subscriptions       - List all subscriptions for the user
+ * POST   /api/subscriptions       - Create a new subscription
+ * PATCH  /api/subscriptions       - Update an existing subscription (body includes id)
+ * DELETE /api/subscriptions?id=x  - Delete a subscription by ObjectId
+ */
 import { NextRequest, NextResponse } from "next/server"
 import { ObjectId } from "mongodb"
 
@@ -34,8 +43,7 @@ function computeNextExpected(from: string, frequency: string): string {
 const VALID_FREQUENCIES = ["monthly", "yearly", "weekly"]
 const VALID_STATUSES = ["active", "cancelled", "paused"]
 
-// ─── GET: list all subscriptions for the authenticated user ───
-
+/** GET /api/subscriptions - List all subscriptions for the user, sorted by next expected date. */
 export async function GET(request: NextRequest) {
   return withAuth(async (_req, { user }) => {
     try {
@@ -60,8 +68,7 @@ export async function GET(request: NextRequest) {
   })(request)
 }
 
-// ─── POST: create a new subscription ───
-
+/** POST /api/subscriptions - Create a new subscription. Body: { name, amount, frequency, nextExpected, ... } */
 export async function POST(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {
@@ -119,8 +126,7 @@ export async function POST(request: NextRequest) {
   })(request)
 }
 
-// ─── PATCH: update an existing subscription ───
-
+/** PATCH /api/subscriptions - Update an existing subscription. Body: { id, ...fields } */
 export async function PATCH(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {
@@ -186,8 +192,7 @@ export async function PATCH(request: NextRequest) {
   })(request)
 }
 
-// ─── DELETE: remove a subscription by id ───
-
+/** DELETE /api/subscriptions?id=x - Remove a subscription by ObjectId. */
 export async function DELETE(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {
@@ -221,8 +226,7 @@ export async function DELETE(request: NextRequest) {
   })(request)
 }
 
-// ─── OPTIONS: CORS preflight ───
-
+/** OPTIONS /api/subscriptions - CORS preflight. */
 export async function OPTIONS() {
   return handleOptions()
 }

@@ -1,3 +1,11 @@
+/**
+ * Stock Transactions API
+ * Records buy/sell stock transaction history in MongoDB.
+ *
+ * GET    /api/stocks/transactions       - List all stock transactions
+ * POST   /api/stocks/transactions       - Bulk-import transactions via { items: [...] }
+ * DELETE /api/stocks/transactions?id=x  - Delete a transaction by ObjectId
+ */
 import { NextRequest, NextResponse } from "next/server"
 import { ObjectId } from "mongodb"
 

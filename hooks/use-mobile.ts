@@ -1,7 +1,15 @@
+/**
+ * Responsive breakpoint hook.
+ * @module hooks/use-mobile
+ */
 import * as React from "react"
 
 const MOBILE_BREAKPOINT = 768
 
+/**
+ * Returns `true` when the viewport width is below {@link MOBILE_BREAKPOINT} (768 px).
+ * Uses `matchMedia` for efficient change detection.
+ */
 export function useIsMobile() {
   const [isMobile, setIsMobile] = React.useState<boolean | undefined>(undefined)
 

@@ -1,3 +1,12 @@
+/**
+ * Categorization Rules CRUD API
+ * Manages user-defined pattern-matching rules for auto-categorizing transactions.
+ *
+ * GET    /api/categorization-rules       - List all rules for the user
+ * POST   /api/categorization-rules       - Create a new rule
+ * PUT    /api/categorization-rules?id=x  - Update an existing rule
+ * DELETE /api/categorization-rules?id=x  - Delete a rule (or ?all=true to delete all)
+ */
 import { NextRequest, NextResponse } from "next/server"
 import { ObjectId } from "mongodb"
 

@@ -1,3 +1,9 @@
+/**
+ * Data quality audit dashboard that computes descriptive statistics,
+ * merchant rankings, temporal aggregates, and balance anomaly detection
+ * from raw transaction data.
+ * @module components/data-audit
+ */
 "use client"
 
 import * as React from "react"
@@ -65,6 +71,11 @@ const amountBuckets = [
   { label: "100k+", min: 100000, max: Infinity },
 ]
 
+/**
+ * Renders a comprehensive data audit view: coverage, amount stats, balance stats,
+ * top merchants, daily/weekly/monthly aggregates, and anomaly detection.
+ * @param transactions - Full transaction array to audit.
+ */
 export function DataAudit({ transactions }: { transactions: Transaction[] }) {
   const audit = useMemo(() => {
     const sorted = [...transactions].sort((a, b) => {

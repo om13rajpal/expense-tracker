@@ -1,4 +1,10 @@
-// Verify authentication route
+/**
+ * Auth Verification Route
+ *
+ * GET /api/auth/verify
+ * Verifies whether the current JWT token (from cookie or Authorization header) is valid.
+ * Returns the authenticated user object on success.
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import { corsHeaders, handleOptions, extractToken } from '@/lib/middleware';

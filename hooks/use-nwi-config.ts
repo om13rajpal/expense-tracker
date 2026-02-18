@@ -1,3 +1,7 @@
+/**
+ * Hooks for reading and updating the Needs/Wants/Investments (NWI) budget allocation config.
+ * @module hooks/use-nwi-config
+ */
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 
 interface NWIBucket {
@@ -18,6 +22,7 @@ interface NWIConfigResponse {
   error?: string
 }
 
+/** Fetches the current NWI bucket percentages and category mappings. */
 export function useNWIConfig() {
   return useQuery<NWIConfigResponse>({
     queryKey: ["nwi-config"],
@@ -29,6 +34,7 @@ export function useNWIConfig() {
   })
 }
 
+/** Updates NWI config and invalidates both `nwi-config` and `financial-health` caches. */
 export function useUpdateNWIConfig() {
   const queryClient = useQueryClient()
 

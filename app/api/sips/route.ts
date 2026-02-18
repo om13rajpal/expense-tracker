@@ -1,3 +1,12 @@
+/**
+ * SIPs (Systematic Investment Plans) CRUD API
+ * Manages the user's SIP portfolio in MongoDB.
+ *
+ * GET    /api/sips       - List all SIPs
+ * POST   /api/sips       - Add a single SIP or bulk-import via { items: [...] }
+ * PUT    /api/sips?id=x  - Update an existing SIP
+ * DELETE /api/sips?id=x  - Delete a SIP by ObjectId
+ */
 import { NextRequest, NextResponse } from "next/server"
 import { ObjectId } from "mongodb"
 

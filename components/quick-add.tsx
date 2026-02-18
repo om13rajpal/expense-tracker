@@ -1,3 +1,8 @@
+/**
+ * Quick-add transaction dialog accessible via `Ctrl+N` or the mobile FAB.
+ * Submits a new transaction to `POST /api/transactions`.
+ * @module components/quick-add
+ */
 "use client"
 
 import { useState } from "react"
@@ -40,6 +45,11 @@ interface QuickAddProps {
   onOpenChange: (open: boolean) => void
 }
 
+/**
+ * Dialog form for rapidly adding an income or expense transaction.
+ * @param open - Controlled open state.
+ * @param onOpenChange - Callback when the dialog opens or closes.
+ */
 export function QuickAddTransaction({ open, onOpenChange }: QuickAddProps) {
   const [amount, setAmount] = useState("")
   const [description, setDescription] = useState("")

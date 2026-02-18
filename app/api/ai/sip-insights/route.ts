@@ -1,3 +1,10 @@
+/**
+ * AI Investment/SIP Insights API
+ *
+ * POST /api/ai/sip-insights
+ * Generates AI-powered investment insights covering stocks, mutual funds, and SIPs.
+ * Legacy/backward-compatible endpoint; prefer /api/ai/insights for new code.
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { corsHeaders, handleOptions, withAuth } from '@/lib/middleware';
 import { runAiPipeline } from '@/lib/ai-pipeline';
@@ -8,7 +15,7 @@ function getErrorMessage(error: unknown) {
 
 /**
  * POST /api/ai/sip-insights
- * Backward-compatible wrapper — delegates to AI pipeline (investment_insights)
+ * Backward-compatible wrapper -- delegates to AI pipeline (investment_insights)
  */
 export async function POST(request: NextRequest) {
   return withAuth(async (_req, { user }) => {

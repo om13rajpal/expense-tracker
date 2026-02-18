@@ -1,3 +1,7 @@
+/**
+ * Hook for fetching the composite financial health dashboard metrics.
+ * @module hooks/use-financial-health
+ */
 import { useQuery } from "@tanstack/react-query"
 
 interface ExpenseVelocity {
@@ -44,6 +48,10 @@ interface FinancialHealthResponse {
   message?: string
 }
 
+/**
+ * Fetches financial health metrics including emergency fund coverage,
+ * expense velocity, freedom score breakdown, net-worth timeline, and income profile.
+ */
 export function useFinancialHealth() {
   return useQuery<FinancialHealthResponse>({
     queryKey: ["financial-health"],

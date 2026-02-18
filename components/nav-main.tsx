@@ -1,3 +1,7 @@
+/**
+ * Sidebar navigation with animated collapsible groups and tree-style connectors.
+ * @module components/nav-main
+ */
 "use client"
 
 import * as React from "react"
@@ -12,6 +16,7 @@ import {
   SidebarGroupContent,
 } from "@/components/ui/sidebar"
 
+/** Shape of a navigation group containing a label, icon, and child links. */
 export interface NavGroup {
   label: string
   icon: Icon
@@ -106,6 +111,11 @@ function CollapsibleNavGroup({ group }: { group: NavGroup }) {
   )
 }
 
+/**
+ * Primary sidebar nav rendering a standalone Dashboard link followed by collapsible groups.
+ * @param groups - Array of navigation groups to render.
+ * @param dashboardActive - Whether the Dashboard link should be highlighted.
+ */
 export function NavMain({ groups, dashboardActive }: { groups: NavGroup[]; dashboardActive?: boolean }) {
   return (
     <SidebarGroup>

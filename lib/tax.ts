@@ -368,6 +368,11 @@ function calculateNewRegime(config: TaxConfig): TaxBreakdown {
 // Public API
 // ---------------------------------------------------------------------------
 
+/**
+ * Calculate tax under both Old and New regimes and recommend the better one.
+ * Includes full deduction handling, HRA exemption, Section 87A rebate,
+ * marginal relief, surcharge, and 4% health & education cess.
+ */
 export function calculateTax(config: TaxConfig): TaxComparison {
   const oldResult = calculateOldRegime(config)
   const newResult = calculateNewRegime(config)
@@ -378,6 +383,7 @@ export function calculateTax(config: TaxConfig): TaxComparison {
   return { old: oldResult, new: newResult, recommended, savings }
 }
 
+/** Return a zero-valued TaxConfig as a starting point for new users. */
 export function getDefaultTaxConfig(): TaxConfig {
   return {
     grossAnnualIncome: 0,

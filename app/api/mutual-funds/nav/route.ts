@@ -1,3 +1,12 @@
+/**
+ * Mutual Fund NAV API (via MFAPI.in)
+ *
+ * GET /api/mutual-funds/nav?schemes=code1,code2  - Fetch latest NAVs for scheme codes
+ * GET /api/mutual-funds/nav?search=name           - Search MF schemes by name
+ * GET /api/mutual-funds/nav?history=code           - Get NAV history with trailing returns
+ *
+ * Optionally pass ?updateDb=true to auto-update currentValue in MongoDB.
+ */
 import { NextRequest, NextResponse } from "next/server"
 
 import { corsHeaders, handleOptions, withAuth } from "@/lib/middleware"

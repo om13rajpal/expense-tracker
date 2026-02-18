@@ -1,3 +1,7 @@
+/**
+ * Interactive area chart toggling between monthly and daily expense/income views.
+ * @module components/chart-area-interactive
+ */
 "use client"
 
 import * as React from "react"
@@ -61,6 +65,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
+/** Area chart card with monthly/daily toggle and average expense footer. */
 export function ChartAreaInteractive() {
   const [viewType, setViewType] = React.useState<"monthly" | "daily">("monthly")
 

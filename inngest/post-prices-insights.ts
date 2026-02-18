@@ -1,3 +1,9 @@
+/**
+ * Event-driven function triggered after stock/MF price refresh.
+ * Discovers all users with investment holdings and fans out
+ * `finance/insights.generate` events for investment insights.
+ * @module inngest/post-prices-insights
+ */
 import { inngest } from '@/lib/inngest';
 import { getMongoDb } from '@/lib/mongodb';
 import type { AiInsightType } from '@/lib/ai-types';

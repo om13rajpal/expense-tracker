@@ -1,3 +1,7 @@
+/**
+ * Small info-circle icon that shows explanatory text in a tooltip on hover.
+ * @module components/info-tooltip
+ */
 "use client"
 
 import * as React from "react"
@@ -16,6 +20,11 @@ interface InfoTooltipProps {
   side?: "top" | "right" | "bottom" | "left"
 }
 
+/**
+ * Renders a small info icon that displays tooltip text on hover.
+ * @param text - Tooltip content.
+ * @param side - Preferred tooltip placement (default "top").
+ */
 export function InfoTooltip({
   text,
   className,

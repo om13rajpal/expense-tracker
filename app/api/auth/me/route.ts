@@ -1,3 +1,8 @@
+/**
+ * GET /api/auth/me
+ * Return the currently authenticated user's profile from the JWT token.
+ * Reads the auth-token cookie and verifies it.
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { verifyToken } from '@/lib/auth';
 import { corsHeaders, handleOptions } from '@/lib/middleware';

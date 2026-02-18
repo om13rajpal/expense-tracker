@@ -1,3 +1,9 @@
+/**
+ * Hero metric cards displayed at the top of the dashboard:
+ * Total Balance, Monthly Spend, Monthly Income, and Average Monthly Savings.
+ * Each card shows a trend badge comparing to the previous period.
+ * @module components/section-cards
+ */
 "use client"
 
 import { IconTrendingDown, IconTrendingUp, IconWallet, IconCreditCard, IconPigMoney, IconChartLine } from "@tabler/icons-react"
@@ -44,6 +50,10 @@ const mockMetrics: FinanceMetrics = {
   savingsChange: 15.7,
 }
 
+/**
+ * Renders four KPI cards in a responsive grid.
+ * @param metrics - Financial summary data; defaults to mock data for demo.
+ */
 export function SectionCards({ metrics = mockMetrics }: { metrics?: FinanceMetrics }) {
   const isBalancePositive = metrics.balanceChange >= 0
   const isSpendPositive = metrics.spendChange <= 0 // Negative spend change is good

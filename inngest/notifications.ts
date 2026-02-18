@@ -1,3 +1,8 @@
+/**
+ * Scheduled notification functions: budget breach checks, subscription renewal alerts,
+ * and the weekly financial digest.
+ * @module inngest/notifications
+ */
 import { inngest } from '@/lib/inngest';
 import { getMongoDb } from '@/lib/mongodb';
 import {

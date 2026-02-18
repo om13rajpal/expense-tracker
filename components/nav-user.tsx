@@ -1,3 +1,7 @@
+/**
+ * Sidebar footer user menu with avatar and logout dropdown.
+ * @module components/nav-user
+ */
 "use client"
 
 import {
@@ -26,6 +30,7 @@ import {
   useSidebar,
 } from "@/components/ui/sidebar"
 
+/** Sidebar user tile with avatar, name, and a dropdown containing logout. */
 export function NavUser({
   user,
 }: {

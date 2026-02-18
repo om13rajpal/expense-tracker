@@ -1,4 +1,7 @@
-// Transactions hook for client-side data fetching
+/**
+ * Hooks for fetching and syncing transactions from the API / Google Sheets.
+ * @module hooks/use-transactions
+ */
 'use client';
 
 import { useState, useCallback, useEffect } from 'react';
@@ -19,6 +22,11 @@ interface SyncState {
   error: string | null;
 }
 
+/**
+ * Fetches paginated transactions with optional filters and provides Google Sheets sync.
+ * Automatically loads transactions on mount.
+ * @param initialQuery - Optional default filters applied on initial load and after sync.
+ */
 export function useTransactions(initialQuery?: Partial<TransactionQuery>) {
   const [state, setState] = useState<TransactionsState>({
     transactions: [],
@@ -172,7 +180,8 @@ export function useTransactions(initialQuery?: Partial<TransactionQuery>) {
 }
 
 /**
- * Hook for syncing Google Sheets data
+ * Standalone hook for triggering a Google Sheets sync without loading transactions.
+ * @returns Sync state (`isSyncing`, `lastSync`, `error`) and a `sync` function.
  */
 export function useSheetSync() {
   const [state, setState] = useState<SyncState>({

@@ -1,3 +1,8 @@
+/**
+ * Full weekly analytics view with period bridge, stat bar, daily breakdown chart,
+ * top categories, and top expenses list. Includes week navigation.
+ * @module components/weekly-analytics-content
+ */
 "use client"
 
 import * as React from "react"
@@ -55,6 +60,10 @@ function formatCurrency(amount: number): string {
 const CHART_INCOME = "var(--chart-1)"
 const CHART_EXPENSE = "var(--chart-5)"
 
+/**
+ * Renders a week-by-week analytics dashboard with navigation, charts, and breakdowns.
+ * @param transactions - Full transaction list; filtering by week is handled internally.
+ */
 export function WeeklyAnalyticsContent({ transactions }: WeeklyAnalyticsContentProps) {
   const availableWeeks = useMemo(
     () => getAvailableWeeks(transactions),

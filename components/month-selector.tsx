@@ -1,3 +1,7 @@
+/**
+ * Month navigation control with prev/next arrows and a dropdown selector.
+ * @module components/month-selector
+ */
 "use client"
 
 import * as React from "react"
@@ -12,6 +16,12 @@ interface MonthSelectorProps {
   onMonthChange: (month: MonthIdentifier) => void
 }
 
+/**
+ * Controlled month picker with arrow navigation and a dropdown list.
+ * @param availableMonths - List of selectable months.
+ * @param selectedMonth - Currently selected month.
+ * @param onMonthChange - Callback when a new month is chosen.
+ */
 export function MonthSelector({
   availableMonths,
   selectedMonth,

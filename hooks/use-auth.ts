@@ -1,4 +1,9 @@
-// Authentication hook for client-side components
+/**
+ * Authentication hook for client-side components.
+ * Manages login, logout, and session verification via the `/api/auth/*` endpoints.
+ * Persists a JWT token in localStorage alongside HTTP-only cookies.
+ * @module hooks/use-auth
+ */
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
@@ -15,6 +20,11 @@ interface LoginCredentials {
   password: string;
 }
 
+/**
+ * Provides authentication state and actions (login, logout, checkAuth).
+ * Automatically verifies the session on mount.
+ * @returns Auth state plus `login`, `logout`, and `checkAuth` callbacks.
+ */
 export function useAuth() {
   const [state, setState] = useState<AuthState>({
     isAuthenticated: false,

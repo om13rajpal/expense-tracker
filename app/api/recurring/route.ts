@@ -1,3 +1,11 @@
+/**
+ * Recurring Transaction Detection API
+ *
+ * GET /api/recurring
+ * Analyzes the last 6 months of transactions to detect recurring patterns
+ * (subscriptions, EMIs, rent, etc.) using merchant/amount clustering.
+ * Optional query params: tolerance (amount tolerance fraction), minCount (min occurrences).
+ */
 import { NextRequest, NextResponse } from "next/server"
 import { ObjectId } from "mongodb"
 

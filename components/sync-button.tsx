@@ -1,3 +1,8 @@
+/**
+ * Google Sheets sync button with loading spinner, toast feedback, and "last synced" tooltip.
+ * Exports both a full-size (`SyncButton`) and a toolbar-friendly (`SyncButtonCompact`) variant.
+ * @module components/sync-button
+ */
 "use client"
 
 import * as React from "react"
@@ -20,6 +25,7 @@ interface SyncButtonProps {
   className?: string
 }
 
+/** Full-size sync button with optional label and last-sync timestamp. */
 export function SyncButton({
   onSync,
   variant = "outline",
@@ -126,7 +132,7 @@ export function SyncButton({
   )
 }
 
-// Alternative compact version for headers/toolbars
+/** Compact sync button for headers and toolbars. Uses toast.promise for feedback. */
 export function SyncButtonCompact({
   onSync,
   className,

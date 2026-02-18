@@ -112,6 +112,11 @@ function calculateConfidence(
   return Math.round(confidence * 100) / 100
 }
 
+/**
+ * Detect recurring expense patterns from transaction history.
+ * Groups by normalized merchant, classifies frequency, calculates confidence,
+ * and predicts next expected dates. Minimum 3 occurrences and 0.3 confidence.
+ */
 export function detectRecurringTransactions(
   transactions: Transaction[]
 ): RecurringPattern[] {

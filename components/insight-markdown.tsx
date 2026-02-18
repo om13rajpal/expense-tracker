@@ -1,3 +1,9 @@
+/**
+ * Styled markdown renderer for AI insight content.
+ * Uses react-markdown with remark-gfm and custom component overrides
+ * that match the application design system.
+ * @module components/insight-markdown
+ */
 "use client"
 
 import ReactMarkdown, { type Components } from "react-markdown"
@@ -52,6 +58,10 @@ const mdComponents: Components = {
   hr: () => <hr className="my-3 border-border/50" />,
 }
 
+/**
+ * Renders markdown content with GFM support and themed component overrides.
+ * @param content - Raw markdown string from AI insight responses.
+ */
 export function InsightMarkdown({ content }: { content: string }) {
   return (
     <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>

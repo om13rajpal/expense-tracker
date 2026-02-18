@@ -1,3 +1,12 @@
+/**
+ * Debts CRUD API
+ * Manages user debt entries (home loans, car loans, credit cards, etc.) in MongoDB.
+ *
+ * GET    /api/debts       - List all debts for the user
+ * POST   /api/debts       - Create a new debt entry
+ * PATCH  /api/debts       - Update an existing debt (body includes id)
+ * DELETE /api/debts?id=x  - Delete a debt by ObjectId
+ */
 import { NextRequest, NextResponse } from "next/server"
 import { ObjectId } from "mongodb"
 

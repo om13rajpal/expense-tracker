@@ -1,3 +1,11 @@
+/**
+ * Learn Quiz Submission API
+ *
+ * POST /api/learn/quiz
+ * Submit quiz answers for a topic. Calculates score, determines pass/fail (>=80%),
+ * and updates the user's learning progress accordingly.
+ * Body: { topicId: string, answers: number[] }
+ */
 import { NextResponse } from 'next/server'
 import { withAuth, corsHeaders, handleOptions } from '@/lib/middleware'
 import { getMongoDb } from '@/lib/mongodb'

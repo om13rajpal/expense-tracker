@@ -1,3 +1,9 @@
+/**
+ * Global keyboard shortcut handler.
+ * Registers single-key shortcuts (n, ?, /) and two-key "g then letter" chords
+ * for rapid page navigation. Skips events when focus is in an input/textarea.
+ * @module hooks/use-keyboard-shortcuts
+ */
 "use client"
 
 import { useEffect, useRef } from "react"
@@ -9,6 +15,10 @@ interface KeyboardShortcutsOptions {
   onHelp?: () => void
 }
 
+/**
+ * Attaches global keydown listeners for app-wide shortcuts.
+ * @param options - Callbacks for quick-add (`n`), search (`/` or `Ctrl+K`), and help (`?`).
+ */
 export function useKeyboardShortcuts(options: KeyboardShortcutsOptions = {}) {
   const router = useRouter()
   const pendingChord = useRef<string | null>(null)

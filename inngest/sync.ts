@@ -1,3 +1,9 @@
+/**
+ * Daily cron function that syncs transactions from Google Sheets into MongoDB.
+ * Runs at 6:00 AM UTC, applies categorization rules, respects manual category
+ * overrides, and emits a `finance/sync.completed` event on success.
+ * @module inngest/sync
+ */
 import { inngest } from '@/lib/inngest';
 import { getMongoDb } from '@/lib/mongodb';
 import { fetchTransactionsFromSheet, clearCache } from '@/lib/sheets';
@@ -5,6 +11,11 @@ import type { Transaction } from '@/lib/types';
 
 const CRON_COLLECTION = 'cron_runs';
 
+/**
+ * Upserts transactions into MongoDB for a given user, applying categorization
+ * rules while preserving manual category overrides.
+ * @returns Number of documents upserted or modified.
+ */
 async function persistTransactions(userId: string, transactions: Transaction[]) {
   if (!transactions.length) return 0;
 

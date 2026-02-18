@@ -1,3 +1,7 @@
+/**
+ * Application sidebar with collapsible nav groups, a dashboard link, and user menu.
+ * @module components/app-sidebar
+ */
 "use client"
 
 import * as React from "react"
@@ -73,6 +77,7 @@ const userData = {
   avatar: "",
 }
 
+/** Collapsible off-canvas sidebar containing the main navigation and user footer. */
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
   const isDashboard = pathname === "/dashboard" || pathname === "/"

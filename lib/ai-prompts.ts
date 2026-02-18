@@ -340,10 +340,12 @@ const PROMPT_MAP: Record<AiInsightType, string> = {
   planner_recommendation: PLANNER_RECOMMENDATION_PROMPT,
 };
 
+/** Get the LLM system prompt for a given AI insight type. */
 export function getSystemPrompt(type: AiInsightType): string {
   return PROMPT_MAP[type];
 }
 
+/** Assemble the user message for the LLM from pipeline context data. */
 export function buildUserMessage(type: AiInsightType, ctx: PipelineContext): string {
   const parts: string[] = ['Here is my financial data:\n'];
 

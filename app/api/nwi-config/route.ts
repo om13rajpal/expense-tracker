@@ -1,3 +1,14 @@
+/**
+ * NWI (Needs/Wants/Investments/Savings) Configuration API
+ * Manages the user's allocation split and category mappings.
+ *
+ * GET /api/nwi-config - Fetch NWI config (seeds defaults on first access)
+ * PUT /api/nwi-config - Update allocation percentages and category mappings
+ *
+ * Percentages across all four buckets must sum to 100.
+ * Categories are auto-deduplicated across buckets by priority:
+ * savings > investments > wants > needs.
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { getMongoDb } from '@/lib/mongodb';
 import { corsHeaders, handleOptions, withAuth } from '@/lib/middleware';

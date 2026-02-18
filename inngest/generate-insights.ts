@@ -1,3 +1,10 @@
+/**
+ * Inngest function that generates AI insights for a single user.
+ * Triggered by the `finance/insights.generate` event and iterates over the
+ * requested insight types, running each through the AI pipeline.
+ * Concurrency is limited to 3 globally and 1 per user.
+ * @module inngest/generate-insights
+ */
 import { inngest } from '@/lib/inngest';
 import { getMongoDb } from '@/lib/mongodb';
 import { runAiPipeline } from '@/lib/ai-pipeline';

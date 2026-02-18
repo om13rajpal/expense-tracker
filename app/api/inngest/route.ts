@@ -1,3 +1,10 @@
+/**
+ * Inngest Webhook Handler
+ *
+ * Serves the Inngest SDK endpoint that registers and executes all
+ * event-driven background functions: transaction sync, price refresh,
+ * AI insight generation, and notification workflows.
+ */
 import { serve } from 'inngest/next';
 import { inngest } from '@/lib/inngest';
 import { syncTransactions } from '@/inngest/sync';

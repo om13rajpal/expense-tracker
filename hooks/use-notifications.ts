@@ -1,3 +1,8 @@
+/**
+ * React Query hook for the notification system.
+ * Polls for new notifications every 60 s and provides mark-read / delete mutations.
+ * @module hooks/use-notifications
+ */
 "use client"
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
@@ -63,6 +68,10 @@ async function deleteNotification(id: string): Promise<MutationResponse> {
 
 // ─── Hook ────────────────────────────────────────────────────────────
 
+/**
+ * Manages notification list, unread count, and CRUD operations.
+ * @returns Notifications array, `unreadCount`, and action callbacks.
+ */
 export function useNotifications() {
   const queryClient = useQueryClient()
   const queryKey = ["notifications"]

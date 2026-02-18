@@ -1,3 +1,12 @@
+/**
+ * Mutual Funds Holdings CRUD API
+ * Manages the user's mutual fund portfolio in MongoDB.
+ *
+ * GET    /api/mutual-funds       - List all mutual fund holdings
+ * POST   /api/mutual-funds       - Bulk-import funds via { items: [...] }
+ * PUT    /api/mutual-funds?id=x  - Update an existing fund
+ * DELETE /api/mutual-funds?id=x  - Delete a fund by ObjectId
+ */
 import { NextRequest, NextResponse } from "next/server"
 import { ObjectId } from "mongodb"
 

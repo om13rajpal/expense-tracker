@@ -1,3 +1,10 @@
+/**
+ * Learn Progress API
+ *
+ * GET  /api/learn/progress - Fetch all topic progress records for the user
+ * POST /api/learn/progress - Update progress for a single topic
+ *   Body: { topicId, status: 'unread'|'read'|'quizzed'|'mastered', quizScore? }
+ */
 import { NextRequest, NextResponse } from 'next/server'
 import { withAuth, corsHeaders, handleOptions } from '@/lib/middleware'
 import { getMongoDb } from '@/lib/mongodb'

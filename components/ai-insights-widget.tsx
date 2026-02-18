@@ -1,3 +1,9 @@
+/**
+ * Dashboard widget that renders AI-generated spending analysis.
+ * Shows structured data (health score, categories, action items) when available,
+ * otherwise falls back to markdown rendering.
+ * @module components/ai-insights-widget
+ */
 "use client"
 
 import * as React from "react"
@@ -360,6 +366,10 @@ interface AiInsightsWidgetProps {
   compact?: boolean
 }
 
+/**
+ * Card displaying AI spending analysis with health score, alerts, and recommendations.
+ * @param compact - When true, truncates content and shows a link to the full insights page.
+ */
 export function AiInsightsWidget({ compact = false }: AiInsightsWidgetProps) {
   const insight = useAiInsight("spending_analysis")
 

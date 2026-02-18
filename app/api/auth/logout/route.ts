@@ -1,4 +1,9 @@
-// Logout API route
+/**
+ * Logout API Route
+ *
+ * POST /api/auth/logout
+ * Clears the auth-token cookie to end the user's session.
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { corsHeaders, handleOptions } from '@/lib/middleware';
 

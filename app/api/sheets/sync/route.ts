@@ -1,4 +1,15 @@
-// Google Sheets sync API route — now persists to MongoDB on sync
+/**
+ * Google Sheets Sync API
+ * Fetches transactions from a linked Google Sheet and persists them to MongoDB.
+ *
+ * GET    /api/sheets/sync          - Sync from Sheets (uses cache unless ?force=true)
+ * DELETE /api/sheets/sync          - Clear the in-memory transaction cache
+ *
+ * Category handling during sync:
+ *   - Manual overrides (categoryOverride: true) are never touched
+ *   - Existing transactions keep their current category
+ *   - New transactions are categorized via user rules + built-in categorizer
+ */
 import { NextRequest, NextResponse } from "next/server"
 
 import {

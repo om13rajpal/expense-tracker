@@ -1,3 +1,8 @@
+/**
+ * Period bridge card showing opening balance -> inflow/outflow -> closing balance.
+ * Used on weekly and monthly analytics pages.
+ * @module components/period-bridge
+ */
 "use client"
 
 import * as React from "react"
@@ -22,6 +27,11 @@ function formatCurrency(amount: number): string {
   }).format(amount)
 }
 
+/**
+ * Renders a four-column stat card: Opening, Inflow, Outflow, Closing.
+ * @param title - Card heading.
+ * @param periodLabel - Subtitle describing the period.
+ */
 export function PeriodBridge({
   title,
   periodLabel,

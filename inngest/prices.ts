@@ -1,9 +1,20 @@
+/**
+ * Weekday cron function that refreshes stock prices (via Yahoo Finance) and
+ * mutual fund NAVs (via MFAPI). Runs at 10:00 AM UTC Mon-Fri.
+ * Emits a `finance/prices.updated` event when any prices are updated.
+ * @module inngest/prices
+ */
 import { inngest } from '@/lib/inngest';
 import { getMongoDb } from '@/lib/mongodb';
 import { fetchLatestNAV } from '@/lib/mfapi';
 
 const CRON_COLLECTION = 'cron_runs';
 
+/**
+ * Fetches the current price, day change, and change percentage for a stock symbol.
+ * Supports NSE and BSE exchanges via Yahoo Finance chart API.
+ * @returns Price data or null on failure.
+ */
 async function fetchStockPrice(
   symbol: string,
   exchange: string

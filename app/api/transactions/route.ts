@@ -1,4 +1,12 @@
-// Transactions API route — now backed by MongoDB with category update support
+/**
+ * Transactions CRUD API (MongoDB-backed)
+ *
+ * GET    /api/transactions - List transactions with filtering, sorting, pagination
+ * POST   /api/transactions - Manually create a new transaction
+ * PATCH  /api/transactions - Update category for one or many transactions
+ * PUT    /api/transactions - Update a transaction's NWI override
+ * DELETE /api/transactions - Delete by single id, bulk ids, or date range
+ */
 import { NextRequest, NextResponse } from "next/server"
 import { ObjectId } from "mongodb"
 

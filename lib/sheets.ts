@@ -1,4 +1,9 @@
-// Google Sheets integration for transaction data
+/**
+ * Google Sheets integration for transaction data.
+ * Fetches bank transactions from a Google Sheet (public CSV or authenticated API),
+ * parses Indian bank statement formats (UPI/IMPS/NEFT), auto-categorizes,
+ * and falls back to demo data when the sheet is unavailable.
+ */
 import { google } from 'googleapis';
 import type { GoogleAuth } from 'google-auth-library';
 import type { Transaction, RawTransaction } from './types';
@@ -354,7 +359,9 @@ async function fetchFromPublicSheet(): Promise<string[][] | null> {
 }
 
 /**
- * Fetch transactions from Google Sheets
+ * Fetch transactions from Google Sheets.
+ * Tries public CSV export first, then authenticated API, then falls back to demo data.
+ * Caches results in memory for subsequent calls.
  */
 export async function fetchTransactionsFromSheet(): Promise<{
   transactions: Transaction[];
@@ -455,7 +462,7 @@ export function clearCache(): void {
 }
 
 /**
- * Filter transactions based on query parameters
+ * Filter transactions by category, payment method, date range, and/or amount range.
  */
 export function filterTransactions(
   transactions: Transaction[],

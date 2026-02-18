@@ -1,7 +1,13 @@
+/**
+ * Static content for the Learn section: topic definitions, markdown articles,
+ * and quiz questions covering investing, budgeting, tax, and FIRE.
+ */
+
 import type { LearnTopic, QuizQuestion } from './learn-types'
 
 /* ─── Section definitions ─── */
 
+/** A navigational section grouping related learn topics. */
 export interface LearnSection {
   id: string
   title: string

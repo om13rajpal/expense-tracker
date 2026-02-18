@@ -1,3 +1,12 @@
+/**
+ * Stock Holdings CRUD API
+ * Manages the user's stock portfolio (symbol, shares, average cost) in MongoDB.
+ *
+ * GET    /api/stocks       - List all stock holdings
+ * POST   /api/stocks       - Add a single stock or bulk-import via { items: [...] }
+ * PUT    /api/stocks?id=x  - Update an existing holding
+ * DELETE /api/stocks?id=x  - Delete a holding by ObjectId
+ */
 import { NextRequest, NextResponse } from "next/server"
 import { ObjectId } from "mongodb"
 

@@ -1,3 +1,11 @@
+/**
+ * AI Budget Recommendations API
+ *
+ * POST /api/ai/recommendations
+ * Generates AI-powered budget recommendations (monthly or weekly).
+ * Legacy/backward-compatible endpoint; prefer /api/ai/insights for new code.
+ * Body: { period?: "monthly" | "weekly" }
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { corsHeaders, handleOptions, withAuth } from '@/lib/middleware';
 import { runAiPipeline } from '@/lib/ai-pipeline';
@@ -9,7 +17,7 @@ function getErrorMessage(error: unknown) {
 
 /**
  * POST /api/ai/recommendations
- * Backward-compatible wrapper — delegates to AI pipeline (monthly_budget / weekly_budget)
+ * Backward-compatible wrapper -- delegates to AI pipeline (monthly_budget / weekly_budget)
  */
 export async function POST(request: NextRequest) {
   return withAuth(async (req, { user }) => {

@@ -1,3 +1,8 @@
+/**
+ * Summary card showing opening/closing balance, net change, growth, income,
+ * expenses, and savings rate for a given month.
+ * @module components/monthly-summary-card
+ */
 "use client"
 
 import { Badge } from "@/components/ui/badge"
@@ -16,6 +21,10 @@ function formatCurrency(amount: number): string {
   }).format(amount)
 }
 
+/**
+ * Renders a two-row stat grid for the given month's financial metrics.
+ * @param metrics - Pre-computed monthly metrics from `calculateMonthlyMetrics`.
+ */
 export function MonthlySummaryCard({ metrics }: MonthlySummaryCardProps) {
   const isPositiveGrowth = metrics.netChange >= 0
   const isPartialMonth = metrics.isPartialMonth

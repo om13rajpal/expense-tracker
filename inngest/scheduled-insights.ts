@@ -1,3 +1,8 @@
+/**
+ * Weekly cron function (Monday 9 AM UTC) that triggers a full refresh
+ * of all AI insight types for every user with transaction data.
+ * @module inngest/scheduled-insights
+ */
 import { inngest } from '@/lib/inngest';
 import { getMongoDb } from '@/lib/mongodb';
 import type { AiInsightType } from '@/lib/ai-types';

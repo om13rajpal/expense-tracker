@@ -1,3 +1,8 @@
+/**
+ * Sticky site header with sidebar trigger, page title, command palette,
+ * notifications, and theme toggler.
+ * @module components/site-header
+ */
 "use client"
 
 import * as React from "react"
@@ -14,6 +19,12 @@ interface SiteHeaderProps {
   actions?: React.ReactNode
 }
 
+/**
+ * Renders a sticky header bar with optional title, subtitle, and action slot.
+ * @param title - Page title displayed in the header (defaults to "Dashboard").
+ * @param subtitle - Optional secondary text beside the title.
+ * @param actions - Extra React nodes rendered in the right-side action area.
+ */
 export function SiteHeader({
   title = "Dashboard",
   subtitle,

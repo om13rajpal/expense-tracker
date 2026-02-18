@@ -1,3 +1,7 @@
+/**
+ * Horizontal bar chart showing transaction count or total amount by payment method.
+ * @module components/payment-method-chart
+ */
 "use client"
 
 import * as React from "react"
@@ -42,6 +46,10 @@ function formatCurrency(amount: number): string {
   }).format(amount)
 }
 
+/**
+ * Renders a horizontal bar chart of payment methods, toggleable between count and amount views.
+ * @param data - Payment method breakdown entries.
+ */
 export function PaymentMethodChart({ data = [] }: { data?: PaymentMethodData[] }) {
   const [viewMode, setViewMode] = React.useState<"count" | "amount">("amount")
   const [activeIndex, setActiveIndex] = React.useState<number | undefined>(undefined)

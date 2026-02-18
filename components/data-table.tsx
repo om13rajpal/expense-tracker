@@ -1,3 +1,8 @@
+/**
+ * Full-featured transaction data table with search, column filters,
+ * sorting, pagination, and row selection. Built on TanStack Table.
+ * @module components/data-table
+ */
 "use client"
 
 import * as React from "react"
@@ -324,6 +329,10 @@ const columns: ColumnDef<Transaction>[] = [
   },
 ]
 
+/**
+ * Renders a filterable, sortable, paginated transaction table.
+ * @param data - Array of transactions to display. Falls back to mock data.
+ */
 export function DataTable({
   data = mockTransactions,
 }: {

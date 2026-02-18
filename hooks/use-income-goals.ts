@@ -1,3 +1,7 @@
+/**
+ * React Query hooks for income goal CRUD and progress tracking.
+ * @module hooks/use-income-goals
+ */
 "use client"
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
@@ -79,6 +83,7 @@ async function fetchIncomeGoal(): Promise<IncomeGoalResponse> {
 
 const QUERY_KEY = ["income-goal"]
 
+/** Fetches the active income goal and fiscal-year progress. */
 export function useIncomeGoal() {
   return useQuery<IncomeGoalResponse>({
     queryKey: QUERY_KEY,
@@ -88,6 +93,7 @@ export function useIncomeGoal() {
   })
 }
 
+/** Creates or updates an income goal. Invalidates the query cache on success. */
 export function useSetIncomeGoal() {
   const queryClient = useQueryClient()
 
@@ -111,6 +117,7 @@ export function useSetIncomeGoal() {
   })
 }
 
+/** Deletes the active income goal. Invalidates the query cache on success. */
 export function useDeleteIncomeGoal() {
   const queryClient = useQueryClient()
 

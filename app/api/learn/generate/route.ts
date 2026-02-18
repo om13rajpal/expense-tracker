@@ -1,3 +1,11 @@
+/**
+ * Learn Content Generation API
+ *
+ * POST /api/learn/generate
+ * Generates AI-personalized financial lesson content for a given topic.
+ * Uses the user's actual financial data for contextual examples.
+ * Results are cached in MongoDB for 7 days.
+ */
 import { NextResponse } from 'next/server'
 import { withAuth, corsHeaders, handleOptions } from '@/lib/middleware'
 import { getMongoDb } from '@/lib/mongodb'

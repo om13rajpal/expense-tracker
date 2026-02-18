@@ -1,3 +1,10 @@
+/**
+ * Tax Configuration API
+ * Stores and retrieves the user's Indian tax planning configuration.
+ *
+ * GET /api/tax - Fetch saved tax config (or defaults if none exists)
+ * PUT /api/tax - Save/update tax config (80C, 80D, HRA, income, regime preference)
+ */
 import { NextRequest, NextResponse } from "next/server"
 import { getMongoDb } from "@/lib/mongodb"
 import { corsHeaders, handleOptions, withAuth } from "@/lib/middleware"

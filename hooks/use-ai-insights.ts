@@ -1,3 +1,8 @@
+/**
+ * React Query hook for fetching and regenerating AI-generated financial insights.
+ * Caches results for 5 minutes on the client and supports on-demand regeneration.
+ * @module hooks/use-ai-insights
+ */
 "use client"
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
@@ -55,6 +60,10 @@ async function regenerateInsight(type: AiInsightType): Promise<InsightResponse> 
   return data
 }
 
+/**
+ * Fetches a cached AI insight by type and provides a `regenerate` mutation.
+ * @param type - The insight category (e.g. `spending_analysis`, `investment_insights`).
+ */
 export function useAiInsight(type: AiInsightType): UseAiInsightReturn {
   const queryClient = useQueryClient()
   const queryKey = ["ai-insight", type]

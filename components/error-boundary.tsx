@@ -1,3 +1,9 @@
+/**
+ * React error boundaries for isolating component failures.
+ * `ErrorBoundary` renders a retry card; `SectionErrorBoundary` provides a
+ * lighter fallback scoped to a single dashboard section.
+ * @module components/error-boundary
+ */
 "use client"
 
 import * as React from "react"
@@ -15,6 +21,7 @@ interface ErrorBoundaryState {
   error: Error | null
 }
 
+/** Class-based error boundary with a "Try Again" button fallback. */
 export class ErrorBoundary extends React.Component<ErrorBoundaryProps, ErrorBoundaryState> {
   constructor(props: ErrorBoundaryProps) {
     super(props)

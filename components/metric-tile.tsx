@@ -1,3 +1,7 @@
+/**
+ * Reusable KPI tile showing a label, formatted value, optional trend badge, and icon.
+ * @module components/metric-tile
+ */
 "use client"
 
 import * as React from "react"
@@ -17,6 +21,13 @@ interface MetricTileProps {
   tooltip?: string
 }
 
+/**
+ * Renders a compact metric card with value, change percentage, and optional icon.
+ * @param label - Metric name.
+ * @param value - Pre-formatted display value.
+ * @param change - Percentage change shown as a trend badge.
+ * @param tone - Controls badge coloring: positive (green), negative (red), or neutral.
+ */
 export function MetricTile({
   label,
   value,

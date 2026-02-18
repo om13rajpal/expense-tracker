@@ -1,3 +1,8 @@
+/**
+ * Donut chart showing expense breakdown by category for the current month.
+ * Uses theme-aware CSS variable colors.
+ * @module components/category-chart
+ */
 "use client"
 
 import * as React from "react"
@@ -41,6 +46,10 @@ function formatCurrency(amount: number): string {
   }).format(amount)
 }
 
+/**
+ * Renders a donut pie chart with a center total label and a category legend.
+ * @param data - Category name, amount, and percentage entries.
+ */
 export function CategoryChart({ data = [] }: { data?: CategoryData[] }) {
   const totalAmount = data.reduce((sum, item) => sum + item.amount, 0)
   const hasData = data.length > 0 && totalAmount > 0

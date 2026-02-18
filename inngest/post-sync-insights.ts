@@ -1,3 +1,9 @@
+/**
+ * Event-driven function triggered after a successful Google Sheets sync.
+ * Fans out `finance/insights.generate` events for spending and budget insights
+ * to each synced user.
+ * @module inngest/post-sync-insights
+ */
 import { inngest } from '@/lib/inngest';
 import type { AiInsightType } from '@/lib/ai-types';
 

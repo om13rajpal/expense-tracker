@@ -1,3 +1,11 @@
+/**
+ * Mutual Fund Transactions API
+ * Records purchase/redemption transaction history for mutual funds.
+ *
+ * GET    /api/mutual-funds/transactions       - List all MF transactions
+ * POST   /api/mutual-funds/transactions       - Bulk-import via { items: [...] }
+ * DELETE /api/mutual-funds/transactions?id=x  - Delete a transaction by ObjectId
+ */
 import { NextRequest, NextResponse } from "next/server"
 import { ObjectId } from "mongodb"
 

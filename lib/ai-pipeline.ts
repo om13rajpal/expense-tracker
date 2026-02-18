@@ -37,6 +37,10 @@ function isStale(doc: AiAnalysisDoc): boolean {
   return Date.now() - generatedAt > STALENESS_MS;
 }
 
+/**
+ * Retrieve the most recent cached AI analysis for a user and insight type.
+ * Returns null if no cached analysis exists, otherwise includes a `stale` flag.
+ */
 export async function getCachedAnalysis(
   userId: string,
   type: AiInsightType
@@ -994,6 +998,11 @@ async function persistAnalysis(
   }
 }
 
+/**
+ * Run the full AI insight pipeline: check cache, collect user data,
+ * optionally enrich with market search, generate via LLM, parse structured
+ * response, and persist to MongoDB. Returns cached result if fresh.
+ */
 export async function runAiPipeline(
   userId: string,
   type: AiInsightType,

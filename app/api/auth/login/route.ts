@@ -1,4 +1,10 @@
-// Login API route
+/**
+ * Login API Route
+ *
+ * POST /api/auth/login
+ * Authenticate a user with email/username and password.
+ * Sets an HTTP-only auth-token cookie on success (7-day expiry).
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { authenticateUser } from '@/lib/auth';
 import { corsHeaders, handleOptions } from '@/lib/middleware';

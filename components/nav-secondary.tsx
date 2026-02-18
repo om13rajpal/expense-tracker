@@ -1,3 +1,7 @@
+/**
+ * Secondary sidebar navigation group with active-link highlighting.
+ * @module components/nav-secondary
+ */
 "use client"
 
 import * as React from "react"
@@ -12,6 +16,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar"
 
+/** Renders a flat list of sidebar links with pathname-based active state. */
 export function NavSecondary({
   items,
   ...props

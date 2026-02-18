@@ -1,3 +1,8 @@
+/**
+ * Login form card with username/password fields.
+ * Submits credentials to `POST /api/auth/login` and redirects to dashboard on success.
+ * @module components/login-form
+ */
 "use client"
 
 import { useState } from "react"
@@ -16,6 +21,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 
+/** Renders the login card with username and password inputs. */
 export function LoginForm() {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)

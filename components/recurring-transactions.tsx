@@ -1,3 +1,8 @@
+/**
+ * Displays detected recurring transaction patterns (subscriptions, EMIs, etc.)
+ * with status badges and a 7-day upcoming summary.
+ * @module components/recurring-transactions
+ */
 "use client"
 
 import * as React from "react"
@@ -73,6 +78,10 @@ function formatDate(dateStr: string): string {
   })
 }
 
+/**
+ * Lists recurring transaction patterns fetched from the API.
+ * @param compact - Limits display to 5 patterns and hides status badges.
+ */
 export function RecurringTransactions({ compact = false }: RecurringTransactionsProps) {
   const [patterns, setPatterns] = React.useState<RecurringPattern[]>([])
   const [upcomingTotal, setUpcomingTotal] = React.useState(0)

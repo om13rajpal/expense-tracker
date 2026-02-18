@@ -1,3 +1,10 @@
+/**
+ * Transaction Export API
+ *
+ * GET /api/reports/export
+ * Exports transactions as a downloadable CSV file.
+ * Supports date range, category, and type filters via query params.
+ */
 import { NextRequest, NextResponse } from "next/server"
 
 import { getMongoDb } from "@/lib/mongodb"

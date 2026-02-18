@@ -1,3 +1,13 @@
+/**
+ * AI Insights API (primary endpoint)
+ *
+ * GET  /api/ai/insights?type=spending_analysis  - Get cached or auto-generated insight
+ * POST /api/ai/insights  body: { type }         - Force-regenerate an insight (bypass cache)
+ *
+ * Supported types: spending_analysis, monthly_budget, weekly_budget,
+ * investment_insights, tax_optimization, planner_recommendation.
+ * Falls back to stale cache if generation fails.
+ */
 import { NextRequest, NextResponse } from 'next/server';
 import { corsHeaders, handleOptions, withAuth } from '@/lib/middleware';
 import { runAiPipeline, getCachedAnalysis } from '@/lib/ai-pipeline';
