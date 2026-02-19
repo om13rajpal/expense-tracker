@@ -99,9 +99,20 @@ export async function PUT(request: NextRequest) {
         Pick<NWIConfig, 'needs' | 'wants' | 'investments' | 'savings'>
       >;
 
-      // Validate percentages sum to 100 when all four are provided
-      if (needs?.percentage != null && wants?.percentage != null && investments?.percentage != null && savings?.percentage != null) {
-        const total = needs.percentage + wants.percentage + investments.percentage + savings.percentage;
+      const db = await getMongoDb();
+      const col = db.collection(COLLECTION);
+
+      // Validate percentages sum to 100 when any percentage is provided
+      const hasAnyPercentage = needs?.percentage != null || wants?.percentage != null ||
+        investments?.percentage != null || savings?.percentage != null;
+      if (hasAnyPercentage) {
+        // Load current config to fill in missing buckets
+        const currentDoc = await col.findOne({ userId: user.userId });
+        const nP = needs?.percentage ?? currentDoc?.needs?.percentage ?? 0;
+        const wP = wants?.percentage ?? currentDoc?.wants?.percentage ?? 0;
+        const iP = investments?.percentage ?? currentDoc?.investments?.percentage ?? 0;
+        const sP = savings?.percentage ?? currentDoc?.savings?.percentage ?? 0;
+        const total = nP + wP + iP + sP;
         if (total !== 100) {
           return NextResponse.json(
             { success: false, error: `Percentages must sum to 100 (got ${total})` },
@@ -123,9 +134,6 @@ export async function PUT(request: NextRequest) {
           });
         }
       }
-
-      const db = await getMongoDb();
-      const col = db.collection(COLLECTION);
 
       const updateFields: Record<string, unknown> = {
         updatedAt: new Date().toISOString(),

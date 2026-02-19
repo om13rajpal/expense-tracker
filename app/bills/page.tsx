@@ -95,7 +95,7 @@ export default function BillsPage() {
         <div className="flex flex-1 flex-col">
           <div className="@container/main flex flex-1 flex-col gap-4 p-4 md:p-6">
             <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-1 flex-col">
-              <div className="border-b border-border/40">
+              <div className="border-b border-border/40 overflow-x-auto">
                 <TabsList variant="line" className="inline-flex h-10 items-center gap-1 bg-transparent p-0">
                   <TabsTrigger
                     value="subscriptions"

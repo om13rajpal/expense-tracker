@@ -51,7 +51,7 @@ export default function AiPage() {
       <SidebarInset className="h-dvh overflow-hidden">
         <SiteHeader title="AI Assistant" />
         <Tabs defaultValue={defaultTab} className="flex flex-1 flex-col overflow-hidden">
-          <div className="border-b border-border/40 px-4">
+          <div className="border-b border-border/40 px-4 overflow-x-auto">
             <TabsList variant="line" className="inline-flex h-10 items-center gap-1 bg-transparent p-0">
               <TabsTrigger
                 value="chat"

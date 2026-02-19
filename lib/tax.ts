@@ -247,12 +247,12 @@ function calculateOldRegime(config: TaxConfig): TaxBreakdown {
     OLD_SLAB_LABELS
   )
 
-  // Section 87A rebate: Full rebate if taxable income <= 5L
-  const rebate87A = taxableIncome <= 500_000 ? taxBeforeRebate : 0
+  // Section 87A rebate: Max ₹12,500 if taxable income <= 5L
+  const rebate87A = taxableIncome <= 500_000 ? Math.min(taxBeforeRebate, 12_500) : 0
   const taxAfterRebate = Math.max(0, taxBeforeRebate - rebate87A)
 
-  // Surcharge (on income above 50L for most people this is 0)
-  const surcharge = calculateSurcharge(taxAfterRebate, taxableIncome)
+  // Surcharge based on total income (taxable income per IT Act)
+  const surcharge = calculateSurcharge(taxAfterRebate, grossTotalIncome)
 
   // Cess: 4% on (tax + surcharge)
   const cess = Math.round((taxAfterRebate + surcharge) * 0.04)
@@ -317,8 +317,8 @@ function calculateNewRegime(config: TaxConfig): TaxBreakdown {
   let taxAfterRebate = taxBeforeRebate
 
   if (taxableIncome <= 700_000) {
-    rebate87A = taxBeforeRebate
-    taxAfterRebate = 0
+    rebate87A = Math.min(taxBeforeRebate, 25_000)
+    taxAfterRebate = Math.max(0, taxBeforeRebate - rebate87A)
   } else if (taxableIncome <= 727_500) {
     // Marginal relief: tax should not exceed (taxableIncome - 7,00,000)
     const marginalIncome = taxableIncome - 700_000
@@ -328,8 +328,8 @@ function calculateNewRegime(config: TaxConfig): TaxBreakdown {
     }
   }
 
-  // Surcharge
-  const surcharge = calculateNewRegimeSurcharge(taxAfterRebate, taxableIncome)
+  // Surcharge based on total income
+  const surcharge = calculateNewRegimeSurcharge(taxAfterRebate, grossTotalIncome)
 
   // Cess: 4%
   const cess = Math.round((taxAfterRebate + surcharge) * 0.04)
@@ -377,7 +377,11 @@ export function calculateTax(config: TaxConfig): TaxComparison {
   const oldResult = calculateOldRegime(config)
   const newResult = calculateNewRegime(config)
 
-  const recommended = oldResult.totalTax <= newResult.totalTax ? "old" : "new"
+  // Respect user's preferred regime; fall back to the lower-tax option
+  const autoRecommended = oldResult.totalTax <= newResult.totalTax ? "old" : "new"
+  const recommended = config.preferredRegime === "auto"
+    ? autoRecommended
+    : config.preferredRegime
   const savings = Math.abs(oldResult.totalTax - newResult.totalTax)
 
   return { old: oldResult, new: newResult, recommended, savings }

@@ -283,14 +283,16 @@ export async function checkBadgeUnlocks(db: Db, userId: string, trigger?: string
   const newlyUnlocked: string[] = [];
 
   // Fetch user data needed for badge checks
-  const [txnCount, budgetCount, goalCount, investmentCount, streak, existingBadges] = await Promise.all([
+  const [txnCount, budgetCount, goalCount, stockCount, mfCount, streak, existingBadges] = await Promise.all([
     db.collection('transactions').countDocuments({ userId }),
     db.collection('budget_categories').countDocuments({ userId }),
     db.collection('goals').countDocuments({ userId }),
-    db.collection('investments').countDocuments({ userId }),
+    db.collection('stocks').countDocuments({ userId }),
+    db.collection('mutual_funds').countDocuments({ userId }),
     db.collection('user_streaks').findOne({ userId }),
     db.collection('user_badges').find({ userId }).toArray(),
   ]);
+  const investmentCount = stockCount + mfCount;
 
   const unlockedIds = new Set(existingBadges.map((b) => b.badgeId));
 
@@ -465,13 +467,20 @@ export async function checkBadgeUnlocks(db: Db, userId: string, trigger?: string
     await tryUnlock('impulse_control', allUnderFor14Days);
   }
 
-  // safety_net: Savings goals with significant progress (>= 50% of target)
-  const goals = await db.collection('goals').find({ userId }).toArray();
-  if (goals.length > 0) {
-    const hasSubstantialSavings = goals.some(
-      (g) => g.targetAmount > 0 && g.currentAmount >= g.targetAmount * 0.5,
-    );
-    await tryUnlock('safety_net', hasSubstantialSavings);
+  // safety_net: Build a 6-month emergency fund
+  // Check if user's balance covers 6+ months of expenses
+  const recentTxns = await db.collection('transactions')
+    .find({ userId, type: 'expense', date: { $gte: new Date(now.getFullYear(), now.getMonth() - 6, 1).toISOString() } })
+    .toArray();
+  const totalRecentExpenses = recentTxns.reduce((s, t) => s + Math.abs(t.amount as number), 0);
+  const avgMonthlyExpense = recentTxns.length > 0 ? totalRecentExpenses / 6 : 0;
+  if (avgMonthlyExpense > 0) {
+    // Get latest balance from most recent transaction
+    const latestTxn = await db.collection('transactions')
+      .findOne({ userId, balance: { $exists: true } }, { sort: { date: -1 } });
+    const currentBalance = (latestTxn?.balance as number) ?? 0;
+    const emergencyMonths = currentBalance / avgMonthlyExpense;
+    await tryUnlock('safety_net', emergencyMonths >= 6);
   }
 
   // ─── Skill Badges ─────────────────────────────────────────────────────

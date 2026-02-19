@@ -23,10 +23,20 @@ export async function GET(request: NextRequest) {
       const db = await getMongoDb();
       const userIds = await db.collection('transactions').distinct('userId');
 
+      const insightTypes = [
+        'spending_analysis',
+        'monthly_budget',
+        'weekly_budget',
+        'investment_insights',
+        'tax_optimization',
+        'planner_recommendation',
+      ] as const;
+
       for (const userId of userIds) {
         try {
-          await runAiPipeline(userId, 'spending_analysis', { force: true, includeSearch: false });
-          await runAiPipeline(userId, 'tax_optimization', { force: true, includeSearch: false });
+          for (const type of insightTypes) {
+            await runAiPipeline(userId, type, { force: true, includeSearch: false });
+          }
           usersProcessed++;
         } catch {
           usersFailed++;

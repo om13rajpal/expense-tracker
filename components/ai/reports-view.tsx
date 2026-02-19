@@ -507,17 +507,22 @@ function MonthlyBudgetDashboard({
               </p>
               {/* Categories */}
               <div className="mt-3 space-y-2">
-                {bucket.data.categories.map((cat) => (
-                  <div key={cat.name} className="flex items-center justify-between gap-2">
-                    <span className="min-w-0 truncate text-xs text-foreground/80">{cat.name}</span>
-                    <div className="flex shrink-0 items-center gap-2">
-                      <span className="text-xs tabular-nums text-muted-foreground">
-                        {formatCurrency(cat.actual)} / {formatCurrency(cat.budgeted)}
-                      </span>
-                      <StatusBadge status={cat.status} />
+                {bucket.data.categories.map((cat) => {
+                  const computedCatStatus = cat.budgeted > 0
+                    ? (cat.actual > cat.budgeted ? "over" : cat.actual < cat.budgeted * 0.8 ? "under" : "on_track")
+                    : (cat.actual > 0 ? "over" : "on_track")
+                  return (
+                    <div key={cat.name} className="flex items-center justify-between gap-2">
+                      <span className="min-w-0 truncate text-xs text-foreground/80">{cat.name}</span>
+                      <div className="flex shrink-0 items-center gap-2">
+                        <span className="text-xs tabular-nums text-muted-foreground">
+                          {formatCurrency(cat.actual)} / {formatCurrency(cat.budgeted)}
+                        </span>
+                        <StatusBadge status={computedCatStatus} />
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
               </div>
             </div>
           )
@@ -638,7 +643,11 @@ function WeeklyBudgetDashboard({
           <div className="space-y-3">
             {data.categories.map((cat) => {
               const pct = cat.weeklyBudget > 0 ? (cat.spent / cat.weeklyBudget) * 100 : 0
-              const barColor = cat.status === "over" ? "bg-rose-500" : cat.status === "under" ? "bg-blue-500" : "bg-emerald-500"
+              // Compute status from actual numbers instead of trusting AI label
+              const computedStatus = cat.weeklyBudget > 0
+                ? (cat.spent > cat.weeklyBudget ? "over" : cat.spent < cat.weeklyBudget * 0.8 ? "under" : "on_track")
+                : (cat.spent > 0 ? "over" : "on_track")
+              const barColor = computedStatus === "over" ? "bg-rose-500" : computedStatus === "under" ? "bg-blue-500" : "bg-emerald-500"
               return (
                 <div key={cat.name}>
                   <div className="flex items-center justify-between">
@@ -647,7 +656,7 @@ function WeeklyBudgetDashboard({
                       <span className="text-xs tabular-nums text-muted-foreground">
                         {formatCurrency(cat.spent)} / {formatCurrency(cat.weeklyBudget)}
                       </span>
-                      <StatusBadge status={cat.status} />
+                      <StatusBadge status={computedStatus} />
                     </div>
                   </div>
                   <div className="mt-1 h-1.5 w-full overflow-hidden rounded-full bg-muted/50">

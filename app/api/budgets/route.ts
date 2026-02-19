@@ -117,6 +117,12 @@ export async function POST(request: NextRequest) {
         await awardXP(db, user.userId, 'budget_created', 20, 'Budgets updated')
         await checkBadgeUnlocks(db, user.userId, 'budget_updated')
         await updateChallengeProgress(db, user.userId)
+        // Invalidate badge check cache so next GET reflects changes
+        await db.collection('gamification_meta').updateOne(
+          { userId: user.userId },
+          { $set: { lastBadgeCheck: new Date(0) } },
+          { upsert: true },
+        )
       } catch (gamErr) {
         console.error('Gamification hook error:', gamErr)
       }

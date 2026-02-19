@@ -1017,7 +1017,7 @@ export default function InvestmentsPage() {
       <SidebarInset>
         <SiteHeader title="Investments" />
         <div className="flex flex-1 flex-col">
-          <div className="@container/main flex flex-1 flex-col gap-6 p-6">
+          <div className="@container/main flex flex-1 flex-col gap-4 md:gap-6 p-4 md:p-6">
 
             {/* ══════════════════════════════════════════════════════════════
                 SECTION 1: Portfolio Hero
@@ -1047,7 +1047,7 @@ export default function InvestmentsPage() {
                         {portfolioTotal.plPercent >= 0 ? "+" : ""}{portfolioTotal.plPercent.toFixed(2)}%
                       </Badge>
                     </div>
-                    <div className="mt-4 grid grid-cols-3 gap-3 border-t border-border/40 pt-3">
+                    <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3 border-t border-border/40 pt-3">
                       <div>
                         <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Invested</div>
                         <div className="text-sm font-semibold tabular-nums">{fmt(portfolioTotal.invested)}</div>
@@ -1369,7 +1369,7 @@ export default function InvestmentsPage() {
             ══════════════════════════════════════════════════════════════ */}
             <motion.div variants={fadeUp} initial="hidden" animate="show">
             <Tabs defaultValue="stocks" className="space-y-4">
-              <TabsList variant="line" className="inline-flex h-10 items-center gap-1 bg-transparent p-0 border-b border-border/40 w-full justify-start">
+              <TabsList variant="line" className="inline-flex h-10 items-center gap-1 bg-transparent p-0 border-b border-border/40 w-full justify-start overflow-x-auto">
                 <TabsTrigger value="stocks" className="relative gap-1 rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent">Stocks ({stocks.length})</TabsTrigger>
                 <TabsTrigger value="stock-txns" className="relative gap-1 rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent">Stock Orders ({stockTxns.length})</TabsTrigger>
                 <TabsTrigger value="funds" className="relative gap-1 rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent">Mutual Funds ({mutualFunds.length})</TabsTrigger>
@@ -1397,7 +1397,7 @@ export default function InvestmentsPage() {
                 {showAddStock && (
                   <Card className="card-elevated">
                     <CardContent className="pt-4 space-y-3">
-                      <div className="grid gap-3 sm:grid-cols-5">
+                      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-5">
                         <div className="space-y-1"><Label className="text-xs">Symbol</Label><Input placeholder="e.g. RELIANCE" value={stockForm.symbol} onChange={(e) => setStockForm({ ...stockForm, symbol: e.target.value })} /></div>
                         <div className="space-y-1"><Label className="text-xs">Exchange</Label>
                           <Select value={stockForm.exchange} onValueChange={(v) => setStockForm({ ...stockForm, exchange: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="NSE">NSE</SelectItem><SelectItem value="BSE">BSE</SelectItem><SelectItem value="NASDAQ">NASDAQ</SelectItem><SelectItem value="NYSE">NYSE</SelectItem></SelectContent></Select>
@@ -1428,17 +1428,18 @@ export default function InvestmentsPage() {
                   </Card>
                 ) : (
                   <Card className="card-elevated overflow-hidden">
+                    <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow className="bg-muted/30 hover:bg-muted/30">
                           <TableHead className="font-semibold text-xs">Stock</TableHead>
-                          <TableHead className="text-right font-semibold text-xs">Shares</TableHead>
-                          <TableHead className="text-right font-semibold text-xs">Avg Cost</TableHead>
-                          <TableHead className="text-right font-semibold text-xs">CMP</TableHead>
-                          <TableHead className="text-right font-semibold text-xs">Invested</TableHead>
+                          <TableHead className="text-right font-semibold text-xs hidden md:table-cell">Shares</TableHead>
+                          <TableHead className="text-right font-semibold text-xs hidden md:table-cell">Avg Cost</TableHead>
+                          <TableHead className="text-right font-semibold text-xs hidden lg:table-cell">CMP</TableHead>
+                          <TableHead className="text-right font-semibold text-xs hidden sm:table-cell">Invested</TableHead>
                           <TableHead className="text-right font-semibold text-xs">Current</TableHead>
                           <TableHead className="text-right font-semibold text-xs">P&L</TableHead>
-                          <TableHead className="text-right font-semibold text-xs">Change</TableHead>
+                          <TableHead className="text-right font-semibold text-xs hidden sm:table-cell">Change</TableHead>
                           <TableHead className="w-[80px]" />
                         </TableRow>
                       </TableHeader>
@@ -1456,17 +1457,17 @@ export default function InvestmentsPage() {
                                 <div className="font-semibold text-sm">{s.symbol}</div>
                                 <div className="text-[11px] text-muted-foreground">{s.exchange}</div>
                               </TableCell>
-                              <TableCell className="text-right tabular-nums text-sm">{s.shares}</TableCell>
-                              <TableCell className="text-right tabular-nums text-sm">{fmt(s.averageCost)}</TableCell>
-                              <TableCell className="text-right tabular-nums text-sm">{q?.current ? fmt(cmp) : <span className="text-muted-foreground" title="Using avg cost">{fmt(cmp)}*</span>}</TableCell>
-                              <TableCell className="text-right tabular-nums text-sm">{fmt(invested)}</TableCell>
+                              <TableCell className="text-right tabular-nums text-sm hidden md:table-cell">{s.shares}</TableCell>
+                              <TableCell className="text-right tabular-nums text-sm hidden md:table-cell">{fmt(s.averageCost)}</TableCell>
+                              <TableCell className="text-right tabular-nums text-sm hidden lg:table-cell">{q?.current ? fmt(cmp) : <span className="text-muted-foreground" title="Using avg cost">{fmt(cmp)}*</span>}</TableCell>
+                              <TableCell className="text-right tabular-nums text-sm hidden sm:table-cell">{fmt(invested)}</TableCell>
                               <TableCell className="text-right tabular-nums text-sm">{fmt(current)}{!q?.current && <span className="text-muted-foreground">*</span>}</TableCell>
                               <TableCell className="text-right">
                                 <span className={`inline-flex items-center gap-1 text-sm font-medium px-2 py-0.5 rounded-md ${pl >= 0 ? "text-emerald-700 dark:text-emerald-300 bg-emerald-500/8" : "text-rose-700 dark:text-rose-300 bg-rose-500/8"}`}>
                                   {fmt(pl)} <span className="text-[11px] opacity-75">({plPct.toFixed(1)}%)</span>
                                 </span>
                               </TableCell>
-                              <TableCell className="text-right">
+                              <TableCell className="text-right hidden sm:table-cell">
                                 {q ? (
                                   <span className={`text-xs font-medium tabular-nums px-1.5 py-0.5 rounded-md ${q.changePercent >= 0 ? "text-emerald-700 dark:text-emerald-300 bg-emerald-500/10" : "text-rose-700 dark:text-rose-300 bg-rose-500/10"}`}>
                                     {q.changePercent >= 0 ? "+" : ""}{q.changePercent.toFixed(2)}%
@@ -1484,6 +1485,7 @@ export default function InvestmentsPage() {
                         })}
                       </TableBody>
                     </Table>
+                    </div>
                     <div className="flex items-center justify-between border-t bg-muted/20 px-4 py-2.5 text-sm">
                       <span className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Total</span>
                       <div className="flex gap-5 text-xs">
@@ -1561,6 +1563,7 @@ export default function InvestmentsPage() {
                   </Card>
                 ) : (
                   <Card className="card-elevated overflow-hidden">
+                    <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow className="bg-muted/30 hover:bg-muted/30">
@@ -1568,9 +1571,9 @@ export default function InvestmentsPage() {
                           <TableHead className="font-semibold text-xs">Type</TableHead>
                           <TableHead className="text-right font-semibold text-xs">Qty</TableHead>
                           <TableHead className="text-right font-semibold text-xs">Value</TableHead>
-                          <TableHead className="text-right font-semibold text-xs">Price/Unit</TableHead>
-                          <TableHead className="font-semibold text-xs">Exchange</TableHead>
-                          <TableHead className="font-semibold text-xs">Date</TableHead>
+                          <TableHead className="text-right font-semibold text-xs hidden sm:table-cell">Price/Unit</TableHead>
+                          <TableHead className="font-semibold text-xs hidden md:table-cell">Exchange</TableHead>
+                          <TableHead className="font-semibold text-xs hidden md:table-cell">Date</TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
@@ -1589,14 +1592,15 @@ export default function InvestmentsPage() {
                               </TableCell>
                               <TableCell className="text-right tabular-nums text-sm">{txn.quantity}</TableCell>
                               <TableCell className="text-right tabular-nums font-medium text-sm">{fmtPrecise(txn.value)}</TableCell>
-                              <TableCell className="text-right tabular-nums text-sm text-muted-foreground">{fmtPrecise(pricePerUnit)}</TableCell>
-                              <TableCell className="text-muted-foreground text-sm">{txn.exchange}</TableCell>
-                              <TableCell className="text-muted-foreground text-xs">{txn.executionDate}</TableCell>
+                              <TableCell className="text-right tabular-nums text-sm text-muted-foreground hidden sm:table-cell">{fmtPrecise(pricePerUnit)}</TableCell>
+                              <TableCell className="text-muted-foreground text-sm hidden md:table-cell">{txn.exchange}</TableCell>
+                              <TableCell className="text-muted-foreground text-xs hidden md:table-cell">{txn.executionDate}</TableCell>
                             </TableRow>
                           )
                         })}
                       </TableBody>
                     </Table>
+                    </div>
                     <div className="flex items-center justify-between border-t bg-muted/20 px-4 py-2.5 text-xs">
                       <span className="font-semibold uppercase tracking-wider text-muted-foreground">{stockTxns.length} transaction(s)</span>
                       <div className="flex gap-4 font-medium">
@@ -1678,15 +1682,16 @@ export default function InvestmentsPage() {
                   </Card>
                 ) : (
                   <Card className="card-elevated overflow-hidden">
+                    <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow className="bg-muted/30 hover:bg-muted/30">
                           <TableHead className="font-semibold text-xs">Scheme</TableHead>
-                          <TableHead className="text-right font-semibold text-xs">Units</TableHead>
-                          <TableHead className="text-right font-semibold text-xs">Invested</TableHead>
+                          <TableHead className="text-right font-semibold text-xs hidden md:table-cell">Units</TableHead>
+                          <TableHead className="text-right font-semibold text-xs hidden sm:table-cell">Invested</TableHead>
                           <TableHead className="text-right font-semibold text-xs">Current</TableHead>
                           <TableHead className="text-right font-semibold text-xs">P&L</TableHead>
-                          <TableHead className="text-right font-semibold text-xs">Returns %</TableHead>
+                          <TableHead className="text-right font-semibold text-xs hidden sm:table-cell">Returns %</TableHead>
                           <TableHead className="w-[80px]" />
                         </TableRow>
                       </TableHeader>
@@ -1700,13 +1705,13 @@ export default function InvestmentsPage() {
                                 <div className="font-semibold text-sm max-w-[280px] truncate">{f.schemeName}</div>
                                 <div className="text-[11px] text-muted-foreground">{[f.amc, f.category].filter(Boolean).join(" - ") || "Mutual Fund"}</div>
                               </TableCell>
-                              <TableCell className="text-right tabular-nums text-sm">{Number(f.units).toFixed(3)}</TableCell>
-                              <TableCell className="text-right tabular-nums text-sm">{fmt(f.investedValue)}</TableCell>
+                              <TableCell className="text-right tabular-nums text-sm hidden md:table-cell">{Number(f.units).toFixed(3)}</TableCell>
+                              <TableCell className="text-right tabular-nums text-sm hidden sm:table-cell">{fmt(f.investedValue)}</TableCell>
                               <TableCell className="text-right tabular-nums text-sm">{fmt(f.currentValue)}</TableCell>
                               <TableCell className="text-right">
                                 <span className={`text-sm font-medium px-2 py-0.5 rounded-md ${ret >= 0 ? "text-emerald-700 dark:text-emerald-300 bg-emerald-500/8" : "text-rose-700 dark:text-rose-300 bg-rose-500/8"}`}>{fmt(ret)}</span>
                               </TableCell>
-                              <TableCell className="text-right">
+                              <TableCell className="text-right hidden sm:table-cell">
                                 <span className={`text-xs font-medium tabular-nums px-1.5 py-0.5 rounded-md ${retPct >= 0 ? "text-emerald-700 dark:text-emerald-300 bg-emerald-500/10" : "text-rose-700 dark:text-rose-300 bg-rose-500/10"}`}>
                                   {retPct >= 0 ? "+" : ""}{retPct.toFixed(1)}%
                                 </span>
@@ -1722,6 +1727,7 @@ export default function InvestmentsPage() {
                         })}
                       </TableBody>
                     </Table>
+                    </div>
                     <div className="flex items-center justify-between border-t bg-muted/20 px-4 py-2.5 text-xs">
                       <span className="font-semibold uppercase tracking-wider text-muted-foreground">Total ({mutualFunds.length} schemes)</span>
                       <div className="flex gap-5">
@@ -1867,6 +1873,7 @@ export default function InvestmentsPage() {
                   </Card>
                 ) : (
                   <Card className="card-elevated overflow-hidden">
+                    <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow className="bg-muted/30 hover:bg-muted/30">
@@ -1903,6 +1910,7 @@ export default function InvestmentsPage() {
                         ))}
                       </TableBody>
                     </Table>
+                    </div>
                     <div className="flex items-center justify-between border-t bg-muted/20 px-4 py-2.5 text-xs">
                       <span className="font-semibold uppercase tracking-wider text-muted-foreground">{sips.length} SIP(s)</span>
                       <span>Monthly total: <strong className="font-semibold">{fmt(sipTotals.monthlyTotal)}</strong></span>
@@ -2140,7 +2148,7 @@ function InvestmentsLoadingSkeleton() {
                 <Skeleton className="h-5 w-24" />
                 <Skeleton className="h-5 w-16 rounded-full" />
               </div>
-              <div className="mt-4 grid grid-cols-3 gap-3 border-t border-border/40 pt-3">
+              <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3 border-t border-border/40 pt-3">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="space-y-1">
                     <Skeleton className="h-2.5 w-14" />

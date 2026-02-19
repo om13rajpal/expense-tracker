@@ -12,118 +12,15 @@ import { ObjectId } from "mongodb"
 
 import {
   getCachedTransactions,
-  filterTransactions,
   fetchTransactionsFromSheet,
 } from "@/lib/sheets"
 import { getMongoDb } from "@/lib/mongodb"
-import { TransactionCategory } from "@/lib/types"
 import { corsHeaders, handleOptions, withAuth } from "@/lib/middleware"
-import type { Transaction } from "@/lib/types"
 import { updateStreak, awardXP, checkBadgeUnlocks, updateChallengeProgress } from "@/lib/gamification"
+import { persistTransactions } from "@/lib/persist-transactions"
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Unknown error"
-}
-
-/**
- * Persist an array of parsed transactions into MongoDB.
- * Uses the sheet's txn_id (transaction.id) as a dedupe key.
- *
- * Category handling:
- *  - Existing transactions: category preserved (never overwritten by sync)
- *  - New transactions: categorized via user rules + built-in categorizer
- *
- * To re-apply rules to existing transactions, use POST /api/transactions/recategorize.
- */
-async function persistTransactions(userId: string, transactions: Transaction[]) {
-  if (!transactions.length) return
-
-  const db = await getMongoDb()
-  const col = db.collection("transactions")
-
-  // Load user rules for categorizing NEW transactions
-  const rules = await db
-    .collection("categorization_rules")
-    .find({ userId, enabled: true })
-    .toArray()
-
-  // Load ALL existing txnIds
-  const existingDocs = await col
-    .find({ userId }, { projection: { txnId: 1 } })
-    .toArray()
-  const existingIds = new Set(existingDocs.map((d) => d.txnId as string))
-
-  const ops = transactions.map((txn) => {
-    const dateStr = txn.date instanceof Date ? txn.date.toISOString() : String(txn.date)
-
-    const baseFields = {
-      date: dateStr,
-      description: txn.description,
-      merchant: txn.merchant,
-      amount: txn.amount,
-      type: txn.type,
-      paymentMethod: txn.paymentMethod,
-      account: txn.account,
-      status: txn.status,
-      tags: txn.tags,
-      recurring: txn.recurring,
-      balance: txn.balance,
-      sequence: txn.sequence,
-      updatedAt: new Date().toISOString(),
-    }
-
-    if (existingIds.has(txn.id)) {
-      // EXISTING transaction — update non-category fields only
-      return {
-        updateOne: {
-          filter: { userId, txnId: txn.id },
-          update: { $set: baseFields },
-          upsert: false,
-        },
-      }
-    }
-
-    // NEW transaction — apply rules, fall back to built-in categorizer
-    let category = txn.category
-    for (const rule of rules) {
-      const pattern = rule.pattern as string
-      const matchField = rule.matchField as string
-      const caseSensitive = rule.caseSensitive === true
-
-      let textToSearch = ""
-      if (matchField === "merchant") textToSearch = txn.merchant || ""
-      else if (matchField === "description") textToSearch = txn.description || ""
-      else textToSearch = `${txn.merchant || ""} ${txn.description || ""}`
-
-      const haystack = caseSensitive ? textToSearch : textToSearch.toLowerCase()
-      const needle = caseSensitive ? pattern : pattern.toLowerCase()
-
-      if (haystack.includes(needle)) {
-        category = rule.category as TransactionCategory
-        break
-      }
-    }
-
-    return {
-      updateOne: {
-        filter: { userId, txnId: txn.id },
-        update: {
-          $set: {
-            userId,
-            txnId: txn.id,
-            ...baseFields,
-            category,
-          },
-          $setOnInsert: {
-            createdAt: new Date().toISOString(),
-          },
-        },
-        upsert: true,
-      },
-    }
-  })
-
-  await col.bulkWrite(ops, { ordered: false })
 }
 
 /**
@@ -615,6 +512,12 @@ export async function POST(request: NextRequest) {
         }
         // Update challenge progress in real-time (not just via daily cron)
         await updateChallengeProgress(db, user.userId)
+        // Invalidate badge check cache so next GET reflects changes
+        await db.collection('gamification_meta').updateOne(
+          { userId: user.userId },
+          { $set: { lastBadgeCheck: new Date(0) } },
+          { upsert: true },
+        )
       } catch (gamErr) {
         // Gamification should not block transaction creation
         console.error('Gamification hook error:', gamErr)

@@ -10,7 +10,7 @@ import type { Transaction, RawTransaction } from './types';
 import { TransactionCategory, TransactionType, PaymentMethod, TransactionStatus } from './types';
 import { categorizeTransaction } from './categorizer';
 
-const SHEET_ID = process.env.GOOGLE_SHEETS_ID || '1yw-KSfgyit84gDoSUgaRsRFH4Mj2DnxXHYaF_yx3UTA';
+const DEFAULT_SHEET_ID = process.env.GOOGLE_SHEETS_ID || '1yw-KSfgyit84gDoSUgaRsRFH4Mj2DnxXHYaF_yx3UTA';
 const SHEET_NAME = 'Sheet1'; // Adjust if your sheet has a different name
 
 // In-memory cache for transactions
@@ -330,8 +330,8 @@ function parseCSV(csvText: string): string[][] {
 /**
  * Fetch from public Google Sheet via CSV export (no auth needed)
  */
-async function fetchFromPublicSheet(): Promise<string[][] | null> {
-  const csvUrl = `https://docs.google.com/spreadsheets/d/${SHEET_ID}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
+async function fetchFromPublicSheet(sheetId: string): Promise<string[][] | null> {
+  const csvUrl = `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(SHEET_NAME)}`;
 
   try {
     const response = await fetch(csvUrl);
@@ -363,14 +363,16 @@ async function fetchFromPublicSheet(): Promise<string[][] | null> {
  * Tries public CSV export first, then authenticated API, then falls back to demo data.
  * Caches results in memory for subsequent calls.
  */
-export async function fetchTransactionsFromSheet(): Promise<{
+export async function fetchTransactionsFromSheet(sheetId?: string): Promise<{
   transactions: Transaction[];
   lastSync: string;
   isDemo?: boolean;
 }> {
+  const resolvedSheetId = sheetId || DEFAULT_SHEET_ID;
+
   // First, try to fetch from public sheet URL (works if sheet is "Anyone with link can view")
   console.log('Attempting to fetch from public Google Sheet...');
-  const publicRows = await fetchFromPublicSheet();
+  const publicRows = await fetchFromPublicSheet(resolvedSheetId);
 
   if (publicRows && publicRows.length > 0) {
     console.log(`Successfully fetched ${publicRows.length} rows from public sheet`);
@@ -400,7 +402,7 @@ export async function fetchTransactionsFromSheet(): Promise<{
       const sheets = google.sheets({ version: 'v4', auth });
 
       const response = await sheets.spreadsheets.values.get({
-        spreadsheetId: SHEET_ID,
+        spreadsheetId: resolvedSheetId,
         range: `${SHEET_NAME}!A2:O`, // Start from row 2 to skip headers, columns A to O
       });
 

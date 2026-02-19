@@ -337,7 +337,7 @@ function StatItem({
       initial={anim.initial}
       animate={anim.animate}
       transition={anim.transition}
-      className="flex items-center gap-3 px-5 py-4"
+      className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-5 py-4 min-w-0"
     >
       <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/60">
         <Icon className="h-4 w-4 text-muted-foreground" />
@@ -346,10 +346,10 @@ function StatItem({
         <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-0.5 truncate">
           {label}
         </p>
-        <p className={`text-lg font-bold tabular-nums leading-tight ${colorClass || ""}`}>
+        <p className={`text-base sm:text-lg font-bold tabular-nums leading-tight truncate ${colorClass || ""}`}>
           {value}
           {suffix && (
-            <span className="text-sm font-normal text-muted-foreground"> {suffix}</span>
+            <span className="text-xs sm:text-sm font-normal text-muted-foreground"> {suffix}</span>
           )}
         </p>
       </div>
@@ -950,7 +950,7 @@ function DebtTrackerSection() {
             <Skeleton className="h-7 w-7 rounded-lg" />
             <Skeleton className="h-4 w-24" />
           </div>
-          <div className="grid grid-cols-3 gap-3 mb-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
             {Array.from({ length: 3 }).map((_, i) => (
               <Skeleton key={i} className="h-16 rounded-lg" />
             ))}
@@ -983,7 +983,7 @@ function DebtTrackerSection() {
           </div>
 
           {/* Summary tiles */}
-          <div className="grid grid-cols-3 gap-3 mb-5">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
             <div className="rounded-lg bg-muted/30 p-3">
               <p className="text-[11px] text-muted-foreground uppercase tracking-wider">
                 Total Outstanding
@@ -1240,7 +1240,7 @@ function HealthLoadingSkeleton() {
               <Skeleton className="h-9 w-48" />
               <Skeleton className="h-5 w-36 mt-2" />
             </div>
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {Array.from({ length: 3 }).map((_, i) => (
                 <Skeleton key={i} className="h-16 rounded-lg" />
               ))}
@@ -1251,7 +1251,7 @@ function HealthLoadingSkeleton() {
       </div>
 
       {/* Stat bar skeleton */}
-      <div className="card-elevated rounded-xl grid grid-cols-2 sm:grid-cols-4 divide-x divide-border/40">
+      <div className="card-elevated rounded-xl grid grid-cols-2 sm:grid-cols-4 divide-x divide-border/40 overflow-hidden">
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="px-5 py-4 flex items-center gap-3">
             <Skeleton className="h-9 w-9 rounded-lg" />
@@ -1298,7 +1298,7 @@ function HealthLoadingSkeleton() {
           <Skeleton className="h-7 w-7 rounded-lg" />
           <Skeleton className="h-4 w-24" />
         </div>
-        <div className="grid grid-cols-3 gap-3 mb-5">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
           {Array.from({ length: 3 }).map((_, i) => (
             <Skeleton key={i} className="h-16 rounded-lg" />
           ))}
@@ -1375,7 +1375,7 @@ export default function FinancialHealthPage() {
         <SiteHeader
           title="Financial Health"
         />
-        <div className="flex flex-1 flex-col">
+        <div className="flex flex-1 flex-col overflow-x-hidden">
           <div className="@container/main flex flex-1 flex-col gap-5 p-4 md:p-6">
             {isLoading ? (
               <HealthLoadingSkeleton />
@@ -1396,7 +1396,7 @@ export default function FinancialHealthPage() {
                 {/* --------------------------------------------------------- */}
                 <motion.div
                   variants={fadeUp}
-                  className="card-elevated rounded-xl grid grid-cols-2 sm:grid-cols-4 divide-x divide-border/40"
+                  className="card-elevated rounded-xl grid grid-cols-2 sm:grid-cols-4 divide-x divide-border/40 overflow-hidden"
                 >
                   <StatItem
                     icon={IconChartDonut}
@@ -1845,7 +1845,7 @@ export default function FinancialHealthPage() {
                     <InfoTooltip text="How many months of expenses your current bank balance can cover. The target is typically 6 months." />
                   </div>
 
-                  <div className="grid grid-cols-2 gap-5 mb-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
                     <div className="rounded-xl border border-border/40 bg-muted/20 p-4">
                       <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
                         Current Coverage

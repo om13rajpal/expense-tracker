@@ -2,119 +2,16 @@
  * Cron: Periodic Google Sheets transaction sync
  * GET /api/cron/sync
  *
- * Fetches transactions from Google Sheets and persists to MongoDB
- * for all users that have a linked sheet.
+ * Fetches transactions from Google Sheets and persists to MongoDB.
  */
 
 import { NextRequest, NextResponse } from 'next/server';
 import { withCronAuth } from '@/lib/middleware';
 import { getMongoDb } from '@/lib/mongodb';
 import { fetchTransactionsFromSheet, clearCache } from '@/lib/sheets';
-import type { Transaction } from '@/lib/types';
+import { persistTransactions } from '@/lib/persist-transactions';
 
 const CRON_COLLECTION = 'cron_runs';
-
-/**
- * Persist transactions to MongoDB, applying categorization rules.
- * Respects existing manual overrides (categoryOverride).
- */
-async function persistTransactions(userId: string, transactions: Transaction[]) {
-  if (!transactions.length) return 0;
-
-  const db = await getMongoDb();
-  const col = db.collection('transactions');
-
-  // Load user rules
-  const rules = await db
-    .collection('categorization_rules')
-    .find({ userId, enabled: true })
-    .toArray();
-
-  // Load existing overrides
-  const overrideDocs = await col
-    .find({ userId, categoryOverride: true }, { projection: { txnId: 1 } })
-    .toArray();
-  const overrides = new Set(overrideDocs.map((d) => d.txnId as string));
-
-  const ops = transactions.map((txn) => {
-    let category = txn.category;
-
-    if (!overrides.has(txn.id)) {
-      // Apply user rules
-      for (const rule of rules) {
-        const pattern = rule.pattern as string;
-        const matchField = rule.matchField as string;
-        const caseSensitive = rule.caseSensitive === true;
-
-        let text = '';
-        if (matchField === 'merchant') text = txn.merchant || '';
-        else if (matchField === 'description') text = txn.description || '';
-        else text = `${txn.merchant || ''} ${txn.description || ''}`;
-
-        const haystack = caseSensitive ? text : text.toLowerCase();
-        const needle = caseSensitive ? pattern : pattern.toLowerCase();
-
-        if (haystack.includes(needle)) {
-          category = rule.category as typeof category;
-          break;
-        }
-      }
-    }
-
-    const dateStr = txn.date instanceof Date ? txn.date.toISOString() : String(txn.date);
-
-    if (overrides.has(txn.id)) {
-      return {
-        updateOne: {
-          filter: { userId, txnId: txn.id },
-          update: {
-            $set: {
-              date: dateStr,
-              description: txn.description,
-              merchant: txn.merchant,
-              amount: txn.amount,
-              type: txn.type,
-              paymentMethod: txn.paymentMethod,
-              account: txn.account,
-              status: txn.status,
-              balance: txn.balance,
-              updatedAt: new Date().toISOString(),
-            },
-          },
-          upsert: false,
-        },
-      };
-    }
-
-    return {
-      updateOne: {
-        filter: { userId, txnId: txn.id },
-        update: {
-          $set: {
-            userId,
-            txnId: txn.id,
-            date: dateStr,
-            description: txn.description,
-            merchant: txn.merchant,
-            category,
-            amount: txn.amount,
-            type: txn.type,
-            paymentMethod: txn.paymentMethod,
-            account: txn.account,
-            status: txn.status,
-            balance: txn.balance,
-            updatedAt: new Date().toISOString(),
-          },
-          $setOnInsert: { createdAt: new Date().toISOString() },
-        },
-        upsert: true,
-      },
-    };
-  });
-
-  const result = await col.bulkWrite(ops, { ordered: false });
-  return result.upsertedCount + result.modifiedCount;
-}
 
 export async function GET(request: NextRequest) {
   return withCronAuth(async () => {
@@ -126,7 +23,14 @@ export async function GET(request: NextRequest) {
       // Clear in-memory cache to force fresh fetch
       clearCache();
 
-      const { transactions, lastSync, isDemo } = await fetchTransactionsFromSheet();
+      // Single-user: get the one user from the users collection
+      const userDoc = await db.collection('users').findOne({}, { projection: { _id: 1 } });
+      const userId = userDoc ? userDoc._id.toString() : 'default';
+
+      const { transactions, isDemo } = await fetchTransactionsFromSheet();
+
+      let totalPersisted = 0;
+      const totalTransactions = transactions.length;
 
       if (isDemo) {
         await db.collection(CRON_COLLECTION).insertOne({
@@ -143,27 +47,16 @@ export async function GET(request: NextRequest) {
         });
       }
 
-      // Get all user IDs that exist in the system
-      const users = await db.collection('users').find({}).project({ _id: 1 }).toArray();
-      const userIds = users.map((u) => u._id.toString());
-
-      // If no users, use a default userId
-      if (userIds.length === 0) userIds.push('default');
-
-      let totalPersisted = 0;
-      for (const userId of userIds) {
-        const persisted = await persistTransactions(userId, transactions);
-        totalPersisted += persisted;
-      }
+      const result = await persistTransactions(userId, transactions);
+      totalPersisted = result.total;
 
       const finishedAt = new Date();
       await db.collection(CRON_COLLECTION).insertOne({
         job: 'sync',
         status: 'success',
         results: {
-          transactionCount: transactions.length,
+          transactionCount: totalTransactions,
           persisted: totalPersisted,
-          userCount: userIds.length,
         },
         startedAt: startedAt.toISOString(),
         finishedAt: finishedAt.toISOString(),
@@ -173,7 +66,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({
         success: true,
         message: 'Sync complete',
-        count: transactions.length,
+        count: totalTransactions,
         persisted: totalPersisted,
       });
     } catch (error) {

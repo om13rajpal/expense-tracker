@@ -6,7 +6,6 @@
 "use client"
 
 import * as React from "react"
-import Link from "next/link"
 
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler"
 import { Spotlight } from "@/components/spotlight"
@@ -61,12 +60,10 @@ export function SiteHeader({
               </span>
             )}
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
             <Spotlight />
             {actions}
-            <Link href="/gamification" className="hover:opacity-80 transition-opacity">
-              <StreakCounter />
-            </Link>
+            <span className="hidden sm:inline-flex"><StreakCounter linkTo="/gamification" /></span>
             <NotificationCenter />
             <AnimatedThemeToggler />
           </div>

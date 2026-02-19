@@ -61,9 +61,9 @@ export default function MoneyPage() {
       <AppSidebar variant="inset" />
       <SidebarInset>
         <SiteHeader title="Money" />
-        <div className="flex flex-1 flex-col">
+        <div className="flex flex-1 flex-col overflow-x-hidden">
           <Tabs value={tab} onValueChange={handleTabChange} className="flex flex-1 flex-col">
-            <div className="border-b border-border/40 px-4 md:px-6">
+            <div className="border-b border-border/40 px-4 md:px-6 overflow-x-auto">
               <TabsList variant="line" className="inline-flex h-10 items-center gap-1 bg-transparent p-0">
                 <TabsTrigger
                   value="transactions"

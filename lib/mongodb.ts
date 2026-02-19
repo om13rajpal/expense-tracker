@@ -1,4 +1,5 @@
 import { MongoClient } from "mongodb"
+import { ensureIndexes } from "./db-indexes"
 
 const uri = process.env.MONGODB_URI
 const dbName = process.env.MONGODB_DB || "finance"
@@ -27,5 +28,12 @@ if (process.env.NODE_ENV === "development") {
 
 export async function getMongoDb() {
   const client = await clientPromise
-  return client.db(dbName)
+  const db = client.db(dbName)
+
+  // Fire-and-forget: ensureIndexes has its own guard flag and retries on failure
+  ensureIndexes(db).catch((err) =>
+    console.error("Background index creation failed:", err)
+  )
+
+  return db
 }

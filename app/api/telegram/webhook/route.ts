@@ -8,7 +8,7 @@
  * text messages (expense entry), photos (receipt scan),
  * and callback queries (inline keyboard presses).
  */
-import { NextRequest, NextResponse } from 'next/server';
+import { NextRequest, NextResponse, after } from 'next/server';
 import { ObjectId } from 'mongodb';
 import { getMongoDb } from '@/lib/mongodb';
 import { formatINR } from '@/lib/format';
@@ -19,9 +19,29 @@ import {
   buildConfirmKeyboard,
   getFileUrl,
   callTelegramAPI,
+  resolveCategoryIndex,
 } from '@/lib/telegram';
 import { parseExpenseMessage } from '@/lib/telegram-parser';
 import { processReceiptImage } from '@/lib/telegram-receipt';
+
+// ─── Dedup: track processed update_ids to reject Telegram retries ───
+
+const DEDUP_TTL_MS = 5 * 60 * 1000; // 5 minutes
+const processedUpdates = new Map<number, number>(); // update_id -> timestamp
+
+function isDuplicate(updateId: number): boolean {
+  if (processedUpdates.has(updateId)) return true;
+  processedUpdates.set(updateId, Date.now());
+  return false;
+}
+
+/** Purge stale entries older than TTL. Called on each request. */
+function cleanupDedup() {
+  const cutoff = Date.now() - DEDUP_TTL_MS;
+  for (const [id, ts] of processedUpdates) {
+    if (ts < cutoff) processedUpdates.delete(id);
+  }
+}
 
 // ─── Helpers ────────────────────────────────────────────────────────
 
@@ -74,16 +94,6 @@ async function handleLink(chatId: number, code: string, username?: string) {
   }
 
   const userId = tokenDoc.userId as string;
-
-  // Check if this chatId is already linked to another account
-  const existing = await db.collection('user_settings').findOne({
-    telegramChatId: chatId,
-    userId: { $ne: userId },
-  });
-  if (existing) {
-    await sendMessage(chatId, 'This Telegram account is already linked to a different user. Unlink it first with /unlink.');
-    return;
-  }
 
   // Save chatId in user_settings
   await db.collection('user_settings').updateOne(
@@ -236,7 +246,7 @@ async function handleTextMessage(chatId: number, text: string) {
   // Insert transaction into MongoDB
   const db = await getMongoDb();
   const now = new Date().toISOString();
-  const txnId = `tg-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+  const txnId = `tg-${crypto.randomUUID()}`;
 
   const doc = {
     userId,
@@ -284,10 +294,48 @@ async function handleTextMessage(chatId: number, text: string) {
 
 // ─── Photo Handler (Receipt scan) ───────────────────────────────────
 
-async function handlePhoto(chatId: number, fileId: string) {
+/**
+ * Schedule receipt processing via next/server `after()`.
+ * This keeps the work alive after the webhook response is sent,
+ * even in serverless environments like Vercel.
+ */
+function scheduleReceiptProcessing(chatId: number, fileId: string) {
+  after(async () => {
+    try {
+      await processReceiptInBackground(chatId, fileId);
+    } catch (err) {
+      console.error('Background receipt processing error:', err);
+    }
+  });
+}
+
+const RECEIPT_DAILY_LIMIT = 10;
+
+async function checkReceiptRateLimit(userId: string): Promise<boolean> {
+  const db = await getMongoDb();
+  const today = new Date();
+  const startOfDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
+
+  const count = await db.collection('transactions').countDocuments({
+    userId,
+    source: 'telegram-receipt',
+    createdAt: { $gte: startOfDay },
+  });
+
+  return count < RECEIPT_DAILY_LIMIT;
+}
+
+async function processReceiptInBackground(chatId: number, fileId: string) {
   const userId = await getUserIdByChatId(chatId);
   if (!userId) {
     await sendMessage(chatId, 'Account not linked. Use /start to learn how to link your account.');
+    return;
+  }
+
+  // Rate-limit: max 10 receipt scans per day
+  const allowed = await checkReceiptRateLimit(userId);
+  if (!allowed) {
+    await sendMessage(chatId, `Daily receipt scan limit reached (${RECEIPT_DAILY_LIMIT}/day). Try again tomorrow or enter expenses manually.`);
     return;
   }
 
@@ -310,12 +358,16 @@ async function handlePhoto(chatId: number, fileId: string) {
     // Store as a pending receipt transaction
     const db = await getMongoDb();
     const now = new Date().toISOString();
-    const txnId = `tg-receipt-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    const txnId = `tg-receipt-${crypto.randomUUID()}`;
 
     const doc = {
       userId,
       txnId,
-      date: receipt.date ? new Date(receipt.date).toISOString() : now,
+      date: (() => {
+        if (!receipt.date) return now;
+        const parsed = new Date(receipt.date);
+        return isNaN(parsed.getTime()) ? now : parsed.toISOString();
+      })(),
       description: receipt.merchant,
       merchant: receipt.merchant,
       category: receipt.category || 'Uncategorized',
@@ -374,16 +426,23 @@ async function handleCallbackQuery(callbackQuery: {
 
   const db = await getMongoDb();
 
-  // Category selection: cat:<txnId>:<category>
+  // Verify the user owns the transaction for all callback actions
+  const userId = await getUserIdByChatId(chatId);
+  if (!userId) return;
+
+  // Category selection: cat:<txnId>:<categoryIndex>
   if (data.startsWith('cat:')) {
     const parts = data.split(':');
     const txnId = parts[1];
-    const category = parts.slice(2).join(':'); // category may contain colons
+    const categoryIndex = parseInt(parts[2], 10);
 
     if (!ObjectId.isValid(txnId)) return;
 
+    const category = resolveCategoryIndex(categoryIndex);
+    if (!category) return;
+
     await db.collection('transactions').updateOne(
-      { _id: new ObjectId(txnId) },
+      { _id: new ObjectId(txnId), userId },
       { $set: { category, updatedAt: new Date().toISOString() } }
     );
 
@@ -403,7 +462,7 @@ async function handleCallbackQuery(callbackQuery: {
     if (!ObjectId.isValid(txnId)) return;
 
     await db.collection('transactions').updateOne(
-      { _id: new ObjectId(txnId) },
+      { _id: new ObjectId(txnId), userId },
       { $set: { status: 'completed', updatedAt: new Date().toISOString() } }
     );
 
@@ -421,7 +480,7 @@ async function handleCallbackQuery(callbackQuery: {
     const txnId = data.replace('receipt_cancel:', '');
     if (!ObjectId.isValid(txnId)) return;
 
-    await db.collection('transactions').deleteOne({ _id: new ObjectId(txnId) });
+    await db.collection('transactions').deleteOne({ _id: new ObjectId(txnId), userId });
 
     await callTelegramAPI('editMessageText', {
       chat_id: chatId,
@@ -442,6 +501,13 @@ export async function POST(request: NextRequest) {
 
   try {
     const update = await request.json();
+
+    // Dedup: reject retried updates from Telegram
+    cleanupDedup();
+    const updateId: number | undefined = update.update_id;
+    if (updateId !== undefined && isDuplicate(updateId)) {
+      return NextResponse.json({ ok: true });
+    }
 
     // Handle callback queries (inline keyboard presses)
     if (update.callback_query) {
@@ -472,8 +538,9 @@ export async function POST(request: NextRequest) {
       await handleSummary(chatId);
     } else if (message.photo && message.photo.length > 0) {
       // Use the largest photo (last in the array)
+      // Fire-and-forget: respond 200 immediately, process receipt in background
       const fileId = message.photo[message.photo.length - 1].file_id;
-      await handlePhoto(chatId, fileId);
+      scheduleReceiptProcessing(chatId, fileId);
     } else if (text && !text.startsWith('/')) {
       // Natural language expense entry
       await handleTextMessage(chatId, text);
@@ -486,6 +553,9 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  if (!verifySecret(request)) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+  }
   return NextResponse.json({ status: 'ok' }, { status: 200 });
 }

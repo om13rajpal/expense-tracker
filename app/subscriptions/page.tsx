@@ -710,7 +710,7 @@ export default function SubscriptionsPage() {
             <SubscriptionsLoadingSkeleton />
           ) : (
             <motion.div
-              className="space-y-4 p-4"
+              className="space-y-4 p-4 md:p-6"
               initial="hidden"
               animate="show"
               variants={stagger}
@@ -1206,7 +1206,7 @@ function SmartSubscriptionForm({
                   {Math.round(suggestion.confidence * 100)}% confidence
                 </Badge>
               </div>
-              <div className="grid grid-cols-3 gap-2 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
                 <div>
                   <span className="text-muted-foreground block">Amount</span>
                   <span className="font-medium">{formatINR(suggestion.amount)}</span>

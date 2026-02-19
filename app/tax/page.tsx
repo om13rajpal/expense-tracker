@@ -688,7 +688,7 @@ export default function TaxPlannerPage() {
             {/* ── LEFT: Inputs (2 cols on xl) ── */}
             <div className="xl:col-span-2 space-y-6">
               <Tabs defaultValue="income" className="w-full">
-                <TabsList className="w-full grid grid-cols-4">
+                <TabsList className="w-full grid grid-cols-2 sm:grid-cols-4">
                   <TabsTrigger value="income" className="text-xs">Income</TabsTrigger>
                   <TabsTrigger value="80c" className="text-xs">80C</TabsTrigger>
                   <TabsTrigger value="health" className="text-xs">Health & HRA</TabsTrigger>

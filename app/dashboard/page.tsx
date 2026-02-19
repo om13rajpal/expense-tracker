@@ -260,7 +260,7 @@ export default function DashboardPage() {
             <SyncButtonCompact onSync={async () => { await syncFromSheets(false) }} />
           }
         />
-        <div className="flex flex-1 flex-col">
+        <div className="flex flex-1 flex-col overflow-x-hidden">
           <div className="@container/main flex flex-1 flex-col gap-5 p-4 md:p-6">
             {isLoading ? (
               <DashboardLoadingSkeleton />
@@ -285,7 +285,7 @@ export default function DashboardPage() {
                 {/* ─── 1. Stat Bar (full width) ─── */}
                 <motion.div
                   variants={fadeUp}
-                  className="grid grid-cols-2 lg:grid-cols-4 gap-3"
+                  className="grid grid-cols-2 lg:grid-cols-4 gap-3 overflow-hidden"
                 >
                   {STAT_CONFIG.map((stat, i) => {
                     const Icon = stat.icon
@@ -304,7 +304,7 @@ export default function DashboardPage() {
                           </p>
                           <motion.p
                             variants={numberPop}
-                            className={`text-xl font-bold tabular-nums truncate ${statValueColors[i]}`}
+                            className={`text-base sm:text-xl font-bold tabular-nums truncate ${statValueColors[i]}`}
                           >
                             {statValues[i]}
                           </motion.p>
@@ -536,15 +536,15 @@ export default function DashboardPage() {
                   {/* Monthly Trend */}
                   <SectionErrorBoundary name="monthly-trend">
                     <div className="card-elevated rounded-xl bg-card p-5 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
-                      <div className="flex items-center justify-between mb-1">
+                      <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
                         <div className="flex items-center gap-2.5">
                           <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-gradient-to-br from-emerald-500/15 to-amber-500/15">
                             <IconChartBar className="h-4 w-4 text-emerald-500" />
                           </div>
                           <h3 className="text-sm font-semibold">Monthly Trend</h3>
                         </div>
-                        <div className="flex items-center gap-4">
-                          <Link href="/money?tab=analytics" className="text-xs text-primary hover:underline">View all</Link>
+                        <div className="flex items-center gap-3 sm:gap-4">
+                          <Link href="/money?tab=analytics" className="text-xs text-primary hover:underline hidden sm:inline">View all</Link>
                           <div className="flex items-center gap-1.5">
                             <div className="h-2.5 w-2.5 rounded-[3px] bg-chart-1" />
                             <span className="text-[11px] text-muted-foreground">Income</span>
@@ -602,11 +602,11 @@ function DashboardLoadingSkeleton() {
   return (
     <div className="space-y-5">
       {/* Stat Bar skeleton */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 overflow-hidden">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="card-elevated rounded-xl bg-card p-4 flex items-start gap-3.5">
+          <div key={i} className="card-elevated rounded-xl bg-card p-4 flex items-start gap-3.5 min-w-0">
             <Skeleton className="h-10 w-10 rounded-xl shrink-0" />
-            <div className="space-y-1.5 flex-1">
+            <div className="space-y-1.5 flex-1 min-w-0">
               <Skeleton className="h-3 w-16" />
               <Skeleton className="h-6 w-24" />
             </div>

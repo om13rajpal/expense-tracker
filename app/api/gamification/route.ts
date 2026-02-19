@@ -19,17 +19,31 @@ import {
 
 export const OPTIONS = handleOptions;
 
+const BADGE_CHECK_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
+
 export const GET = withAuth(async (_request: NextRequest, { user }) => {
   const db = await getMongoDb();
   const userId = user.userId;
 
   // ── Evaluate badges & challenge progress against live data ──
-  // This ensures existing transactions/budgets/goals are detected even
-  // if the daily cron hasn't run yet or the user had data before
-  // the gamification system was added.
+  // Skip if checked within the last 5 minutes to avoid 15+ queries per page load.
+  // The daily cron at 7:30 PM UTC handles the comprehensive check.
   try {
-    await checkBadgeUnlocks(db, userId);
-    await updateChallengeProgress(db, userId);
+    const gamDoc = await db.collection('gamification_meta').findOne({ userId });
+    const lastCheck = gamDoc?.lastBadgeCheck
+      ? new Date(gamDoc.lastBadgeCheck).getTime()
+      : 0;
+    const now = Date.now();
+
+    if (now - lastCheck > BADGE_CHECK_INTERVAL_MS) {
+      await checkBadgeUnlocks(db, userId);
+      await updateChallengeProgress(db, userId);
+      await db.collection('gamification_meta').updateOne(
+        { userId },
+        { $set: { lastBadgeCheck: new Date() } },
+        { upsert: true },
+      );
+    }
   } catch (err) {
     // Don't block the page load if evaluation fails
     console.error('Gamification evaluation error:', err);

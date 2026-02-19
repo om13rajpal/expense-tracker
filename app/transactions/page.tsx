@@ -872,7 +872,7 @@ export default function TransactionsPage() {
                 className="card-elevated rounded-xl bg-card p-3 flex flex-wrap items-center gap-3"
               >
                 {/* Search Input */}
-                <div className="relative flex-1 min-w-[200px] max-w-[380px]">
+                <div className="relative flex-1 min-w-[140px] sm:min-w-[200px] max-w-[380px]">
                   <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/60" />
                   <Input
                     placeholder="Search by description, category, or merchant..."
@@ -1027,7 +1027,7 @@ export default function TransactionsPage() {
                     exit={{ opacity: 0, y: -8, height: 0 }}
                     className="overflow-hidden"
                   >
-                    <div className="flex items-center gap-3 rounded-xl border border-primary/20 bg-primary/5 px-4 py-2.5">
+                    <div className="flex flex-wrap items-center gap-2 sm:gap-3 rounded-xl border border-primary/20 bg-primary/5 px-3 sm:px-4 py-2.5">
                       <div className="flex items-center gap-2">
                         <div className="h-5 w-5 rounded-full bg-primary/15 flex items-center justify-center">
                           <IconCheck className="size-3 text-primary" />
@@ -1101,7 +1101,7 @@ export default function TransactionsPage() {
 
               {/* Transaction Table */}
               <motion.div variants={fadeUp} className="card-elevated rounded-xl bg-card overflow-x-auto">
-                <Table className="min-w-[640px]">
+                <Table className="min-w-[480px]">
                   <TableHeader>
                     <TableRow className="hover:bg-transparent border-b border-border/50">
                       <TableHead className="w-[40px] pl-4">
@@ -1112,7 +1112,7 @@ export default function TransactionsPage() {
                           }
                         </button>
                       </TableHead>
-                      <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 w-[90px]">
+                      <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 w-[90px] hidden sm:table-cell">
                         <button onClick={() => toggleSort("date")} className="inline-flex items-center gap-1 hover:text-foreground transition-colors">
                           Date
                           {sortField === "date" ? (sortDir === "asc" ? <IconSortAscending className="size-3.5" /> : <IconSortDescending className="size-3.5" />) : <IconArrowsSort className="size-3.5 opacity-0 group-hover:opacity-40" />}
@@ -1124,7 +1124,7 @@ export default function TransactionsPage() {
                           {sortField === "description" ? (sortDir === "asc" ? <IconSortAscending className="size-3.5" /> : <IconSortDescending className="size-3.5" />) : null}
                         </button>
                       </TableHead>
-                      <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                      <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 hidden md:table-cell">
                         <span className="inline-flex items-center gap-1">
                           <button onClick={() => toggleSort("category")} className="inline-flex items-center gap-1 hover:text-foreground transition-colors">
                             Category
@@ -1171,7 +1171,7 @@ export default function TransactionsPage() {
                             </TableCell>
 
                             {/* Date */}
-                            <TableCell>
+                            <TableCell className="hidden sm:table-cell">
                               <div className="flex flex-col">
                                 <span className="text-[13px] font-medium tabular-nums text-foreground">
                                   {new Date(transaction.date).toLocaleDateString("en-IN", {
@@ -1191,7 +1191,7 @@ export default function TransactionsPage() {
 
                             {/* Description */}
                             <TableCell>
-                              <div className="max-w-[360px]">
+                              <div className="max-w-[200px] sm:max-w-[280px] md:max-w-[360px]">
                                 <Tooltip>
                                   <TooltipTrigger asChild>
                                     <div className="text-[13px] font-medium truncate cursor-default text-foreground">
@@ -1216,7 +1216,7 @@ export default function TransactionsPage() {
                             </TableCell>
 
                             {/* Category */}
-                            <TableCell>
+                            <TableCell className="hidden md:table-cell">
                               {editingId === transaction.id ? (
                                 <div className="flex items-center gap-1">
                                   <Select value={editCategory} onValueChange={setEditCategory}>
@@ -1465,7 +1465,7 @@ export default function TransactionsPage() {
 
       {/* Add Transaction Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="max-w-md">
+        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Add Transaction</DialogTitle>
             <DialogDescription>Manually add a new transaction.</DialogDescription>
@@ -1546,7 +1546,7 @@ export default function TransactionsPage() {
 
       {/* Rules Management Dialog */}
       <Dialog open={showRules} onOpenChange={setShowRules}>
-        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-[calc(100vw-2rem)] sm:max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <IconSettings className="size-5 text-muted-foreground" />

@@ -10,17 +10,33 @@ const BOT_TOKEN = () => process.env.TELEGRAM_BOT_TOKEN!;
 
 // ─── Generic API caller ─────────────────────────────────────────────
 
+const MAX_RETRIES = 3;
+
 export async function callTelegramAPI(method: string, body: object) {
-  const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN()}/${method}`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(body),
-  });
-  const data = await res.json();
-  if (!data.ok) {
-    console.error(`Telegram API error [${method}]:`, data.description);
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
+    const res = await fetch(`https://api.telegram.org/bot${BOT_TOKEN()}/${method}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    const data = await res.json();
+
+    // Retry on 429 (rate-limited) with exponential backoff
+    // Telegram returns retry_after in the JSON body, not HTTP headers
+    if (res.status === 429 && attempt < MAX_RETRIES) {
+      const retryAfter = data?.parameters?.retry_after || 1;
+      const backoff = Math.max(retryAfter, 2 ** attempt) * 1000;
+      await new Promise((r) => setTimeout(r, backoff));
+      continue;
+    }
+    if (!data.ok) {
+      console.error(`Telegram API error [${method}]:`, data.description);
+    }
+    return data;
   }
-  return data;
+  // Should not reach here, but return an error shape if it does
+  return { ok: false, description: 'Max retries exceeded' };
 }
 
 // ─── Send helpers ───────────────────────────────────────────────────
@@ -48,20 +64,31 @@ export async function sendMessageWithKeyboard(
 
 // ─── Inline keyboards ──────────────────────────────────────────────
 
+/**
+ * Build category selection keyboard.
+ * Uses category index instead of full name in callback_data
+ * to stay within Telegram's 64-byte callback_data limit.
+ * Format: cat:<txnId>:<index>
+ */
 export function buildCategoryKeyboard(txnId: string) {
   const categories = getBudgetCategories();
-  // 2 buttons per row
   const rows: { text: string; callback_data: string }[][] = [];
   for (let i = 0; i < categories.length; i += 2) {
     const row = [
-      { text: categories[i], callback_data: `cat:${txnId}:${categories[i]}` },
+      { text: categories[i], callback_data: `cat:${txnId}:${i}` },
     ];
     if (categories[i + 1]) {
-      row.push({ text: categories[i + 1], callback_data: `cat:${txnId}:${categories[i + 1]}` });
+      row.push({ text: categories[i + 1], callback_data: `cat:${txnId}:${i + 1}` });
     }
     rows.push(row);
   }
   return { inline_keyboard: rows };
+}
+
+/** Resolve a category index back to the category name */
+export function resolveCategoryIndex(index: number): string | null {
+  const categories = getBudgetCategories();
+  return index >= 0 && index < categories.length ? categories[index] : null;
 }
 
 export function buildConfirmKeyboard(txnId: string) {

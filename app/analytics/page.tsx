@@ -476,8 +476,8 @@ export default function AnalyticsPage() {
             ) : null
           }
         />
-        <div className="flex flex-1 flex-col">
-          <div className="@container/main flex flex-1 flex-col gap-4 p-4">
+        <div className="flex flex-1 flex-col overflow-x-hidden">
+          <div className="@container/main flex flex-1 flex-col gap-4 p-4 md:p-6">
             {isLoading ? (
               <AnalyticsLoadingSkeleton />
             ) : (
@@ -485,10 +485,10 @@ export default function AnalyticsPage() {
                 {/* ── Stat Bar ── */}
                 <motion.div
                   variants={fadeUp}
-                  className="card-elevated rounded-2xl bg-card grid grid-cols-2 @xl/main:grid-cols-4 divide-y @xl/main:divide-y-0 @xl/main:divide-x divide-border/40"
+                  className="card-elevated rounded-2xl bg-card grid grid-cols-2 @xl/main:grid-cols-4 divide-y @xl/main:divide-y-0 @xl/main:divide-x divide-border/40 overflow-hidden"
                 >
                   {/* Opening Balance */}
-                  <div className="px-5 py-4 flex items-start gap-3.5">
+                  <div className="px-3 sm:px-5 py-4 flex items-start gap-2.5 sm:gap-3.5 min-w-0">
                     <div className="mt-0.5 flex size-9 items-center justify-center rounded-xl bg-muted">
                       <IconScale className="size-4 text-muted-foreground" />
                     </div>
@@ -503,7 +503,7 @@ export default function AnalyticsPage() {
                   </div>
 
                   {/* Income */}
-                  <div className="px-5 py-4 flex items-start gap-3.5">
+                  <div className="px-3 sm:px-5 py-4 flex items-start gap-2.5 sm:gap-3.5 min-w-0">
                     <div className="mt-0.5 flex size-9 items-center justify-center rounded-xl bg-primary/10">
                       <IconArrowUpRight className="size-4 text-primary" />
                     </div>
@@ -518,7 +518,7 @@ export default function AnalyticsPage() {
                   </div>
 
                   {/* Expenses */}
-                  <div className="px-5 py-4 flex items-start gap-3.5">
+                  <div className="px-3 sm:px-5 py-4 flex items-start gap-2.5 sm:gap-3.5 min-w-0">
                     <div className="mt-0.5 flex size-9 items-center justify-center rounded-xl bg-muted">
                       <IconArrowDownRight className="size-4 text-muted-foreground" />
                     </div>
@@ -533,7 +533,7 @@ export default function AnalyticsPage() {
                   </div>
 
                   {/* Current Balance */}
-                  <div className="px-5 py-4 flex items-start gap-3.5">
+                  <div className="px-3 sm:px-5 py-4 flex items-start gap-2.5 sm:gap-3.5 min-w-0">
                     <div className={`mt-0.5 flex size-9 items-center justify-center rounded-xl ${netChange >= 0 ? "bg-primary/10" : "bg-destructive/10"}`}>
                       <IconWallet className={`size-4 ${netChange >= 0 ? "text-primary" : "text-destructive"}`} />
                     </div>
@@ -586,7 +586,7 @@ export default function AnalyticsPage() {
                 {/* ── Tabs ── */}
                 <motion.div variants={fadeUp}>
                   <Tabs defaultValue="daily" className="space-y-4">
-                    <TabsList className="inline-flex h-10 gap-1 rounded-xl bg-muted/50 p-1">
+                    <TabsList className="inline-flex h-10 gap-1 rounded-xl bg-muted/50 p-1 overflow-x-auto">
                       <TabsTrigger value="daily" className="rounded-lg px-4 text-xs font-medium">Daily</TabsTrigger>
                       <TabsTrigger value="weekly" className="rounded-lg px-4 text-xs font-medium">Weekly</TabsTrigger>
                       <TabsTrigger value="monthly" className="rounded-lg px-4 text-xs font-medium">Monthly</TabsTrigger>
@@ -623,7 +623,7 @@ export default function AnalyticsPage() {
                       </div>
 
                       {/* Daily Highlights */}
-                      <div className="card-elevated rounded-2xl bg-card grid grid-cols-3 divide-x divide-border/40">
+                      <div className="card-elevated rounded-2xl bg-card grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border/40">
                         <div className="px-5 py-4 flex items-start gap-3">
                           <div className="mt-0.5 flex size-8 items-center justify-center rounded-lg bg-muted">
                             <IconCalendarStats className="size-3.5 text-muted-foreground" />
@@ -786,7 +786,7 @@ export default function AnalyticsPage() {
                       {/* Change Summary Cards */}
                       <div className="card-elevated rounded-2xl bg-card grid grid-cols-1 @lg/main:grid-cols-3 divide-y @lg/main:divide-y-0 @lg/main:divide-x divide-border/40">
                         {/* Income Change */}
-                        <div className="px-5 py-4 flex items-start gap-3.5">
+                        <div className="px-3 sm:px-5 py-4 flex items-start gap-2.5 sm:gap-3.5 min-w-0">
                           <div className={`mt-0.5 flex size-9 items-center justify-center rounded-xl ${comparisonChanges.income.change >= 0 ? "bg-primary/10" : "bg-destructive/10"}`}>
                             {comparisonChanges.income.change >= 0
                               ? <IconTrendingUp className="size-4 text-primary" />
@@ -807,7 +807,7 @@ export default function AnalyticsPage() {
                         </div>
 
                         {/* Expense Change */}
-                        <div className="px-5 py-4 flex items-start gap-3.5">
+                        <div className="px-3 sm:px-5 py-4 flex items-start gap-2.5 sm:gap-3.5 min-w-0">
                           <div className={`mt-0.5 flex size-9 items-center justify-center rounded-xl ${comparisonChanges.expense.change <= 0 ? "bg-primary/10" : "bg-destructive/10"}`}>
                             <IconArrowsExchange className={`size-4 ${comparisonChanges.expense.change <= 0 ? "text-primary" : "text-destructive"}`} />
                           </div>
@@ -826,7 +826,7 @@ export default function AnalyticsPage() {
                         </div>
 
                         {/* Savings Change */}
-                        <div className="px-5 py-4 flex items-start gap-3.5">
+                        <div className="px-3 sm:px-5 py-4 flex items-start gap-2.5 sm:gap-3.5 min-w-0">
                           <div className={`mt-0.5 flex size-9 items-center justify-center rounded-xl ${comparisonChanges.savings.current >= 0 ? "bg-primary/10" : "bg-destructive/10"}`}>
                             <IconWallet className={`size-4 ${comparisonChanges.savings.current >= 0 ? "text-primary" : "text-destructive"}`} />
                           </div>
@@ -1127,9 +1127,9 @@ export default function AnalyticsPage() {
 function AnalyticsLoadingSkeleton() {
   return (
     <div className="space-y-5">
-      <div className="card-elevated rounded-2xl bg-card grid grid-cols-4 divide-x divide-border/40">
+      <div className="card-elevated rounded-2xl bg-card grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border/40 overflow-hidden">
         {[0, 1, 2, 3].map((i) => (
-          <div key={i} className="px-5 py-4 flex items-start gap-3.5">
+          <div key={i} className="px-3 sm:px-5 py-4 flex items-start gap-2.5 sm:gap-3.5 min-w-0">
             <Skeleton className="size-9 rounded-xl" />
             <div className="space-y-2 flex-1">
               <Skeleton className="h-3 w-14" />

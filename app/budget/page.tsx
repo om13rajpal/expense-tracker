@@ -895,15 +895,15 @@ export default function BudgetPage() {
           <BudgetLoadingSkeleton />
         ) : (
           <motion.div
-            className="space-y-4 p-4"
+            className="space-y-4 p-4 md:p-6"
             initial="hidden"
             animate="show"
             variants={stagger}
           >
             {/* ─── Tabs: Current / History ─── */}
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <motion.div variants={fadeUpSmall} className="border-b border-border/40 -mx-4 px-4">
-                <TabsList variant="line" className="inline-flex h-10 items-center gap-1 bg-transparent p-0">
+              <motion.div variants={fadeUpSmall} className="border-b border-border/40 -mx-4 px-4 overflow-x-auto">
+                <TabsList variant="line" className="inline-flex h-10 items-center gap-1 bg-transparent p-0 min-w-max">
                   <TabsTrigger
                     value="current"
                     className="relative gap-1.5 rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent"
@@ -1082,7 +1082,7 @@ export default function BudgetPage() {
                     </div>
 
                     {/* 4 bucket cards */}
-                    <div className="grid gap-3 md:grid-cols-4">
+                    <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
                       {(["needs", "wants", "investments", "savings"] as const).map((key) => {
                         const cfg = BUCKET_CONFIG[key]
                         const BucketIcon = cfg.icon
@@ -1306,7 +1306,7 @@ export default function BudgetPage() {
                       <h3 className="text-sm font-semibold">Needs vs Wants Usage</h3>
                       <InfoTooltip text="Shows how much of your Needs and Wants budget has been spent this month. Based on category classifications in the table below." />
                     </div>
-                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+                    <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
                       {(["needs", "wants", "investments", "savings"] as const).map((key) => {
                         const cfg = BUCKET_CONFIG[key]
                         const BIcon = cfg.icon
@@ -1375,12 +1375,12 @@ export default function BudgetPage() {
                     <TableHeader>
                       <TableRow className="border-border/40 hover:bg-transparent">
                         <TableHead className="text-[11px] uppercase tracking-wider font-medium">Category</TableHead>
-                        <TableHead className="text-[11px] uppercase tracking-wider font-medium w-[100px]">Type</TableHead>
+                        <TableHead className="text-[11px] uppercase tracking-wider font-medium w-[100px] hidden lg:table-cell">Type</TableHead>
                         <TableHead className="text-right text-[11px] uppercase tracking-wider font-medium">Budget</TableHead>
                         <TableHead className="text-right text-[11px] uppercase tracking-wider font-medium">Spent</TableHead>
-                        <TableHead className="text-right text-[11px] uppercase tracking-wider font-medium">Left</TableHead>
+                        <TableHead className="text-right text-[11px] uppercase tracking-wider font-medium hidden sm:table-cell">Left</TableHead>
                         <TableHead className="w-[180px] text-[11px] uppercase tracking-wider font-medium">Progress</TableHead>
-                        <TableHead className="w-[120px] text-[11px] uppercase tracking-wider font-medium">Rollover</TableHead>
+                        <TableHead className="w-[120px] text-[11px] uppercase tracking-wider font-medium hidden md:table-cell">Rollover</TableHead>
                         <TableHead className="w-[80px]" />
                       </TableRow>
                     </TableHeader>
@@ -1424,7 +1424,7 @@ export default function BudgetPage() {
                                 </p>
                               )}
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="hidden lg:table-cell">
                               {nwiConfig ? (
                                 <Select
                                   value={getBucket(item.budgetCategory) || ""}
@@ -1473,7 +1473,7 @@ export default function BudgetPage() {
                             <TableCell className="text-right font-semibold tabular-nums text-sm">
                               {formatCurrency(item.actualSpent)}
                             </TableCell>
-                            <TableCell className={`text-right font-semibold tabular-nums text-sm ${effectiveLeft < 0 ? "text-destructive" : "text-primary"}`}>
+                            <TableCell className={`text-right font-semibold tabular-nums text-sm hidden sm:table-cell ${effectiveLeft < 0 ? "text-destructive" : "text-primary"}`}>
                               {effectiveLeft < 0 ? "-" : ""}{formatCurrency(Math.abs(effectiveLeft))}
                             </TableCell>
                             <TableCell>
@@ -1498,7 +1498,7 @@ export default function BudgetPage() {
                                 </div>
                               </div>
                             </TableCell>
-                            <TableCell>
+                            <TableCell className="hidden md:table-cell">
                               <div className="flex items-center gap-2">
                                 <Switch
                                   checked={isRollover}
@@ -1549,10 +1549,10 @@ export default function BudgetPage() {
                       })}
                       <TableRow className="border-t-2 border-border/60 font-semibold hover:bg-transparent">
                         <TableCell className="text-sm">Total</TableCell>
-                        <TableCell />
+                        <TableCell className="hidden lg:table-cell" />
                         <TableCell className="text-right tabular-nums text-sm">{formatCurrency(totalMonthlyBudget)}</TableCell>
                         <TableCell className="text-right tabular-nums text-sm">{formatCurrency(totalSpent)}</TableCell>
-                        <TableCell className={`text-right tabular-nums text-sm ${totalMonthlyBudget - totalSpent > 0 ? "text-primary" : "text-destructive"}`}>
+                        <TableCell className={`text-right tabular-nums text-sm hidden sm:table-cell ${totalMonthlyBudget - totalSpent > 0 ? "text-primary" : "text-destructive"}`}>
                           {totalMonthlyBudget - totalSpent < 0 ? "-" : ""}{formatCurrency(Math.abs(totalMonthlyBudget - totalSpent))}
                         </TableCell>
                         <TableCell>
@@ -1572,7 +1572,7 @@ export default function BudgetPage() {
                             )}
                           </div>
                         </TableCell>
-                        <TableCell />
+                        <TableCell className="hidden md:table-cell" />
                         <TableCell />
                       </TableRow>
                     </TableBody>
@@ -1774,7 +1774,7 @@ function MiniSparkline({ data, highlightIndex }: { data: number[]; highlightInde
 
 function BudgetLoadingSkeleton() {
   return (
-    <div className="space-y-4 p-4">
+    <div className="space-y-4 p-4 md:p-6">
       <Skeleton className="h-24 w-full rounded-xl" />
       <Skeleton className="h-16 w-full rounded-xl" />
       <div className="grid gap-4 lg:grid-cols-5">

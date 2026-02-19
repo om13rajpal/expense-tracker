@@ -11,6 +11,8 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { corsHeaders, handleOptions, withAuth } from '@/lib/middleware';
 import { runAiPipeline, getCachedAnalysis } from '@/lib/ai-pipeline';
+import { getMongoDb } from '@/lib/mongodb';
+import { checkRateLimit } from '@/lib/rate-limit';
 import type { AiInsightType } from '@/lib/ai-types';
 
 const VALID_TYPES: AiInsightType[] = ['spending_analysis', 'monthly_budget', 'weekly_budget', 'investment_insights', 'tax_optimization', 'planner_recommendation'];
@@ -94,6 +96,25 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         { success: false, message: `Invalid type. Must be one of: ${VALID_TYPES.join(', ')}` },
         { status: 400, headers: corsHeaders() }
+      );
+    }
+
+    // Rate limit: max 3 regenerations per insight type per hour
+    try {
+      const db = await getMongoDb();
+      const allowed = await checkRateLimit(db, user.userId, `insight_${type}`, 3, 60 * 60 * 1000);
+      if (!allowed) {
+        return NextResponse.json(
+          { success: false, message: 'Rate limit exceeded. You can regenerate this insight up to 3 times per hour.' },
+          { status: 429, headers: corsHeaders() }
+        );
+      }
+    } catch (err) {
+      // Fail closed: if rate limit check fails, deny to protect API costs
+      console.error('Rate limit check error:', err);
+      return NextResponse.json(
+        { success: false, message: 'Service temporarily unavailable. Please try again.' },
+        { status: 503, headers: corsHeaders() }
       );
     }
 

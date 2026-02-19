@@ -1,115 +1,13 @@
 /**
- * Daily cron function that syncs transactions from Google Sheets into MongoDB.
- * Runs at 6:00 AM UTC, applies categorization rules, respects manual category
- * overrides, and emits a `finance/sync.completed` event on success.
- * @module inngest/sync
+ * Daily scheduled sync: Google Sheets -> MongoDB.
+ * Runs at 6:00 AM UTC, emits `finance/sync.completed` on success.
  */
 import { inngest } from '@/lib/inngest';
 import { getMongoDb } from '@/lib/mongodb';
 import { fetchTransactionsFromSheet, clearCache } from '@/lib/sheets';
-import type { Transaction } from '@/lib/types';
+import { persistTransactions } from '@/lib/persist-transactions';
 
 const CRON_COLLECTION = 'cron_runs';
-
-/**
- * Upserts transactions into MongoDB for a given user, applying categorization
- * rules while preserving manual category overrides.
- * @returns Number of documents upserted or modified.
- */
-async function persistTransactions(userId: string, transactions: Transaction[]) {
-  if (!transactions.length) return 0;
-
-  const db = await getMongoDb();
-  const col = db.collection('transactions');
-
-  const rules = await db
-    .collection('categorization_rules')
-    .find({ userId, enabled: true })
-    .toArray();
-
-  const overrideDocs = await col
-    .find({ userId, categoryOverride: true }, { projection: { txnId: 1 } })
-    .toArray();
-  const overrides = new Set(overrideDocs.map((d) => d.txnId as string));
-
-  const ops = transactions.map((txn) => {
-    let category = txn.category;
-
-    if (!overrides.has(txn.id)) {
-      for (const rule of rules) {
-        const pattern = rule.pattern as string;
-        const matchField = rule.matchField as string;
-        const caseSensitive = rule.caseSensitive === true;
-
-        let text = '';
-        if (matchField === 'merchant') text = txn.merchant || '';
-        else if (matchField === 'description') text = txn.description || '';
-        else text = `${txn.merchant || ''} ${txn.description || ''}`;
-
-        const haystack = caseSensitive ? text : text.toLowerCase();
-        const needle = caseSensitive ? pattern : pattern.toLowerCase();
-
-        if (haystack.includes(needle)) {
-          category = rule.category as typeof category;
-          break;
-        }
-      }
-    }
-
-    const dateStr = txn.date instanceof Date ? txn.date.toISOString() : String(txn.date);
-
-    if (overrides.has(txn.id)) {
-      return {
-        updateOne: {
-          filter: { userId, txnId: txn.id },
-          update: {
-            $set: {
-              date: dateStr,
-              description: txn.description,
-              merchant: txn.merchant,
-              amount: txn.amount,
-              type: txn.type,
-              paymentMethod: txn.paymentMethod,
-              account: txn.account,
-              status: txn.status,
-              balance: txn.balance,
-              updatedAt: new Date().toISOString(),
-            },
-          },
-          upsert: false,
-        },
-      };
-    }
-
-    return {
-      updateOne: {
-        filter: { userId, txnId: txn.id },
-        update: {
-          $set: {
-            userId,
-            txnId: txn.id,
-            date: dateStr,
-            description: txn.description,
-            merchant: txn.merchant,
-            category,
-            amount: txn.amount,
-            type: txn.type,
-            paymentMethod: txn.paymentMethod,
-            account: txn.account,
-            status: txn.status,
-            balance: txn.balance,
-            updatedAt: new Date().toISOString(),
-          },
-          $setOnInsert: { createdAt: new Date().toISOString() },
-        },
-        upsert: true,
-      },
-    };
-  });
-
-  const result = await col.bulkWrite(ops, { ordered: false });
-  return result.upsertedCount + result.modifiedCount;
-}
 
 export const syncTransactions = inngest.createFunction(
   { id: 'sync-transactions', name: 'Sync Google Sheets Transactions' },
@@ -120,6 +18,10 @@ export const syncTransactions = inngest.createFunction(
     const result = await step.run('sync-sheets-to-mongo', async () => {
       const db = await getMongoDb();
       clearCache();
+
+      // Single-user: get the one user from the users collection
+      const userDoc = await db.collection('users').findOne({}, { projection: { _id: 1 } });
+      const userId = userDoc ? userDoc._id.toString() : 'default';
 
       const { transactions, isDemo } = await fetchTransactionsFromSheet();
 
@@ -134,15 +36,7 @@ export const syncTransactions = inngest.createFunction(
         return { skipped: true as const, count: 0, userIds: [] as string[] };
       }
 
-      const users = await db.collection('users').find({}).project({ _id: 1 }).toArray();
-      const userIds = users.map((u) => u._id.toString());
-      if (userIds.length === 0) userIds.push('default');
-
-      let totalPersisted = 0;
-      for (const userId of userIds) {
-        const persisted = await persistTransactions(userId, transactions);
-        totalPersisted += persisted;
-      }
+      const persistResult = await persistTransactions(userId, transactions);
 
       const finishedAt = new Date();
       await db.collection(CRON_COLLECTION).insertOne({
@@ -150,15 +44,14 @@ export const syncTransactions = inngest.createFunction(
         status: 'success',
         results: {
           transactionCount: transactions.length,
-          persisted: totalPersisted,
-          userCount: userIds.length,
+          persisted: persistResult.total,
         },
         startedAt: startedAt.toISOString(),
         finishedAt: finishedAt.toISOString(),
         durationMs: finishedAt.getTime() - startedAt.getTime(),
       });
 
-      return { skipped: false as const, count: transactions.length, persisted: totalPersisted, userIds };
+      return { skipped: false as const, count: transactions.length, persisted: persistResult.total, userIds: [userId] };
     });
 
     if (!result.skipped && result.count > 0) {

@@ -56,10 +56,12 @@ export function withAuth(
  * CORS headers for API routes
  */
 export function corsHeaders() {
+  const allowedOrigin = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
   return {
-    'Access-Control-Allow-Origin': '*',
+    'Access-Control-Allow-Origin': allowedOrigin,
     'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Allow-Credentials': 'true',
   };
 }
 

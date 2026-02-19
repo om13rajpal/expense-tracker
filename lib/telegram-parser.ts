@@ -91,8 +91,11 @@ export function parseExpenseMessage(text: string): ParsedExpense | null {
   const amountMatch = trimmed.match(/[\d,]+(?:\.\d{1,2})?/);
   if (!amountMatch) return null;
 
-  const amount = parseFloat(amountMatch[0].replace(/,/g, ''));
-  if (isNaN(amount) || amount <= 0) return null;
+  const rawAmount = amountMatch[0].replace(/,/g, '');
+  // Reject amounts with 10+ digits (before decimal) or > 10,00,000 (10 lakh)
+  if (rawAmount.replace(/\.\d+$/, '').length >= 10) return null;
+  const amount = parseFloat(rawAmount);
+  if (isNaN(amount) || amount <= 0 || amount > 1_000_000) return null;
 
   // Remove the amount from text to get description tokens
   const withoutAmount = trimmed.replace(amountMatch[0], '').trim();

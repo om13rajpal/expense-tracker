@@ -20,6 +20,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { corsHeaders, handleOptions, withAuth } from '@/lib/middleware'
 import { getMongoDb } from '@/lib/mongodb'
 import { fetchAllFinancialData, buildFinancialContext } from '@/lib/financial-context'
+import { checkRateLimit } from '@/lib/rate-limit'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -30,7 +31,8 @@ const MODEL = 'anthropic/claude-sonnet-4.5'
 const MAX_TOKENS = 4096
 const TEMPERATURE = 0.4
 
-const SYSTEM_PROMPT = `You are a personal financial advisor AI assistant for the user's Finance Tracker app. You have complete access to their financial data including transactions, investments, budgets, and goals.
+function buildSystemPrompt(): string {
+  return `You are a personal financial advisor AI assistant for the user's Finance Tracker app. You have complete access to their financial data including transactions, investments, budgets, and goals.
 
 Guidelines:
 - Always use INR (Rs.) for currency values, formatted in Indian notation (lakhs, crores)
@@ -44,7 +46,8 @@ Guidelines:
 - Today's date is ${new Date().toISOString().slice(0, 10)}
 
 You have access to the following financial data:
-`
+`;
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -187,6 +190,24 @@ export async function POST(request: NextRequest) {
 
       // 3. Fetch all financial data from MongoDB
       const db = await getMongoDb()
+
+      // 2.5. Rate limit: max 20 messages per hour per user
+      try {
+        const allowed = await checkRateLimit(db, user.userId, 'agent_chat', 20, 60 * 60 * 1000)
+        if (!allowed) {
+          return NextResponse.json(
+            { success: false, message: 'Rate limit exceeded. You can send up to 20 messages per hour.' },
+            { status: 429, headers: corsHeaders() }
+          )
+        }
+      } catch (err) {
+        // Fail closed: if rate limit check fails, deny the request to protect API costs
+        console.error('Rate limit check error:', err)
+        return NextResponse.json(
+          { success: false, message: 'Service temporarily unavailable. Please try again.' },
+          { status: 503, headers: corsHeaders() }
+        )
+      }
       const financialData = await fetchAllFinancialData(db, user.userId)
 
       // 4. Build the comprehensive context
@@ -194,7 +215,7 @@ export async function POST(request: NextRequest) {
 
       // 5. Construct messages array
       const messages: { role: string; content: string }[] = [
-        { role: 'system', content: SYSTEM_PROMPT + '\n' + financialContext },
+        { role: 'system', content: buildSystemPrompt() + '\n' + financialContext },
       ]
 
       // If a threadId is provided, load conversation history from MongoDB
@@ -233,23 +254,41 @@ export async function POST(request: NextRequest) {
       // Add the current user message
       messages.push({ role: 'user', content: message })
 
-      // 6. Call OpenRouter with streaming enabled
-      const openRouterResponse = await fetch(OPENROUTER_API_URL, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${apiKey}`,
-          'Content-Type': 'application/json',
-          'HTTP-Referer': 'https://finance-tracker.local',
-          'X-Title': 'Finance Tracker AI Agent',
-        },
-        body: JSON.stringify({
-          model: MODEL,
-          messages,
-          max_tokens: MAX_TOKENS,
-          temperature: TEMPERATURE,
-          stream: true,
-        }),
-      })
+      // 6. Call OpenRouter with streaming enabled (30s timeout)
+      const controller = new AbortController()
+      const timeout = setTimeout(() => controller.abort(), 30_000)
+
+      let openRouterResponse: Response
+      try {
+        openRouterResponse = await fetch(OPENROUTER_API_URL, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': 'https://finance-tracker.local',
+            'X-Title': 'Finance Tracker AI Agent',
+          },
+          body: JSON.stringify({
+            model: MODEL,
+            messages,
+            max_tokens: MAX_TOKENS,
+            temperature: TEMPERATURE,
+            stream: true,
+          }),
+          signal: controller.signal,
+        })
+      } catch (err: unknown) {
+        clearTimeout(timeout)
+        if (err instanceof DOMException && err.name === 'AbortError') {
+          return NextResponse.json(
+            { success: false, message: 'AI analysis timed out. Please try again.' },
+            { status: 504, headers: corsHeaders() }
+          )
+        }
+        throw err
+      } finally {
+        clearTimeout(timeout)
+      }
 
       if (!openRouterResponse.ok) {
         const errorText = await openRouterResponse.text()

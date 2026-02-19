@@ -238,7 +238,7 @@ export default function AiInsightsPage() {
           title="AI Recommendations"
         />
         <div className="flex flex-1 flex-col">
-          <div className="@container/main flex flex-1 flex-col gap-5 p-5">
+          <div className="@container/main flex flex-1 flex-col gap-5 p-4 md:p-6">
             <Tabs defaultValue="spending_analysis" className="flex flex-col gap-4">
               {/* Tab bar with regenerate all */}
               <motion.div
@@ -247,7 +247,7 @@ export default function AiInsightsPage() {
                 transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
                 className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
               >
-                <TabsList className="h-auto w-full justify-start gap-1 bg-muted/50 p-1 sm:w-auto">
+                <TabsList className="h-auto w-full justify-start gap-1 bg-muted/50 p-1 sm:w-auto overflow-x-auto">
                   {insightConfig.map((config) => {
                     const Icon = config.icon
                     return (
@@ -620,7 +620,7 @@ function MonthlyBudgetDashboard({
   return (
     <DashboardShell meta={meta} insight={insight}>
       {/* 1. Overview stat tiles */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <StatTile label="Income" value={data.totalIncome} color="text-emerald-600 dark:text-emerald-400" />
         <StatTile label="Budget" value={data.totalBudget} color="text-blue-600 dark:text-blue-400" />
         <StatTile label="Surplus" value={data.surplus} color={data.surplus >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"} />
@@ -765,7 +765,7 @@ function WeeklyBudgetDashboard({
           <span>Spent: <span className="font-medium text-foreground">{formatCurrency(data.spent)}</span></span>
           <span>Target: <span className="font-medium text-foreground">{formatCurrency(data.weeklyTarget)}</span></span>
         </div>
-        <div className="mt-3 grid grid-cols-3 gap-3">
+        <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
           <StatTile label="Remaining" value={data.remaining} color={data.remaining >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"} />
           <StatTile label="Daily Limit" value={data.dailyLimit} color="text-blue-600 dark:text-blue-400" />
           <StatTile label="Days Left" value={data.daysRemaining} color="text-purple-600 dark:text-purple-400" isRaw />

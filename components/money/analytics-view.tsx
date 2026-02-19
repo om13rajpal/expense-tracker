@@ -549,14 +549,16 @@ export function AnalyticsView() {
         {/* ── Tabs ── */}
         <motion.div variants={fadeUp}>
           <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="space-y-4">
-            <TabsList className="inline-flex h-10 gap-1 rounded-xl bg-muted/50 p-1">
-              <TabsTrigger value="daily" className="rounded-lg px-4 text-xs font-medium">Daily</TabsTrigger>
-              <TabsTrigger value="weekly" className="rounded-lg px-4 text-xs font-medium">Weekly</TabsTrigger>
-              <TabsTrigger value="monthly" className="rounded-lg px-4 text-xs font-medium">Monthly</TabsTrigger>
-              <TabsTrigger value="comparison" className="rounded-lg px-4 text-xs font-medium">Comparison</TabsTrigger>
-              <TabsTrigger value="trends" className="rounded-lg px-4 text-xs font-medium">Trends</TabsTrigger>
-              <TabsTrigger value="yearly" className="rounded-lg px-4 text-xs font-medium">Yearly</TabsTrigger>
-            </TabsList>
+            <div className="overflow-x-auto">
+              <TabsList className="inline-flex h-10 gap-1 rounded-xl bg-muted/50 p-1 min-w-max">
+                <TabsTrigger value="daily" className="rounded-lg px-3 sm:px-4 text-xs font-medium">Daily</TabsTrigger>
+                <TabsTrigger value="weekly" className="rounded-lg px-3 sm:px-4 text-xs font-medium">Weekly</TabsTrigger>
+                <TabsTrigger value="monthly" className="rounded-lg px-3 sm:px-4 text-xs font-medium">Monthly</TabsTrigger>
+                <TabsTrigger value="comparison" className="rounded-lg px-3 sm:px-4 text-xs font-medium">Comparison</TabsTrigger>
+                <TabsTrigger value="trends" className="rounded-lg px-3 sm:px-4 text-xs font-medium">Trends</TabsTrigger>
+                <TabsTrigger value="yearly" className="rounded-lg px-3 sm:px-4 text-xs font-medium">Yearly</TabsTrigger>
+              </TabsList>
+            </div>
 
             {/* ── Daily Tab ── */}
             <TabsContent value="daily" className="space-y-4">

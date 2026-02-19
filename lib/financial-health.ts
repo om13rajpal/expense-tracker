@@ -26,7 +26,7 @@ export function calculateEmergencyFundRatio(
   currentBalance: number,
   avgMonthlyExpense: number
 ): number {
-  if (avgMonthlyExpense <= 0) return 0;
+  if (avgMonthlyExpense <= 0) return currentBalance > 0 ? 12 : 0;
   return currentBalance / avgMonthlyExpense;
 }
 
