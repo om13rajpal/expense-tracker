@@ -247,13 +247,13 @@ function StructuredInsightsView({
   compact: boolean
 }) {
   const categories = compact
-    ? data.topCategories?.slice(0, 4)
+    ? data.topCategories?.slice(0, 3)
     : data.topCategories
   const actions = compact
-    ? data.actionItems?.slice(0, 3)
+    ? data.actionItems?.slice(0, 2)
     : data.actionItems
   const alerts = compact
-    ? data.alerts?.slice(0, 2)
+    ? data.alerts?.filter(a => a.type === "critical")?.slice(0, 1)
     : data.alerts
 
   return (
@@ -264,7 +264,7 @@ function StructuredInsightsView({
         {data.keyInsight && (
           <div className="flex items-start gap-1.5 min-w-0 flex-1">
             <IconBulb className="h-3.5 w-3.5 mt-0.5 shrink-0 text-amber-500" />
-            <p className="text-xs text-muted-foreground leading-relaxed line-clamp-2">
+            <p className={`text-xs text-muted-foreground leading-relaxed ${compact ? "line-clamp-1" : "line-clamp-2"}`}>
               {data.keyInsight}
             </p>
           </div>
@@ -294,7 +294,7 @@ function StructuredInsightsView({
               {data.summary.savingsRate.toFixed(0)}%
             </strong>
           </span>
-          {data.summary.verdict && (
+          {!compact && data.summary.verdict && (
             <>
               <span className="h-3 w-px bg-border" />
               <span className="text-muted-foreground italic">
@@ -305,8 +305,8 @@ function StructuredInsightsView({
         </div>
       )}
 
-      {/* Top Categories */}
-      {categories && categories.length > 0 && (
+      {/* Top Categories - hidden in compact mode */}
+      {!compact && categories && categories.length > 0 && (
         <div>
           <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
             Top Categories
@@ -319,7 +319,7 @@ function StructuredInsightsView({
         </div>
       )}
 
-      {/* Alerts */}
+      {/* Alerts - only critical ones in compact mode */}
       {alerts && alerts.length > 0 && (
         <div className="space-y-1.5">
           {alerts.map((alert, i) => {
@@ -333,9 +333,11 @@ function StructuredInsightsView({
                 <AlertIcon className={`h-3.5 w-3.5 mt-0.5 shrink-0 ${style.iconColor}`} />
                 <div className="min-w-0">
                   <p className="text-xs font-medium">{alert.title}</p>
-                  <p className="text-[11px] text-muted-foreground leading-relaxed">
-                    {alert.message}
-                  </p>
+                  {!compact && (
+                    <p className="text-[11px] text-muted-foreground leading-relaxed">
+                      {alert.message}
+                    </p>
+                  )}
                 </div>
               </div>
             )
@@ -343,16 +345,45 @@ function StructuredInsightsView({
         </div>
       )}
 
-      {/* Action Items */}
+      {/* Action Items - compact shows title-only cards */}
       {actions && actions.length > 0 && (
         <div>
           <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
             Recommendations
           </p>
           <div className="space-y-2">
-            {actions.map((action, i) => (
-              <ActionItemCard key={i} {...action} />
-            ))}
+            {compact
+              ? actions.map((action, i) => {
+                  const link = getActionLink(action.category, action.title)
+                  const impactStyle = IMPACT_STYLES[action.impact]
+                  return (
+                    <Link
+                      key={i}
+                      href={link}
+                      className="group flex items-center gap-2.5 rounded-lg border border-border/50 bg-card px-3 py-2 transition-colors hover:bg-muted/40 hover:border-border"
+                    >
+                      <IconBolt className="h-3.5 w-3.5 text-primary shrink-0" />
+                      <span className="text-xs font-medium flex-1 truncate group-hover:text-primary transition-colors">
+                        {action.title}
+                      </span>
+                      <Badge
+                        variant="outline"
+                        className={`text-[10px] px-1.5 py-0 h-4 shrink-0 ${impactStyle}`}
+                      >
+                        {action.impact}
+                      </Badge>
+                      {action.savingAmount > 0 && (
+                        <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 tabular-nums shrink-0">
+                          {formatINR(action.savingAmount)}
+                        </span>
+                      )}
+                    </Link>
+                  )
+                })
+              : actions.map((action, i) => (
+                  <ActionItemCard key={i} {...action} />
+                ))
+            }
           </div>
         </div>
       )}
@@ -448,7 +479,7 @@ export function AiInsightsWidget({ compact = false }: AiInsightsWidgetProps) {
         ) : structuredData ? (
           <div>
             <StructuredInsightsView data={structuredData} compact={compact} />
-            {insight.generatedAt && (
+            {!compact && insight.generatedAt && (
               <p className="text-[11px] text-muted-foreground mt-4 pt-3 border-t border-border/40">
                 Generated{" "}
                 {new Date(insight.generatedAt).toLocaleString("en-IN", {

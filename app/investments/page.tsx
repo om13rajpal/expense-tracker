@@ -1072,66 +1072,66 @@ export default function InvestmentsPage() {
               {/* Quick metric tiles */}
               <motion.div variants={stagger} className="@[1200px]/main:col-span-8 grid grid-cols-2 @[640px]/main:grid-cols-4 gap-3">
                 <motion.div variants={fadeUpSmall}>
-                  <Card className="card-elevated h-full">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
+                  <Card className="card-elevated h-full border-t-2 border-t-indigo-500/40">
+                    <CardContent className="flex items-start gap-3 p-4">
+                      <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-500/10 dark:bg-indigo-500/15">
+                        <IconChartLine className="size-4 text-indigo-600 dark:text-indigo-400" />
+                      </div>
+                      <div className="min-w-0">
                         <span className="text-[11px] uppercase tracking-wider font-medium text-muted-foreground">Stocks</span>
-                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-500/10">
-                          <IconChartLine className="size-3.5 text-indigo-500" />
+                        <div className="text-xl font-bold tabular-nums">{fmt(stockTotals.totalValue)}</div>
+                        <div className={`text-xs font-medium ${stockTotals.totalPL >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                          {stockTotals.totalPL >= 0 ? "+" : ""}{stockTotals.plPercent.toFixed(1)}%
+                          <span className="text-muted-foreground font-normal ml-1">({stocks.length})</span>
                         </div>
-                      </div>
-                      <div className="mt-2 text-xl font-bold tabular-nums">{fmt(stockTotals.totalValue)}</div>
-                      <div className={`mt-0.5 text-xs font-medium ${stockTotals.totalPL >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
-                        {stockTotals.totalPL >= 0 ? "+" : ""}{stockTotals.plPercent.toFixed(1)}%
-                        <span className="text-muted-foreground font-normal ml-1">({stocks.length})</span>
                       </div>
                     </CardContent>
                   </Card>
                 </motion.div>
                 <motion.div variants={fadeUpSmall}>
-                  <Card className="card-elevated h-full">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
+                  <Card className="card-elevated h-full border-t-2 border-t-amber-500/40">
+                    <CardContent className="flex items-start gap-3 p-4">
+                      <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 dark:bg-amber-500/15">
+                        <IconChartBar className="size-4 text-amber-600 dark:text-amber-400" />
+                      </div>
+                      <div className="min-w-0">
                         <span className="text-[11px] uppercase tracking-wider font-medium text-muted-foreground">Mutual Funds</span>
-                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/10">
-                          <IconChartBar className="size-3.5 text-amber-500" />
+                        <div className="text-xl font-bold tabular-nums">{fmt(fundTotals.current)}</div>
+                        <div className={`text-xs font-medium ${fundTotals.returns >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                          {fundTotals.returns >= 0 ? "+" : ""}{fundTotals.plPercent.toFixed(1)}%
+                          <span className="text-muted-foreground font-normal ml-1">({mutualFunds.length})</span>
                         </div>
-                      </div>
-                      <div className="mt-2 text-xl font-bold tabular-nums">{fmt(fundTotals.current)}</div>
-                      <div className={`mt-0.5 text-xs font-medium ${fundTotals.returns >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
-                        {fundTotals.returns >= 0 ? "+" : ""}{fundTotals.plPercent.toFixed(1)}%
-                        <span className="text-muted-foreground font-normal ml-1">({mutualFunds.length})</span>
                       </div>
                     </CardContent>
                   </Card>
                 </motion.div>
                 <motion.div variants={fadeUpSmall}>
-                  <Card className="card-elevated h-full">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
+                  <Card className="card-elevated h-full border-t-2 border-t-emerald-500/40">
+                    <CardContent className="flex items-start gap-3 p-4">
+                      <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15">
+                        <IconCoin className="size-4 text-emerald-600 dark:text-emerald-400" />
+                      </div>
+                      <div className="min-w-0">
                         <span className="text-[11px] uppercase tracking-wider font-medium text-muted-foreground">Monthly SIP</span>
-                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/10">
-                          <IconCoin className="size-3.5 text-emerald-500" />
-                        </div>
+                        <div className="text-xl font-bold tabular-nums">{fmt(sipTotals.monthlyTotal)}</div>
+                        <div className="text-xs text-muted-foreground">{sipTotals.active} active of {sipTotals.total}</div>
                       </div>
-                      <div className="mt-2 text-xl font-bold tabular-nums">{fmt(sipTotals.monthlyTotal)}</div>
-                      <div className="mt-0.5 text-xs text-muted-foreground">{sipTotals.active} active of {sipTotals.total}</div>
                     </CardContent>
                   </Card>
                 </motion.div>
                 <motion.div variants={fadeUpSmall}>
-                  <Card className="card-elevated h-full">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
+                  <Card className={`card-elevated h-full border-t-2 ${realizedPL >= 0 ? "border-t-emerald-500/40" : "border-t-rose-500/40"}`}>
+                    <CardContent className="flex items-start gap-3 p-4">
+                      <div className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${realizedPL >= 0 ? "bg-emerald-500/10 dark:bg-emerald-500/15" : "bg-rose-500/10 dark:bg-rose-500/15"}`}>
+                        <IconTrendingUp className={`size-4 ${realizedPL >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`} />
+                      </div>
+                      <div className="min-w-0">
                         <span className="text-[11px] uppercase tracking-wider font-medium text-muted-foreground">Realized P&L</span>
-                        <div className={`flex h-7 w-7 items-center justify-center rounded-lg ${realizedPL >= 0 ? "bg-emerald-500/10" : "bg-rose-500/10"}`}>
-                          <IconTrendingUp className={`size-3.5 ${realizedPL >= 0 ? "text-emerald-500" : "text-rose-500"}`} />
+                        <div className={`text-xl font-bold tabular-nums ${realizedPL >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                          {realizedPL >= 0 ? "+" : ""}{fmt(realizedPL)}
                         </div>
+                        <div className="text-xs text-muted-foreground">{exitedStocks.length} exited positions</div>
                       </div>
-                      <div className={`mt-2 text-xl font-bold tabular-nums ${realizedPL >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
-                        {realizedPL >= 0 ? "+" : ""}{fmt(realizedPL)}
-                      </div>
-                      <div className="mt-0.5 text-xs text-muted-foreground">{exitedStocks.length} exited positions</div>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -1369,11 +1369,11 @@ export default function InvestmentsPage() {
             ══════════════════════════════════════════════════════════════ */}
             <motion.div variants={fadeUp} initial="hidden" animate="show">
             <Tabs defaultValue="stocks" className="space-y-4">
-              <TabsList className="bg-muted/50 p-1 rounded-xl h-auto">
-                <TabsTrigger value="stocks" className="rounded-lg data-[state=active]:shadow-sm text-xs px-4 py-2">Stocks ({stocks.length})</TabsTrigger>
-                <TabsTrigger value="stock-txns" className="rounded-lg data-[state=active]:shadow-sm text-xs px-4 py-2">Stock Orders ({stockTxns.length})</TabsTrigger>
-                <TabsTrigger value="funds" className="rounded-lg data-[state=active]:shadow-sm text-xs px-4 py-2">Mutual Funds ({mutualFunds.length})</TabsTrigger>
-                <TabsTrigger value="sips" className="rounded-lg data-[state=active]:shadow-sm text-xs px-4 py-2">SIPs ({sips.length})</TabsTrigger>
+              <TabsList variant="line" className="inline-flex h-10 items-center gap-1 bg-transparent p-0 border-b border-border/40 w-full justify-start">
+                <TabsTrigger value="stocks" className="relative gap-1 rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent">Stocks ({stocks.length})</TabsTrigger>
+                <TabsTrigger value="stock-txns" className="relative gap-1 rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent">Stock Orders ({stockTxns.length})</TabsTrigger>
+                <TabsTrigger value="funds" className="relative gap-1 rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent">Mutual Funds ({mutualFunds.length})</TabsTrigger>
+                <TabsTrigger value="sips" className="relative gap-1 rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent">SIPs ({sips.length})</TabsTrigger>
               </TabsList>
 
               {/* ── STOCKS TAB ── */}

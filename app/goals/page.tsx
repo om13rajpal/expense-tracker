@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useEffect, useState, useCallback } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { motion, AnimatePresence } from "motion/react"
 import {
   Area,
@@ -39,6 +39,8 @@ import {
   IconCar,
   IconHeart,
   IconDots,
+  IconHeartbeat,
+  IconBuildingBank,
 } from "@tabler/icons-react"
 
 import { toast } from "sonner"
@@ -79,6 +81,8 @@ import {
 } from "@/components/ui/table"
 import { stagger, fadeUp, fadeUpSmall, scaleIn, numberPop, listItem } from "@/lib/motion"
 import { IncomeGoalTracker } from "@/components/wealth/income-goal-tracker"
+import { HealthOverview } from "@/components/goals/health-overview"
+import { NetWorthView } from "@/components/goals/net-worth-view"
 
 // ─── Types ───
 
@@ -372,7 +376,19 @@ function ProgressRing({
 
 export default function GoalsPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { isAuthenticated, isLoading: authLoading } = useAuth()
+
+  // Tab state from URL
+  const tabParam = searchParams.get("tab")
+  const validTabs = ["overview", "savings", "fire", "networth"]
+  const activeTab = validTabs.includes(tabParam || "") ? tabParam! : "overview"
+
+  const handleTabChange = (value: string) => {
+    const params = new URLSearchParams(searchParams.toString())
+    params.set("tab", value)
+    router.replace(`/goals?${params.toString()}`, { scroll: false })
+  }
 
   // Data state
   const [goals, setGoals] = useState<SavingsGoal[]>([])
@@ -703,7 +719,7 @@ export default function GoalsPage() {
       <AppSidebar variant="inset" />
       <SidebarInset>
         <SiteHeader
-          title="Goals & Projections"
+          title="Goals & Financial Health"
         />
         <div className="flex flex-1 flex-col">
           <div className="@container/main flex flex-1 flex-col gap-5 p-4 md:p-6">
@@ -716,49 +732,57 @@ export default function GoalsPage() {
                   variants={fadeUp}
                   className="card-elevated rounded-xl bg-card grid grid-cols-2 sm:grid-cols-4 divide-x divide-border/40"
                 >
-                  <div className="px-5 py-4">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <IconCoin className="h-3.5 w-3.5 text-emerald-500" />
-                      <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Total Saved</p>
+                  <div className="px-5 py-4 flex items-start gap-3">
+                    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 dark:bg-emerald-500/15">
+                      <IconCoin className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                     </div>
-                    <motion.p variants={numberPop} className="text-xl font-bold tabular-nums">{formatCurrency(totalSaved)}</motion.p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">{goals.length} active goal{goals.length !== 1 ? "s" : ""}</p>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider leading-none mb-1.5">Total Saved</p>
+                      <motion.p variants={numberPop} className="text-lg font-bold tabular-nums leading-tight">{formatCurrency(totalSaved)}</motion.p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">{goals.length} active goal{goals.length !== 1 ? "s" : ""}</p>
+                    </div>
                   </div>
-                  <div className="px-5 py-4">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <IconTarget className="h-3.5 w-3.5 text-blue-500" />
-                      <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Total Target</p>
+                  <div className="px-5 py-4 flex items-start gap-3">
+                    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 dark:bg-blue-500/15">
+                      <IconTarget className="h-4 w-4 text-blue-600 dark:text-blue-400" />
                     </div>
-                    <motion.p variants={numberPop} className="text-xl font-bold tabular-nums">{formatCurrency(totalTarget)}</motion.p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">{overallProgress.toFixed(1)}% overall</p>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider leading-none mb-1.5">Total Target</p>
+                      <motion.p variants={numberPop} className="text-lg font-bold tabular-nums leading-tight">{formatCurrency(totalTarget)}</motion.p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">{overallProgress.toFixed(1)}% overall</p>
+                    </div>
                   </div>
-                  <div className="px-5 py-4 max-sm:border-t max-sm:border-border/40">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <IconCheck className="h-3.5 w-3.5 text-teal-500" />
-                      <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">On Track</p>
+                  <div className="px-5 py-4 max-sm:border-t max-sm:border-border/40 flex items-start gap-3">
+                    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-500/10 dark:bg-teal-500/15">
+                      <IconCheck className="h-4 w-4 text-teal-600 dark:text-teal-400" />
                     </div>
-                    <motion.p variants={numberPop} className="text-xl font-bold tabular-nums">{onTrackCount} / {goals.length}</motion.p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      {goals.length > 0
-                        ? `${((onTrackCount / goals.length) * 100).toFixed(0)}% on track`
-                        : "No goals yet"}
-                    </p>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider leading-none mb-1.5">On Track</p>
+                      <motion.p variants={numberPop} className="text-lg font-bold tabular-nums leading-tight">{onTrackCount} / {goals.length}</motion.p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        {goals.length > 0
+                          ? `${((onTrackCount / goals.length) * 100).toFixed(0)}% on track`
+                          : "No goals yet"}
+                      </p>
+                    </div>
                   </div>
-                  <div className="px-5 py-4 max-sm:border-t max-sm:border-border/40">
-                    <div className="flex items-center gap-1.5 mb-1">
-                      <IconFlame className="h-3.5 w-3.5 text-orange-500" />
-                      <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">FIRE Progress</p>
+                  <div className="px-5 py-4 max-sm:border-t max-sm:border-border/40 flex items-start gap-3">
+                    <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-orange-500/10 dark:bg-orange-500/15">
+                      <IconFlame className="h-4 w-4 text-orange-600 dark:text-orange-400" />
                     </div>
-                    <motion.p variants={numberPop} className="text-xl font-bold tabular-nums">
-                      {projections?.fire
-                        ? `${projections.fire.progressPercent.toFixed(1)}%`
-                        : "N/A"}
-                    </motion.p>
-                    <p className="text-[11px] text-muted-foreground mt-0.5">
-                      {projections?.fire
-                        ? `${projections.fire.yearsToFIRE.toFixed(1)} years to goal`
-                        : "No projection data"}
-                    </p>
+                    <div className="min-w-0">
+                      <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider leading-none mb-1.5">FIRE Progress</p>
+                      <motion.p variants={numberPop} className="text-lg font-bold tabular-nums leading-tight">
+                        {projections?.fire
+                          ? `${projections.fire.progressPercent.toFixed(1)}%`
+                          : "N/A"}
+                      </motion.p>
+                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                        {projections?.fire
+                          ? `${projections.fire.yearsToFIRE.toFixed(1)} years to goal`
+                          : "No projection data"}
+                      </p>
+                    </div>
                   </div>
                 </motion.div>
 
@@ -767,24 +791,140 @@ export default function GoalsPage() {
 
                 {/* ─── Tabs ─── */}
                 <motion.div variants={fadeUpSmall}>
-                  <Tabs defaultValue="goals" className="space-y-5">
-                    <TabsList className="h-10 p-1 bg-muted/50 rounded-lg">
-                      <TabsTrigger value="goals" className="rounded-md px-4 text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                        <IconPigMoney className="mr-1.5 h-4 w-4" />
-                        Savings Goals
-                      </TabsTrigger>
-                      <TabsTrigger value="fire" className="rounded-md px-4 text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                        <IconFlame className="mr-1.5 h-4 w-4" />
-                        Early Retirement
-                      </TabsTrigger>
-                      <TabsTrigger value="projections" className="rounded-md px-4 text-sm data-[state=active]:bg-background data-[state=active]:shadow-sm">
-                        <IconTrendingUp className="mr-1.5 h-4 w-4" />
-                        Projections
-                      </TabsTrigger>
-                    </TabsList>
+                  <Tabs value={activeTab} onValueChange={handleTabChange} className="space-y-5">
+                    <div className="border-b border-border/40">
+                      <TabsList variant="line" className="inline-flex h-10 items-center gap-1 bg-transparent p-0">
+                        <TabsTrigger
+                          value="overview"
+                          className="relative gap-1.5 rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent"
+                        >
+                          <IconHeartbeat className="h-4 w-4" />
+                          Overview
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="savings"
+                          className="relative gap-1.5 rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent"
+                        >
+                          <IconPigMoney className="h-4 w-4" />
+                          Savings Goals
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="fire"
+                          className="relative gap-1.5 rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent"
+                        >
+                          <IconFlame className="h-4 w-4" />
+                          Retire Early
+                        </TabsTrigger>
+                        <TabsTrigger
+                          value="networth"
+                          className="relative gap-1.5 rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent"
+                        >
+                          <IconBuildingBank className="h-4 w-4" />
+                          Net Worth & Debt
+                        </TabsTrigger>
+                      </TabsList>
+                    </div>
+
+                    {/* ─── Tab 0: Overview ─── */}
+                    <TabsContent value="overview" className="space-y-5">
+                      <HealthOverview />
+
+                      {/* Goals summary */}
+                      {goals.length > 0 ? (
+                        <div className="card-elevated rounded-xl bg-card p-5">
+                          <div className="flex items-center justify-between mb-4">
+                            <div className="flex items-center gap-1.5">
+                              <IconPigMoney className="h-4 w-4 text-muted-foreground" />
+                              <h3 className="text-sm font-semibold">Savings Goals</h3>
+                            </div>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              className="text-xs gap-1"
+                              onClick={() => handleTabChange("savings")}
+                            >
+                              View All
+                              <IconTrendingUp className="h-3 w-3" />
+                            </Button>
+                          </div>
+                          <div className="space-y-3">
+                            {goals.slice(0, 4).map((goal) => {
+                              const autoLinked = goal.autoLinkedAmount || 0
+                              const totalAmount = goal.currentAmount + autoLinked
+                              const totalPct = Math.min(
+                                goal.targetAmount > 0
+                                  ? (totalAmount / goal.targetAmount) * 100
+                                  : 0,
+                                100
+                              )
+                              const config = getCategoryConfig(goal.category)
+                              const CategoryIcon = config.icon
+                              return (
+                                <div key={goal.id} className="flex items-center gap-3">
+                                  <div className={`rounded-lg p-1.5 ${config.bg} ${config.border} border`}>
+                                    <CategoryIcon className={`h-3.5 w-3.5 ${config.color}`} />
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <div className="flex items-center justify-between mb-1">
+                                      <span className="text-sm font-medium truncate">{goal.name}</span>
+                                      <span className="text-xs tabular-nums text-muted-foreground ml-2 shrink-0">
+                                        {Math.round(totalPct)}%
+                                      </span>
+                                    </div>
+                                    <div className="h-1.5 w-full rounded-full bg-muted/50 overflow-hidden">
+                                      <div
+                                        className="h-1.5 rounded-full transition-all"
+                                        style={{
+                                          width: `${Math.max(totalPct, 1)}%`,
+                                          background: totalPct >= 100 ? '#10b981' : totalPct >= 50 ? '#3b82f6' : '#f59e0b',
+                                        }}
+                                      />
+                                    </div>
+                                    <div className="flex items-center justify-between mt-1">
+                                      <span className="text-[11px] text-muted-foreground">
+                                        {formatCurrency(totalAmount)} of {formatCurrency(goal.targetAmount)}
+                                      </span>
+                                      <Badge
+                                        variant="outline"
+                                        className={`text-[9px] px-1.5 py-0 font-medium ${
+                                          goal.onTrack
+                                            ? "border-emerald-200 bg-emerald-500/10 text-emerald-700 dark:border-emerald-800 dark:text-emerald-400"
+                                            : "border-rose-200 bg-rose-500/10 text-rose-700 dark:border-rose-800 dark:text-rose-400"
+                                        }`}
+                                      >
+                                        {goal.onTrack ? "On Track" : "Behind"}
+                                      </Badge>
+                                    </div>
+                                  </div>
+                                </div>
+                              )
+                            })}
+                          </div>
+                          {goals.length > 4 && (
+                            <p className="text-[11px] text-muted-foreground mt-3 text-center">
+                              + {goals.length - 4} more goal{goals.length - 4 !== 1 ? "s" : ""}
+                            </p>
+                          )}
+                        </div>
+                      ) : (
+                        <div className="card-elevated rounded-xl bg-card p-5">
+                          <div className="flex flex-col items-center justify-center py-8 text-center">
+                            <div className="rounded-2xl bg-primary/5 p-3 mb-3">
+                              <IconTarget className="h-6 w-6 text-primary/40" />
+                            </div>
+                            <p className="text-sm font-medium text-foreground mb-1">No savings goals yet</p>
+                            <p className="text-xs text-muted-foreground mb-3">Set your first goal to start tracking progress</p>
+                            <Button size="sm" className="gap-1.5" onClick={() => { handleTabChange("savings"); setTimeout(() => openAddDialog(), 100) }}>
+                              <IconPlus className="h-4 w-4" />
+                              Create Goal
+                            </Button>
+                          </div>
+                        </div>
+                      )}
+                    </TabsContent>
 
                     {/* ─── Tab 1: Savings Goals ─── */}
-                    <TabsContent value="goals" className="space-y-5">
+                    <TabsContent value="savings" className="space-y-5">
                       <div className="flex items-center justify-between">
                         <div>
                           <div className="flex items-center gap-1.5">
@@ -1349,11 +1489,9 @@ export default function GoalsPage() {
                           </div>
                         </div>
                       )}
-                    </TabsContent>
 
-                    {/* ─── Tab 3: Projections (Investment + Net Worth) ─── */}
-                    <TabsContent value="projections" className="space-y-5">
-                      {projections ? (
+                      {/* ─── Projections (merged into Retire Early) ─── */}
+                      {projections && (
                         <>
                           {/* SIP Projections Table */}
                           {projections.sipProjections.length > 0 && (
@@ -1579,7 +1717,6 @@ export default function GoalsPage() {
                                 <div className="space-y-5">
                                   <div className="flex flex-col items-center justify-center py-2">
                                     <div className="relative flex h-36 w-36 items-center justify-center">
-                                      {/* Subtle glow */}
                                       <div
                                         className="absolute inset-0 rounded-full opacity-20 blur-xl"
                                         style={{
@@ -1688,18 +1825,12 @@ export default function GoalsPage() {
                               </div>
                             )}
                         </>
-                      ) : (
-                        <div className="card-elevated rounded-xl bg-card">
-                          <div className="flex flex-col items-center justify-center py-20 text-center">
-                            <div className="mb-5 rounded-2xl bg-primary/5 p-4">
-                              <IconChartLine className="h-10 w-10 text-primary/40" />
-                            </div>
-                            <p className="text-base font-semibold text-foreground">
-                              Loading projection data...
-                            </p>
-                          </div>
-                        </div>
                       )}
+                    </TabsContent>
+
+                    {/* ─── Tab 3: Net Worth & Debt ─── */}
+                    <TabsContent value="networth" className="space-y-5">
+                      <NetWorthView />
                     </TabsContent>
                   </Tabs>
                 </motion.div>

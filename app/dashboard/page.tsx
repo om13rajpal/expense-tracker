@@ -16,14 +16,11 @@ import {
 } from "recharts"
 import {
   IconAlertCircle,
-  IconAlertTriangle,
   IconArrowDownRight,
-  IconArrowRight,
   IconArrowUpRight,
   IconChartBar,
-  IconReceipt,
   IconRefresh,
-  IconTrendingUp,
+  IconSparkles,
   IconWallet,
   IconScale,
 } from "@tabler/icons-react"
@@ -44,18 +41,11 @@ import { AppSidebar } from "@/components/app-sidebar"
 import { SiteHeader } from "@/components/site-header"
 import { AiInsightsWidget } from "@/components/ai-insights-widget"
 import { SyncButtonCompact } from "@/components/sync-button"
-import { RecurringTransactions } from "@/components/recurring-transactions"
 import { SectionErrorBoundary } from "@/components/error-boundary"
-import { PredictionsCard } from "@/components/predictions-card"
-import { GhostBudgetCard } from "@/components/ghost-budget-card"
-import { TimeTravelCard } from "@/components/time-travel-card"
-import { SpendVelocityTicker } from "@/components/spend-velocity-ticker"
-import { RoundupSavingsCard } from "@/components/roundup-savings-card"
 import {
   SidebarInset,
   SidebarProvider,
 } from "@/components/ui/sidebar"
-import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { formatINR as formatCurrency } from "@/lib/format"
@@ -91,6 +81,7 @@ const STAT_CONFIG = [
     icon: IconScale,
     iconBg: "bg-blue-500/10 dark:bg-blue-500/15",
     iconColor: "text-blue-600 dark:text-blue-400",
+    accent: "border-t-blue-500/40",
   },
   {
     key: "income",
@@ -98,6 +89,7 @@ const STAT_CONFIG = [
     icon: IconArrowUpRight,
     iconBg: "bg-emerald-500/10 dark:bg-emerald-500/15",
     iconColor: "text-emerald-600 dark:text-emerald-400",
+    accent: "border-t-emerald-500/40",
   },
   {
     key: "expenses",
@@ -105,6 +97,7 @@ const STAT_CONFIG = [
     icon: IconArrowDownRight,
     iconBg: "bg-rose-500/10 dark:bg-rose-500/15",
     iconColor: "text-rose-600 dark:text-rose-400",
+    accent: "border-t-rose-500/40",
   },
   {
     key: "balance",
@@ -112,6 +105,7 @@ const STAT_CONFIG = [
     icon: IconWallet,
     iconBg: "bg-amber-500/10 dark:bg-amber-500/15",
     iconColor: "text-amber-600 dark:text-amber-400",
+    accent: "border-t-amber-500/40",
   },
 ] as const
 
@@ -149,21 +143,6 @@ export default function DashboardPage() {
 
   const categoryBreakdown = calculateCategoryBreakdown(monthTransactions)
 
-  // Check if current month has no income but previous month had salary
-  // (salary landed in previous month due to irregular pay cycles)
-  const noIncomeContext = useMemo(() => {
-    if (!monthlyMetrics || monthlyMetrics.totalIncome > 0) return null
-    // Check if previous month had income
-    let prevYear = year
-    let prevMonth = month - 1
-    if (prevMonth < 1) { prevMonth = 12; prevYear = year - 1 }
-    const prevMetrics = calculateMonthlyMetrics(transactions, prevYear, prevMonth)
-    if (prevMetrics.totalIncome > 0) {
-      return "Salary likely received in previous month"
-    }
-    return null
-  }, [transactions, year, month, monthlyMetrics])
-
   const monthlyTrendData = useMemo(() => {
     if (transactions.length === 0) return []
     const data: { name: string; income: number; expenses: number }[] = []
@@ -178,20 +157,13 @@ export default function DashboardPage() {
     return data
   }, [transactions, year, month])
 
-  const recentTransactions = useMemo(() => {
-    return [...monthTransactions]
-      .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-      .slice(0, 5)
-  }, [monthTransactions])
-
   const isLoading = authLoading || transactionsLoading
   const totalIncome = monthlyMetrics?.totalIncome || 0
   const totalExpenses = monthlyMetrics?.totalExpenses || 0
   const openingBalance = monthlyMetrics?.openingBalance || 0
   const closingBalance = monthlyMetrics?.closingBalance || 0
-  const netChange = monthlyMetrics?.netChange || 0
 
-  const VISIBLE_CATEGORIES = 6
+  const VISIBLE_CATEGORIES = 4
   const visibleCategories = categoryBreakdown.slice(0, VISIBLE_CATEGORIES)
   const hiddenCount = Math.max(0, categoryBreakdown.length - VISIBLE_CATEGORIES)
 
@@ -204,40 +176,10 @@ export default function DashboardPage() {
 
   const statValueColors = [
     "text-blue-600 dark:text-blue-400",
-    totalIncome === 0 ? "text-muted-foreground" : "",
-    "",
+    totalIncome === 0 ? "text-muted-foreground" : "text-emerald-600 dark:text-emerald-400",
+    totalExpenses === 0 ? "text-muted-foreground" : "text-rose-600 dark:text-rose-400",
     "",
   ]
-
-  /* ─── Predictive Cashflow ─── */
-  const cashflowForecast = useMemo(() => {
-    const daysElapsed = Math.max(1, new Date().getDate())
-    const totalDaysInMonth = new Date(year, month, 0).getDate()
-    const projectedExpenses = (totalExpenses / daysElapsed) * totalDaysInMonth
-    const dailyAvgSpend = totalExpenses / daysElapsed
-    const remainingDays = Math.max(0, totalDaysInMonth - daysElapsed)
-    const remainingDailyBudget = totalIncome > 0 && remainingDays > 0
-      ? (totalIncome - totalExpenses) / remainingDays
-      : 0
-
-    let projectedColor = "text-emerald-600 dark:text-emerald-400"
-    if (totalIncome > 0) {
-      if (projectedExpenses > totalIncome) {
-        projectedColor = "text-rose-600 dark:text-rose-400"
-      } else if (projectedExpenses > totalIncome * 0.9) {
-        projectedColor = "text-amber-600 dark:text-amber-400"
-      }
-    }
-
-    return {
-      projectedExpenses,
-      dailyAvgSpend,
-      remainingDays,
-      remainingDailyBudget,
-      projectedColor,
-      totalDaysInMonth,
-    }
-  }, [totalExpenses, totalIncome, year, month])
 
   /* ─── Smart Daily Summary ─── */
   const dailySummary = useMemo(() => {
@@ -293,35 +235,6 @@ export default function DashboardPage() {
     return { todaySpent, topCategory, budgetRemaining, remainingDays, dailyBudget, isToday, dateLabel }
   }, [monthTransactions, totalIncome, totalExpenses, year, month])
 
-  /* ─── Anomaly Detection ─── */
-  const anomalies = useMemo(() => {
-    if (!monthTransactions.length) return []
-
-    const expenses = monthTransactions.filter(t => t.type === "expense")
-    const categoryAmounts: Record<string, number[]> = {}
-    expenses.forEach(t => {
-      if (!categoryAmounts[t.category]) categoryAmounts[t.category] = []
-      categoryAmounts[t.category].push(t.amount)
-    })
-
-    const results: Array<{ description: string; amount: number; category: string; reason: string }> = []
-    expenses.forEach(t => {
-      const amounts = categoryAmounts[t.category] || []
-      if (amounts.length < 3) return
-      const avg = amounts.reduce((s, a) => s + a, 0) / amounts.length
-      const stddev = Math.sqrt(amounts.reduce((s, a) => s + (a - avg) ** 2, 0) / amounts.length)
-      if (stddev > 0 && t.amount > avg + 2 * stddev) {
-        results.push({
-          description: t.merchant || t.description,
-          amount: t.amount,
-          category: t.category,
-          reason: `${(t.amount / avg).toFixed(1)}x above average`,
-        })
-      }
-    })
-    return results.sort((a, b) => b.amount - a.amount).slice(0, 3)
-  }, [monthTransactions])
-
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -369,99 +282,7 @@ export default function DashboardPage() {
                   return partialInfo.isPartial ? <ContextBanner variant="info" title={partialInfo.message} /> : null
                 })()}
 
-                {/* ─── Daily Budget Pulse ─── */}
-                <motion.div
-                  variants={fadeUpSmall}
-                  className="rounded-2xl border border-white/10 bg-card/50 backdrop-blur-xl p-5 shadow-xl shadow-black/5"
-                >
-                  <div className="flex items-center gap-5">
-                    {/* Circular progress ring */}
-                    {(() => {
-                      const dailyLimit = dailySummary.dailyBudget + dailySummary.todaySpent / (dailySummary.remainingDays > 0 ? 1 : 1)
-                      const effectiveDailyLimit = totalIncome > 0
-                        ? totalIncome / new Date(year, month, 0).getDate()
-                        : 0
-                      const spentPct = effectiveDailyLimit > 0
-                        ? Math.min((dailySummary.todaySpent / effectiveDailyLimit) * 100, 100)
-                        : 0
-                      const ringSize = 72
-                      const strokeWidth = 6
-                      const radius = (ringSize - strokeWidth) / 2
-                      const circumference = 2 * Math.PI * radius
-                      const strokeDashoffset = circumference * (1 - spentPct / 100)
-                      const ringColor = spentPct >= 100
-                        ? "#f43f5e"
-                        : spentPct >= 80
-                          ? "#f59e0b"
-                          : "#10b981"
-
-                      return (
-                        <div className="relative shrink-0" style={{ width: ringSize, height: ringSize }}>
-                          <svg width={ringSize} height={ringSize} viewBox={`0 0 ${ringSize} ${ringSize}`}>
-                            <circle
-                              cx={ringSize / 2}
-                              cy={ringSize / 2}
-                              r={radius}
-                              fill="none"
-                              stroke="var(--border)"
-                              strokeWidth={strokeWidth}
-                              strokeOpacity={0.3}
-                            />
-                            <motion.circle
-                              cx={ringSize / 2}
-                              cy={ringSize / 2}
-                              r={radius}
-                              fill="none"
-                              stroke={ringColor}
-                              strokeWidth={strokeWidth}
-                              strokeLinecap="round"
-                              strokeDasharray={circumference}
-                              transform={`rotate(-90 ${ringSize / 2} ${ringSize / 2})`}
-                              initial={{ strokeDashoffset: circumference }}
-                              animate={{ strokeDashoffset }}
-                              transition={{ delay: 0.3, duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
-                            />
-                          </svg>
-                          <div className="absolute inset-0 flex flex-col items-center justify-center">
-                            <span className="text-sm font-bold tabular-nums" style={{ color: ringColor }}>
-                              {Math.round(spentPct)}%
-                            </span>
-                          </div>
-                        </div>
-                      )
-                    })()}
-
-                    {/* Text details */}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
-                        {dailySummary.isToday ? "Today\u2019s Spending" : `Last: ${dailySummary.dateLabel}`}
-                      </p>
-                      <p className="text-lg font-bold tabular-nums text-foreground">
-                        {formatCurrency(dailySummary.todaySpent)}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-0.5">
-                        {dailySummary.todaySpent > 0 && dailySummary.topCategory
-                          ? `Mostly on ${dailySummary.topCategory}`
-                          : "No spending recorded this month"}
-                      </p>
-                    </div>
-
-                    {/* Right stats */}
-                    <div className="hidden sm:flex items-center gap-4">
-                      <div className="text-right">
-                        <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Daily Budget</p>
-                        <p className="text-sm font-semibold tabular-nums">{formatCurrency(dailySummary.dailyBudget)}</p>
-                      </div>
-                      <div className="h-8 w-px bg-border/40" />
-                      <div className="text-right">
-                        <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Days Left</p>
-                        <p className="text-sm font-semibold tabular-nums">{dailySummary.remainingDays}</p>
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-
-                {/* ─── Stat Bar ─── */}
+                {/* ─── 1. Stat Bar (full width) ─── */}
                 <motion.div
                   variants={fadeUp}
                   className="grid grid-cols-2 lg:grid-cols-4 gap-3"
@@ -472,7 +293,7 @@ export default function DashboardPage() {
                       <motion.div
                         key={stat.key}
                         variants={fadeUpSmall}
-                        className="card-elevated rounded-xl bg-card p-4 flex items-start gap-3.5 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 hover:scale-[1.01]"
+                        className={`card-elevated rounded-xl bg-card border-t-2 ${stat.accent} p-4 flex items-start gap-3.5 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 hover:scale-[1.01]`}
                       >
                         <div className={`flex items-center justify-center h-10 w-10 rounded-xl ${stat.iconBg} shrink-0`}>
                           <Icon className={`h-5 w-5 ${stat.iconColor}`} strokeWidth={1.8} />
@@ -493,38 +314,165 @@ export default function DashboardPage() {
                   })}
                 </motion.div>
 
-                {/* ─── Predictive Cashflow ─── */}
-                <motion.div variants={fadeUp} className="card-elevated rounded-xl bg-card p-4 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
-                  <div className="flex items-center gap-2 mb-3">
-                    <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-gradient-to-br from-violet-500/15 to-pink-500/15">
-                      <IconTrendingUp className="h-4 w-4 text-violet-500" />
+                {/* ─── 2. Today's Pulse + AI Highlights (side by side) ─── */}
+                <motion.div variants={fadeUp} className="grid gap-5 lg:grid-cols-2 items-start">
+                  {/* Today's Pulse */}
+                  <div className="card-elevated rounded-xl bg-card p-5 flex flex-col transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
+                    <div className="flex items-center gap-5">
+                      {/* Circular progress ring */}
+                      {(() => {
+                        const effectiveDailyLimit = totalIncome > 0
+                          ? totalIncome / new Date(year, month, 0).getDate()
+                          : 0
+                        const spentPct = effectiveDailyLimit > 0
+                          ? Math.min((dailySummary.todaySpent / effectiveDailyLimit) * 100, 100)
+                          : 0
+                        const ringSize = 72
+                        const strokeWidth = 6
+                        const radius = (ringSize - strokeWidth) / 2
+                        const circumference = 2 * Math.PI * radius
+                        const strokeDashoffset = circumference * (1 - spentPct / 100)
+                        const ringColor = spentPct >= 100
+                          ? "#f43f5e"
+                          : spentPct >= 80
+                            ? "#f59e0b"
+                            : "#10b981"
+
+                        return (
+                          <div className="relative shrink-0" style={{ width: ringSize, height: ringSize }}>
+                            <svg width={ringSize} height={ringSize} viewBox={`0 0 ${ringSize} ${ringSize}`}>
+                              <circle
+                                cx={ringSize / 2}
+                                cy={ringSize / 2}
+                                r={radius}
+                                fill="none"
+                                stroke="var(--border)"
+                                strokeWidth={strokeWidth}
+                                strokeOpacity={0.3}
+                              />
+                              <motion.circle
+                                cx={ringSize / 2}
+                                cy={ringSize / 2}
+                                r={radius}
+                                fill="none"
+                                stroke={ringColor}
+                                strokeWidth={strokeWidth}
+                                strokeLinecap="round"
+                                strokeDasharray={circumference}
+                                transform={`rotate(-90 ${ringSize / 2} ${ringSize / 2})`}
+                                initial={{ strokeDashoffset: circumference }}
+                                animate={{ strokeDashoffset }}
+                                transition={{ delay: 0.3, duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}
+                              />
+                            </svg>
+                            <div className="absolute inset-0 flex flex-col items-center justify-center">
+                              <span className="text-sm font-bold tabular-nums" style={{ color: ringColor }}>
+                                {Math.round(spentPct)}%
+                              </span>
+                            </div>
+                          </div>
+                        )
+                      })()}
+
+                      {/* Text details */}
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
+                          {dailySummary.isToday ? "Today\u2019s Spending" : `Last: ${dailySummary.dateLabel}`}
+                        </p>
+                        <p className="text-lg font-bold tabular-nums text-foreground">
+                          {formatCurrency(dailySummary.todaySpent)}
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {dailySummary.todaySpent > 0 && dailySummary.topCategory
+                            ? `Mostly on ${dailySummary.topCategory}`
+                            : "No spending recorded this month"}
+                        </p>
+                      </div>
+
+                      {/* Right stats */}
+                      <div className="hidden sm:flex items-center gap-4">
+                        <div className="text-right">
+                          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Daily Budget</p>
+                          <p className="text-sm font-semibold tabular-nums">{formatCurrency(dailySummary.dailyBudget)}</p>
+                        </div>
+                        <div className="h-8 w-px bg-border/40" />
+                        <div className="text-right">
+                          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Days Left</p>
+                          <p className="text-sm font-semibold tabular-nums">{dailySummary.remainingDays}</p>
+                        </div>
+                      </div>
                     </div>
-                    <h3 className="text-sm font-semibold">Cashflow Forecast</h3>
+
+                    {/* Monthly Budget Progress */}
+                    <div className="mt-4 pt-4 border-t border-border/40">
+                      <div className="flex items-center justify-between mb-2">
+                        <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Monthly Budget Usage</p>
+                        <span className="text-xs font-semibold tabular-nums">
+                          {totalIncome > 0 ? `${Math.min(Math.round((totalExpenses / totalIncome) * 100), 999)}%` : "—"}
+                        </span>
+                      </div>
+                      <div className="h-2 w-full rounded-full bg-muted/50 overflow-hidden">
+                        <motion.div
+                          className={`h-full rounded-full ${totalExpenses > totalIncome ? "bg-rose-500" : totalExpenses > totalIncome * 0.8 ? "bg-amber-500" : "bg-emerald-500"}`}
+                          initial={{ width: 0 }}
+                          animate={{ width: `${totalIncome > 0 ? Math.min((totalExpenses / totalIncome) * 100, 100) : 0}%` }}
+                          transition={{ delay: 0.4, duration: 0.6, ease: [0.25, 0.1, 0.25, 1] }}
+                        />
+                      </div>
+                      <div className="mt-3 grid grid-cols-3 gap-3">
+                        <div>
+                          <p className="text-[11px] text-muted-foreground">Income</p>
+                          <p className="text-sm font-semibold tabular-nums text-emerald-600 dark:text-emerald-400">{formatCurrency(totalIncome)}</p>
+                        </div>
+                        <div>
+                          <p className="text-[11px] text-muted-foreground">Spent</p>
+                          <p className="text-sm font-semibold tabular-nums text-rose-600 dark:text-rose-400">{formatCurrency(totalExpenses)}</p>
+                        </div>
+                        <div>
+                          <p className="text-[11px] text-muted-foreground">Saved</p>
+                          <p className={`text-sm font-semibold tabular-nums ${totalIncome - totalExpenses >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                            {formatCurrency(totalIncome - totalExpenses)}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Link to Budget page */}
+                    <Link
+                      href="/budget"
+                      className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline mt-3"
+                    >
+                      View budget details &rarr;
+                    </Link>
                   </div>
-                  <div className="grid grid-cols-3 gap-4">
-                    <div>
-                      <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Projected Month-End</p>
-                      <p className={`text-lg font-bold tabular-nums ${cashflowForecast.projectedColor}`}>
-                        {formatCurrency(cashflowForecast.projectedExpenses)}
-                      </p>
+
+                  {/* AI Highlights */}
+                  <div className="card-elevated rounded-xl bg-card p-5 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="text-sm font-semibold flex items-center gap-2">
+                        <IconSparkles className="size-4 text-primary" />
+                        AI Highlights
+                      </h3>
+                      <Link href="/ai?tab=reports" className="text-xs text-primary hover:underline">
+                        View all
+                      </Link>
                     </div>
-                    <div>
-                      <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Daily Average</p>
-                      <p className="text-lg font-bold tabular-nums">{formatCurrency(cashflowForecast.dailyAvgSpend)}/day</p>
-                    </div>
-                    <div>
-                      <p className="text-[11px] text-muted-foreground uppercase tracking-wider">Remaining Budget</p>
-                      <p className={`text-lg font-bold tabular-nums ${cashflowForecast.remainingDailyBudget > 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600"}`}>
-                        {formatCurrency(Math.abs(cashflowForecast.remainingDailyBudget))}/day
-                      </p>
+                    <div className="space-y-2">
+                      <AiInsightsWidget compact />
+                      <Link
+                        href="/ai?tab=chat"
+                        className="inline-flex items-center gap-1 text-xs font-medium text-primary hover:underline mt-2"
+                      >
+                        Chat with AI Assistant &rarr;
+                      </Link>
                     </div>
                   </div>
                 </motion.div>
 
-                {/* ─── Main Row: Spending Breakdown + Monthly Summary ─── */}
-                <motion.div variants={fadeUp} className="grid gap-5 lg:grid-cols-5">
+                {/* ─── 3. Spending Breakdown + Monthly Trend (side by side) ─── */}
+                <motion.div variants={fadeUp} className="grid gap-5 lg:grid-cols-2">
                   {/* Spending Breakdown */}
-                  <div className="lg:col-span-3 card-elevated rounded-xl bg-card p-5 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
+                  <div className="card-elevated rounded-xl bg-card p-5 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
                     <div className="flex items-center justify-between mb-5">
                       <div className="flex items-center gap-2.5">
                         <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-gradient-to-br from-blue-500/15 to-purple-500/15">
@@ -532,7 +480,10 @@ export default function DashboardPage() {
                         </div>
                         <h3 className="text-sm font-semibold">Spending Breakdown</h3>
                       </div>
-                      <span className="text-xs text-muted-foreground tabular-nums">{categoryBreakdown.length} categories</span>
+                      <div className="flex items-center gap-3">
+                        <span className="text-xs text-muted-foreground tabular-nums">{categoryBreakdown.length} categories</span>
+                        <Link href="/money?tab=analytics" className="text-xs text-primary hover:underline">View all</Link>
+                      </div>
                     </div>
 
                     <div className="space-y-2.5">
@@ -582,150 +533,18 @@ export default function DashboardPage() {
                     )}
                   </div>
 
-                  {/* ─── Monthly Summary ─── */}
-                  <div className="lg:col-span-2 card-elevated rounded-xl bg-card p-5 flex flex-col transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
-                    <div className="flex items-center gap-2.5 mb-4">
-                      <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-gradient-to-br from-emerald-500/15 to-cyan-500/15">
-                        <IconReceipt className="h-4 w-4 text-emerald-500" />
-                      </div>
-                      <h3 className="text-sm font-semibold">Balance Flow</h3>
-                    </div>
-
-                    <div className="flex-1 flex flex-col justify-center">
-                      <div className="text-center mb-6">
-                        <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-1.5">
-                          Net Change
-                        </p>
-                        <motion.span
-                          variants={numberPop}
-                          className={`text-4xl font-extrabold tabular-nums block ${
-                            netChange >= 0 ? "text-primary" : "text-destructive"
-                          }`}
-                        >
-                          {netChange >= 0 ? "+" : "-"}{formatCurrency(Math.abs(netChange))}
-                        </motion.span>
-                        <motion.p
-                          variants={fadeUpSmall}
-                          className="text-xs mt-1.5 font-medium text-muted-foreground"
-                        >
-                          {formatCurrency(openingBalance)} &rarr; {formatCurrency(closingBalance)}
-                        </motion.p>
-                        {noIncomeContext && (
-                          <motion.p
-                            variants={fadeUpSmall}
-                            className="text-[11px] mt-2 text-amber-600 dark:text-amber-400 font-medium"
-                          >
-                            {noIncomeContext}
-                          </motion.p>
-                        )}
-                      </div>
-
-                      <div className="space-y-3.5">
-                        <SummaryBar
-                          label="Income"
-                          value={formatCurrency(totalIncome)}
-                          pct={openingBalance + totalIncome > 0 ? (totalIncome / (openingBalance + totalIncome)) * 100 : 0}
-                          barClass="bg-primary"
-                          trackClass="bg-primary/10"
-                        />
-                        <SummaryBar
-                          label="Expenses"
-                          value={formatCurrency(totalExpenses)}
-                          pct={openingBalance + totalIncome > 0 ? Math.min((totalExpenses / (openingBalance + totalIncome)) * 100, 100) : 0}
-                          barClass={totalExpenses > openingBalance + totalIncome ? "bg-destructive" : "bg-muted-foreground/30"}
-                          trackClass="bg-muted/60"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </motion.div>
-
-                {/* ─── Unusual Activity ─── */}
-                {anomalies.length > 0 && (
-                  <motion.div variants={fadeUp} className="card-elevated rounded-xl bg-card p-5">
-                    <div className="flex items-center gap-2 mb-4">
-                      <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-amber-500/10">
-                        <IconAlertTriangle className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                      </div>
-                      <h3 className="text-sm font-semibold">Unusual Activity</h3>
-                      <Badge variant="outline" className="ml-auto text-xs">{anomalies.length} flagged</Badge>
-                    </div>
-                    <div className="space-y-2.5">
-                      {anomalies.map((a, i) => (
-                        <div key={i} className="flex items-center justify-between py-2 px-2.5 rounded-lg bg-amber-500/5 border border-amber-500/10">
-                          <div>
-                            <p className="text-sm font-medium">{a.description}</p>
-                            <p className="text-xs text-muted-foreground">{a.category} &middot; {a.reason}</p>
-                          </div>
-                          <span className="text-sm font-semibold tabular-nums text-amber-600 dark:text-amber-400">
-                            {formatCurrency(a.amount)}
-                          </span>
-                        </div>
-                      ))}
-                    </div>
-                  </motion.div>
-                )}
-
-                {/* ─── Bottom 2-col grid: Transactions + Trend ─── */}
-                <motion.div variants={fadeUp} className="grid gap-5 lg:grid-cols-2">
-
-                {/* ─── Recent Transactions ─── */}
-                <div className="card-elevated rounded-xl bg-card p-5 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-sm font-semibold">Recent Transactions</h3>
-                    <Link
-                      href="/transactions"
-                      className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 group"
-                    >
-                      View All <IconArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" />
-                    </Link>
-                  </div>
-
-                  {recentTransactions.length > 0 ? (
-                    <div className="divide-y divide-border/30">
-                      {recentTransactions.map((t, i) => {
-                        const txDate = new Date(t.date)
-                        const dateStr = txDate.toLocaleDateString("en-GB", {
-                          day: "numeric", month: "short", timeZone: "Asia/Kolkata",
-                        })
-                        const isIncome = t.type === "income"
-                        const anim = listItem(i)
-                        return (
-                          <motion.div
-                            key={t.id}
-                            initial={anim.initial}
-                            animate={anim.animate}
-                            transition={anim.transition}
-                            className="flex items-center justify-between py-3 gap-3 hover:bg-muted/30 -mx-3 px-3 rounded-lg transition-colors first:pt-0 last:pb-0"
-                          >
-                            <div className="flex items-center gap-3 min-w-0 flex-1">
-                              <span className="text-sm font-medium truncate">{t.merchant || t.description}</span>
-                              <span className="text-[11px] font-medium text-muted-foreground bg-muted/60 border border-border/40 px-2 py-0.5 rounded-full shrink-0 uppercase tracking-wide">
-                                {t.category}
-                              </span>
-                            </div>
-                            <div className="flex items-center gap-4 shrink-0">
-                              <span className="text-xs text-muted-foreground tabular-nums w-14 text-right">{dateStr}</span>
-                              <span className={`text-sm font-semibold tabular-nums min-w-[80px] text-right ${isIncome ? "text-emerald-600 dark:text-emerald-400" : ""}`}>
-                                {isIncome ? "+" : "-"}{formatCurrency(t.amount)}
-                              </span>
-                            </div>
-                          </motion.div>
-                        )
-                      })}
-                    </div>
-                  ) : (
-                    <p className="text-sm text-muted-foreground py-6 text-center">No transactions this month.</p>
-                  )}
-                </div>
-
-                {/* ─── Monthly Trend ─── */}
-                <div>
+                  {/* Monthly Trend */}
                   <SectionErrorBoundary name="monthly-trend">
-                    <div className="card-elevated rounded-xl bg-card p-5">
+                    <div className="card-elevated rounded-xl bg-card p-5 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
                       <div className="flex items-center justify-between mb-1">
-                        <h3 className="text-sm font-semibold">Monthly Trend</h3>
-                        <div className="flex items-center gap-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-gradient-to-br from-emerald-500/15 to-amber-500/15">
+                            <IconChartBar className="h-4 w-4 text-emerald-500" />
+                          </div>
+                          <h3 className="text-sm font-semibold">Monthly Trend</h3>
+                        </div>
+                        <div className="flex items-center gap-4">
+                          <Link href="/money?tab=analytics" className="text-xs text-primary hover:underline">View all</Link>
                           <div className="flex items-center gap-1.5">
                             <div className="h-2.5 w-2.5 rounded-[3px] bg-chart-1" />
                             <span className="text-[11px] text-muted-foreground">Income</span>
@@ -767,25 +586,7 @@ export default function DashboardPage() {
                       )}
                     </div>
                   </SectionErrorBoundary>
-                </div>
-
                 </motion.div>
-
-                {/* ─── Bottom 2-col grid: Recurring + AI Insights ─── */}
-                <motion.div variants={fadeUp} className="grid gap-5 lg:grid-cols-2">
-                  <SectionErrorBoundary name="recurring-transactions">
-                    <RecurringTransactions compact />
-                  </SectionErrorBoundary>
-
-                  <AiInsightsWidget compact />
-                </motion.div>
-
-                {/* ─── Futuristic Feature Widgets ─── */}
-                <PredictionsCard />
-                <GhostBudgetCard />
-                <TimeTravelCard />
-                <RoundupSavingsCard />
-                <SpendVelocityTicker />
               </motion.div>
             )}
           </div>
@@ -796,37 +597,11 @@ export default function DashboardPage() {
 }
 
 
-/* ─── Summary Bar (Income / Expenses comparison) ─── */
-function SummaryBar({ label, value, pct, barClass, trackClass }: {
-  label: string
-  value: string
-  pct: number
-  barClass: string
-  trackClass: string
-}) {
-  return (
-    <div>
-      <div className="flex items-center justify-between text-xs mb-1.5">
-        <span className="font-medium text-foreground/70">{label}</span>
-        <span className="font-semibold tabular-nums text-foreground/90">{value}</span>
-      </div>
-      <div className={`h-2.5 w-full rounded-full ${trackClass} overflow-hidden`}>
-        <motion.div
-          className={`h-2.5 rounded-full ${barClass}`}
-          initial={{ width: 0 }}
-          animate={{ width: `${pct}%` }}
-          transition={{ delay: 0.3, duration: 0.5, ease: [0, 0, 0.2, 1] as const }}
-        />
-      </div>
-    </div>
-  )
-}
-
-
 /* ─── Loading Skeleton ─── */
 function DashboardLoadingSkeleton() {
   return (
     <div className="space-y-5">
+      {/* Stat Bar skeleton */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="card-elevated rounded-xl bg-card p-4 flex items-start gap-3.5">
@@ -838,32 +613,35 @@ function DashboardLoadingSkeleton() {
           </div>
         ))}
       </div>
-      <div className="grid gap-5 lg:grid-cols-5">
-        <div className="lg:col-span-3 card-elevated rounded-xl bg-card p-5 space-y-4">
+      {/* Pulse + AI Highlights skeleton */}
+      <div className="grid gap-5 lg:grid-cols-2">
+        <div className="card-elevated rounded-xl bg-card p-5 space-y-3">
+          <Skeleton className="h-[72px] w-[72px] rounded-full" />
+          <Skeleton className="h-4 w-32" />
+          <Skeleton className="h-6 w-24" />
+        </div>
+        <div className="card-elevated rounded-xl bg-card p-5 space-y-3">
+          <Skeleton className="h-5 w-28" />
+          <Skeleton className="h-4 w-full" />
+          <Skeleton className="h-4 w-3/4" />
+          <Skeleton className="h-4 w-1/2" />
+        </div>
+      </div>
+      {/* Spending + Trend skeleton */}
+      <div className="grid gap-5 lg:grid-cols-2">
+        <div className="card-elevated rounded-xl bg-card p-5 space-y-4">
           <Skeleton className="h-5 w-36" />
-          {Array.from({ length: 5 }).map((_, i) => (
+          {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="space-y-2">
               <div className="flex justify-between"><Skeleton className="h-4 w-24" /><Skeleton className="h-4 w-16" /></div>
               <Skeleton className="h-2 w-full rounded-full" />
             </div>
           ))}
         </div>
-        <div className="lg:col-span-2 card-elevated rounded-xl bg-card p-5 space-y-3">
-          <Skeleton className="h-5 w-28" />
-          <Skeleton className="h-12 w-36 mx-auto mt-4" />
-          <Skeleton className="h-2.5 w-full mt-4 rounded-full" />
-          <Skeleton className="h-2.5 w-3/4 rounded-full" />
+        <div className="card-elevated rounded-xl bg-card p-5">
+          <Skeleton className="h-5 w-28 mb-4" />
+          <Skeleton className="h-[220px] w-full rounded-lg" />
         </div>
-      </div>
-      <div className="card-elevated rounded-xl bg-card p-5 space-y-3">
-        <Skeleton className="h-5 w-36" />
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-10 w-full rounded-lg" />
-        ))}
-      </div>
-      <div className="card-elevated rounded-xl bg-card p-5">
-        <Skeleton className="h-5 w-28 mb-4" />
-        <Skeleton className="h-[220px] w-full rounded-lg" />
       </div>
     </div>
   )

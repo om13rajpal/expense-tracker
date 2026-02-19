@@ -1,9 +1,10 @@
 "use client"
 
 import * as React from "react"
-import { useEffect } from "react"
+import { useEffect, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
-import { motion } from "motion/react"
+import { motion, AnimatePresence } from "motion/react"
+import Lottie from "lottie-react"
 import {
   IconFlame,
   IconSnowflake,
@@ -11,7 +12,6 @@ import {
   IconStar,
   IconLock,
   IconBolt,
-  IconTarget,
   IconHistory,
   IconReceipt,
   IconWallet,
@@ -35,12 +35,10 @@ import {
 
 import { stagger, fadeUp, fadeUpSmall, scaleIn, numberPop } from "@/lib/motion"
 import { useAuth } from "@/hooks/use-auth"
-import { useGamification, useJoinChallenge, useSkipChallenge, useStreakFreeze } from "@/hooks/use-gamification"
-import { CHALLENGES } from "@/lib/gamification"
+import { useGamification, useStreakFreeze } from "@/hooks/use-gamification"
 import { AppSidebar } from "@/components/app-sidebar"
 import { SiteHeader } from "@/components/site-header"
 import { XPProgressBar } from "@/components/xp-progress-bar"
-import { ChallengeCard } from "@/components/challenge-card"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
@@ -52,7 +50,7 @@ import type { BadgeCategory } from "@/lib/gamification"
 const BADGE_ICONS: Record<string, React.ComponentType<{ className?: string; stroke?: number }>> = {
   IconReceipt,
   IconWallet,
-  IconTarget,
+  IconTarget: IconTrendingUp,
   IconTrendingUp,
   IconCircleCheck,
   IconNumber100Small,
@@ -70,38 +68,58 @@ const BADGE_ICONS: Record<string, React.ComponentType<{ className?: string; stro
   IconHeartbeat,
 }
 
-// ─── Badge colors per category ───────────────────────────────────────
+// ─── Badge colors per category — vibrant, distinct palettes ──────────
 
 const CATEGORY_THEME: Record<BadgeCategory, {
   label: string
+  gradient: string
   iconBg: string
   iconColor: string
+  glowColor: string
+  ringColor: string
+  accentBg: string
 }> = {
   onboarding: {
     label: "Getting Started",
-    iconBg: "bg-primary/10",
-    iconColor: "text-foreground",
+    gradient: "from-blue-500 to-indigo-500",
+    iconBg: "bg-gradient-to-br from-blue-500/15 to-indigo-500/15",
+    iconColor: "text-blue-500",
+    glowColor: "shadow-blue-500/20",
+    ringColor: "ring-blue-500/25",
+    accentBg: "bg-blue-500/8",
   },
   milestones: {
     label: "Milestones",
-    iconBg: "bg-primary/10",
-    iconColor: "text-foreground",
+    gradient: "from-amber-500 to-orange-500",
+    iconBg: "bg-gradient-to-br from-amber-500/15 to-orange-500/15",
+    iconColor: "text-amber-500",
+    glowColor: "shadow-amber-500/20",
+    ringColor: "ring-amber-500/25",
+    accentBg: "bg-amber-500/8",
   },
   behavioral: {
     label: "Good Habits",
-    iconBg: "bg-primary/10",
-    iconColor: "text-foreground",
+    gradient: "from-emerald-500 to-teal-500",
+    iconBg: "bg-gradient-to-br from-emerald-500/15 to-teal-500/15",
+    iconColor: "text-emerald-500",
+    glowColor: "shadow-emerald-500/20",
+    ringColor: "ring-emerald-500/25",
+    accentBg: "bg-emerald-500/8",
   },
   skill: {
     label: "Skill Mastery",
-    iconBg: "bg-primary/10",
-    iconColor: "text-foreground",
+    gradient: "from-violet-500 to-purple-500",
+    iconBg: "bg-gradient-to-br from-violet-500/15 to-purple-500/15",
+    iconColor: "text-violet-500",
+    glowColor: "shadow-violet-500/20",
+    ringColor: "ring-violet-500/25",
+    accentBg: "bg-violet-500/8",
   },
 }
 
 const CATEGORY_ORDER: BadgeCategory[] = ["onboarding", "milestones", "behavioral", "skill"]
 
-// ─── Level title colors (more fun as you level up) ───────────────────
+// ─── Level title colors ───────────────────────────────────────────────
 
 const LEVEL_GRADIENTS: Record<number, string> = {
   1: "from-slate-600 to-slate-500",
@@ -116,21 +134,283 @@ const LEVEL_GRADIENTS: Record<number, string> = {
   10: "from-amber-500 to-amber-400",
 }
 
+// ─── Animated badge card ──────────────────────────────────────────────
+
+function BadgeCard({
+  badge,
+  theme,
+  index,
+  onSelect,
+}: {
+  badge: { id: string; name: string; description: string; icon: string; unlocked: boolean; unlockedAt: string | null }
+  theme: typeof CATEGORY_THEME[BadgeCategory]
+  index: number
+  onSelect: (id: string) => void
+}) {
+  const BadgeIcon = BADGE_ICONS[badge.icon] ?? IconStar
+  const [isHovered, setIsHovered] = useState(false)
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 12, scale: 0.95 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={{ delay: index * 0.04, duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
+      whileHover={badge.unlocked ? { y: -4, scale: 1.03 } : { scale: 1.01 }}
+      onHoverStart={() => setIsHovered(true)}
+      onHoverEnd={() => setIsHovered(false)}
+      onClick={() => onSelect(badge.id)}
+      className={cn(
+        "group relative flex flex-col items-center gap-3 rounded-2xl p-4 text-center cursor-pointer transition-all duration-300 overflow-hidden",
+        badge.unlocked
+          ? cn(
+              "bg-card border border-border/60 shadow-sm hover:shadow-xl",
+              `hover:${theme.glowColor}`,
+              `hover:${theme.ringColor} hover:ring-1`,
+            )
+          : "bg-muted/10 border border-dashed border-border/40 opacity-50 hover:opacity-70",
+      )}
+    >
+      {/* Shine sweep animation on hover for unlocked badges */}
+      {badge.unlocked && (
+        <motion.div
+          className="absolute inset-0 pointer-events-none"
+          initial={{ opacity: 0 }}
+          animate={isHovered ? { opacity: 1 } : { opacity: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <motion.div
+            className="absolute inset-0 bg-gradient-to-r from-transparent via-white/[0.08] to-transparent -skew-x-12"
+            animate={isHovered ? { x: ["-100%", "200%"] } : {}}
+            transition={{ duration: 0.8, ease: "easeInOut" }}
+          />
+        </motion.div>
+      )}
+
+      {/* Top accent gradient bar for unlocked */}
+      {badge.unlocked && (
+        <div className={cn(
+          "absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r opacity-60",
+          theme.gradient,
+        )} />
+      )}
+
+      {/* Badge icon — circular with glow */}
+      <div className="relative">
+        {/* Outer glow ring for unlocked */}
+        {badge.unlocked && (
+          <motion.div
+            className={cn(
+              "absolute -inset-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-500",
+              theme.iconBg,
+            )}
+            animate={isHovered ? { scale: [1, 1.15, 1] } : {}}
+            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+          />
+        )}
+        <div
+          className={cn(
+            "relative flex items-center justify-center size-14 rounded-full transition-all duration-300",
+            badge.unlocked
+              ? cn(theme.iconBg, "ring-2", theme.ringColor)
+              : "bg-muted/50 ring-1 ring-border/30",
+          )}
+        >
+          {badge.unlocked ? (
+            <motion.div
+              animate={isHovered ? { rotate: [0, -10, 10, -5, 0] } : {}}
+              transition={{ duration: 0.5, ease: "easeInOut" }}
+            >
+              <BadgeIcon
+                className={cn("size-7", theme.iconColor)}
+                stroke={1.5}
+              />
+            </motion.div>
+          ) : (
+            <IconLock
+              className="size-4 text-muted-foreground/40"
+              stroke={1.5}
+            />
+          )}
+        </div>
+
+        {/* Sparkle indicator for unlocked */}
+        {badge.unlocked && (
+          <motion.div
+            className="absolute -top-0.5 -right-0.5"
+            animate={{ scale: [1, 1.2, 1], rotate: [0, 15, 0] }}
+            transition={{ duration: 3, repeat: Infinity, ease: "easeInOut" }}
+          >
+            <div className={cn(
+              "flex items-center justify-center size-4 rounded-full shadow-sm",
+              `bg-gradient-to-br ${theme.gradient}`,
+            )}>
+              <IconSparkles className="size-2.5 text-white" stroke={2.5} />
+            </div>
+          </motion.div>
+        )}
+      </div>
+
+      {/* Badge text */}
+      <div className="space-y-1 relative z-10">
+        <p
+          className={cn(
+            "text-xs font-semibold leading-tight",
+            badge.unlocked ? "text-foreground" : "text-muted-foreground/60",
+          )}
+        >
+          {badge.name}
+        </p>
+        <p className={cn(
+          "text-[10px] leading-relaxed",
+          badge.unlocked ? "text-muted-foreground" : "text-muted-foreground/40",
+        )}>
+          {badge.description}
+        </p>
+      </div>
+
+      {/* Unlocked date */}
+      {badge.unlocked && badge.unlockedAt && (
+        <div className={cn(
+          "flex items-center gap-1 text-[10px] font-medium rounded-full px-2 py-0.5",
+          theme.accentBg, theme.iconColor,
+        )}>
+          <IconCalendarEvent className="size-2.5" stroke={1.5} />
+          {new Date(badge.unlockedAt).toLocaleDateString("en-US", {
+            month: "short",
+            day: "numeric",
+          })}
+        </div>
+      )}
+    </motion.div>
+  )
+}
+
+// ─── Badge detail modal with Lottie celebration ───────────────────────
+
+function BadgeDetailOverlay({
+  badge,
+  theme,
+  lottieData,
+  onClose,
+}: {
+  badge: { id: string; name: string; description: string; icon: string; unlocked: boolean; unlockedAt: string | null; condition: string } | null
+  theme: typeof CATEGORY_THEME[BadgeCategory] | null
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  lottieData: any
+  onClose: () => void
+}) {
+  if (!badge || !theme) return null
+
+  const BadgeIcon = BADGE_ICONS[badge.icon] ?? IconStar
+
+  return (
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4"
+        onClick={onClose}
+      >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.9, y: 20 }}
+          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+          className="relative bg-card rounded-2xl border border-border/60 shadow-2xl max-w-xs w-full overflow-hidden"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {/* Lottie celebration for unlocked badges */}
+          {badge.unlocked && lottieData && (
+            <div className="absolute inset-0 pointer-events-none z-10">
+              <Lottie
+                animationData={lottieData}
+                loop={false}
+                autoplay
+                className="w-full h-full"
+              />
+            </div>
+          )}
+
+          {/* Top gradient */}
+          <div className={cn(
+            "h-24 bg-gradient-to-br flex items-center justify-center relative",
+            theme.gradient,
+          )}>
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ type: "spring", stiffness: 400, damping: 15, delay: 0.15 }}
+              className="flex items-center justify-center size-16 rounded-full bg-white/20 backdrop-blur-sm"
+            >
+              <BadgeIcon className="size-9 text-white" stroke={1.5} />
+            </motion.div>
+            {!badge.unlocked && (
+              <div className="absolute inset-0 bg-black/30 backdrop-blur-[1px] flex items-center justify-center">
+                <IconLock className="size-8 text-white/70" stroke={1.5} />
+              </div>
+            )}
+          </div>
+
+          {/* Content */}
+          <div className="p-5 text-center space-y-3">
+            <div>
+              <h3 className="text-base font-bold text-foreground">{badge.name}</h3>
+              <p className="text-xs text-muted-foreground mt-1">{badge.description}</p>
+            </div>
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-muted/50 px-3 py-1.5 text-[11px] text-muted-foreground">
+              {badge.unlocked ? (
+                <>
+                  <IconCircleCheck className="size-3.5 text-emerald-500" stroke={2} />
+                  <span className="font-medium text-emerald-600 dark:text-emerald-400">Unlocked</span>
+                  {badge.unlockedAt && (
+                    <span className="text-muted-foreground/60">
+                      {new Date(badge.unlockedAt).toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </span>
+                  )}
+                </>
+              ) : (
+                <>
+                  <IconLock className="size-3.5" stroke={1.5} />
+                  <span>{badge.condition}</span>
+                </>
+              )}
+            </div>
+
+            <button
+              onClick={onClose}
+              className="w-full mt-2 rounded-xl bg-muted/50 hover:bg-muted/80 py-2.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </motion.div>
+      </motion.div>
+    </AnimatePresence>
+  )
+}
+
+// ─── Main page ────────────────────────────────────────────────────────
+
 export default function GamificationPage() {
   const router = useRouter()
   const { isAuthenticated, isLoading: authLoading } = useAuth()
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const [confettiLottie, setConfettiLottie] = useState<any>(null)
+  const [selectedBadge, setSelectedBadge] = useState<string | null>(null)
 
   const {
     streak,
     xp,
     badges,
-    activeChallenges,
     recentXP,
     isLoading,
   } = useGamification()
 
-  const joinMutation = useJoinChallenge()
-  const skipMutation = useSkipChallenge()
   const freezeMutation = useStreakFreeze()
 
   useEffect(() => {
@@ -139,12 +419,29 @@ export default function GamificationPage() {
     }
   }, [isAuthenticated, authLoading, router])
 
-  // Available challenges that user hasn't joined
-  const joinedIds = new Set(activeChallenges.map((c) => c.challengeId))
-  const availableChallenges = CHALLENGES.filter((c) => !joinedIds.has(c.id))
+  // Fetch confetti Lottie animation for badge detail modal
+  useEffect(() => {
+    fetch("https://lottie.host/f8e3f5a8-80f1-4108-8a68-5e3e4e39c8f5/confetti.json")
+      .then((r) => r.json())
+      .then(setConfettiLottie)
+      .catch(() => {})
+  }, [])
+
+  const handleBadgeSelect = useCallback((id: string) => {
+    setSelectedBadge(id)
+  }, [])
+
+  const selectedBadgeData = badges.find((b) => b.id === selectedBadge)
+  const selectedBadgeTheme = selectedBadgeData
+    ? CATEGORY_THEME[selectedBadgeData.category as BadgeCategory]
+    : null
 
   const currentLevel = xp?.level ?? 1
   const heroGradient = LEVEL_GRADIENTS[currentLevel] ?? LEVEL_GRADIENTS[1]
+
+  const totalBadges = badges.length
+  const unlockedBadges = badges.filter((b) => b.unlocked).length
+  const badgePercent = totalBadges > 0 ? Math.round((unlockedBadges / totalBadges) * 100) : 0
 
   if (authLoading) {
     return (
@@ -266,13 +563,10 @@ export default function GamificationPage() {
                 {/* Current Streak - prominent card */}
                 <div className="card-elevated rounded-xl bg-card overflow-hidden sm:col-span-1">
                   <div className="relative p-5 flex flex-col items-center text-center">
-                    {/* Background flame glow for active streaks */}
                     {(streak?.currentStreak ?? 0) > 0 && (
                       <div className="absolute inset-0 bg-gradient-to-t from-primary/5 via-transparent to-transparent pointer-events-none" />
                     )}
-
                     <div className="relative">
-                      {/* Animated flame container */}
                       <motion.div
                         className={cn(
                           "flex items-center justify-center size-16 rounded-2xl mb-3",
@@ -368,20 +662,37 @@ export default function GamificationPage() {
             </motion.div>
 
             {/* ────────────────────────────────────────────────────────── */}
-            {/*  3. BADGES                                                */}
+            {/*  3. BADGES — redesigned with animations                   */}
             {/* ────────────────────────────────────────────────────────── */}
             <motion.div variants={fadeUp}>
               <div className="space-y-6">
+                {/* Badges header with progress */}
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-gradient-to-br from-amber-500/15 to-orange-500/15">
+                    <div className="flex items-center justify-center h-8 w-8 rounded-xl bg-gradient-to-br from-amber-500/15 to-orange-500/15">
                       <IconTrophy className="size-4 text-amber-500" stroke={1.5} />
                     </div>
-                    <h3 className="text-sm font-semibold">Badges</h3>
+                    <div>
+                      <h3 className="text-sm font-semibold">Badge Collection</h3>
+                      <p className="text-[11px] text-muted-foreground">
+                        {unlockedBadges} of {totalBadges} unlocked ({badgePercent}%)
+                      </p>
+                    </div>
                   </div>
-                  <span className="text-xs text-muted-foreground tabular-nums">
-                    {badges.filter((b) => b.unlocked).length}/{badges.length} unlocked
-                  </span>
+                  {/* Mini progress bar */}
+                  <div className="hidden sm:flex items-center gap-2">
+                    <div className="w-24 h-2 rounded-full bg-muted/50 overflow-hidden">
+                      <motion.div
+                        className="h-full rounded-full bg-gradient-to-r from-amber-500 to-orange-500"
+                        initial={{ width: 0 }}
+                        animate={{ width: `${badgePercent}%` }}
+                        transition={{ delay: 0.3, duration: 0.6, ease: [0, 0, 0.2, 1] }}
+                      />
+                    </div>
+                    <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 tabular-nums">
+                      {badgePercent}%
+                    </span>
+                  </div>
                 </div>
 
                 {CATEGORY_ORDER.map((category) => {
@@ -392,90 +703,40 @@ export default function GamificationPage() {
 
                   return (
                     <motion.div key={category} variants={fadeUpSmall} className="space-y-3">
+                      {/* Category header with colored accent */}
                       <div className="flex items-center justify-between">
-                        <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
-                          {theme.label}
-                        </h3>
-                        <span className="text-[11px] font-medium text-muted-foreground tabular-nums">
-                          {unlockedCount}/{categoryBadges.length}
-                        </span>
+                        <div className="flex items-center gap-2">
+                          <div className={cn("h-3 w-0.5 rounded-full bg-gradient-to-b", theme.gradient)} />
+                          <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest">
+                            {theme.label}
+                          </h3>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <span className={cn(
+                            "text-[11px] font-bold tabular-nums",
+                            unlockedCount === categoryBadges.length
+                              ? "text-emerald-600 dark:text-emerald-400"
+                              : "text-muted-foreground",
+                          )}>
+                            {unlockedCount}/{categoryBadges.length}
+                          </span>
+                          {unlockedCount === categoryBadges.length && (
+                            <IconCircleCheck className="size-3.5 text-emerald-500" stroke={2} />
+                          )}
+                        </div>
                       </div>
+
+                      {/* Badge grid */}
                       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
-                        {categoryBadges.map((badge) => {
-                          const BadgeIcon = BADGE_ICONS[badge.icon] ?? IconStar
-
-                          return (
-                            <motion.div
-                              key={badge.id}
-                              whileHover={badge.unlocked ? { y: -2, scale: 1.02 } : {}}
-                              transition={{ duration: 0.2 }}
-                              className={cn(
-                                "group relative flex flex-col items-center gap-2.5 rounded-xl p-4 text-center transition-all duration-300",
-                                badge.unlocked
-                                  ? "card-elevated bg-card hover:shadow-lg"
-                                  : "bg-muted/20 border border-dashed border-border/50 opacity-60",
-                              )}
-                            >
-                              {/* Badge icon container with glow for unlocked */}
-                              <div className="relative">
-                                <div
-                                  className={cn(
-                                    "flex items-center justify-center size-12 rounded-xl transition-all duration-300",
-                                    badge.unlocked
-                                      ? cn(theme.iconBg, "ring-1 ring-border")
-                                      : "bg-muted ring-1 ring-border/40",
-                                  )}
-                                >
-                                  {badge.unlocked ? (
-                                    <BadgeIcon
-                                      className={cn("size-6", theme.iconColor)}
-                                      stroke={1.5}
-                                    />
-                                  ) : (
-                                    <IconLock
-                                      className="size-4 text-muted-foreground/50"
-                                      stroke={1.5}
-                                    />
-                                  )}
-                                </div>
-                                {/* Unlocked glow effect */}
-                                {badge.unlocked && (
-                                  <div
-                                    className="absolute inset-0 rounded-xl bg-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-300 blur-md -z-10"
-                                  />
-                                )}
-                              </div>
-
-                              {/* Badge text */}
-                              <div className="space-y-0.5">
-                                <p
-                                  className={cn(
-                                    "text-xs font-semibold leading-tight",
-                                    badge.unlocked
-                                      ? "text-foreground"
-                                      : "text-muted-foreground",
-                                  )}
-                                >
-                                  {badge.name}
-                                </p>
-                                <p className="text-[10px] text-muted-foreground leading-relaxed">
-                                  {badge.description}
-                                </p>
-                              </div>
-
-                              {/* Unlocked date */}
-                              {badge.unlocked && badge.unlockedAt && (
-                                <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                                  <IconCalendarEvent className="size-2.5" stroke={1.5} />
-                                  {new Date(badge.unlockedAt).toLocaleDateString("en-US", {
-                                    month: "short",
-                                    day: "numeric",
-                                  })}
-                                </div>
-                              )}
-                            </motion.div>
-                          )
-                        })}
+                        {categoryBadges.map((badge, idx) => (
+                          <BadgeCard
+                            key={badge.id}
+                            badge={badge}
+                            theme={theme}
+                            index={idx}
+                            onSelect={handleBadgeSelect}
+                          />
+                        ))}
                       </div>
                     </motion.div>
                   )
@@ -484,73 +745,7 @@ export default function GamificationPage() {
             </motion.div>
 
             {/* ────────────────────────────────────────────────────────── */}
-            {/*  4. CHALLENGES                                            */}
-            {/* ────────────────────────────────────────────────────────── */}
-            <motion.div variants={fadeUp}>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-gradient-to-br from-primary/15 to-emerald-500/15">
-                      <IconTarget className="size-4 text-primary" stroke={1.5} />
-                    </div>
-                    <h3 className="text-sm font-semibold">Monthly Challenges</h3>
-                  </div>
-                  <span className="text-xs text-muted-foreground tabular-nums">
-                    {activeChallenges.length}/{CHALLENGES.length} active
-                  </span>
-                </div>
-
-                {activeChallenges.length === 0 && availableChallenges.length === 0 && (
-                  <div className="card-elevated rounded-xl bg-card overflow-hidden">
-                    <div className="bg-gradient-to-br from-primary/5 via-blue-500/5 to-violet-500/5">
-                      <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-                        <div className="relative mb-6">
-                          <div className="absolute inset-0 rounded-full bg-primary/10 blur-xl scale-150" />
-                          <div className="relative rounded-2xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/10 p-5">
-                            <IconTarget className="h-8 w-8 text-primary" stroke={1.5} />
-                          </div>
-                        </div>
-                        <p className="text-sm font-medium text-foreground mb-1">No challenges yet</p>
-                        <p className="text-xs text-muted-foreground">Join a challenge below to start tracking progress!</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {/* Active / completed challenges first */}
-                  {activeChallenges.map((ch) => (
-                    <ChallengeCard
-                      key={ch.challengeId}
-                      {...ch}
-                      joined
-                      onSkip={(id) => skipMutation.mutate(id)}
-                      isSkipping={skipMutation.isPending}
-                    />
-                  ))}
-                  {/* Available challenges */}
-                  {availableChallenges.map((ch) => (
-                    <ChallengeCard
-                      key={ch.id}
-                      challengeId={ch.id}
-                      name={ch.name}
-                      description={ch.description}
-                      target={ch.target}
-                      current={0}
-                      progress={0}
-                      xpReward={ch.xpReward}
-                      status="available"
-                      joined={false}
-                      onJoin={(id) => joinMutation.mutate(id)}
-                      isJoining={joinMutation.isPending}
-                    />
-                  ))}
-                </div>
-              </div>
-            </motion.div>
-
-            {/* ────────────────────────────────────────────────────────── */}
-            {/*  5. XP HISTORY                                            */}
+            {/*  4. XP HISTORY                                            */}
             {/* ────────────────────────────────────────────────────────── */}
             <motion.div variants={fadeUp}>
               <div className="card-elevated rounded-xl bg-card overflow-hidden">
@@ -614,6 +809,18 @@ export default function GamificationPage() {
           </div>
         </div>
       </SidebarInset>
+
+      {/* Badge detail overlay */}
+      <AnimatePresence>
+        {selectedBadge && selectedBadgeData && (
+          <BadgeDetailOverlay
+            badge={selectedBadgeData}
+            theme={selectedBadgeTheme}
+            lottieData={confettiLottie}
+            onClose={() => setSelectedBadge(null)}
+          />
+        )}
+      </AnimatePresence>
     </SidebarProvider>
   )
 }
@@ -654,38 +861,18 @@ function GamificationLoadingSkeleton() {
       {/* Badges skeleton */}
       <div className="space-y-4">
         <div className="flex items-center gap-2.5">
-          <Skeleton className="h-7 w-7 rounded-lg" />
-          <Skeleton className="h-5 w-16" />
+          <Skeleton className="h-8 w-8 rounded-xl" />
+          <div className="space-y-1">
+            <Skeleton className="h-4 w-28" />
+            <Skeleton className="h-3 w-36" />
+          </div>
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="rounded-xl bg-muted/20 p-4 flex flex-col items-center gap-2.5">
-              <Skeleton className="size-12 rounded-xl" />
+            <div key={i} className="rounded-2xl bg-muted/15 p-4 flex flex-col items-center gap-3">
+              <Skeleton className="size-14 rounded-full" />
               <Skeleton className="h-3 w-16" />
               <Skeleton className="h-2 w-24" />
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Challenges skeleton */}
-      <div className="space-y-4">
-        <div className="flex items-center gap-2.5">
-          <Skeleton className="h-7 w-7 rounded-lg" />
-          <Skeleton className="h-5 w-24" />
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="card-elevated rounded-xl bg-card p-5 space-y-3">
-              <Skeleton className="h-1 w-full rounded-full" />
-              <div className="flex items-start gap-3">
-                <Skeleton className="size-10 rounded-lg shrink-0" />
-                <div className="flex-1 space-y-1.5">
-                  <Skeleton className="h-4 w-24" />
-                  <Skeleton className="h-3 w-full" />
-                </div>
-              </div>
-              <Skeleton className="h-2.5 w-full rounded-full" />
             </div>
           ))}
         </div>

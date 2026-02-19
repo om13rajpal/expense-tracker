@@ -19,6 +19,8 @@ interface MetricTileProps {
   icon?: React.ReactNode
   tone?: "neutral" | "positive" | "negative"
   tooltip?: string
+  iconBg?: string
+  iconColor?: string
 }
 
 /**
@@ -36,6 +38,8 @@ export function MetricTile({
   icon,
   tone = "neutral",
   tooltip,
+  iconBg,
+  iconColor,
 }: MetricTileProps) {
   const isPositive = typeof change === "number" && change >= 0
   const badgeTone =
@@ -47,8 +51,13 @@ export function MetricTile({
 
   return (
     <Card className="border border-border/70 bg-card/80 shadow-sm">
-      <CardContent className="flex items-center justify-between gap-3 p-3.5">
-        <div className="space-y-1">
+      <CardContent className="flex items-start gap-3.5 p-3.5">
+        {icon && (
+          <div className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${iconBg || "bg-primary/10"} ${iconColor || "text-primary"}`}>
+            {icon}
+          </div>
+        )}
+        <div className="min-w-0 space-y-1">
           <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-muted-foreground flex items-center gap-1">
             {label}
             {tooltip && <InfoTooltip text={tooltip} iconClassName="h-3 w-3" />}
@@ -72,11 +81,6 @@ export function MetricTile({
             </div>
           )}
         </div>
-        {icon && (
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            {icon}
-          </div>
-        )}
       </CardContent>
     </Card>
   )

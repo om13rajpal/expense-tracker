@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useEffect, useMemo, useRef, useState, useCallback } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import {
   Bar,
   BarChart,
@@ -33,6 +33,8 @@ import {
   IconChevronDown,
   IconChevronRight,
   IconBell,
+  IconCalculator,
+  IconAdjustments,
 } from "@tabler/icons-react"
 import { motion } from "motion/react"
 
@@ -93,6 +95,8 @@ import { DEFAULT_BUDGETS } from "@/lib/budget-mapping"
 import { generateBudgetAlerts, type BudgetAlert } from "@/lib/budget-alerts"
 import { stagger, fadeUp, fadeUpSmall } from "@/lib/motion"
 import { BudgetSuggestions } from "@/components/planning/budget-suggestions"
+import { PlanAllocateView } from "@/components/budget/plan-allocate-view"
+import { WhatIfView } from "@/components/budget/what-if-view"
 
 interface BudgetCategoryItem {
   id: string
@@ -241,8 +245,10 @@ export default function BudgetPage() {
   // Alert state
   const [alerts, setAlerts] = useState<BudgetAlert[]>([])
 
-  // Active tab
-  const [activeTab, setActiveTab] = useState("current")
+  // Active tab (supports deep linking via ?tab=plan etc.)
+  const searchParams = useSearchParams()
+  const tabFromUrl = searchParams.get("tab")
+  const [activeTab, setActiveTab] = useState(tabFromUrl || "current")
 
   const LOCAL_BUDGETS_KEY = "finance:budgets"
   const hasLocalEditsRef = useRef(false)
@@ -896,10 +902,32 @@ export default function BudgetPage() {
           >
             {/* ─── Tabs: Current / History ─── */}
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <motion.div variants={fadeUpSmall}>
-                <TabsList>
-                  <TabsTrigger value="current">Current Month</TabsTrigger>
-                  <TabsTrigger value="history" className="gap-1.5">
+              <motion.div variants={fadeUpSmall} className="border-b border-border/40 -mx-4 px-4">
+                <TabsList variant="line" className="inline-flex h-10 items-center gap-1 bg-transparent p-0">
+                  <TabsTrigger
+                    value="current"
+                    className="relative gap-1.5 rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent"
+                  >
+                    Current Month
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="plan"
+                    className="relative gap-1.5 rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent"
+                  >
+                    <IconCalculator className="h-3.5 w-3.5" />
+                    Plan & Allocate
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="whatif"
+                    className="relative gap-1.5 rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent"
+                  >
+                    <IconAdjustments className="h-3.5 w-3.5" />
+                    What-If
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="history"
+                    className="relative gap-1.5 rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent"
+                  >
                     <IconHistory className="h-3.5 w-3.5" />
                     History
                   </TabsTrigger>
@@ -948,6 +976,8 @@ export default function BudgetPage() {
                       sub: `of ${formatCurrency(totalMonthlyBudget)} budget`,
                       icon: IconWallet,
                       color: "",
+                      iconBg: "bg-blue-500/10 dark:bg-blue-500/15",
+                      iconColor: "text-blue-600 dark:text-blue-400",
                     },
                     {
                       label: "Budget Left",
@@ -955,6 +985,8 @@ export default function BudgetPage() {
                       sub: "Remaining this period",
                       icon: IconArrowDown,
                       color: totalRemaining >= 0 ? "text-primary" : "text-destructive",
+                      iconBg: totalRemaining >= 0 ? "bg-emerald-500/10 dark:bg-emerald-500/15" : "bg-rose-500/10 dark:bg-rose-500/15",
+                      iconColor: totalRemaining >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400",
                     },
                     {
                       label: "Projected",
@@ -962,6 +994,8 @@ export default function BudgetPage() {
                       sub: "On track to spend",
                       icon: IconTrendingUp,
                       color: totalProjected <= totalMonthlyBudget ? "text-primary" : "text-destructive",
+                      iconBg: "bg-violet-500/10 dark:bg-violet-500/15",
+                      iconColor: "text-violet-600 dark:text-violet-400",
                     },
                     {
                       label: "Usage",
@@ -969,11 +1003,13 @@ export default function BudgetPage() {
                       sub: null,
                       icon: IconGauge,
                       color: getUsageColor(totalPercentage),
+                      iconBg: "bg-amber-500/10 dark:bg-amber-500/15",
+                      iconColor: "text-amber-600 dark:text-amber-400",
                     },
                   ].map((stat) => (
                     <div key={stat.label} className="px-5 py-4 flex items-start gap-3">
-                      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-muted/60">
-                        <stat.icon className="h-4 w-4 text-muted-foreground" />
+                      <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${stat.iconBg}`}>
+                        <stat.icon className={`h-4 w-4 ${stat.iconColor}`} />
                       </div>
                       <div className="min-w-0">
                         <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider leading-none mb-1.5">
@@ -1544,6 +1580,16 @@ export default function BudgetPage() {
                 </div>
               </motion.div>
 
+                </TabsContent>
+
+                {/* ─── Plan & Allocate Tab ─── */}
+                <TabsContent value="plan" className="space-y-4 mt-0">
+                  <PlanAllocateView />
+                </TabsContent>
+
+                {/* ─── What-If Tab ─── */}
+                <TabsContent value="whatif" className="space-y-4 mt-0">
+                  <WhatIfView />
                 </TabsContent>
 
                 {/* ─── History Tab ─── */}

@@ -1,5 +1,5 @@
 /**
- * Application sidebar with collapsible nav groups, a dashboard link, and user menu.
+ * Application sidebar with flat nav items, a dashboard link, and user menu.
  * @module components/app-sidebar
  */
 "use client"
@@ -8,16 +8,18 @@ import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
-  IconBrain,
-  IconChartPie,
-  IconClipboardList,
   IconDashboard,
+  IconFileInvoice,
   IconPigMoney,
-  IconWallet,
+  IconReceipt2,
+  IconSparkles,
+  IconTargetArrow,
+  IconTrendingUp,
 } from "@tabler/icons-react"
 
-import { NavMain, type NavGroup } from "@/components/nav-main"
+import { NavMain, type NavItem } from "@/components/nav-main"
 import { NavUser } from "@/components/nav-user"
+import { SidebarXP } from "@/components/sidebar-xp"
 import {
   Sidebar,
   SidebarContent,
@@ -30,47 +32,14 @@ import {
   SidebarMenuItem,
   SidebarSeparator,
 } from "@/components/ui/sidebar"
-import { cn } from "@/lib/utils"
 
-const navGroups: NavGroup[] = [
-  {
-    label: "Overview",
-    icon: IconChartPie,
-    items: [
-      { title: "Transactions", url: "/transactions" },
-      { title: "Analytics", url: "/analytics" },
-    ],
-  },
-  {
-    label: "Planning",
-    icon: IconClipboardList,
-    items: [
-      { title: "Budget", url: "/budget" },
-      { title: "Finance Planner", url: "/planner" },
-      { title: "Tax Planner", url: "/tax" },
-      { title: "Subscriptions", url: "/subscriptions" },
-      { title: "Split Expenses", url: "/splits" },
-    ],
-  },
-  {
-    label: "Wealth",
-    icon: IconWallet,
-    items: [
-      { title: "Investments", url: "/investments" },
-      { title: "Financial Health", url: "/financial-health" },
-      { title: "Goals", url: "/goals" },
-      { title: "Rewards", url: "/gamification" },
-    ],
-  },
-  {
-    label: "Intelligence",
-    icon: IconBrain,
-    items: [
-      { title: "AI Insights", url: "/ai-insights" },
-      { title: "Finance Agent", url: "/agent" },
-      { title: "Learn", url: "/learn" },
-    ],
-  },
+const navItems: NavItem[] = [
+  { title: "Money",        url: "/money",        icon: IconReceipt2 },
+  { title: "Budget",       url: "/budget",       icon: IconPigMoney },
+  { title: "Goals",        url: "/goals",        icon: IconTargetArrow },
+  { title: "Investments",  url: "/investments",  icon: IconTrendingUp },
+  { title: "Tax & Bills",  url: "/bills",        icon: IconFileInvoice },
+  { title: "AI Assistant", url: "/ai",           icon: IconSparkles },
 ]
 
 const userData = {
@@ -79,7 +48,7 @@ const userData = {
   avatar: "",
 }
 
-/** Collapsible off-canvas sidebar containing the main navigation and user footer. */
+/** Off-canvas sidebar with flat navigation and user footer. */
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
   const isDashboard = pathname === "/dashboard" || pathname === "/"
@@ -105,13 +74,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarSeparator />
 
       <SidebarContent className="px-2 py-2">
-        {/* Dashboard + collapsible nav groups in a single SidebarGroup */}
-        <NavMain dashboardActive={isDashboard} groups={navGroups} />
+        <NavMain dashboardActive={isDashboard} items={navItems} />
       </SidebarContent>
 
       <SidebarSeparator />
 
       <SidebarFooter>
+        <SidebarXP />
         <NavUser user={userData} />
       </SidebarFooter>
     </Sidebar>
