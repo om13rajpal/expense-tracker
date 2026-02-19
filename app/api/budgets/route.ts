@@ -12,6 +12,7 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, corsHeaders, handleOptions } from '@/lib/middleware';
 import { getMongoDb } from '@/lib/mongodb';
 import { buildSeedDocs, DEFAULT_BUDGETS } from '@/lib/budget-mapping';
+import { awardXP, checkBadgeUnlocks, updateChallengeProgress } from '@/lib/gamification';
 
 const COLLECTION = 'budget_categories';
 
@@ -110,6 +111,15 @@ export async function POST(request: NextRequest) {
         )
       );
       await Promise.all(ops);
+
+      // ── Gamification hooks ──
+      try {
+        await awardXP(db, user.userId, 'budget_created', 20, 'Budgets updated')
+        await checkBadgeUnlocks(db, user.userId, 'budget_updated')
+        await updateChallengeProgress(db, user.userId)
+      } catch (gamErr) {
+        console.error('Gamification hook error:', gamErr)
+      }
 
       return NextResponse.json(
         {

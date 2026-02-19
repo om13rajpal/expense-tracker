@@ -8,8 +8,9 @@
 import * as React from "react"
 
 import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler"
-import { CommandPalette } from "@/components/command-palette"
+import { Spotlight } from "@/components/spotlight"
 import { NotificationCenter } from "@/components/notification-center"
+import { StreakCounter } from "@/components/streak-counter"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 
@@ -60,8 +61,9 @@ export function SiteHeader({
             )}
           </div>
           <div className="flex items-center gap-3">
-            <CommandPalette />
+            <Spotlight />
             {actions}
+            <StreakCounter />
             <NotificationCenter />
             <AnimatedThemeToggler />
           </div>

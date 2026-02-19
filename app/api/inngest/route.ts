@@ -14,6 +14,15 @@ import { postSyncInsights } from '@/inngest/post-sync-insights';
 import { postPricesInsights } from '@/inngest/post-prices-insights';
 import { generateUserInsights } from '@/inngest/generate-insights';
 import { budgetBreachCheck, renewalAlert, weeklyDigest } from '@/inngest/notifications';
+import {
+  dailyStreakCheck,
+  dailyBadgeCheck,
+  weeklyFreezeGrant,
+  monthlyChallengeRotation,
+} from '@/inngest/gamification';
+import { telegramDailySummary } from '@/inngest/telegram-daily-summary';
+import { ghostBudgetSnapshot } from '@/inngest/ghost-budget';
+import { subscriptionPaymentCheck } from '@/inngest/subscription-payment-check';
 
 export const { GET, POST, PUT } = serve({
   client: inngest,
@@ -27,5 +36,12 @@ export const { GET, POST, PUT } = serve({
     budgetBreachCheck,
     renewalAlert,
     weeklyDigest,
+    dailyStreakCheck,
+    dailyBadgeCheck,
+    weeklyFreezeGrant,
+    monthlyChallengeRotation,
+    telegramDailySummary,
+    ghostBudgetSnapshot,
+    subscriptionPaymentCheck,
   ],
 });

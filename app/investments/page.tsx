@@ -1015,7 +1015,7 @@ export default function InvestmentsPage() {
     >
       <AppSidebar variant="inset" />
       <SidebarInset>
-        <SiteHeader title="Investments" subtitle="Portfolio tracker with live quotes" />
+        <SiteHeader title="Investments" />
         <div className="flex flex-1 flex-col">
           <div className="@container/main flex flex-1 flex-col gap-6 p-6">
 

@@ -1,5 +1,5 @@
 /**
- * Weekly cron function (Monday 9 AM UTC) that triggers a full refresh
+ * Daily cron function (3:30 AM IST / 10 PM UTC) that triggers a full refresh
  * of all AI insight types for every user with transaction data.
  * @module inngest/scheduled-insights
  */
@@ -13,11 +13,12 @@ const ALL_TYPES: AiInsightType[] = [
   'weekly_budget',
   'investment_insights',
   'tax_optimization',
+  'planner_recommendation',
 ];
 
 export const scheduledInsights = inngest.createFunction(
-  { id: 'scheduled-insights', name: 'Weekly Full AI Insights Refresh' },
-  { cron: '0 9 * * 1' }, // Monday at 9:00 AM UTC
+  { id: 'scheduled-insights', name: 'Daily Full AI Insights Refresh' },
+  { cron: '0 22 * * *' }, // Daily at 10:00 PM UTC (3:30 AM IST next day)
   async ({ step }) => {
     const userIds = await step.run('discover-users', async () => {
       const db = await getMongoDb();

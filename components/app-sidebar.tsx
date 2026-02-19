@@ -49,6 +49,7 @@ const navGroups: NavGroup[] = [
       { title: "Finance Planner", url: "/planner" },
       { title: "Tax Planner", url: "/tax" },
       { title: "Subscriptions", url: "/subscriptions" },
+      { title: "Split Expenses", url: "/splits" },
     ],
   },
   {
@@ -58,6 +59,7 @@ const navGroups: NavGroup[] = [
       { title: "Investments", url: "/investments" },
       { title: "Financial Health", url: "/financial-health" },
       { title: "Goals", url: "/goals" },
+      { title: "Rewards", url: "/gamification" },
     ],
   },
   {

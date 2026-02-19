@@ -46,6 +46,11 @@ import { AiInsightsWidget } from "@/components/ai-insights-widget"
 import { SyncButtonCompact } from "@/components/sync-button"
 import { RecurringTransactions } from "@/components/recurring-transactions"
 import { SectionErrorBoundary } from "@/components/error-boundary"
+import { PredictionsCard } from "@/components/predictions-card"
+import { GhostBudgetCard } from "@/components/ghost-budget-card"
+import { TimeTravelCard } from "@/components/time-travel-card"
+import { SpendVelocityTicker } from "@/components/spend-velocity-ticker"
+import { RoundupSavingsCard } from "@/components/roundup-savings-card"
 import {
   SidebarInset,
   SidebarProvider,
@@ -121,7 +126,15 @@ export default function DashboardPage() {
     refresh,
   } = useTransactions()
 
-  const { year, month, label: monthLabel } = getCurrentMonth()
+  // Track client-side mount to prevent SSR hydration animation glitch.
+  // On SSR, initial="hidden" sets children to opacity:0 which can persist
+  // if the animation doesn't trigger during hydration. By using initial={false}
+  // on the first render, content is immediately visible. After mount,
+  // subsequent renders will properly animate.
+  const [mounted, setMounted] = React.useState(false)
+  React.useEffect(() => setMounted(true), [])
+
+  const { year, month } = getCurrentMonth()
   const monthTransactions = getMonthTransactions(transactions, year, month)
 
   useEffect(() => {
@@ -232,11 +245,33 @@ export default function DashboardPage() {
     const todayTxns = monthTransactions.filter(
       t => new Date(t.date).toISOString().slice(0, 10) === todayStr
     ).filter(t => t.type === "expense")
-    const todaySpent = todayTxns.reduce((sum, t) => sum + t.amount, 0)
 
-    const topCategory = todayTxns.length > 0
+    let displayTxns = todayTxns
+    let isToday = true
+    let lastDate = todayStr
+
+    // If no spending today, find the most recent day with expenses
+    if (todayTxns.length === 0) {
+      const expensesByDate = new Map<string, typeof monthTransactions>()
+      for (const t of monthTransactions) {
+        if (t.type !== "expense") continue
+        const d = new Date(t.date).toISOString().slice(0, 10)
+        if (!expensesByDate.has(d)) expensesByDate.set(d, [])
+        expensesByDate.get(d)!.push(t)
+      }
+      const sortedDates = [...expensesByDate.keys()].sort().reverse()
+      if (sortedDates.length > 0) {
+        lastDate = sortedDates[0]
+        displayTxns = expensesByDate.get(lastDate)!
+        isToday = false
+      }
+    }
+
+    const todaySpent = displayTxns.reduce((sum, t) => sum + t.amount, 0)
+
+    const topCategory = displayTxns.length > 0
       ? Object.entries(
-          todayTxns.reduce<Record<string, number>>((acc, t) => {
+          displayTxns.reduce<Record<string, number>>((acc, t) => {
             acc[t.category] = (acc[t.category] || 0) + t.amount
             return acc
           }, {})
@@ -250,7 +285,12 @@ export default function DashboardPage() {
     const remainingDays = Math.max(0, totalDaysInMonth - daysElapsed)
     const dailyBudget = remainingDays > 0 ? budgetRemaining / remainingDays : 0
 
-    return { todaySpent, topCategory, budgetRemaining, remainingDays, dailyBudget }
+    // Format the date label for display (e.g., "Feb 17")
+    const dateLabel = isToday
+      ? ""
+      : new Date(lastDate + "T00:00:00").toLocaleDateString("en-US", { month: "short", day: "numeric" })
+
+    return { todaySpent, topCategory, budgetRemaining, remainingDays, dailyBudget, isToday, dateLabel }
   }, [monthTransactions, totalIncome, totalExpenses, year, month])
 
   /* ─── Anomaly Detection ─── */
@@ -303,7 +343,6 @@ export default function DashboardPage() {
       <SidebarInset>
         <SiteHeader
           title="Dashboard"
-          subtitle={monthLabel}
           actions={
             <SyncButtonCompact onSync={async () => { await syncFromSheets(false) }} />
           }
@@ -324,7 +363,7 @@ export default function DashboardPage() {
                 </Button>
               </div>
             ) : (
-              <motion.div variants={stagger} initial="hidden" animate="show" className="flex flex-col gap-5">
+              <motion.div variants={stagger} initial={mounted ? "hidden" : false} animate="show" className="flex flex-col gap-5">
                 {(() => {
                   const partialInfo = getPartialMonthInfo(monthTransactions, year, month)
                   return partialInfo.isPartial ? <ContextBanner variant="info" title={partialInfo.message} /> : null
@@ -394,14 +433,16 @@ export default function DashboardPage() {
 
                     {/* Text details */}
                     <div className="flex-1 min-w-0">
-                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Today&apos;s Spending</p>
+                      <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">
+                        {dailySummary.isToday ? "Today\u2019s Spending" : `Last: ${dailySummary.dateLabel}`}
+                      </p>
                       <p className="text-lg font-bold tabular-nums text-foreground">
                         {formatCurrency(dailySummary.todaySpent)}
                       </p>
                       <p className="text-xs text-muted-foreground mt-0.5">
                         {dailySummary.todaySpent > 0 && dailySummary.topCategory
                           ? `Mostly on ${dailySummary.topCategory}`
-                          : "No spending recorded today"}
+                          : "No spending recorded this month"}
                       </p>
                     </div>
 
@@ -738,6 +779,13 @@ export default function DashboardPage() {
 
                   <AiInsightsWidget compact />
                 </motion.div>
+
+                {/* ─── Futuristic Feature Widgets ─── */}
+                <PredictionsCard />
+                <GhostBudgetCard />
+                <TimeTravelCard />
+                <RoundupSavingsCard />
+                <SpendVelocityTicker />
               </motion.div>
             )}
           </div>

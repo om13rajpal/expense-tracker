@@ -236,7 +236,6 @@ export default function AiInsightsPage() {
       <SidebarInset>
         <SiteHeader
           title="AI Recommendations"
-          subtitle="AI-powered spending analysis, budget recommendations, and investment insights"
         />
         <div className="flex flex-1 flex-col">
           <div className="@container/main flex flex-1 flex-col gap-5 p-5">

@@ -797,7 +797,6 @@ export default function BudgetPage() {
       <SidebarInset>
         <SiteHeader
           title="Budget"
-          subtitle="Monitor budgets against real-time spend"
           actions={
             <>
               {budgetPeriod && (

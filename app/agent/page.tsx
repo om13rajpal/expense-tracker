@@ -493,8 +493,6 @@ export default function AgentPage() {
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(null)
   const [threadPanelOpen, setThreadPanelOpen] = useState(false)
   const [threadSidebarVisible, setThreadSidebarVisible] = useState(true)
-  const [initialLoadDone, setInitialLoadDone] = useState(false)
-
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const textareaRef = useRef<HTMLTextAreaElement>(null)
   const abortControllerRef = useRef<AbortController | null>(null)
@@ -570,15 +568,7 @@ export default function AgentPage() {
     []
   )
 
-  // ── Auto-load most recent thread on mount ──
-  useEffect(() => {
-    if (initialLoadDone || !threads.length || !isAuthenticated) return
-    setInitialLoadDone(true)
-    const mostRecent = threads[0] // already sorted by updatedAt desc
-    if (mostRecent) {
-      loadThread(mostRecent.threadId)
-    }
-  }, [threads, isAuthenticated, initialLoadDone, loadThread])
+  // Start with a fresh chat by default (no auto-load of previous threads)
 
   // Auth guard
   useEffect(() => {
@@ -771,7 +761,6 @@ export default function AgentPage() {
       <SidebarInset className="h-dvh overflow-hidden">
         <SiteHeader
           title="Finance Agent"
-          subtitle="AI-powered financial advisor"
         />
         <div className="flex flex-1 overflow-hidden min-h-0">
           {/* ═══════════════════════════════════════════════════════════ */}

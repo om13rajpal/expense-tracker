@@ -189,7 +189,6 @@ export default function CronPage() {
       <SidebarInset>
         <SiteHeader
           title="Cron Jobs"
-          subtitle="Automated data refresh schedules and status"
           actions={
             <>
               {triggerMessage && (

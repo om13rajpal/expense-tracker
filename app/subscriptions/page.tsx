@@ -1,7 +1,7 @@
 "use client"
 
 import * as React from "react"
-import { useEffect, useMemo, useState, useCallback } from "react"
+import { useEffect, useMemo, useState, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
 import { motion } from "motion/react"
 import {
@@ -15,6 +15,9 @@ import {
   IconPlayerPause,
   IconPlayerPlay,
   IconSearch,
+  IconCheck,
+  IconAlertTriangle,
+  IconEye,
 } from "@tabler/icons-react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
@@ -194,6 +197,14 @@ function ServiceLogo({ name, size = 32 }: { name: string; size?: number }) {
 
 // ─── Types ───
 
+interface PaymentHistoryEntry {
+  date: string
+  amount: number
+  transactionId?: string
+  auto: boolean
+  detectedAt: string
+}
+
 interface Subscription {
   _id: string
   userId: string
@@ -207,8 +218,18 @@ interface Subscription {
   autoDetected: boolean
   merchantPattern?: string
   notes?: string
+  paymentHistory?: PaymentHistoryEntry[]
   createdAt: string
   updatedAt: string
+}
+
+interface LookupSuggestion {
+  amount: number
+  lastCharged: string
+  frequency: string
+  nextExpected: string
+  confidence: number
+  matchedMerchant: string
 }
 
 // ─── Category badge colors ───
@@ -238,7 +259,48 @@ const STATUS_BADGE: Record<string, { label: string; class: string }> = {
   cancelled: { label: "Cancelled", class: "bg-slate-100 text-slate-500 dark:bg-slate-900/30 dark:text-slate-500 border-slate-200 dark:border-slate-800" },
 }
 
+// ─── Payment Status ───
+
+type PaymentStatus = "paid" | "due-soon" | "overdue" | "upcoming"
+
+const PAYMENT_STATUS_BADGE: Record<PaymentStatus, { label: string; class: string }> = {
+  paid: { label: "Paid", class: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" },
+  "due-soon": { label: "Due Soon", class: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
+  overdue: { label: "Overdue", class: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" },
+  upcoming: { label: "Upcoming", class: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
+}
+
+function getPaymentStatus(sub: Subscription): PaymentStatus {
+  const days = daysUntil(sub.nextExpected)
+  if (days < 0) return "overdue"
+  if (days <= 3) return "due-soon"
+  // Consider "paid" if lastCharged is within the current billing cycle
+  if (sub.lastCharged) {
+    const lastChargedDays = daysUntil(sub.lastCharged)
+    // lastCharged is in the past, and nextExpected is in the future — paid for this cycle
+    if (lastChargedDays <= 0 && days > 3) return "paid"
+  }
+  return "upcoming"
+}
+
 // ─── Helpers ───
+
+function computeNextExpectedClient(from: string, frequency: string): string {
+  const d = new Date(from)
+  if (isNaN(d.getTime())) return from
+  switch (frequency) {
+    case "weekly":
+      d.setDate(d.getDate() + 7)
+      break
+    case "monthly":
+      d.setMonth(d.getMonth() + 1)
+      break
+    case "yearly":
+      d.setFullYear(d.getFullYear() + 1)
+      break
+  }
+  return d.toISOString().split("T")[0]
+}
 
 function formatDate(iso: string): string {
   if (!iso) return "--"
@@ -307,10 +369,24 @@ export default function SubscriptionsPage() {
   const [deleteTarget, setDeleteTarget] = useState<Subscription | null>(null)
   const [searchQuery, setSearchQuery] = useState("")
 
+  // Smart lookup state
+  const [lookupName, setLookupName] = useState("")
+  const [appliedSuggestion, setAppliedSuggestion] = useState(false)
+
   // Auth guard
   useEffect(() => {
     if (!authLoading && !isAuthenticated) router.push("/")
   }, [authLoading, isAuthenticated, router])
+
+  // ─── Debounced lookup name ───
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const handleNameChangeForLookup = useCallback((name: string) => {
+    setAppliedSuggestion(false)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      setLookupName(name.trim())
+    }, 500)
+  }, [])
 
   // ─── Data fetching ───
 
@@ -328,6 +404,26 @@ export default function SubscriptionsPage() {
   })
 
   const subscriptions = subsData?.subscriptions ?? []
+
+  // ─── Subscription Lookup Query ───
+  const { data: lookupData, isFetching: lookupFetching } = useQuery<{
+    success: boolean
+    matches: Array<{ _id: string; date: string; amount: number; merchant: string; description: string }>
+    suggestion: LookupSuggestion | null
+  }>({
+    queryKey: ["subscription-lookup", lookupName],
+    queryFn: async () => {
+      const res = await fetch("/api/subscriptions/lookup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ name: lookupName }),
+      })
+      if (!res.ok) throw new Error("Lookup failed")
+      return res.json()
+    },
+    enabled: isAuthenticated && lookupName.length >= 3 && showAddDialog,
+  })
 
   // ─── Mutations ───
 
@@ -350,6 +446,8 @@ export default function SubscriptionsPage() {
       toast.success("Subscription added")
       setShowAddDialog(false)
       setForm(blankForm())
+      setLookupName("")
+      setAppliedSuggestion(false)
     },
     onError: (error: Error) => {
       toast.error("Failed to add subscription", { description: error.message })
@@ -419,6 +517,56 @@ export default function SubscriptionsPage() {
     },
   })
 
+  // ─── Check Payments Mutation ───
+  const checkPaymentsMutation = useMutation({
+    mutationFn: async (subscriptionId: string | undefined) => {
+      const res = await fetch("/api/subscriptions/check-payments", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify(subscriptionId ? { subscriptionId } : {}),
+      })
+      if (!res.ok) throw new Error("Failed to check payments")
+      return res.json()
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries({ queryKey: ["subscriptions"] })
+      const matched = data.summary?.matched || 0
+      if (matched > 0) {
+        toast.success(`Found ${matched} payment${matched > 1 ? "s" : ""}`, {
+          description: "Subscription dates updated automatically.",
+        })
+      } else {
+        toast.info("No new payments detected")
+      }
+    },
+    onError: () => {
+      toast.error("Failed to check payments")
+    },
+  })
+
+  // ─── Mark as Paid Mutation ───
+  const markPaidMutation = useMutation({
+    mutationFn: async ({ id, frequency }: { id: string; frequency: string }) => {
+      const today = new Date().toISOString().split("T")[0]
+      const res = await fetch("/api/subscriptions", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id, markPaidDate: today }),
+      })
+      if (!res.ok) throw new Error("Failed to mark as paid")
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["subscriptions"] })
+      toast.success("Marked as paid", { description: "Next expected date has been updated." })
+    },
+    onError: () => {
+      toast.error("Failed to mark as paid")
+    },
+  })
+
   // ─── Handlers ───
 
   const handleCreate = useCallback(() => {
@@ -436,9 +584,12 @@ export default function SubscriptionsPage() {
       lastCharged: form.lastCharged || "",
       notes: form.notes || "",
       status: "active",
-      autoDetected: false,
+      autoDetected: appliedSuggestion,
+      ...(appliedSuggestion && lookupData?.suggestion?.matchedMerchant && {
+        merchantPattern: lookupData.suggestion.matchedMerchant,
+      }),
     })
-  }, [form, createMutation])
+  }, [form, createMutation, appliedSuggestion, lookupData])
 
   const handleEdit = useCallback(() => {
     if (!editTarget) return
@@ -512,6 +663,12 @@ export default function SubscriptionsPage() {
     [activeSubs]
   )
 
+  // Overdue subscriptions
+  const overdueSubs = useMemo(
+    () => activeSubs.filter((s) => daysUntil(s.nextExpected) < 0),
+    [activeSubs]
+  )
+
   // ─── Loading / Auth guards ───
 
   if (authLoading) {
@@ -537,12 +694,11 @@ export default function SubscriptionsPage() {
       <SidebarInset>
         <SiteHeader
           title="Subscriptions"
-          subtitle="Track recurring payments and subscriptions"
           actions={
             <Button
               size="sm"
               className="h-8 gap-1.5 text-xs"
-              onClick={() => { setForm(blankForm()); setShowAddDialog(true) }}
+              onClick={() => { setForm(blankForm()); setLookupName(""); setAppliedSuggestion(false); setShowAddDialog(true) }}
             >
               <IconPlus className="h-3.5 w-3.5" />
               Add
@@ -561,7 +717,7 @@ export default function SubscriptionsPage() {
             >
               {/* ─── Stat Tiles ─── */}
               <motion.div variants={fadeUp}>
-                <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+                <div className={`grid grid-cols-1 gap-3 ${overdueSubs.length > 0 ? "sm:grid-cols-4" : "sm:grid-cols-3"}`}>
                   <MetricTile
                     label="Active Subscriptions"
                     value={activeSubs.length.toString()}
@@ -580,8 +736,89 @@ export default function SubscriptionsPage() {
                     trendLabel="estimated annual spend"
                     icon={<IconCalendar className="h-5 w-5" />}
                   />
+                  {overdueSubs.length > 0 && (
+                    <MetricTile
+                      label="Overdue"
+                      value={overdueSubs.length.toString()}
+                      trendLabel="need attention"
+                      icon={<IconAlertTriangle className="h-5 w-5" />}
+                    />
+                  )}
                 </div>
               </motion.div>
+
+              {/* ─── Overdue Subscriptions ─── */}
+              {overdueSubs.length > 0 && (
+                <motion.div variants={fadeUp}>
+                  <Card className="border-red-200 dark:border-red-800/40 bg-red-50/50 dark:bg-red-950/10">
+                    <CardHeader className="pb-2 pt-4 px-5">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="text-sm font-semibold flex items-center gap-2">
+                            <IconAlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
+                            Overdue Subscriptions
+                          </CardTitle>
+                          <CardDescription className="text-xs">
+                            {overdueSubs.length} subscription{overdueSubs.length > 1 ? "s" : ""} past expected payment date
+                          </CardDescription>
+                        </div>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          className="h-7 text-xs gap-1 border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/20"
+                          onClick={() => checkPaymentsMutation.mutate(undefined)}
+                          disabled={checkPaymentsMutation.isPending}
+                        >
+                          <IconEye className="h-3 w-3" />
+                          {checkPaymentsMutation.isPending ? "Checking..." : "Check All"}
+                        </Button>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="px-5 pb-4">
+                      <div className="flex flex-wrap gap-2">
+                        {overdueSubs.map((sub) => {
+                          const days = Math.abs(daysUntil(sub.nextExpected))
+                          return (
+                            <div
+                              key={sub._id}
+                              className="flex items-center gap-2 rounded-lg border border-red-200/60 dark:border-red-800/30 bg-background/80 px-3 py-2"
+                            >
+                              <ServiceLogo name={sub.name} size={20} />
+                              <span className="text-sm font-medium">{sub.name}</span>
+                              <span className="text-xs text-muted-foreground tabular-nums">
+                                {formatINR(sub.amount)}
+                              </span>
+                              <Badge variant="destructive" className="text-[11px] px-1.5 py-0 h-4">
+                                {days}d overdue
+                              </Badge>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-6 w-6 text-muted-foreground hover:text-foreground"
+                                onClick={() => checkPaymentsMutation.mutate(sub._id)}
+                                disabled={checkPaymentsMutation.isPending}
+                                title="Check Now"
+                              >
+                                <IconEye className="h-3 w-3" />
+                              </Button>
+                              <Button
+                                size="icon"
+                                variant="ghost"
+                                className="h-6 w-6 text-muted-foreground hover:text-emerald-600"
+                                onClick={() => markPaidMutation.mutate({ id: sub._id, frequency: sub.frequency })}
+                                disabled={markPaidMutation.isPending}
+                                title="Mark as Paid"
+                              >
+                                <IconCheck className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              )}
 
               {/* ─── Upcoming Renewals ─── */}
               {upcomingRenewals.length > 0 && (
@@ -686,6 +923,9 @@ export default function SubscriptionsPage() {
                           toggleLabel="Pause"
                           toggleIcon={<IconPlayerPause className="h-3.5 w-3.5" />}
                           emptyMessage="No active subscriptions. Add one to get started."
+                          onCheckPayment={(sub) => checkPaymentsMutation.mutate(sub._id)}
+                          onMarkPaid={(sub) => markPaidMutation.mutate({ id: sub._id, frequency: sub.frequency })}
+                          showPaymentStatus
                         />
                       </TabsContent>
 
@@ -778,16 +1018,35 @@ export default function SubscriptionsPage() {
         </div>
       </SidebarInset>
 
-      {/* ─── Add Subscription Dialog ─── */}
-      <Dialog open={showAddDialog} onOpenChange={(open) => { if (!open) { setShowAddDialog(false); setForm(blankForm()) } }}>
+      {/* ─── Add Subscription Dialog (Smart Form) ─── */}
+      <Dialog open={showAddDialog} onOpenChange={(open) => { if (!open) { setShowAddDialog(false); setForm(blankForm()); setLookupName(""); setAppliedSuggestion(false) } }}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Add Subscription</DialogTitle>
             <DialogDescription>Track a new recurring payment.</DialogDescription>
           </DialogHeader>
-          <SubscriptionForm form={form} setForm={setForm} />
+          <SmartSubscriptionForm
+            form={form}
+            setForm={setForm}
+            suggestion={lookupData?.suggestion ?? null}
+            lookupFetching={lookupFetching}
+            appliedSuggestion={appliedSuggestion}
+            onNameChange={handleNameChangeForLookup}
+            onApplySuggestion={() => {
+              const s = lookupData?.suggestion
+              if (!s) return
+              setForm((prev) => ({
+                ...prev,
+                amount: s.amount.toString(),
+                frequency: (s.frequency === "weekly" || s.frequency === "monthly" || s.frequency === "yearly") ? s.frequency : "monthly",
+                lastCharged: s.lastCharged,
+                nextExpected: s.nextExpected,
+              }))
+              setAppliedSuggestion(true)
+            }}
+          />
           <DialogFooter>
-            <Button variant="outline" onClick={() => { setShowAddDialog(false); setForm(blankForm()) }} disabled={createMutation.isPending}>
+            <Button variant="outline" onClick={() => { setShowAddDialog(false); setForm(blankForm()); setLookupName(""); setAppliedSuggestion(false) }} disabled={createMutation.isPending}>
               Cancel
             </Button>
             <Button onClick={handleCreate} disabled={createMutation.isPending}>
@@ -843,14 +1102,27 @@ export default function SubscriptionsPage() {
   )
 }
 
-// ─── Subscription Form (shared between Add & Edit) ───
+// ─── Smart Subscription Form (for Add dialog — with auto-detection) ───
 
-interface SubscriptionFormProps {
+interface SmartSubscriptionFormProps {
   form: ReturnType<typeof blankForm>
   setForm: React.Dispatch<React.SetStateAction<ReturnType<typeof blankForm>>>
+  suggestion: LookupSuggestion | null
+  lookupFetching: boolean
+  appliedSuggestion: boolean
+  onNameChange: (name: string) => void
+  onApplySuggestion: () => void
 }
 
-function SubscriptionForm({ form, setForm }: SubscriptionFormProps) {
+function SmartSubscriptionForm({
+  form,
+  setForm,
+  suggestion,
+  lookupFetching,
+  appliedSuggestion,
+  onNameChange,
+  onApplySuggestion,
+}: SmartSubscriptionFormProps) {
   const handleQuickSelect = (service: (typeof POPULAR_SERVICES)[number]) => {
     setForm((prev) => ({
       ...prev,
@@ -859,6 +1131,7 @@ function SubscriptionForm({ form, setForm }: SubscriptionFormProps) {
       frequency: service.frequency,
       category: service.category,
     }))
+    onNameChange(service.name)
   }
 
   return (
@@ -892,6 +1165,173 @@ function SubscriptionForm({ form, setForm }: SubscriptionFormProps) {
 
       <Separator />
 
+      <div className="grid grid-cols-2 gap-3">
+        <div className="col-span-2 space-y-2">
+          <Label htmlFor="sub-name">Name</Label>
+          <div className="flex gap-2 items-center">
+            {form.name && <ServiceLogo name={form.name} size={28} />}
+            <Input
+              id="sub-name"
+              placeholder="e.g. Netflix, Spotify"
+              value={form.name}
+              onChange={(e) => {
+                setForm((prev) => ({ ...prev, name: e.target.value }))
+                onNameChange(e.target.value)
+              }}
+              className="flex-1"
+            />
+          </div>
+        </div>
+
+        {/* Lookup loading indicator */}
+        {lookupFetching && (
+          <div className="col-span-2">
+            <div className="flex items-center gap-2 text-xs text-muted-foreground py-1">
+              <div className="h-3 w-3 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+              Searching your transaction history...
+            </div>
+          </div>
+        )}
+
+        {/* Match Found card */}
+        {suggestion && !appliedSuggestion && !lookupFetching && (
+          <div className="col-span-2">
+            <div className="rounded-lg border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50/50 dark:bg-emerald-950/10 p-3 space-y-2">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-1.5">
+                  <IconCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                  <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">Match Found</span>
+                </div>
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-emerald-300 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400">
+                  {Math.round(suggestion.confidence * 100)}% confidence
+                </Badge>
+              </div>
+              <div className="grid grid-cols-3 gap-2 text-xs">
+                <div>
+                  <span className="text-muted-foreground block">Amount</span>
+                  <span className="font-medium">{formatINR(suggestion.amount)}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground block">Last Paid</span>
+                  <span className="font-medium">{formatDate(suggestion.lastCharged)}</span>
+                </div>
+                <div>
+                  <span className="text-muted-foreground block">Frequency</span>
+                  <span className="font-medium capitalize">{suggestion.frequency}</span>
+                </div>
+              </div>
+              <Button
+                size="sm"
+                className="w-full h-7 text-xs"
+                variant="outline"
+                onClick={onApplySuggestion}
+              >
+                Apply Auto-Detected Details
+              </Button>
+            </div>
+          </div>
+        )}
+
+        {/* Applied confirmation card */}
+        {appliedSuggestion && (
+          <div className="col-span-2">
+            <div className="rounded-lg border border-blue-200 dark:border-blue-800/40 bg-blue-50/50 dark:bg-blue-950/10 p-3">
+              <div className="flex items-center gap-1.5">
+                <IconCheck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
+                <span className="text-xs text-blue-700 dark:text-blue-400">
+                  Auto-filled from your transaction history. Next expected: {formatDate(form.nextExpected)}.
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-2">
+          <Label htmlFor="sub-amount">Amount (INR)</Label>
+          <Input
+            id="sub-amount"
+            type="number"
+            placeholder="499"
+            value={form.amount}
+            onChange={(e) => setForm((prev) => ({ ...prev, amount: e.target.value }))}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label>Frequency</Label>
+          <Select
+            value={form.frequency}
+            onValueChange={(val) => setForm((prev) => ({ ...prev, frequency: val as "monthly" | "yearly" | "weekly" }))}
+          >
+            <SelectTrigger className="h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="weekly">Weekly</SelectItem>
+              <SelectItem value="monthly">Monthly</SelectItem>
+              <SelectItem value="yearly">Yearly</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label>Category</Label>
+          <Select
+            value={form.category}
+            onValueChange={(val) => setForm((prev) => ({ ...prev, category: val }))}
+          >
+            <SelectTrigger className="h-9">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {CATEGORY_OPTIONS.map((cat) => (
+                <SelectItem key={cat} value={cat}>
+                  {cat}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="sub-next">Next Expected</Label>
+          <Input
+            id="sub-next"
+            type="date"
+            value={form.nextExpected}
+            onChange={(e) => setForm((prev) => ({ ...prev, nextExpected: e.target.value }))}
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="sub-last">Last Charged</Label>
+          <Input
+            id="sub-last"
+            type="date"
+            value={form.lastCharged}
+            onChange={(e) => setForm((prev) => ({ ...prev, lastCharged: e.target.value }))}
+          />
+        </div>
+        <div className="col-span-2 space-y-2">
+          <Label htmlFor="sub-notes">Notes (optional)</Label>
+          <Input
+            id="sub-notes"
+            placeholder="Family plan, shared with..."
+            value={form.notes}
+            onChange={(e) => setForm((prev) => ({ ...prev, notes: e.target.value }))}
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Subscription Form (for Edit dialog — simple, no lookup) ───
+
+interface SubscriptionFormProps {
+  form: ReturnType<typeof blankForm>
+  setForm: React.Dispatch<React.SetStateAction<ReturnType<typeof blankForm>>>
+}
+
+function SubscriptionForm({ form, setForm }: SubscriptionFormProps) {
+  return (
+    <div className="space-y-4 py-2">
       <div className="grid grid-cols-2 gap-3">
         <div className="col-span-2 space-y-2">
           <Label htmlFor="sub-name">Name</Label>
@@ -992,6 +1432,9 @@ interface SubscriptionTableProps {
   toggleLabel: string
   toggleIcon: React.ReactNode
   emptyMessage: string
+  onCheckPayment?: (sub: Subscription) => void
+  onMarkPaid?: (sub: Subscription) => void
+  showPaymentStatus?: boolean
 }
 
 function SubscriptionTable({
@@ -1002,6 +1445,9 @@ function SubscriptionTable({
   toggleLabel,
   toggleIcon,
   emptyMessage,
+  onCheckPayment,
+  onMarkPaid,
+  showPaymentStatus,
 }: SubscriptionTableProps) {
   if (subscriptions.length === 0) {
     return (
@@ -1019,10 +1465,13 @@ function SubscriptionTable({
             <TableHead className="text-[11px] uppercase tracking-wider font-medium">Name</TableHead>
             <TableHead className="text-right text-[11px] uppercase tracking-wider font-medium">Amount</TableHead>
             <TableHead className="text-[11px] uppercase tracking-wider font-medium hidden sm:table-cell">Frequency</TableHead>
+            {showPaymentStatus && (
+              <TableHead className="text-[11px] uppercase tracking-wider font-medium hidden sm:table-cell">Status</TableHead>
+            )}
             <TableHead className="text-[11px] uppercase tracking-wider font-medium hidden md:table-cell">Category</TableHead>
             <TableHead className="text-[11px] uppercase tracking-wider font-medium hidden lg:table-cell">Last Charged</TableHead>
             <TableHead className="text-[11px] uppercase tracking-wider font-medium">Next Expected</TableHead>
-            <TableHead className="w-[120px]" />
+            <TableHead className="w-[140px]" />
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -1030,6 +1479,8 @@ function SubscriptionTable({
             const days = daysUntil(sub.nextExpected)
             const isUpcoming = days >= 0 && days <= 3
             const isOverdue = days < 0
+            const paymentStatus = showPaymentStatus ? getPaymentStatus(sub) : null
+            const statusBadge = paymentStatus ? PAYMENT_STATUS_BADGE[paymentStatus] : null
 
             return (
               <TableRow
@@ -1056,6 +1507,13 @@ function SubscriptionTable({
                 <TableCell className="hidden sm:table-cell">
                   <span className="text-xs text-muted-foreground capitalize">{sub.frequency}</span>
                 </TableCell>
+                {showPaymentStatus && statusBadge && (
+                  <TableCell className="hidden sm:table-cell">
+                    <Badge variant="outline" className={`text-[11px] px-1.5 py-0 h-4 border-0 ${statusBadge.class}`}>
+                      {statusBadge.label}
+                    </Badge>
+                  </TableCell>
+                )}
                 <TableCell className="hidden md:table-cell">
                   <Badge variant="outline" className={`text-[11px] px-1.5 py-0 h-4 border-0 ${getCategoryBadgeClass(sub.category)}`}>
                     {sub.category}
@@ -1083,6 +1541,28 @@ function SubscriptionTable({
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                    {onCheckPayment && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                        onClick={() => onCheckPayment(sub)}
+                        title="Check Now"
+                      >
+                        <IconEye className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                    {onMarkPaid && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7 text-muted-foreground hover:text-emerald-600"
+                        onClick={() => onMarkPaid(sub)}
+                        title="Mark as Paid"
+                      >
+                        <IconCheck className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
                     <Button
                       size="icon"
                       variant="ghost"

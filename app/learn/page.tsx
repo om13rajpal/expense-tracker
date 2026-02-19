@@ -1046,7 +1046,7 @@ export default function LearnPage() {
     >
       <AppSidebar variant="inset" />
       <SidebarInset>
-        <SiteHeader title="Learn" subtitle="Master your financial knowledge" />
+        <SiteHeader title="Learn" />
         <div className="flex flex-1 flex-col">
           <div className="@container/main flex flex-1 flex-col gap-6 p-4 md:p-6">
             <AnimatePresence mode="wait">

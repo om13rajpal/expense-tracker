@@ -92,6 +92,9 @@ export async function POST(request: NextRequest) {
         )
       }
 
+      // Optional paymentHistory pass-through (from auto-detection)
+      const paymentHistory = Array.isArray(body.paymentHistory) ? body.paymentHistory : undefined
+
       const now = new Date().toISOString()
       const doc = {
         userId: user.userId,
@@ -105,6 +108,7 @@ export async function POST(request: NextRequest) {
         autoDetected,
         ...(merchantPattern && { merchantPattern }),
         ...(notes && { notes }),
+        ...(paymentHistory && { paymentHistory }),
         createdAt: now,
         updatedAt: now,
       }
@@ -140,6 +144,50 @@ export async function PATCH(request: NextRequest) {
         )
       }
 
+      // ── Mark as Paid shortcut ──
+      // When body contains { id, markPaidDate }, treat as a manual "paid" action:
+      // set lastCharged to the given date, advance nextExpected by one cycle.
+      if (typeof body.markPaidDate === "string") {
+        const db = await getMongoDb()
+        const existing = await db.collection("subscriptions").findOne({
+          _id: new ObjectId(id),
+          userId: user.userId,
+        })
+        if (!existing) {
+          return NextResponse.json(
+            { success: false, message: "Subscription not found." },
+            { status: 404, headers: corsHeaders() }
+          )
+        }
+
+        const paidDate = body.markPaidDate
+        const freq = existing.frequency || "monthly"
+        const nextExpected = computeNextExpected(paidDate, freq)
+        const now = new Date().toISOString()
+
+        const paymentEntry = {
+          date: paidDate,
+          amount: existing.amount,
+          auto: false,
+          detectedAt: now,
+        }
+
+        await db.collection("subscriptions").updateOne(
+          { _id: new ObjectId(id), userId: user.userId },
+          {
+            $set: { lastCharged: paidDate, nextExpected, updatedAt: now },
+            $push: { paymentHistory: paymentEntry } as unknown as Record<string, never>,
+          }
+        )
+
+        const updated = await db.collection("subscriptions").findOne({ _id: new ObjectId(id) })
+        return NextResponse.json(
+          { success: true, subscription: updated ? toResponse(updated as Record<string, unknown>) : null },
+          { status: 200, headers: corsHeaders() }
+        )
+      }
+
+      // ── Standard field updates ──
       const updates: Record<string, unknown> = {}
 
       if (typeof body.name === "string" && body.name.trim()) updates.name = body.name.trim()
@@ -165,9 +213,17 @@ export async function PATCH(request: NextRequest) {
       updates.updatedAt = new Date().toISOString()
 
       const db = await getMongoDb()
+
+      // Support paymentHistory push alongside other updates
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const updateOps: any = { $set: updates }
+      if (body.paymentHistoryEntry && typeof body.paymentHistoryEntry === "object") {
+        updateOps.$push = { paymentHistory: body.paymentHistoryEntry }
+      }
+
       const result = await db.collection("subscriptions").updateOne(
         { _id: new ObjectId(id), userId: user.userId },
-        { $set: updates }
+        updateOps
       )
 
       if (result.matchedCount === 0) {

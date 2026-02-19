@@ -7,6 +7,7 @@
 import {
   IconDotsVertical,
   IconLogout,
+  IconSettings,
 } from "@tabler/icons-react"
 import { useRouter } from "next/navigation"
 
@@ -97,6 +98,11 @@ export function NavUser({
                 </div>
               </div>
             </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={() => router.push("/settings")}>
+              <IconSettings />
+              Settings
+            </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={handleLogout}>
               <IconLogout />

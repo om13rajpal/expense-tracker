@@ -704,7 +704,6 @@ export default function GoalsPage() {
       <SidebarInset>
         <SiteHeader
           title="Goals & Projections"
-          subtitle="Track savings goals and visualize your financial future"
         />
         <div className="flex flex-1 flex-col">
           <div className="@container/main flex flex-1 flex-col gap-5 p-4 md:p-6">

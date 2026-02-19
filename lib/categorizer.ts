@@ -5,6 +5,7 @@
  */
 
 import { TransactionCategory } from './types';
+import { chatCompletion } from './openrouter';
 
 // ============================================================================
 // Text Normalization Utilities
@@ -255,24 +256,29 @@ const CATEGORY_PATTERNS: Record<TransactionCategory, string[]> = {
     'client payment',
   ],
   [TransactionCategory.INVESTMENT_INCOME]: [
-    'dividend',
-    'interest',
+    'dividend received',
+    'dividend credit',
+    'interest earned',
+    'interest credit',
     'capital gains',
-    'mutual fund',
-    'stock sale',
+    'mutual fund redemption',
+    'stock sale proceeds',
   ],
   [TransactionCategory.OTHER_INCOME]: [
     'bonus',
     'gift received',
-    'cashback',
-    'refund',
-    'poonam',
-    'jasvin',
-    'mohit',
-    'chhavi',
-    'aaryan',
-    'google',
+    'cashback received',
+    'cashback credit',
+    'refund received',
+    'refund credit',
     'transfer received',
+    'reimbursement',
+    'reward points',
+    'reward credit',
+    'prize money',
+    'maturity proceeds',
+    'pension credit',
+    'annuity payment',
   ],
 
   // Essential expenses
@@ -325,15 +331,14 @@ const CATEGORY_PATTERNS: Record<TransactionCategory, string[]> = {
     'reliance fresh',
     'reliance smart',
     'more supermarket',
-    'spencers',
-    'fresh',
+    'spencers retail',
     'vegetables',
-    'fruits',
+    'fruits market',
     'kirana',
     'zepto',
     'blinkit',
     'instamart',
-    'dunzo',
+    'dunzo grocery',
     'milkbasket',
     'country delight',
     'grofers',
@@ -371,7 +376,8 @@ const CATEGORY_PATTERNS: Record<TransactionCategory, string[]> = {
   ],
   [TransactionCategory.INSURANCE]: [
     'insurance',
-    'premium',
+    'insurance premium',
+    'premium payment',
     'lic',
     'hdfc life',
     'icici prudential',
@@ -388,34 +394,46 @@ const CATEGORY_PATTERNS: Record<TransactionCategory, string[]> = {
     'policybazaar',
   ],
   [TransactionCategory.TRANSPORT]: [
-    'uber',
-    'ola',
-    'rapido',
-    'taxi',
-    'metro',
-    'bus',
-    'auto',
+    'uber cab',
+    'uber india',
+    'uber trip',
+    'ola cab',
+    'ola money',
+    'ola ride',
+    'rapido bike',
+    'rapido auto',
+    'rapido ride',
+    'taxi fare',
+    'taxi ride',
+    'metro card',
+    'metro recharge',
+    'metro rail',
+    'dmrc',
+    'bmrc',
+    'bus ticket',
+    'bus pass',
+    'auto rickshaw',
     'rickshaw',
-    'parking',
+    'parking fee',
+    'parking charge',
     'blusmart',
     'namma yatri',
     'meru cabs',
-    'meru',
-    'irctc',
+    'irctc rail',
   ],
   [TransactionCategory.FUEL]: [
     'petrol',
     'diesel',
-    'fuel',
+    'fuel station',
+    'fuel pump',
     'gas station',
     'bharat petroleum',
-    'indian oil',
-    'hp',
+    'indian oil iocl',
     'hindustan petroleum',
-    'shell',
-    'bpcl',
-    'iocl',
-    'hpcl',
+    'shell petrol',
+    'bpcl fuel',
+    'iocl fuel',
+    'hpcl fuel',
     'reliance petroleum',
     'filling station',
     'petrol pump',
@@ -427,7 +445,9 @@ const CATEGORY_PATTERNS: Record<TransactionCategory, string[]> = {
     'cafe',
     'swiggy',
     'zomato',
-    'food',
+    'food delivery',
+    'food order',
+    'food court',
     'dining',
     'pizza',
     'burger',
@@ -438,7 +458,6 @@ const CATEGORY_PATTERNS: Record<TransactionCategory, string[]> = {
     'cafe coffee day',
     'hungerbox',
     'hunger box',
-    'food delivery',
     'wrap chip',
     'chaayos',
     'chai point',
@@ -476,10 +495,9 @@ const CATEGORY_PATTERNS: Record<TransactionCategory, string[]> = {
     'hotstar',
     'spotify',
     'concert',
-    'event',
+    'event ticket',
+    'event booking',
     'bookmyshow',
-    'apple',
-    'apple me',
     'zee5',
     'sonyliv',
     'sony liv',
@@ -499,13 +517,9 @@ const CATEGORY_PATTERNS: Record<TransactionCategory, string[]> = {
     'myntra',
     'ajio',
     'shopping',
-    'retail',
-    'mall',
-    'store',
     'clothing',
     'electronics',
     'zudio',
-    'rebel',
     'nykaa',
     'meesho',
     'snapdeal',
@@ -522,7 +536,7 @@ const CATEGORY_PATTERNS: Record<TransactionCategory, string[]> = {
     'tanishq',
     'lifestyle',
     'shoppers stop',
-    'central',
+    'central mall',
     'westside',
     'h&m',
     'zara',
@@ -536,13 +550,16 @@ const CATEGORY_PATTERNS: Record<TransactionCategory, string[]> = {
     'makemytrip',
     'goibibo',
     'cleartrip',
-    'train',
+    'train ticket',
+    'train booking',
     'flight',
-    'hotel',
+    'flight booking',
+    'hotel booking',
+    'hotel room',
+    'hotel stay',
     'travel',
     'vacation',
     'booking.com',
-    'booking',
     'airbnb',
     'oyo',
     'treebo',
@@ -623,7 +640,8 @@ const CATEGORY_PATTERNS: Record<TransactionCategory, string[]> = {
   // Financial
   [TransactionCategory.SAVINGS]: [
     'savings account',
-    'deposit',
+    'savings deposit',
+    'bank deposit',
     'fd',
     'fixed deposit',
     'recurring deposit',
@@ -631,7 +649,9 @@ const CATEGORY_PATTERNS: Record<TransactionCategory, string[]> = {
   [TransactionCategory.INVESTMENT]: [
     'investment',
     'mutual fund',
-    'sip',
+    'sip investment',
+    'sip payment',
+    'sip debit',
     'stocks',
     'shares',
     'zerodha',
@@ -660,7 +680,9 @@ const CATEGORY_PATTERNS: Record<TransactionCategory, string[]> = {
   ],
   [TransactionCategory.LOAN_PAYMENT]: [
     'loan',
-    'emi',
+    'emi payment',
+    'loan emi',
+    'emi debit',
     'mortgage',
     'home loan',
     'car loan',
@@ -673,7 +695,8 @@ const CATEGORY_PATTERNS: Record<TransactionCategory, string[]> = {
   ],
   [TransactionCategory.TAX]: [
     'income tax',
-    'tax',
+    'tax payment',
+    'tax deducted',
     'gst',
     'tds',
     'advance tax',
@@ -708,7 +731,9 @@ const CATEGORY_PATTERNS: Record<TransactionCategory, string[]> = {
     'substack',
   ],
   [TransactionCategory.GIFTS]: [
-    'gift',
+    'gift purchase',
+    'gift card',
+    'gift voucher',
     'present',
     'flowers',
   ],
@@ -723,15 +748,7 @@ const CATEGORY_PATTERNS: Record<TransactionCategory, string[]> = {
   [TransactionCategory.MISCELLANEOUS]: [
     'miscellaneous',
     'misc',
-    'other',
-    'monu',
-    'ramesh',
-    'binder',
-    'ishan',
-    'punit',
-    'amit ku',
-    'jatinder',
-    'shashwa',
+    'unclassified',
   ],
   [TransactionCategory.UNCATEGORIZED]: [],
 };
@@ -1009,4 +1026,106 @@ export function isSimilarMerchant(text1: string, text2: string, minLength = 3): 
   }
 
   return false;
+}
+
+// ============================================================================
+// AI-Powered Categorization (batch via OpenRouter / Claude)
+// ============================================================================
+
+const VALID_CATEGORIES = Object.values(TransactionCategory);
+
+const AI_CATEGORIZE_SYSTEM_PROMPT = `You are a transaction categorization engine for an Indian personal finance app. Your job is to assign the most accurate category to each transaction.
+
+VALID CATEGORIES (use EXACTLY one of these strings):
+${VALID_CATEGORIES.map((c) => `- "${c}"`).join('\n')}
+
+CONTEXT:
+- These are Indian bank/UPI transactions. Merchant names may be mangled by banks (truncated, extra spaces, UPI suffixes).
+- Common prefixes like "UPI-", "NEFT-", "IMPS-", "POS " should be ignored when identifying the merchant.
+- UPI IDs (e.g. merchant@ybl, name@oksbi) often reveal the merchant name.
+- Consider the transaction type (income vs expense) when choosing categories. Income transactions should use income categories (Salary, Freelance, Business, Investment Income, Other Income).
+
+RESPONSE FORMAT (strict):
+Return ONLY a valid JSON array. No markdown, no code fences, no extra text.
+Each element must be:
+{ "id": "<transaction id>", "category": "<exact category string from list above>", "confidence": <number 0-100> }
+
+RULES:
+- confidence: 90-100 for clear matches, 70-89 for likely matches, below 70 for guesses.
+- If truly unidentifiable, use "Uncategorized" with low confidence.
+- Never invent categories outside the valid list.`;
+
+/**
+ * Send a batch of transactions to Claude AI for categorization.
+ * Returns category assignments with confidence scores.
+ *
+ * @param transactions - Batch of transactions to categorize (max 50)
+ * @param validCategories - List of valid category strings
+ * @returns Array of { id, category, confidence } for each transaction
+ */
+export async function aiCategorizeBatch(
+  transactions: Array<{
+    id: string;
+    merchant: string;
+    description: string;
+    amount: number;
+    type: string;
+    date: string;
+  }>,
+  validCategories: string[]
+): Promise<Array<{ id: string; category: string; confidence: number }>> {
+  if (transactions.length === 0) return [];
+
+  const userMessage = `Categorize these ${transactions.length} transactions:\n\n${JSON.stringify(
+    transactions.map((t) => ({
+      id: t.id,
+      merchant: t.merchant,
+      description: t.description,
+      amount: t.amount,
+      type: t.type,
+      date: t.date,
+    })),
+    null,
+    2
+  )}`;
+
+  const raw = await chatCompletion(
+    [
+      { role: 'system', content: AI_CATEGORIZE_SYSTEM_PROMPT },
+      { role: 'user', content: userMessage },
+    ],
+    { maxTokens: 4000, temperature: 0.1 }
+  );
+
+  // Strip code fences if present
+  let cleaned = raw.trim();
+  if (cleaned.startsWith('```')) {
+    cleaned = cleaned.replace(/^```(?:json)?\s*\n?/, '').replace(/\n?```\s*$/, '');
+  }
+
+  // Extract JSON array from response
+  const arrStart = cleaned.indexOf('[');
+  const arrEnd = cleaned.lastIndexOf(']');
+  if (arrStart === -1 || arrEnd === -1) {
+    throw new Error('AI response did not contain a JSON array');
+  }
+
+  const parsed: unknown[] = JSON.parse(cleaned.slice(arrStart, arrEnd + 1));
+
+  const validSet = new Set(validCategories);
+
+  return parsed
+    .filter(
+      (item): item is { id: string; category: string; confidence: number } =>
+        typeof item === 'object' &&
+        item !== null &&
+        typeof (item as Record<string, unknown>).id === 'string' &&
+        typeof (item as Record<string, unknown>).category === 'string' &&
+        typeof (item as Record<string, unknown>).confidence === 'number'
+    )
+    .map((item) => ({
+      id: item.id,
+      category: validSet.has(item.category) ? item.category : 'Uncategorized',
+      confidence: item.confidence,
+    }));
 }

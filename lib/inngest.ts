@@ -21,6 +21,25 @@ type Events = {
       trigger: 'scheduled' | 'post-sync' | 'post-prices' | 'manual';
     };
   };
+  'finance/gamification.badge-unlocked': {
+    data: {
+      userId: string;
+      badgeId: string;
+      badgeName: string;
+    };
+  };
+  'finance/gamification.level-up': {
+    data: {
+      userId: string;
+      level: number;
+      levelName: string;
+    };
+  };
+  'finance/telegram.daily-summary': {
+    data: {
+      userId: string;
+    };
+  };
 };
 
 export const inngest = new Inngest({

@@ -243,37 +243,51 @@ export const TAX_OPTIMIZATION_PROMPT = `You are an Indian tax advisor specializi
 
 RESPONSE FORMAT (strict):
 Return ONLY a valid JSON object. No markdown, no code fences, no extra text.
-The JSON must match this schema exactly:
 
 {
-  "sections": [
+  "totalSavingPotential": <number, total potential tax savings in INR>,
+  "regime": {
+    "recommended": "old" | "new",
+    "oldTax": <number, tax under old regime>,
+    "newTax": <number, tax under new regime>,
+    "savings": <number, savings from choosing recommended regime>,
+    "effectiveRate": <number, effective tax rate as percentage>
+  },
+  "deductionUtilization": [
     {
-      "id": "unique_snake_case_id",
-      "title": "Section Title",
-      "type": "summary" | "list" | "numbered_list" | "highlight",
-      "text": "Paragraph text (for type=summary)",
-      "items": ["Item 1", "Item 2"] (for type=list or numbered_list),
-      "highlight": "Key sentence" (for type=highlight),
-      "severity": "positive" | "warning" | "critical" | "neutral"
+      "section": "<e.g. 80C, 80D, 80CCD(1B)>",
+      "label": "<human-readable label, e.g. PPF / ELSS / Insurance>",
+      "used": <number, amount already claimed in INR>,
+      "limit": <number, maximum allowed limit in INR>
+    }
+  ],
+  "tips": [
+    {
+      "title": "<short actionable title>",
+      "description": "<specific recommendation with exact INR amounts>",
+      "savingAmount": <number, potential tax saving in INR>,
+      "section": "<relevant tax section, e.g. 80C, 80D, 80CCD(1B), 24>",
+      "priority": "high" | "medium" | "low"
+    }
+  ],
+  "subscriptions": [
+    {
+      "name": "<subscription name>",
+      "domain": "<e.g. netflix.com>",
+      "monthlyCost": <number>,
+      "annualCost": <number>,
+      "suggestion": "<optimization suggestion>"
     }
   ]
 }
 
 RULES:
-- Use INR with Rs. prefix and Indian comma separators (e.g. Rs.1,50,000)
-- Use **bold** and \`code\` inline formatting in text/items/highlight strings
-- Each section must have exactly ONE of: text, items, or highlight
-- severity is optional (defaults to neutral)
-- Keep insights specific and actionable with exact rupee amounts
-
-Return sections with these IDs in this order:
-1. id:"current_status", type:"summary" — Current estimated tax liability under both regimes, recommended regime (Old vs New), effective tax rate, and taxable income bracket. severity based on optimization potential.
-2. id:"section_80c", type:"list" — Section 80C analysis: deductions already used vs Rs.1,50,000 limit. List specific instruments to invest in (ELSS, PPF, EPF, LIC, NSC, SCSS, tax-saver FD) with exact INR amounts to maximize. severity:"warning" if under-utilized, "positive" if near or at limit.
-3. id:"health_insurance", type:"list" — Section 80D analysis: health insurance premiums for self/family (up to Rs.25,000) and parents (up to Rs.25,000 or Rs.50,000 for senior citizens). Show current coverage, gap amounts, and recommended policies. severity:"warning" if no coverage or under-insured.
-4. id:"hra_optimization", type:"list" — HRA exemption analysis: actual HRA received vs optimal claim, metro vs non-metro impact (50% vs 40% of basic), rent paid vs 10% of salary calculation. Only include this section if HRA or rent data exists in the financial context. severity:"neutral".
-5. id:"other_deductions", type:"list" — Additional deductions: 80TTA savings interest (up to Rs.10,000), 80E education loan interest, 80CCD(1B) NPS (additional Rs.50,000), Section 24 home loan interest (up to Rs.2,00,000). Show used vs available limits. severity:"positive" for utilized deductions, "warning" for unused ones.
-6. id:"action_plan", type:"numbered_list" — Top 5 specific tax-saving actions ordered by impact. Each item must include the exact INR tax savings (e.g. "Invest **Rs.50,000** in NPS under 80CCD(1B) — saves \`Rs.15,600\` in tax"). severity:"positive".
-7. id:"total_savings", type:"highlight" — One-line summary: "You can save **Rs.X,XX,XXX** in tax this year by ..." with the total potential savings. severity:"positive".`;
+- All monetary values must be numbers (not strings). Use INR values.
+- deductionUtilization: Include 80C (limit 1,50,000), 80D (limit 25,000 self + 25,000/50,000 parents), 80CCD(1B) (limit 50,000), 80TTA (limit 10,000), Section 24 (limit 2,00,000) where applicable. Show current utilization vs limits.
+- tips: Return 4-6 specific actionable tips ordered by savingAmount (highest first). Each must have a concrete INR saving amount.
+- subscriptions: Only include if subscription data is present in the financial context. Otherwise return an empty array.
+- totalSavingPotential: Sum of all tip savingAmounts plus regime savings.
+- Keep insights specific and actionable with exact rupee amounts.`;
 
 export const PLANNER_RECOMMENDATION_PROMPT = `You are a personal finance planner for an Indian user. Analyze their financial plan (monthly allocations for needs, wants, savings, investments) against their actual spending data, goals, and portfolio. Provide a plan health assessment with actionable recommendations.
 

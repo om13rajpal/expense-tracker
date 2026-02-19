@@ -10,6 +10,11 @@ import {
   buildReverseCategoryMap,
   type BudgetCategoryDoc,
 } from './budget-mapping';
+import {
+  sendMessage,
+  formatBudgetBreachMessage,
+  formatRenewalAlertMessage,
+} from './telegram';
 
 // ─── Types ───────────────────────────────────────────────────────────
 
@@ -78,6 +83,57 @@ async function isDuplicate(
     createdAt: { $gte: cutoff },
   });
   return !!existing;
+}
+
+// ─── Telegram Dispatch ──────────────────────────────────────────────
+
+/**
+ * Dispatch a notification to the user's linked Telegram account.
+ * Silently fails if Telegram is not linked or the notification type is disabled.
+ */
+export async function dispatchToTelegram(
+  db: Db,
+  userId: string,
+  notification: NotificationDoc
+): Promise<void> {
+  try {
+    const settings = await db.collection('user_settings').findOne({ userId });
+    if (!settings?.telegramChatId) return;
+
+    const prefs = settings.telegramNotifications || {};
+    const chatId = settings.telegramChatId as number;
+
+    let text: string | null = null;
+
+    switch (notification.type) {
+      case 'budget_breach':
+        if (prefs.budgetBreach === false) return;
+        text = formatBudgetBreachMessage(notification.title, notification.message, notification.severity);
+        break;
+      case 'renewal_alert':
+        if (prefs.renewalAlert === false) return;
+        text = formatRenewalAlertMessage(notification.title, notification.message);
+        break;
+      case 'weekly_digest':
+        if (prefs.weeklyDigest === false) return;
+        // Weekly digest message is pre-formatted as a string; send directly
+        text = `📊 *Weekly Digest*\n\n${notification.message}`;
+        break;
+      case 'insight':
+        if (prefs.aiInsights === false) return;
+        text = `🧠 *AI Insight*\n\n${notification.title}\n${notification.message}`;
+        break;
+      default:
+        text = `📋 ${notification.title}\n${notification.message}`;
+    }
+
+    if (text) {
+      await sendMessage(chatId, text, { parseMode: 'Markdown' });
+    }
+  } catch (error) {
+    // Silently fail — Telegram dispatch should not break notification flow
+    console.error('Telegram dispatch failed:', error);
+  }
 }
 
 // ─── Budget Breach Check ─────────────────────────────────────────────

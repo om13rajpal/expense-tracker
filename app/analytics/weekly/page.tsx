@@ -164,7 +164,6 @@ export default function WeeklyAnalyticsPage() {
       <SidebarInset>
         <SiteHeader
           title="Weekly Analytics"
-          subtitle="Balance-aware breakdown of weekly performance"
         />
         <div className="flex flex-1 flex-col">
           <div className="@container/main flex flex-1 flex-col gap-6 p-6">

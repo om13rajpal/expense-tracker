@@ -228,16 +228,8 @@ export default function TransactionsPage() {
   const [editingRuleId, setEditingRuleId] = useState<string | null>(null)
   const [editForm, setEditForm] = useState({ pattern: "", matchField: "any", category: "", caseSensitive: false })
 
-  // Smart categorization
-  const [showSmartCatDialog, setShowSmartCatDialog] = useState(false)
-  const [smartCatData, setSmartCatData] = useState<{
-    merchant: string
-    category: string
-    matches: { id: string; date: string; description: string; merchant: string; amount: number; type: string; category: string }[]
-    selectedIds: Set<string>
-  } | null>(null)
-  const [isSavingSmartCat, setIsSavingSmartCat] = useState(false)
-  const [smartCatCreateRule, setSmartCatCreateRule] = useState(true)
+  // AI categorization
+  const [isAiCategorizing, setIsAiCategorizing] = useState(false)
 
   // NWI classification
   const [nwiConfig, setNwiConfig] = useState<{ needs: { categories: string[] }, wants: { categories: string[] }, investments: { categories: string[] }, savings?: { categories: string[] } } | null>(null)
@@ -440,9 +432,9 @@ export default function TransactionsPage() {
         const editedTxn = transactions.find((t) => t.id === editingId)
         const newCategory = editCategory
         setEditingId(null)
-        refresh()
-        toast.success("Category updated")
 
+        // Silently find and update similar transactions + create rule
+        let similarCount = 0
         if (editedTxn?.merchant || editedTxn?.description) {
           const merchantKey = (editedTxn.merchant || "").trim()
           const descriptionKey = (editedTxn.description || "").trim()
@@ -451,33 +443,48 @@ export default function TransactionsPage() {
             if (t.category === newCategory) return false
             const m = (t.merchant || "").trim()
             const d = (t.description || "").trim()
-            // Match on merchant name using fuzzy matching from categorizer
             if (merchantKey && m && isSimilarMerchant(m, merchantKey)) return true
-            // Also match on description if merchant is missing but descriptions match
             if (!m && !merchantKey && d && descriptionKey && isSimilarMerchant(d, descriptionKey)) return true
-            // Cross-match: merchant of one vs description of other
             if (merchantKey && d && isSimilarMerchant(d, merchantKey)) return true
             if (m && descriptionKey && isSimilarMerchant(m, descriptionKey)) return true
             return false
           })
+
           if (similar.length > 0) {
-            setSmartCatData({
-              merchant: editedTxn.merchant,
-              category: newCategory,
-              matches: similar.map((t) => ({
-                id: t.id,
-                date: t.date instanceof Date ? t.date.toISOString() : String(t.date),
-                description: t.description,
-                merchant: t.merchant || "",
-                amount: t.amount,
-                type: t.type,
-                category: t.category,
-              })),
-              selectedIds: new Set(similar.map((t) => t.id)),
-            })
-            setSmartCatCreateRule(true)
-            setShowSmartCatDialog(true)
+            similarCount = similar.length
+            // Apply to similar transactions before refreshing
+            await fetch("/api/transactions", {
+              method: "PATCH",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ ids: similar.map((t) => t.id), category: newCategory }),
+            }).catch(() => {})
           }
+
+          // Create a categorization rule (skip if pattern already exists)
+          if (merchantKey) {
+            const isDuplicate = rules.some(
+              (r) => r.pattern.toLowerCase() === merchantKey.toLowerCase() && r.matchField === "merchant"
+            )
+            if (!isDuplicate) {
+              await fetch("/api/categorization-rules", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  pattern: merchantKey,
+                  matchField: "merchant",
+                  category: newCategory,
+                  caseSensitive: false,
+                }),
+              }).then(() => loadRules()).catch(() => {})
+            }
+          }
+        }
+
+        refresh()
+        if (similarCount > 0) {
+          toast.success(`Category updated — also applied to ${similarCount} similar transaction${similarCount !== 1 ? "s" : ""}`)
+        } else {
+          toast.success("Category updated")
         }
       } else {
         toast.error("Failed to update category")
@@ -603,44 +610,29 @@ export default function TransactionsPage() {
     }
   }
 
-  const applySmartCategorization = async () => {
-    if (!smartCatData || smartCatData.selectedIds.size === 0) return
-    setIsSavingSmartCat(true)
+  const aiCategorize = async () => {
+    setIsAiCategorizing(true)
     try {
-      const ids = Array.from(smartCatData.selectedIds)
-      const res = await fetch("/api/transactions", {
-        method: "PATCH",
+      const res = await fetch("/api/transactions/ai-categorize", {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ ids, category: smartCatData.category }),
+        body: JSON.stringify({}),
       })
-      if (res.ok) {
-        toast.success(`Updated ${ids.length} similar transactions to "${smartCatData.category}"`)
-
-        if (smartCatCreateRule && smartCatData.merchant) {
-          await fetch("/api/categorization-rules", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              pattern: smartCatData.merchant,
-              matchField: "merchant",
-              category: smartCatData.category,
-              caseSensitive: false,
-            }),
-          })
-          loadRules()
-          toast.success(`Rule created: "${smartCatData.merchant}" -> ${smartCatData.category}`)
+      const data = await res.json()
+      if (res.ok && data.success) {
+        if (data.categorized > 0) {
+          toast.success(`AI categorized ${data.categorized} transaction${data.categorized !== 1 ? "s" : ""}`)
+          refresh()
+        } else {
+          toast.info("No uncategorized transactions found")
         }
-
-        setShowSmartCatDialog(false)
-        setSmartCatData(null)
-        refresh()
       } else {
-        toast.error("Failed to apply bulk categorization")
+        toast.error(data.message || "AI categorization failed")
       }
     } catch {
-      toast.error("Network error applying bulk categorization")
+      toast.error("Network error during AI categorization")
     }
-    finally { setIsSavingSmartCat(false) }
+    finally { setIsAiCategorizing(false) }
   }
 
   const toggleRuleEnabled = async (rule: CatRule) => {
@@ -808,7 +800,6 @@ export default function TransactionsPage() {
       <SidebarInset>
         <SiteHeader
           title="Transactions"
-          subtitle="Filter, review, and re-categorize your activity"
         />
         <div className="flex flex-1 flex-col">
           {isLoading ? (
@@ -959,6 +950,25 @@ export default function TransactionsPage() {
 
                 {/* Action Buttons */}
                 <div className="flex items-center gap-1.5">
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="h-8 gap-1.5 text-xs"
+                        onClick={aiCategorize}
+                        disabled={isAiCategorizing}
+                      >
+                        {isAiCategorizing ? (
+                          <IconRefresh className="size-3.5 animate-spin" />
+                        ) : (
+                          <IconTrendingUp className="size-3.5" />
+                        )}
+                        <span className="hidden sm:inline">{isAiCategorizing ? "Categorizing..." : "AI Categorize"}</span>
+                      </Button>
+                    </TooltipTrigger>
+                    <TooltipContent>Use AI to categorize uncategorized transactions</TooltipContent>
+                  </Tooltip>
                   <Tooltip>
                     <TooltipTrigger asChild>
                       <Button
@@ -1735,108 +1745,6 @@ export default function TransactionsPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Smart Categorization Dialog */}
-      <Dialog open={showSmartCatDialog} onOpenChange={(open) => { if (!open) { setShowSmartCatDialog(false); setSmartCatData(null) } }}>
-        <DialogContent className="max-w-[min(900px,calc(100vw-2rem))] flex flex-col max-h-[85vh] !grid-cols-none p-0">
-          <div className="px-6 pt-6 pb-0">
-            <DialogHeader>
-              <DialogTitle>Apply to Similar Transactions?</DialogTitle>
-              <DialogDescription asChild>
-                <div className="text-sm text-muted-foreground">
-                  We found {smartCatData?.matches.length} other transaction{(smartCatData?.matches.length || 0) !== 1 ? "s" : ""} from <strong>&quot;{smartCatData?.merchant}&quot;</strong>. Categorize them as{" "}
-                  {(() => {
-                    const color = getCategoryColor(smartCatData?.category || "")
-                    return (
-                      <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-medium ${color.bg} ${color.text}`}>
-                        <span className={`h-1.5 w-1.5 rounded-full ${color.dot}`} />
-                        {smartCatData?.category}
-                      </span>
-                    )
-                  })()}{" "}
-                  too?
-                </div>
-              </DialogDescription>
-            </DialogHeader>
-          </div>
-
-          {smartCatData && (
-            <div className="flex-1 min-h-0 flex flex-col gap-3 px-6">
-              <div className="flex items-center justify-between shrink-0">
-                <label className="flex items-center gap-2 cursor-pointer text-sm">
-                  <Checkbox
-                    checked={smartCatData.selectedIds.size === smartCatData.matches.length}
-                    onCheckedChange={(checked) => {
-                      setSmartCatData({
-                        ...smartCatData,
-                        selectedIds: checked ? new Set(smartCatData.matches.map((m) => m.id)) : new Set(),
-                      })
-                    }}
-                  />
-                  Select All
-                </label>
-                <span className="text-xs text-muted-foreground">{smartCatData.selectedIds.size} of {smartCatData.matches.length} selected</span>
-              </div>
-
-              <div className="border rounded-xl divide-y flex-1 min-h-0 overflow-y-auto bg-card">
-                {smartCatData.matches.map((match) => {
-                  const matchColor = getCategoryColor(match.category)
-                  return (
-                    <label
-                      key={match.id}
-                      className="flex items-start gap-2.5 px-3 py-2.5 hover:bg-muted/40 cursor-pointer transition-colors"
-                    >
-                      <Checkbox
-                        className="mt-0.5 shrink-0"
-                        checked={smartCatData.selectedIds.has(match.id)}
-                        onCheckedChange={(checked) => {
-                          const next = new Set(smartCatData.selectedIds)
-                          if (checked) next.add(match.id)
-                          else next.delete(match.id)
-                          setSmartCatData({ ...smartCatData, selectedIds: next })
-                        }}
-                      />
-                      <div className="min-w-0 flex-1">
-                        <p className="text-sm font-medium truncate">{match.description}</p>
-                        <p className="text-xs text-muted-foreground mt-0.5 truncate">
-                          <span className={`font-semibold tabular-nums ${match.type === "income" ? "text-primary" : ""}`}>
-                            {match.type === "income" ? "+" : "-"}{formatCurrency(Math.abs(match.amount))}
-                          </span>
-                          {" · "}
-                          <span className="tabular-nums">
-                            {new Date(match.date).toLocaleDateString("en-IN", { day: "2-digit", month: "short", timeZone: "Asia/Kolkata" })}
-                          </span>
-                          {" · "}
-                          <span className={matchColor.text}>{match.category}</span>
-                        </p>
-                      </div>
-                    </label>
-                  )
-                })}
-              </div>
-
-              <label className="flex items-center gap-2 cursor-pointer text-sm text-muted-foreground shrink-0">
-                <Checkbox
-                  checked={smartCatCreateRule}
-                  onCheckedChange={(checked) => setSmartCatCreateRule(checked === true)}
-                />
-                Also create a rule for future imports
-              </label>
-            </div>
-          )}
-
-          <div className="px-6 pb-6 pt-2 shrink-0">
-            <DialogFooter>
-              <Button variant="outline" onClick={() => { setShowSmartCatDialog(false); setSmartCatData(null) }}>Skip</Button>
-              <Button
-                onClick={applySmartCategorization}
-                disabled={isSavingSmartCat || !smartCatData?.selectedIds.size}
-              >
-                {isSavingSmartCat ? "Applying..." : `Apply to ${smartCatData?.selectedIds.size || 0} Transaction${(smartCatData?.selectedIds.size || 0) !== 1 ? "s" : ""}`}
-              </Button>
-            </DialogFooter>
-          </div>
-        </DialogContent>
-      </Dialog>
     </SidebarProvider>
   )
 }

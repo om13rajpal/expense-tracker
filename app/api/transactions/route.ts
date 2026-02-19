@@ -19,6 +19,7 @@ import { getMongoDb } from "@/lib/mongodb"
 import { TransactionCategory } from "@/lib/types"
 import { corsHeaders, handleOptions, withAuth } from "@/lib/middleware"
 import type { Transaction } from "@/lib/types"
+import { updateStreak, awardXP, checkBadgeUnlocks, updateChallengeProgress } from "@/lib/gamification"
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Unknown error"
@@ -603,6 +604,21 @@ export async function POST(request: NextRequest) {
       }
 
       await col.insertOne(doc)
+
+      // ── Gamification hooks ──
+      try {
+        await updateStreak(db, user.userId)
+        const xpResult = await awardXP(db, user.userId, 'expense_logged', 5, `Logged: ${description}`)
+        await checkBadgeUnlocks(db, user.userId, 'transaction_created')
+        if (xpResult.leveledUp) {
+          await checkBadgeUnlocks(db, user.userId, 'level_up')
+        }
+        // Update challenge progress in real-time (not just via daily cron)
+        await updateChallengeProgress(db, user.userId)
+      } catch (gamErr) {
+        // Gamification should not block transaction creation
+        console.error('Gamification hook error:', gamErr)
+      }
 
       return NextResponse.json(
         { success: true, transaction: { id: txnId, ...doc } },

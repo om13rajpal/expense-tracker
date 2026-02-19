@@ -1,12 +1,12 @@
 /**
- * AI Insights API (primary endpoint)
+ * AI Insights API
  *
- * GET  /api/ai/insights?type=spending_analysis  - Get cached or auto-generated insight
- * POST /api/ai/insights  body: { type }         - Force-regenerate an insight (bypass cache)
+ * GET  /api/ai/insights?type=spending_analysis  - Return cached insight (never auto-generates)
+ * POST /api/ai/insights  body: { type }         - Force-regenerate an insight (manual trigger)
  *
- * Supported types: spending_analysis, monthly_budget, weekly_budget,
- * investment_insights, tax_optimization, planner_recommendation.
- * Falls back to stale cache if generation fails.
+ * Generation is handled by:
+ * - Daily Inngest cron (scheduled-insights) at 10 PM UTC
+ * - Manual regenerate button (POST)
  */
 import { NextRequest, NextResponse } from 'next/server';
 import { corsHeaders, handleOptions, withAuth } from '@/lib/middleware';
@@ -25,8 +25,8 @@ function getErrorMessage(error: unknown) {
 
 /**
  * GET /api/ai/insights?type=spending_analysis
- * Returns cached result if fresh (<24h). Auto-generates if stale/missing.
- * Falls back to stale cache if generation fails.
+ * Returns cached insight only. Never triggers generation.
+ * Returns empty response if no cached data exists.
  */
 export async function GET(request: NextRequest) {
   return withAuth(async (req, { user }) => {
@@ -40,46 +40,33 @@ export async function GET(request: NextRequest) {
     }
 
     try {
-      const result = await runAiPipeline(user.userId, type, { force: false });
-
-      return NextResponse.json(
-        {
-          success: true,
-          content: result.content,
-          sections: result.sections || null,
-          structuredData: result.structuredData || null,
-          generatedAt: result.generatedAt,
-          dataPoints: result.dataPoints,
-          fromCache: result.fromCache,
-          stale: result.stale,
-          searchContext: result.searchContext || null,
-        },
-        { status: 200, headers: corsHeaders() }
-      );
-    } catch (error: unknown) {
-      // Fall back to stale cache if generation fails
       const cached = await getCachedAnalysis(user.userId, type);
-      if (cached) {
+
+      if (!cached) {
         return NextResponse.json(
-          {
-            success: true,
-            content: cached.content,
-            sections: cached.sections || null,
-            structuredData: cached.structuredData || null,
-            generatedAt: cached.generatedAt,
-            dataPoints: cached.dataPoints,
-            fromCache: true,
-            stale: true,
-            searchContext: cached.searchContext || null,
-            warning: `Using stale cache. Generation failed: ${getErrorMessage(error)}`,
-          },
+          { success: true, content: null, sections: null, structuredData: null, generatedAt: null, dataPoints: 0, fromCache: false, stale: true },
           { status: 200, headers: corsHeaders() }
         );
       }
 
+      return NextResponse.json(
+        {
+          success: true,
+          content: cached.content,
+          sections: cached.sections || null,
+          structuredData: cached.structuredData || null,
+          generatedAt: cached.generatedAt,
+          dataPoints: cached.dataPoints,
+          fromCache: true,
+          stale: cached.stale,
+          searchContext: cached.searchContext || null,
+        },
+        { status: 200, headers: corsHeaders() }
+      );
+    } catch (error: unknown) {
       console.error('AI insights GET error:', getErrorMessage(error));
       return NextResponse.json(
-        { success: false, message: `AI analysis failed: ${getErrorMessage(error)}` },
+        { success: false, message: `Failed to fetch cached insight: ${getErrorMessage(error)}` },
         { status: 500, headers: corsHeaders() }
       );
     }

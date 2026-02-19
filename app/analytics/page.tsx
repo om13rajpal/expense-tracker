@@ -466,7 +466,6 @@ export default function AnalyticsPage() {
       <SidebarInset>
         <SiteHeader
           title="Analytics"
-          subtitle="Insights across daily, weekly, monthly, and yearly views"
           actions={
             availableMonths.length > 0 ? (
               <MonthSelector
