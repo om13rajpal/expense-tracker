@@ -86,6 +86,19 @@ export async function ensureIndexes(db: Db): Promise<void> {
         { userId: 1 },
         { unique: true }
       ),
+
+      // Bucket List
+      db.collection('bucket_list').createIndex(
+        { userId: 1, status: 1, sortOrder: 1 }
+      ),
+      db.collection('bucket_list').createIndex(
+        { userId: 1, createdAt: -1 }
+      ),
+      // Bucket List price cache - TTL collection
+      db.collection('bucket_list_price_cache').createIndex(
+        { expiresAt: 1 },
+        { expireAfterSeconds: 0 }
+      ),
     ]);
 
     indexesEnsured = true;

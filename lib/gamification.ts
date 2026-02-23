@@ -32,7 +32,10 @@ export type XPAction =
   | 'streak_30'
   | 'streak_100'
   | 'badge_unlocked'
-  | 'challenge_completed';
+  | 'challenge_completed'
+  | 'bucket_list_created'
+  | 'bucket_list_completed'
+  | 'bucket_list_milestone';
 
 export const XP_ACTIONS: Record<XPAction, number> = {
   expense_logged: 5,
@@ -42,6 +45,9 @@ export const XP_ACTIONS: Record<XPAction, number> = {
   streak_100: 500,
   badge_unlocked: 25,
   challenge_completed: 100,
+  bucket_list_created: 10,
+  bucket_list_completed: 50,
+  bucket_list_milestone: 25,
 };
 
 // ─── Badges ────────────────────────────────────────────────────────────
@@ -86,6 +92,11 @@ export const BADGES: BadgeDef[] = [
   { id: 'categorization_expert', name: 'Categorization Expert', description: 'Manually categorize 500 transactions', icon: 'IconTags', category: 'skill', condition: '500 manual categorizations' },
   { id: 'budget_guru', name: 'Budget Guru', description: 'Stay under budget for 6 consecutive months', icon: 'IconCrown', category: 'skill', condition: '6 months under budget' },
   { id: 'health_nut', name: 'Health Nut', description: 'Achieve a 75+ financial health score', icon: 'IconHeartbeat', category: 'skill', condition: '75+ health score' },
+
+  // Bucket List
+  { id: 'dream_big', name: 'Dream Big', description: 'Add your first bucket list item', icon: 'IconChecklist', category: 'onboarding', condition: 'Create 1 bucket list item' },
+  { id: 'wish_warrior', name: 'Wish Warrior', description: 'Complete 5 bucket list items', icon: 'IconTrophy', category: 'milestones', condition: '5 completed bucket list items' },
+  { id: 'deal_hunter', name: 'Deal Hunter', description: 'Find a deal with 20%+ discount', icon: 'IconTag', category: 'skill', condition: 'Find a 20%+ discount deal' },
 ];
 
 // ─── Monthly Challenges ────────────────────────────────────────────────
@@ -294,6 +305,12 @@ export async function checkBadgeUnlocks(db: Db, userId: string, trigger?: string
   ]);
   const investmentCount = stockCount + mfCount;
 
+  // Bucket List counts
+  const [bucketListResult, completedBucketResult] = await Promise.all([
+    db.collection('bucket_list').countDocuments({ userId }),
+    db.collection('bucket_list').countDocuments({ userId, status: 'completed' }),
+  ]);
+
   const unlockedIds = new Set(existingBadges.map((b) => b.badgeId));
 
   async function tryUnlock(badgeId: string, condition: boolean) {
@@ -353,6 +370,17 @@ export async function checkBadgeUnlocks(db: Db, userId: string, trigger?: string
   if (healthDoc?.overallScore) {
     await tryUnlock('health_nut', healthDoc.overallScore >= 75);
   }
+
+  // Bucket List badges
+  await tryUnlock('dream_big', bucketListResult >= 1);
+  await tryUnlock('wish_warrior', completedBucketResult >= 5);
+
+  // Deal Hunter: Check if any bucket list item has a deal with 20%+ discount
+  const dealHunterItems = await db.collection('bucket_list').find({
+    userId,
+    'dealAlerts.discountPercent': { $gte: 20 },
+  }).limit(1).toArray();
+  await tryUnlock('deal_hunter', dealHunterItems.length > 0);
 
   // ─── Behavioral Badges ────────────────────────────────────────────────
 

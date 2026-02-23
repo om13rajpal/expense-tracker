@@ -8,6 +8,7 @@ import * as React from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import {
+  IconChecklist,
   IconDashboard,
   IconFileInvoice,
   IconFlame,
@@ -42,6 +43,7 @@ const navItems: NavItem[] = [
   { title: "Tax & Bills",  url: "/bills",        icon: IconFileInvoice },
   { title: "AI Assistant", url: "/ai",           icon: IconSparkles },
   { title: "Discover",     url: "/discover",     icon: IconFlame },
+  { title: "Bucket List",  url: "/bucket-list",  icon: IconChecklist },
 ]
 
 const userData = {

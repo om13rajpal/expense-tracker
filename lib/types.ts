@@ -692,3 +692,75 @@ export interface SavingsGoalProgress extends SavingsGoalConfig {
   autoLinkedAmount?: number;
   linkedTransactions?: LinkedTransaction[];
 }
+
+// ============================================================================
+// Bucket List
+// ============================================================================
+
+export type BucketListCategory =
+  | 'electronics'
+  | 'travel'
+  | 'vehicle'
+  | 'home'
+  | 'education'
+  | 'experience'
+  | 'fashion'
+  | 'health'
+  | 'other';
+
+export type BucketListPriority = 'high' | 'medium' | 'low';
+
+export type BucketListStatus = 'wishlist' | 'saving' | 'completed';
+
+export interface PriceSnapshot {
+  price: number;
+  source: string;
+  url?: string;
+  checkedAt: string;
+}
+
+export interface DealAlert {
+  title: string;
+  price: number;
+  originalPrice?: number;
+  discountPercent?: number;
+  source: string;
+  url?: string;
+  foundAt: string;
+}
+
+export interface BucketListItem {
+  id: string;
+  userId: string;
+  name: string;
+  description?: string;
+  category: BucketListCategory;
+  priority: BucketListPriority;
+  status: BucketListStatus;
+  targetAmount: number;
+  savedAmount: number;
+  monthlyAllocation: number;
+  targetDate?: string;
+  sortOrder: number;
+  priceHistory: PriceSnapshot[];
+  dealAlerts: DealAlert[];
+  aiStrategy?: string;
+  aiStrategyGeneratedAt?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BucketListSummary {
+  totalItems: number;
+  completedItems: number;
+  totalTargetAmount: number;
+  totalSavedAmount: number;
+  overallProgress: number;
+}
+
+export interface PerplexityPriceResult {
+  prices: PriceSnapshot[];
+  deals: DealAlert[];
+  citations: string[];
+  summary: string;
+}
