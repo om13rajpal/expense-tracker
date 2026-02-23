@@ -1,6 +1,6 @@
 "use client"
 
-import { motion } from "motion/react"
+import { motion, AnimatePresence } from "motion/react"
 import {
   IconHeartbeat,
   IconShieldCheck,
@@ -160,19 +160,19 @@ function StatItem({
       initial={anim.initial}
       animate={anim.animate}
       transition={anim.transition}
-      className="flex items-center gap-3 px-5 py-4"
+      className="flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-3 sm:py-4"
     >
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/60">
-        <Icon className="h-4 w-4 text-muted-foreground" />
+      <div className="flex h-7 w-7 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-lg bg-muted/60">
+        <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
       </div>
       <div className="min-w-0">
-        <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-0.5 truncate">
+        <p className="text-[10px] sm:text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-0.5 truncate">
           {label}
         </p>
-        <p className={`text-lg font-bold tabular-nums leading-tight ${colorClass || ""}`}>
+        <p className={`text-base sm:text-lg font-bold tabular-nums leading-tight ${colorClass || ""}`}>
           {value}
           {suffix && (
-            <span className="text-sm font-normal text-muted-foreground"> {suffix}</span>
+            <span className="text-xs sm:text-sm font-normal text-muted-foreground"> {suffix}</span>
           )}
         </p>
       </div>
@@ -302,22 +302,33 @@ export function HealthOverview() {
   const { data, isLoading, error: queryError } = useFinancialHealth()
   const metrics = data?.metrics ?? null
 
-  if (isLoading) return <HealthOverviewSkeleton />
-
-  if (queryError || !metrics) {
+  if (queryError && !metrics) {
     return (
       <div className="card-elevated rounded-xl flex h-40 items-center justify-center">
         <p className="text-sm text-muted-foreground">
-          {queryError ? "Failed to load financial health data" : "No financial health data available"}
+          Failed to load financial health data
         </p>
       </div>
     )
   }
 
-  const stabilityPercent = Math.round(metrics.incomeProfile.incomeStability * 100)
+  const stabilityPercent = metrics
+    ? Math.round(metrics.incomeProfile.incomeStability * 100)
+    : 0
 
   return (
-    <motion.div variants={stagger} initial="hidden" animate="show" className="flex flex-col gap-5">
+    <AnimatePresence mode="wait">
+    {isLoading || !metrics ? (
+      <motion.div
+        key="health-skeleton"
+        initial={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.2 }}
+      >
+        <HealthOverviewSkeleton />
+      </motion.div>
+    ) : (
+    <motion.div key="health-content" variants={stagger} initial="hidden" animate="show" className="flex flex-col gap-5">
       {/* Stat Bar */}
       <motion.div
         variants={fadeUp}
@@ -436,5 +447,7 @@ export function HealthOverview() {
         </div>
       </motion.div>
     </motion.div>
+    )}
+    </AnimatePresence>
   )
 }

@@ -246,7 +246,7 @@ const ChatBubble = memo(function ChatBubble({
 
       {/* Bubble */}
       <div
-        className={`max-w-[90%] sm:max-w-[80%] md:max-w-[75%] rounded-2xl px-3 py-2.5 sm:px-4 sm:py-3 ${
+        className={`max-w-[90%] sm:max-w-[80%] md:max-w-[75%] rounded-2xl px-3 py-2.5 sm:px-4 sm:py-3 overflow-x-auto ${
           isUser
             ? "bg-primary text-primary-foreground rounded-br-md"
             : "bg-card border border-border/50 rounded-bl-md card-elevated"
@@ -772,7 +772,7 @@ export function ChatView() {
       </AnimatePresence>
 
       {/* MAIN CHAT AREA */}
-      <div className="flex flex-1 flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-hidden min-h-0">
         {!chatStarted ? (
           /* LANDING STATE */
           <div className="flex flex-1 flex-col items-center overflow-y-auto px-3 pb-6 pt-14 sm:px-4 sm:justify-center sm:pt-0 sm:pb-10 md:px-6 relative">
@@ -939,9 +939,9 @@ export function ChatView() {
           </div>
         ) : (
           /* CHAT STATE */
-          <div className="relative flex flex-1 flex-col overflow-hidden">
+          <div className="flex flex-1 flex-col min-h-0">
             {/* Chat header bar */}
-            <div className="flex items-center justify-between border-b border-border/40 bg-card/50 backdrop-blur-sm px-3 py-2 sm:px-4 md:px-6">
+            <div className="flex items-center justify-between border-b border-border/40 bg-card/50 backdrop-blur-sm px-3 py-2 sm:px-4 md:px-6 shrink-0">
               <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
                 {/* Mobile: thread panel trigger */}
                 <Sheet open={threadPanelOpen} onOpenChange={setThreadPanelOpen}>
@@ -1018,7 +1018,7 @@ export function ChatView() {
             {/* Messages */}
             <div
               ref={scrollContainerRef}
-              className="flex-1 overflow-y-auto px-3 py-3 pb-28 space-y-3 sm:px-4 sm:py-4 sm:space-y-4 md:px-6"
+              className="flex-1 overflow-y-auto min-h-0 px-3 py-3 space-y-3 sm:px-4 sm:py-4 sm:space-y-4 md:px-6"
             >
               {messages.map((msg, idx) => (
                 <motion.div
@@ -1048,11 +1048,11 @@ export function ChatView() {
               <div ref={messagesEndRef} />
             </div>
 
-            {/* Input area */}
-            <div className="absolute bottom-0 left-0 right-0 z-10 px-2.5 pb-1.5 pt-6 sm:px-4 sm:pb-2 md:px-6 bg-gradient-to-t from-background from-60% to-transparent pointer-events-none">
+            {/* Input area - pinned to bottom via flex layout */}
+            <div className="shrink-0 px-2.5 pb-1.5 pt-2 sm:px-4 sm:pb-2 md:px-6 border-t border-border/20 bg-background">
               <form
                 onSubmit={handleSubmit}
-                className="pointer-events-auto mx-auto flex max-w-3xl items-end gap-1.5 sm:gap-2"
+                className="mx-auto flex max-w-3xl items-end gap-1.5 sm:gap-2"
               >
                 <div className="flex-1 relative rounded-full border border-border/40 bg-background/80 backdrop-blur-xl shadow-lg ring-1 ring-white/5 transition-all focus-within:border-primary/50 focus-within:shadow-primary/10 focus-within:ring-primary/10">
                   <textarea
@@ -1093,7 +1093,7 @@ export function ChatView() {
                   </button>
                 )}
               </form>
-              <p className="pointer-events-auto text-center text-[10px] sm:text-[11px] text-muted-foreground/40 mt-1 sm:mt-1.5 hidden sm:block">
+              <p className="text-center text-[10px] sm:text-[11px] text-muted-foreground/40 mt-1 sm:mt-1.5 hidden sm:block">
                 Responses are based on your financial data. Always verify
                 important decisions.
               </p>

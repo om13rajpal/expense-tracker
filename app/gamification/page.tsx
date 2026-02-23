@@ -559,17 +559,17 @@ export default function GamificationPage() {
             {/*  2. STREAK + STATS ROW                                    */}
             {/* ────────────────────────────────────────────────────────── */}
             <motion.div variants={fadeUp}>
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="grid grid-cols-3 gap-3 sm:gap-4">
                 {/* Current Streak - prominent card */}
-                <div className="card-elevated rounded-xl bg-card overflow-hidden sm:col-span-1">
-                  <div className="relative p-5 flex flex-col items-center text-center">
+                <div className="card-elevated rounded-xl bg-card overflow-hidden">
+                  <div className="relative p-3 sm:p-5 flex flex-col items-center text-center">
                     {(streak?.currentStreak ?? 0) > 0 && (
                       <div className="absolute inset-0 bg-gradient-to-t from-primary/5 via-transparent to-transparent pointer-events-none" />
                     )}
                     <div className="relative">
                       <motion.div
                         className={cn(
-                          "flex items-center justify-center size-16 rounded-2xl mb-3",
+                          "flex items-center justify-center size-10 sm:size-16 rounded-2xl mb-2 sm:mb-3",
                           (streak?.currentStreak ?? 0) > 0
                             ? "bg-gradient-to-br from-primary/15 to-primary/10"
                             : "bg-muted",
@@ -601,7 +601,7 @@ export default function GamificationPage() {
                     <motion.div
                       variants={numberPop}
                       className={cn(
-                        "text-4xl font-black tabular-nums",
+                        "text-2xl sm:text-4xl font-black tabular-nums",
                         (streak?.currentStreak ?? 0) > 0
                           ? "bg-gradient-to-br from-orange-500 to-red-500 bg-clip-text text-transparent"
                           : "text-muted-foreground",
@@ -609,40 +609,40 @@ export default function GamificationPage() {
                     >
                       {streak?.currentStreak ?? 0}
                     </motion.div>
-                    <p className="text-sm font-medium text-muted-foreground mt-1">
+                    <p className="text-xs sm:text-sm font-medium text-muted-foreground mt-1">
                       Day Streak
                     </p>
                   </div>
                 </div>
 
                 {/* Longest Streak */}
-                <div className="card-elevated rounded-xl bg-card p-5 flex flex-col items-center text-center justify-center">
-                  <div className="flex items-center justify-center size-12 rounded-xl bg-gradient-to-br from-amber-500/15 to-orange-500/15 mb-3">
-                    <IconTrophy className="size-6 text-amber-500" stroke={1.5} />
+                <div className="card-elevated rounded-xl bg-card p-3 sm:p-5 flex flex-col items-center text-center justify-center">
+                  <div className="flex items-center justify-center size-9 sm:size-12 rounded-xl bg-gradient-to-br from-amber-500/15 to-orange-500/15 mb-2 sm:mb-3">
+                    <IconTrophy className="size-5 sm:size-6 text-amber-500" stroke={1.5} />
                   </div>
                   <motion.div
                     variants={numberPop}
-                    className="text-3xl font-black tabular-nums text-foreground"
+                    className="text-xl sm:text-3xl font-black tabular-nums text-foreground"
                   >
                     {streak?.longestStreak ?? 0}
                   </motion.div>
-                  <p className="text-sm font-medium text-muted-foreground mt-1">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground mt-1">
                     Best Streak
                   </p>
                 </div>
 
                 {/* Freeze Tokens */}
-                <div className="card-elevated rounded-xl bg-card p-5 flex flex-col items-center text-center justify-center">
-                  <div className="flex items-center justify-center size-12 rounded-xl bg-primary/10 mb-3">
-                    <IconSnowflake className="size-6 text-primary" stroke={1.5} />
+                <div className="card-elevated rounded-xl bg-card p-3 sm:p-5 flex flex-col items-center text-center justify-center">
+                  <div className="flex items-center justify-center size-9 sm:size-12 rounded-xl bg-primary/10 mb-2 sm:mb-3">
+                    <IconSnowflake className="size-5 sm:size-6 text-primary" stroke={1.5} />
                   </div>
                   <motion.div
                     variants={numberPop}
-                    className="text-3xl font-black tabular-nums text-primary"
+                    className="text-xl sm:text-3xl font-black tabular-nums text-primary"
                   >
                     {streak?.freezeTokens ?? 0}
                   </motion.div>
-                  <p className="text-sm font-medium text-muted-foreground mt-1">
+                  <p className="text-xs sm:text-sm font-medium text-muted-foreground mt-1">
                     Freeze Tokens
                   </p>
                   {(streak?.freezeTokens ?? 0) > 0 && (

@@ -9,7 +9,7 @@ export default function LoginPage() {
       </div>
       <div className="relative z-10 w-full max-w-lg">
         <div className="mb-8 text-center">
-          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">Finance Command Center</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.3em] text-muted-foreground">Finova</p>
           <h1 className="mt-3 text-3xl font-semibold">Secure access to your dashboard</h1>
           <p className="mt-2 text-sm text-muted-foreground">
             Sign in to view balance snapshots, trends, and budget controls.

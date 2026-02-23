@@ -20,8 +20,8 @@ const jetbrainsMono = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: "Finance Command Center",
-    template: "%s | Finance Command Center",
+    default: "Finova",
+    template: "%s | Finova",
   },
   description: "AI-powered personal finance dashboard with spending analysis, budgets, investments, and tax optimization",
   keywords: ["finance", "budget", "investments", "tax", "spending analysis", "personal finance"],

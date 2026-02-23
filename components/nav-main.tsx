@@ -56,7 +56,7 @@ export function NavMain({ items, dashboardActive }: { items: NavItem[]; dashboar
 
         {/* Flat nav items */}
         {items.map((item) => {
-          const isActive = pathname.startsWith(item.url)
+          const isActive = pathname.startsWith(item.url.split("?")[0])
           const ItemIcon = item.icon
 
           return (

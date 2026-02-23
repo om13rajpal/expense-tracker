@@ -60,5 +60,8 @@ export function useFinancialHealth() {
       if (!res.ok) throw new Error("Failed to fetch financial health")
       return res.json()
     },
+    staleTime: 5 * 60 * 1000,
+    gcTime: 30 * 60 * 1000,
+    retry: 2,
   })
 }

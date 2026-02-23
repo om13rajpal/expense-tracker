@@ -200,7 +200,7 @@ export default function SharePage() {
         {/* Footer */}
         <div className="mt-12 flex items-center justify-center gap-2 text-xs text-muted-foreground">
           <IconPigMoney className="h-4 w-4" />
-          <span>Powered by Finance Tracker</span>
+          <span>Powered by Finova</span>
         </div>
       </div>
     </div>

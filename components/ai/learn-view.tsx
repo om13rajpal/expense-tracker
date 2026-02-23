@@ -41,6 +41,7 @@ import {
   IconLoader2,
   IconArrowLeft,
   IconFilter,
+  IconConfetti,
 } from "@tabler/icons-react"
 
 import { stagger, staggerSlow, fadeUp, fadeUpSmall, spring } from "@/lib/motion"
@@ -106,8 +107,52 @@ function difficultyIconBg(d: Difficulty) {
   }
 }
 
+function difficultyGradient(d: Difficulty) {
+  switch (d) {
+    case "beginner":
+      return "from-emerald-500 to-teal-500"
+    case "intermediate":
+      return "from-blue-500 to-indigo-500"
+    case "advanced":
+      return "from-amber-500 to-orange-500"
+  }
+}
+
 function difficultyLabel(d: Difficulty) {
   return d.charAt(0).toUpperCase() + d.slice(1)
+}
+
+/* --- Daily financial tips --- */
+
+const DAILY_TIPS = [
+  "Pay yourself first. Set up auto-debit for SIPs on the day you receive your salary.",
+  "The 50/30/20 rule is a great starting point: 50% needs, 30% wants, 20% savings.",
+  "Compound interest is the eighth wonder of the world. Start investing early, even small amounts.",
+  "Never invest your emergency fund in the stock market. Keep 3-6 months of expenses liquid.",
+  "Index funds beat 80-90% of actively managed funds over a 10-year period. Keep it simple.",
+  "Your savings rate matters more than your investment returns. Focus on the gap between income and spending.",
+  "ELSS mutual funds have the shortest lock-in (3 years) among Section 80C instruments.",
+  "Do not stop your SIPs during market crashes. You are buying more units at lower prices.",
+  "A step-up SIP (increasing 10% yearly) can nearly double your final corpus compared to a flat SIP.",
+  "Net worth = Assets minus Liabilities. Track it monthly to see your real financial progress.",
+  "Direct mutual fund plans save 0.5-1% in fees versus Regular plans. Over 20 years, this compounds massively.",
+  "PPF offers tax-free returns (EEE status) and is backed by the government. A must-have in your portfolio.",
+  "Asset allocation explains over 90% of portfolio return variation. Get your equity-debt split right first.",
+  "Use XIRR (not absolute returns) to measure your real investment performance on SIPs.",
+  "Insurance is for protection, not investment. Buy term insurance and invest the rest.",
+  "Rebalance your portfolio once or twice a year. It forces you to sell high and buy low.",
+  "The best time to plan taxes is April, not March. Spread your 80C investments across the year.",
+  "NPS offers an additional Rs.50,000 tax deduction under Section 80CCD(1B), separate from 80C.",
+  "Sovereign Gold Bonds give 2.5% annual interest plus gold appreciation, with zero capital gains tax at maturity.",
+  "Financial independence is not about being rich. It is about having enough so work becomes a choice, not a necessity.",
+]
+
+function getDailyTip(): string {
+  const now = new Date()
+  const dayOfYear = Math.floor(
+    (now.getTime() - new Date(now.getFullYear(), 0, 0).getTime()) / 86400000
+  )
+  return DAILY_TIPS[dayOfYear % DAILY_TIPS.length]
 }
 
 /* --- Status helpers --- */
@@ -340,31 +385,82 @@ function QuizSection({
     }
   }
 
+  const answeredCount = answers.filter((a) => a !== null).length
+
   if (result) {
+    const scorePercent = Math.round((result.score / result.total) * 100)
     return (
       <div className="space-y-4">
-        <div className={`rounded-xl border p-4 ${result.passed ? "border-emerald-500/30 bg-emerald-500/5" : "border-amber-500/30 bg-amber-500/5"}`}>
-          <div className="flex items-center gap-3 mb-2">
-            {result.passed ? (
-              <IconTrophy className="h-5 w-5 text-emerald-500" />
-            ) : (
-              <IconBrain className="h-5 w-5 text-amber-500" />
-            )}
+        {/* Celebration / result header */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
+          className={`relative rounded-xl border p-5 overflow-hidden ${result.passed ? "border-emerald-500/30 bg-emerald-500/5" : "border-amber-500/30 bg-amber-500/5"}`}
+        >
+          {result.passed && (
+            <div className="absolute inset-0 pointer-events-none">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: [0, 1, 0] }}
+                transition={{ duration: 2, times: [0, 0.3, 1] }}
+                className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-yellow-500/10 to-emerald-500/10"
+              />
+            </div>
+          )}
+          <div className="relative flex items-center gap-4">
+            <motion.div
+              initial={{ scale: 0 }}
+              animate={{ scale: 1 }}
+              transition={{ delay: 0.2, type: "spring", stiffness: 200, damping: 12 }}
+              className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ${result.passed ? "bg-gradient-to-br from-emerald-500 to-teal-500" : "bg-gradient-to-br from-amber-500 to-orange-500"}`}
+            >
+              {result.passed ? (
+                <IconTrophy className="h-7 w-7 text-white" />
+              ) : (
+                <IconBrain className="h-7 w-7 text-white" />
+              )}
+            </motion.div>
             <div>
-              <h4 className="text-sm font-semibold text-foreground">
-                {result.passed ? "Mastered!" : "Keep Learning"}
+              <h4 className="text-base font-bold text-foreground">
+                {result.passed ? "Topic Mastered!" : "Keep Learning"}
               </h4>
-              <p className="text-xs text-muted-foreground">
-                You scored {result.score}/{result.total} ({Math.round((result.score / result.total) * 100)}%)
-                {result.passed ? " — Topic mastered!" : " — Score 80%+ to master this topic."}
+              <p className="text-sm text-muted-foreground mt-0.5">
+                You scored {result.score}/{result.total} ({scorePercent}%)
               </p>
+              {result.passed && (
+                <div className="flex items-center gap-1.5 mt-1">
+                  <IconConfetti className="h-3.5 w-3.5 text-emerald-500" />
+                  <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                    +50 XP earned
+                  </span>
+                </div>
+              )}
+              {!result.passed && (
+                <p className="text-xs text-muted-foreground/70 mt-1">
+                  Score 80%+ to master this topic. Review the explanations below and try again.
+                </p>
+              )}
             </div>
           </div>
-        </div>
+
+          {/* Score bar */}
+          <div className="relative mt-4 h-2 rounded-full bg-muted/40 overflow-hidden">
+            <motion.div
+              initial={{ width: 0 }}
+              animate={{ width: `${scorePercent}%` }}
+              transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1], delay: 0.3 }}
+              className={`h-full rounded-full ${result.passed ? "bg-gradient-to-r from-emerald-500 to-teal-500" : "bg-gradient-to-r from-amber-500 to-orange-500"}`}
+            />
+          </div>
+        </motion.div>
 
         {result.explanations.map((exp, i) => (
-          <div
+          <motion.div
             key={i}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 + i * 0.1, duration: 0.3 }}
             className={`rounded-lg border p-3 ${exp.correct ? "border-emerald-500/20 bg-emerald-500/5" : "border-red-500/20 bg-red-500/5"}`}
           >
             <div className="flex items-start gap-2 mb-1.5">
@@ -376,7 +472,7 @@ function QuizSection({
               <p className="text-xs font-medium text-foreground">{exp.question}</p>
             </div>
             <p className="text-xs text-muted-foreground ml-6">{exp.explanation}</p>
-          </div>
+          </motion.div>
         ))}
       </div>
     )
@@ -384,10 +480,38 @@ function QuizSection({
 
   return (
     <div className="space-y-4">
+      {/* Quiz progress indicator */}
+      <div className="flex items-center gap-3 mb-1">
+        <div className="flex-1 flex items-center gap-1.5">
+          {questions.map((_, i) => (
+            <div
+              key={i}
+              className={`h-1.5 flex-1 rounded-full transition-all duration-300 ${
+                answers[i] !== null
+                  ? "bg-primary"
+                  : "bg-muted/60"
+              }`}
+            />
+          ))}
+        </div>
+        <span className="text-[11px] font-medium text-muted-foreground tabular-nums shrink-0">
+          {answeredCount} of {questions.length}
+        </span>
+      </div>
+
       {questions.map((q, qi) => (
-        <div key={qi} className="rounded-lg border border-border/50 p-4">
+        <motion.div
+          key={qi}
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: qi * 0.05, duration: 0.25 }}
+          className="rounded-lg border border-border/50 p-4"
+        >
           <p className="text-sm font-medium text-foreground mb-3">
-            {qi + 1}. {q.question}
+            <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold mr-2">
+              {qi + 1}
+            </span>
+            {q.question}
           </p>
           <div className="space-y-2">
             {q.options.map((opt, oi) => (
@@ -400,18 +524,22 @@ function QuizSection({
                 }}
                 className={`w-full text-left rounded-lg border px-3 py-2.5 text-xs transition-all duration-150 ${
                   answers[qi] === oi
-                    ? "border-primary/50 bg-primary/10 text-foreground"
+                    ? "border-primary/50 bg-primary/10 text-foreground shadow-sm"
                     : "border-border/40 bg-card/50 text-muted-foreground hover:border-border hover:bg-accent/30"
                 }`}
               >
-                <span className="font-medium mr-2">
-                  {String.fromCharCode(65 + oi)}.
+                <span className={`inline-flex items-center justify-center h-4 w-4 rounded text-[9px] font-bold mr-2 ${
+                  answers[qi] === oi
+                    ? "bg-primary text-primary-foreground"
+                    : "bg-muted/60 text-muted-foreground"
+                }`}>
+                  {String.fromCharCode(65 + oi)}
                 </span>
                 {opt}
               </button>
             ))}
           </div>
-        </div>
+        </motion.div>
       ))}
 
       <button
@@ -419,7 +547,7 @@ function QuizSection({
         disabled={!allAnswered || submitting}
         className={`inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
           allAnswered && !submitting
-            ? "bg-primary text-primary-foreground hover:bg-primary/90"
+            ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
             : "bg-muted text-muted-foreground cursor-not-allowed"
         }`}
       >
@@ -431,7 +559,7 @@ function QuizSection({
         ) : (
           <>
             <IconCheck className="h-4 w-4" />
-            Submit Answers
+            Submit Answers ({answeredCount}/{questions.length})
           </>
         )}
       </button>
@@ -669,14 +797,29 @@ function TopicGridCard({
   const badge = statusBadge(progress?.status || "unread")
   const hasQuiz = !!TOPIC_QUIZZES[topicId]
 
+  const isMastered = progress?.status === "mastered"
+  const isCompleted = progress?.status && progress.status !== "unread"
+
   return (
     <motion.button
       variants={fadeUpSmall}
       onClick={onClick}
-      className="group relative text-left rounded-xl border border-border/50 bg-card/80 hover:bg-accent/30 hover:border-border transition-all duration-200 overflow-hidden"
+      whileHover={{ scale: 1.02, y: -2 }}
+      transition={{ duration: 0.2 }}
+      className="group relative text-left rounded-xl border border-border/50 bg-card/80 hover:border-border hover:shadow-lg hover:shadow-black/5 dark:hover:shadow-black/20 transition-all duration-200 overflow-hidden"
     >
-      {badge && (
-        <div className="absolute top-0 right-0">
+      {/* Completion overlay checkmark */}
+      {isMastered && (
+        <div className="absolute top-2.5 right-2.5 z-10">
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/30">
+            <IconCheck className="h-3.5 w-3.5 text-white" strokeWidth={3} />
+          </div>
+        </div>
+      )}
+
+      {/* Status badge */}
+      {badge && !isMastered && (
+        <div className="absolute top-0 right-0 z-10">
           <div className={`text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-bl-lg border-b border-l ${badge.className}`}>
             {badge.label}
           </div>
@@ -684,19 +827,20 @@ function TopicGridCard({
       )}
 
       <div className="p-4">
-        <div className="flex items-center gap-3 mb-2.5">
-          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${difficultyIconBg(topic.difficulty)} transition-transform duration-200 group-hover:scale-105`}>
-            <TopicIcon className="h-4 w-4" />
+        <div className="flex items-start gap-3 mb-2.5">
+          {/* Larger icon with gradient background */}
+          <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${difficultyGradient(topic.difficulty)} shadow-sm transition-transform duration-200 group-hover:scale-110 group-hover:shadow-md ${isMastered ? "opacity-60" : ""}`}>
+            <TopicIcon className="h-5 w-5 text-white" />
           </div>
-          <div className="flex-1 min-w-0 pr-12">
-            <h3 className={`text-sm font-medium leading-tight truncate ${progress?.status && progress.status !== "unread" ? "text-muted-foreground" : "text-foreground"}`}>
+          <div className="flex-1 min-w-0 pr-6">
+            <h3 className={`text-sm font-semibold leading-tight truncate ${isCompleted ? "text-muted-foreground" : "text-foreground"}`}>
               {topic.title}
             </h3>
-            <div className="flex items-center gap-2 mt-0.5">
-              <span className={`inline-flex items-center rounded border px-1.5 py-0 text-[8px] font-semibold uppercase tracking-wider ${difficultyColor(topic.difficulty)}`}>
+            <div className="flex items-center gap-2 mt-1">
+              <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider ${difficultyColor(topic.difficulty)}`}>
                 {difficultyLabel(topic.difficulty)}
               </span>
-              <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground/50">
+              <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground/60">
                 <IconClock className="h-2.5 w-2.5" />
                 {topic.readTime}
               </span>
@@ -704,22 +848,22 @@ function TopicGridCard({
           </div>
         </div>
 
-        <p className="text-[11px] text-muted-foreground/70 leading-relaxed line-clamp-2 mb-2">
+        <p className="text-[11px] text-muted-foreground/70 leading-relaxed line-clamp-2 mb-3">
           {topic.description}
         </p>
 
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-2">
             {hasQuiz && (
-              <span className="text-[9px] text-muted-foreground/50 font-medium uppercase tracking-wider flex items-center gap-1">
+              <span className="inline-flex items-center gap-1 rounded-md bg-primary/5 border border-primary/10 px-1.5 py-0.5 text-[9px] text-primary/70 font-semibold uppercase tracking-wider">
                 <IconBrain className="h-2.5 w-2.5" />
                 Quiz
               </span>
             )}
           </div>
-          <div className="flex items-center gap-1 text-[11px] font-medium text-primary opacity-0 group-hover:opacity-100 transition-opacity duration-200">
-            <span>Read</span>
-            <IconArrowRight className="h-3 w-3 transition-transform group-hover:translate-x-0.5" />
+          <div className="flex items-center gap-1 text-[11px] font-medium text-primary opacity-0 group-hover:opacity-100 transition-all duration-200 translate-x-1 group-hover:translate-x-0">
+            <span>{isCompleted ? "Review" : "Read"}</span>
+            <IconArrowRight className="h-3 w-3" />
           </div>
         </div>
       </div>
@@ -872,7 +1016,7 @@ function SectionGridBlock({
     <motion.div variants={fadeUp} className="flex flex-col gap-3">
       <button
         onClick={() => setIsOpen((prev) => !prev)}
-        className={`group/section w-full text-left rounded-2xl p-4 transition-all duration-200 bg-gradient-to-r ${section.accentBg} border border-border/40 hover:border-border/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+        className={`group/section w-full text-left rounded-2xl p-4 transition-all duration-200 bg-gradient-to-r ${section.accentBg} border border-border/40 hover:border-border/60 hover:shadow-md hover:shadow-black/5 dark:hover:shadow-black/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
       >
         <div className="flex items-center gap-4">
           <div className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${section.gradient} text-white shadow-sm shrink-0`}>
@@ -881,6 +1025,9 @@ function SectionGridBlock({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-3 mb-1">
               <h2 className="text-base font-semibold text-foreground">{section.title}</h2>
+              <span className="text-[10px] font-medium text-muted-foreground/50 bg-muted/40 rounded-md px-1.5 py-0.5">
+                {total} topic{total !== 1 ? "s" : ""}
+              </span>
               {percent === 100 && (
                 <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/25">
                   <IconCheck className="h-3 w-3 text-white" strokeWidth={3} />
@@ -904,9 +1051,13 @@ function SectionGridBlock({
               </span>
             </div>
           </div>
-          <div className={`shrink-0 text-muted-foreground/40 transition-transform duration-300 ${isOpen ? "rotate-180" : ""}`}>
+          <motion.div
+            animate={{ rotate: isOpen ? 180 : 0 }}
+            transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
+            className="shrink-0 text-muted-foreground/40"
+          >
             <IconChevronDown className="h-5 w-5" />
-          </div>
+          </motion.div>
         </div>
       </button>
 
@@ -998,6 +1149,35 @@ export function LearnView() {
   const progressPercent = totalTopics > 0 ? Math.round((completedCount / totalTopics) * 100) : 0
   const motivational = getMotivationalCopy(progressPercent, completedCount)
   const MotivIcon = motivational.icon
+
+  // XP from learning: 10 XP per read, 30 XP per quizzed, 50 XP per mastered
+  const learnXP = useMemo(() => {
+    let xp = 0
+    for (const topic of TOPICS) {
+      const p = progressMap.get(topic.id)
+      if (!p) continue
+      if (p.status === "read") xp += 10
+      else if (p.status === "quizzed") xp += 30
+      else if (p.status === "mastered") xp += 50
+    }
+    return xp
+  }, [progressMap])
+
+  const dailyTip = getDailyTip()
+
+  // "Continue where you left off" - find the most recently read topic that is not yet mastered
+  const continueTopicId = useMemo(() => {
+    if (!progressData || progressData.length === 0) return null
+    // Find topics that are "read" or "quizzed" but not "mastered" — the user started but didn't finish
+    const inProgressTopics = progressData
+      .filter((p) => p.status === "read" || p.status === "quizzed")
+      .sort((a, b) => {
+        const aTime = a.readAt || a.quizzedAt || ""
+        const bTime = b.readAt || b.quizzedAt || ""
+        return bTime.localeCompare(aTime)
+      })
+    return inProgressTopics.length > 0 ? inProgressTopics[0].topicId : null
+  }, [progressData])
 
   // Filtered sections
   const filteredSections = useMemo(() => {
@@ -1109,6 +1289,15 @@ export function LearnView() {
                               transition={{ duration: 0.7, ease: [0.25, 0.1, 0.25, 1], delay: 0.3 }}
                             />
                           </div>
+                          {learnXP > 0 && (
+                            <div className="flex items-center gap-1.5 mt-2.5">
+                              <IconStar className="h-3.5 w-3.5 text-amber-500" />
+                              <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 tabular-nums">
+                                {learnXP} XP
+                              </span>
+                              <span className="text-[11px] text-muted-foreground/50">earned from learning</span>
+                            </div>
+                          )}
                         </div>
                       </div>
 
@@ -1168,6 +1357,93 @@ export function LearnView() {
                   </div>
                 </div>
               </motion.div>
+
+              {/* Daily Tip */}
+              {!searchQuery && difficultyFilter === "all" && (
+                <motion.div variants={fadeUp}>
+                  <div className="rounded-xl bg-gradient-to-r from-amber-500/8 via-yellow-500/5 to-orange-500/8 border border-amber-500/20 overflow-hidden">
+                    <div className="p-4 flex items-start gap-3.5">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 shadow-sm">
+                        <IconBulb className="h-5 w-5 text-white" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h3 className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                            Daily Tip
+                          </h3>
+                        </div>
+                        <p className="text-sm text-foreground/80 leading-relaxed">
+                          {dailyTip}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+
+              {/* Continue where you left off */}
+              {!searchQuery && difficultyFilter === "all" && continueTopicId && (() => {
+                const continueTopic = TOPICS_MAP.get(continueTopicId)
+                if (!continueTopic) return null
+                const ContinueIcon = getIcon(continueTopic.icon)
+                const continueProgress = progressMap.get(continueTopicId)
+                const continueHasQuiz = !!TOPIC_QUIZZES[continueTopicId]
+                return (
+                  <motion.div variants={fadeUp}>
+                    <button
+                      onClick={() => setSelectedTopic(continueTopicId)}
+                      className="group w-full text-left rounded-xl border border-primary/20 bg-gradient-to-r from-primary/[0.06] via-primary/[0.03] to-transparent hover:from-primary/[0.10] hover:border-primary/30 transition-all duration-200 overflow-hidden"
+                    >
+                      <div className="p-4 flex items-center gap-4">
+                        <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${difficultyGradient(continueTopic.difficulty)} shadow-sm`}>
+                          <ContinueIcon className="h-5 w-5 text-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-primary mb-0.5">
+                            Continue where you left off
+                          </p>
+                          <h3 className="text-sm font-semibold text-foreground truncate">
+                            {continueTopic.title}
+                          </h3>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider ${difficultyColor(continueTopic.difficulty)}`}>
+                              {difficultyLabel(continueTopic.difficulty)}
+                            </span>
+                            {continueProgress?.status === "read" && continueHasQuiz && (
+                              <span className="text-[10px] text-primary/70 font-medium">
+                                Take the quiz to master this topic
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                        <div className="shrink-0 flex items-center gap-1 text-sm font-medium text-primary opacity-60 group-hover:opacity-100 transition-opacity">
+                          <span>Resume</span>
+                          <IconArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                        </div>
+                      </div>
+                    </button>
+                  </motion.div>
+                )
+              })()}
+
+              {/* Discover link */}
+              {!searchQuery && difficultyFilter === "all" && (
+                <motion.div variants={fadeUp}>
+                  <a
+                    href="/discover"
+                    className="flex items-center gap-3 rounded-xl border border-border/60 bg-gradient-to-r from-purple-500/5 via-pink-500/5 to-orange-500/5 p-4 transition-all hover:shadow-md hover:border-primary/20 group"
+                  >
+                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500/15 to-pink-500/15">
+                      <IconStar className="h-5 w-5 text-purple-500" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-foreground">Discover</p>
+                      <p className="text-xs text-muted-foreground">Fun facts and insights from your finances</p>
+                    </div>
+                    <span className="text-xs text-primary font-medium opacity-60 group-hover:opacity-100 transition-opacity">View &rarr;</span>
+                  </a>
+                </motion.div>
+              )}
 
               {/* Search + filter */}
               <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-3">

@@ -19,8 +19,10 @@ import {
   IconArrowDownRight,
   IconArrowUpRight,
   IconChartBar,
+  IconReceipt2,
   IconRefresh,
   IconSparkles,
+  IconTarget,
   IconWallet,
   IconScale,
 } from "@tabler/icons-react"
@@ -293,10 +295,10 @@ export default function DashboardPage() {
                       <motion.div
                         key={stat.key}
                         variants={fadeUpSmall}
-                        className={`card-elevated rounded-xl bg-card border-t-2 ${stat.accent} p-4 flex items-start gap-3.5 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 hover:scale-[1.01]`}
+                        className={`card-elevated rounded-xl bg-card border-t-2 ${stat.accent} p-3 sm:p-4 flex items-start gap-2.5 sm:gap-3.5 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 hover:scale-[1.01]`}
                       >
-                        <div className={`flex items-center justify-center h-10 w-10 rounded-xl ${stat.iconBg} shrink-0`}>
-                          <Icon className={`h-5 w-5 ${stat.iconColor}`} strokeWidth={1.8} />
+                        <div className={`flex items-center justify-center h-8 w-8 sm:h-10 sm:w-10 rounded-xl ${stat.iconBg} shrink-0`}>
+                          <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${stat.iconColor}`} strokeWidth={1.8} />
                         </div>
                         <div className="min-w-0">
                           <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-0.5">
@@ -315,9 +317,9 @@ export default function DashboardPage() {
                 </motion.div>
 
                 {/* ─── 2. Today's Pulse + AI Highlights (side by side) ─── */}
-                <motion.div variants={fadeUp} className="grid gap-5 lg:grid-cols-2 items-start">
+                <motion.div variants={fadeUp} className="grid gap-5 lg:grid-cols-2 items-stretch">
                   {/* Today's Pulse */}
-                  <div className="card-elevated rounded-xl bg-card p-5 flex flex-col transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
+                  <div className="card-elevated rounded-xl bg-card p-3.5 sm:p-5 flex flex-col transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
                     <div className="flex items-center gap-5">
                       {/* Circular progress ring */}
                       {(() => {
@@ -447,7 +449,7 @@ export default function DashboardPage() {
                   </div>
 
                   {/* AI Highlights */}
-                  <div className="card-elevated rounded-xl bg-card p-5 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
+                  <div className="card-elevated rounded-xl bg-card p-3.5 sm:p-5 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
                     <div className="flex items-center justify-between mb-4">
                       <h3 className="text-sm font-semibold flex items-center gap-2">
                         <IconSparkles className="size-4 text-primary" />
@@ -469,8 +471,48 @@ export default function DashboardPage() {
                   </div>
                 </motion.div>
 
+                {/* ─── Quick Actions ─── */}
+                <motion.div variants={fadeUp} className="grid grid-cols-3 gap-3">
+                  <Link
+                    href="/bills"
+                    className="card-elevated rounded-xl bg-card px-4 py-3 flex items-center gap-3 transition-all duration-200 hover:shadow-md hover:shadow-primary/5 hover:border-primary/20 hover:scale-[1.01] group"
+                  >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 dark:bg-amber-500/15 transition-colors group-hover:bg-amber-500/20">
+                      <IconReceipt2 className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">View Bills</p>
+                      <p className="text-[11px] text-muted-foreground">Upcoming & splits</p>
+                    </div>
+                  </Link>
+                  <Link
+                    href="/money?tab=analytics"
+                    className="card-elevated rounded-xl bg-card px-4 py-3 flex items-center gap-3 transition-all duration-200 hover:shadow-md hover:shadow-primary/5 hover:border-primary/20 hover:scale-[1.01] group"
+                  >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-500/10 dark:bg-blue-500/15 transition-colors group-hover:bg-blue-500/20">
+                      <IconChartBar className="h-4 w-4 text-blue-600 dark:text-blue-400" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">Analytics</p>
+                      <p className="text-[11px] text-muted-foreground">Spending insights</p>
+                    </div>
+                  </Link>
+                  <Link
+                    href="/goals"
+                    className="card-elevated rounded-xl bg-card px-4 py-3 flex items-center gap-3 transition-all duration-200 hover:shadow-md hover:shadow-primary/5 hover:border-primary/20 hover:scale-[1.01] group"
+                  >
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10 dark:bg-emerald-500/15 transition-colors group-hover:bg-emerald-500/20">
+                      <IconTarget className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+                    </div>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium truncate">Goals</p>
+                      <p className="text-[11px] text-muted-foreground">Track progress</p>
+                    </div>
+                  </Link>
+                </motion.div>
+
                 {/* ─── 3. Spending Breakdown + Monthly Trend (side by side) ─── */}
-                <motion.div variants={fadeUp} className="grid gap-5 lg:grid-cols-2">
+                <motion.div variants={fadeUp} className="grid gap-5 lg:grid-cols-2 items-stretch [&>*]:self-stretch">
                   {/* Spending Breakdown */}
                   <div className="card-elevated rounded-xl bg-card p-5 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
                     <div className="flex items-center justify-between mb-5">
@@ -626,6 +668,18 @@ function DashboardLoadingSkeleton() {
           <Skeleton className="h-4 w-3/4" />
           <Skeleton className="h-4 w-1/2" />
         </div>
+      </div>
+      {/* Quick actions skeleton */}
+      <div className="grid grid-cols-3 gap-3">
+        {Array.from({ length: 3 }).map((_, i) => (
+          <div key={i} className="card-elevated rounded-xl bg-card px-4 py-3 flex items-center gap-3">
+            <Skeleton className="h-9 w-9 rounded-lg shrink-0" />
+            <div className="space-y-1.5 flex-1">
+              <Skeleton className="h-4 w-20" />
+              <Skeleton className="h-3 w-24" />
+            </div>
+          </div>
+        ))}
       </div>
       {/* Spending + Trend skeleton */}
       <div className="grid gap-5 lg:grid-cols-2">

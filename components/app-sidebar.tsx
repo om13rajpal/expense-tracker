@@ -10,6 +10,7 @@ import { usePathname } from "next/navigation"
 import {
   IconDashboard,
   IconFileInvoice,
+  IconFlame,
   IconPigMoney,
   IconReceipt2,
   IconSparkles,
@@ -40,6 +41,7 @@ const navItems: NavItem[] = [
   { title: "Investments",  url: "/investments",  icon: IconTrendingUp },
   { title: "Tax & Bills",  url: "/bills",        icon: IconFileInvoice },
   { title: "AI Assistant", url: "/ai",           icon: IconSparkles },
+  { title: "Discover",     url: "/discover",     icon: IconFlame },
 ]
 
 const userData = {
@@ -64,7 +66,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             >
               <Link href="/dashboard">
                 <IconPigMoney className="!size-5" />
-                <span className="text-base font-semibold">Finance Tracker</span>
+                <span className="text-base font-semibold">Finova</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>

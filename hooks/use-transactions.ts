@@ -4,7 +4,7 @@
  */
 'use client';
 
-import { useState, useCallback, useEffect } from 'react';
+import { useState, useCallback, useEffect, useRef } from 'react';
 import type { Transaction, TransactionQuery } from '@/lib/types';
 
 interface TransactionsState {
@@ -28,6 +28,10 @@ interface SyncState {
  * @param initialQuery - Optional default filters applied on initial load and after sync.
  */
 export function useTransactions(initialQuery?: Partial<TransactionQuery>) {
+  // Store initialQuery in a ref to avoid infinite re-render loops
+  // when callers pass an inline object literal
+  const queryRef = useRef(initialQuery)
+
   const [state, setState] = useState<TransactionsState>({
     transactions: [],
     isLoading: false,
@@ -121,7 +125,7 @@ export function useTransactions(initialQuery?: Partial<TransactionQuery>) {
         });
 
         // Refresh transactions after sync
-        await fetchTransactions(initialQuery);
+        await fetchTransactions(queryRef.current);
 
         return { success: true, count: data.count };
       } else {
@@ -143,20 +147,19 @@ export function useTransactions(initialQuery?: Partial<TransactionQuery>) {
 
       return { success: false, error: message };
     }
-  }, [fetchTransactions, initialQuery]);
+  }, [fetchTransactions]);
 
   /**
    * Refresh transactions (shorthand for fetchTransactions with same query)
    */
   const refresh = useCallback(() => {
-    return fetchTransactions(initialQuery);
-  }, [fetchTransactions, initialQuery]);
+    return fetchTransactions(queryRef.current);
+  }, [fetchTransactions]);
 
   // Initial fetch on mount
   useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    fetchTransactions(initialQuery);
-  }, [fetchTransactions, initialQuery]);
+    fetchTransactions(queryRef.current);
+  }, [fetchTransactions]);
 
   return {
     // Transaction state

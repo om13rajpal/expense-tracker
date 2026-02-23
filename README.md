@@ -1,4 +1,4 @@
-# Finance Tracker
+# Finova
 
 A full-stack personal finance management app built with Next.js 16, React 19, and MongoDB. Features AI-powered spending insights, Google Sheets transaction sync, investment portfolio tracking, and event-driven background workflows.
 

@@ -448,66 +448,66 @@ export function AnalyticsView() {
         {/* ── Stat Bar ── */}
         <motion.div
           variants={fadeUp}
-          className="card-elevated rounded-xl bg-card grid grid-cols-2 @xl/main:grid-cols-4 divide-y @xl/main:divide-y-0 @xl/main:divide-x divide-border/40"
+          className="card-elevated rounded-xl bg-card grid grid-cols-2 @xl/main:grid-cols-4 divide-y @xl/main:divide-y-0 @xl/main:divide-x divide-border/40 overflow-hidden"
         >
           {/* Opening Balance */}
-          <div className="px-5 py-4 flex items-start gap-3.5">
-            <div className="mt-0.5 flex size-9 items-center justify-center rounded-xl bg-blue-500/10 dark:bg-blue-500/15">
-              <IconScale className="size-4 text-blue-600 dark:text-blue-400" />
+          <div className="px-3 sm:px-5 py-3 sm:py-4 flex items-start gap-2.5 sm:gap-3.5">
+            <div className="mt-0.5 flex size-7 sm:size-9 items-center justify-center rounded-xl bg-blue-500/10 dark:bg-blue-500/15 shrink-0">
+              <IconScale className="size-3.5 sm:size-4 text-blue-600 dark:text-blue-400" />
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
+              <p className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
                 Opening Balance
               </p>
-              <motion.p variants={numberPop} className="text-lg font-bold tabular-nums leading-tight truncate">
+              <motion.p variants={numberPop} className="text-base sm:text-lg font-bold tabular-nums leading-tight truncate">
                 {formatCurrency(openingBalance)}
               </motion.p>
             </div>
           </div>
 
           {/* Income */}
-          <div className="px-5 py-4 flex items-start gap-3.5">
-            <div className="mt-0.5 flex size-9 items-center justify-center rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15">
-              <IconArrowUpRight className="size-4 text-emerald-600 dark:text-emerald-400" />
+          <div className="px-3 sm:px-5 py-3 sm:py-4 flex items-start gap-2.5 sm:gap-3.5">
+            <div className="mt-0.5 flex size-7 sm:size-9 items-center justify-center rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15 shrink-0">
+              <IconArrowUpRight className="size-3.5 sm:size-4 text-emerald-600 dark:text-emerald-400" />
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
+              <p className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
                 Income
               </p>
-              <motion.p variants={numberPop} className="text-lg font-bold text-emerald-600 dark:text-emerald-400 tabular-nums leading-tight truncate">
+              <motion.p variants={numberPop} className="text-base sm:text-lg font-bold text-emerald-600 dark:text-emerald-400 tabular-nums leading-tight truncate">
                 {totalIncome === 0 ? "No income" : formatCurrency(totalIncome)}
               </motion.p>
             </div>
           </div>
 
           {/* Expenses */}
-          <div className="px-5 py-4 flex items-start gap-3.5">
-            <div className="mt-0.5 flex size-9 items-center justify-center rounded-xl bg-rose-500/10 dark:bg-rose-500/15">
-              <IconArrowDownRight className="size-4 text-rose-600 dark:text-rose-400" />
+          <div className="px-3 sm:px-5 py-3 sm:py-4 flex items-start gap-2.5 sm:gap-3.5">
+            <div className="mt-0.5 flex size-7 sm:size-9 items-center justify-center rounded-xl bg-rose-500/10 dark:bg-rose-500/15 shrink-0">
+              <IconArrowDownRight className="size-3.5 sm:size-4 text-rose-600 dark:text-rose-400" />
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
+              <p className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
                 Expenses
               </p>
-              <motion.p variants={numberPop} className="text-lg font-bold tabular-nums leading-tight truncate">
+              <motion.p variants={numberPop} className="text-base sm:text-lg font-bold tabular-nums leading-tight truncate">
                 {formatCurrency(totalExpenses)}
               </motion.p>
             </div>
           </div>
 
           {/* Current Balance */}
-          <div className="px-5 py-4 flex items-start gap-3.5">
-            <div className={`mt-0.5 flex size-9 items-center justify-center rounded-xl ${netChange >= 0 ? "bg-primary/10" : "bg-destructive/10"}`}>
-              <IconWallet className={`size-4 ${netChange >= 0 ? "text-primary" : "text-destructive"}`} />
+          <div className="px-3 sm:px-5 py-3 sm:py-4 flex items-start gap-2.5 sm:gap-3.5">
+            <div className={`mt-0.5 flex size-7 sm:size-9 items-center justify-center rounded-xl shrink-0 ${netChange >= 0 ? "bg-primary/10" : "bg-destructive/10"}`}>
+              <IconWallet className={`size-3.5 sm:size-4 ${netChange >= 0 ? "text-primary" : "text-destructive"}`} />
             </div>
             <div className="min-w-0">
-              <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
+              <p className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
                 Current Balance
               </p>
-              <motion.p variants={numberPop} className={`text-lg font-bold tabular-nums leading-tight truncate ${netChange >= 0 ? "text-primary" : "text-destructive"}`}>
+              <motion.p variants={numberPop} className={`text-base sm:text-lg font-bold tabular-nums leading-tight truncate ${netChange >= 0 ? "text-primary" : "text-destructive"}`}>
                 {formatCurrency(closingBalance)}
               </motion.p>
-              <p className="text-[11px] text-muted-foreground/60 font-medium mt-0.5 leading-none">
+              <p className="text-[10px] sm:text-[11px] text-muted-foreground/60 font-medium mt-0.5 leading-none truncate">
                 {netChange >= 0 ? "+" : ""}{formatCurrency(netChange)} this month
               </p>
             </div>

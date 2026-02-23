@@ -1,5 +1,5 @@
 /**
- * Core TypeScript interfaces for Finance Tracker
+ * Core TypeScript interfaces for Finova
  * Defines data structures for transactions, analytics, and categories
  */
 

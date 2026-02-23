@@ -1,5 +1,5 @@
 /**
- * Constants for Finance Tracker
+ * Constants for Finova
  * Includes colors, icons, and configuration values
  */
 

@@ -1,7 +1,7 @@
-# Finance Tracker API Documentation
+# Finova API Documentation
 
 ## Overview
-This API provides authentication and transaction management for the finance tracker application.
+This API provides authentication and transaction management for the Finova application.
 
 ## Base URL
 - Development: `http://localhost:3000/api`

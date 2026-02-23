@@ -5,7 +5,7 @@
  */
 "use client"
 
-import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
+import { useQuery, useMutation, useQueryClient, keepPreviousData } from "@tanstack/react-query"
 import type { AiInsightType, InsightSection } from "@/lib/ai-types"
 
 interface InsightResponse {
@@ -71,8 +71,11 @@ export function useAiInsight(type: AiInsightType): UseAiInsightReturn {
   const query = useQuery({
     queryKey,
     queryFn: () => fetchInsight(type),
-    staleTime: 5 * 60 * 1000, // 5 min client-side stale time
+    staleTime: 10 * 60 * 1000,
+    gcTime: 60 * 60 * 1000,
     retry: 1,
+    refetchOnWindowFocus: false,
+    placeholderData: keepPreviousData,
   })
 
   const mutation = useMutation({

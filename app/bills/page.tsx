@@ -96,24 +96,24 @@ export default function BillsPage() {
           <div className="@container/main flex flex-1 flex-col gap-4 p-4 md:p-6">
             <Tabs value={activeTab} onValueChange={handleTabChange} className="flex flex-1 flex-col">
               <div className="border-b border-border/40 overflow-x-auto">
-                <TabsList variant="line" className="inline-flex h-10 items-center gap-1 bg-transparent p-0">
+                <TabsList variant="line" className="inline-flex h-10 items-center gap-1 bg-transparent p-0 min-w-max">
                   <TabsTrigger
                     value="subscriptions"
-                    className="relative gap-1.5 rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent"
+                    className="relative gap-1.5 rounded-none border-b-2 border-transparent px-3 py-2 text-xs sm:text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent"
                   >
                     <IconCreditCard className="h-4 w-4" />
                     Subscriptions
                   </TabsTrigger>
                   <TabsTrigger
                     value="splits"
-                    className="relative gap-1.5 rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent"
+                    className="relative gap-1.5 rounded-none border-b-2 border-transparent px-3 py-2 text-xs sm:text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent"
                   >
                     <IconUsers className="h-4 w-4" />
                     Split Expenses
                   </TabsTrigger>
                   <TabsTrigger
                     value="tax"
-                    className="relative gap-1.5 rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent"
+                    className="relative gap-1.5 rounded-none border-b-2 border-transparent px-3 py-2 text-xs sm:text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent"
                   >
                     <IconReceipt2 className="h-4 w-4" />
                     Tax Planner

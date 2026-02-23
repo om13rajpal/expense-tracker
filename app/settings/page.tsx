@@ -1,9 +1,9 @@
 "use client"
 
 import * as React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { motion } from "motion/react"
+import { motion, AnimatePresence } from "motion/react"
 import { toast } from "sonner"
 import {
   IconBrandTelegram,
@@ -15,8 +15,14 @@ import {
   IconBell,
   IconCheck,
   IconArrowRight,
-  IconCurrencyRupee,
+  IconUser,
+  IconPuzzle,
+  IconPalette,
+  IconMoon,
+  IconSun,
+  IconDeviceDesktop,
   IconSettings,
+  IconChevronRight,
 } from "@tabler/icons-react"
 
 import { useAuth } from "@/hooks/use-auth"
@@ -28,6 +34,8 @@ import { SiteHeader } from "@/components/site-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
+
+// ─── Shared toggle switch ────────────────────────────────────────────
 
 function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: () => void }) {
   return (
@@ -45,7 +53,20 @@ function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: () =>
   )
 }
 
-function TelegramSection() {
+// ─── Section nav items ───────────────────────────────────────────────
+
+const NAV_SECTIONS = [
+  { id: "profile", label: "Profile", icon: IconUser },
+  { id: "integrations", label: "Integrations", icon: IconBrandTelegram },
+  { id: "features", label: "Features", icon: IconPuzzle },
+  { id: "appearance", label: "Appearance", icon: IconPalette },
+] as const
+
+type SectionId = (typeof NAV_SECTIONS)[number]["id"]
+
+// ─── Telegram integration section ────────────────────────────────────
+
+function TelegramCard() {
   const { data: settings, isLoading: settingsLoading } = useSettings()
   const linkMutation = useLinkTelegram()
   const unlinkMutation = useUnlinkTelegram()
@@ -91,11 +112,7 @@ function TelegramSection() {
   }
 
   if (settingsLoading) {
-    return (
-      <motion.div variants={fadeUp} className="card-elevated rounded-2xl bg-card p-6">
-        <Skeleton className="h-40 w-full" />
-      </motion.div>
-    )
+    return <Skeleton className="h-48 w-full rounded-xl" />
   }
 
   const linked = settings?.linked ?? false
@@ -108,32 +125,34 @@ function TelegramSection() {
   }
 
   return (
-    <motion.div
-      variants={fadeUp}
-      className="card-elevated rounded-2xl border border-sky-500/10 bg-card overflow-hidden"
-    >
-      {/* Telegram header with gradient accent */}
-      <div className="relative bg-gradient-to-r from-sky-500/8 via-blue-500/6 to-cyan-500/4 px-6 py-5">
+    <div className="card-elevated rounded-xl border border-sky-500/10 bg-card overflow-hidden">
+      {/* Telegram header */}
+      <div className="relative bg-gradient-to-r from-sky-500/8 via-blue-500/6 to-cyan-500/4 px-5 py-4">
         <div className="flex items-center gap-3">
           <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br from-sky-500/20 to-blue-500/20 border border-sky-500/10">
             <IconBrandTelegram className="h-5 w-5 text-sky-500" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="text-base font-semibold">Telegram Integration</h3>
+            <h4 className="text-sm font-semibold">Telegram Bot</h4>
             <p className="text-xs text-muted-foreground mt-0.5">
               Log expenses, scan receipts, and get summaries via chat
             </p>
           </div>
-          {linked && (
+          {linked ? (
             <span className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/15 px-3 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-              <IconCheck className="h-3 w-3" />
+              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
               Connected
+            </span>
+          ) : (
+            <span className="flex items-center gap-1.5 rounded-full bg-muted/60 border border-border/40 px-3 py-1 text-xs font-medium text-muted-foreground">
+              <span className="h-2 w-2 rounded-full bg-muted-foreground/40" />
+              Not connected
             </span>
           )}
         </div>
       </div>
 
-      <div className="px-6 py-5">
+      <div className="px-5 py-4">
         {!linked ? (
           <div className="space-y-4">
             {!linkCode ? (
@@ -267,9 +286,11 @@ function TelegramSection() {
           </div>
         )}
       </div>
-    </motion.div>
+    </div>
   )
 }
+
+// ─── Main settings page ──────────────────────────────────────────────
 
 export default function SettingsPage() {
   const router = useRouter()
@@ -285,6 +306,18 @@ export default function SettingsPage() {
 
   // Ghost Budget state
   const [ghostEnabled, setGhostEnabled] = useState(false)
+
+  // Appearance state
+  const [theme, setTheme] = useState<"light" | "dark" | "system">("system")
+
+  // Active section for nav highlighting
+  const [activeSection, setActiveSection] = useState<SectionId>("profile")
+  const sectionRefs = useRef<Record<SectionId, HTMLDivElement | null>>({
+    profile: null,
+    integrations: null,
+    features: null,
+    appearance: null,
+  })
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -307,6 +340,38 @@ export default function SettingsPage() {
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [isAuthenticated])
+
+  // Read theme from document class on mount
+  useEffect(() => {
+    const html = document.documentElement
+    if (html.classList.contains("dark")) {
+      setTheme("dark")
+    } else if (html.classList.contains("light")) {
+      setTheme("light")
+    } else {
+      setTheme("system")
+    }
+  }, [])
+
+  // Intersection observer for active section tracking
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setActiveSection(entry.target.id as SectionId)
+          }
+        }
+      },
+      { rootMargin: "-20% 0px -60% 0px", threshold: 0 }
+    )
+
+    for (const ref of Object.values(sectionRefs.current)) {
+      if (ref) observer.observe(ref)
+    }
+
+    return () => observer.disconnect()
+  }, [loading])
 
   const computedRate = workingHours > 0 ? monthlyIncome / workingHours : 0
 
@@ -337,6 +402,22 @@ export default function SettingsPage() {
     }
   }
 
+  function scrollToSection(id: SectionId) {
+    sectionRefs.current[id]?.scrollIntoView({ behavior: "smooth", block: "start" })
+  }
+
+  function handleThemeChange(newTheme: "light" | "dark" | "system") {
+    setTheme(newTheme)
+    const html = document.documentElement
+    html.classList.remove("light", "dark")
+    if (newTheme === "system") {
+      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
+      html.classList.add(prefersDark ? "dark" : "light")
+    } else {
+      html.classList.add(newTheme)
+    }
+  }
+
   if (authLoading) {
     return (
       <div className="flex min-h-screen items-center justify-center">
@@ -359,104 +440,271 @@ export default function SettingsPage() {
         <SiteHeader title="Settings" subtitle="Preferences" />
         <div className="flex flex-1 flex-col">
           <div className="@container/main flex flex-1 flex-col gap-2 p-4 md:p-6">
-            <div className="mx-auto w-full max-w-2xl">
-              {loading ? (
-                <div className="space-y-5">
-                  <Skeleton className="h-12 w-64 rounded-lg" />
-                  <Skeleton className="h-56 w-full rounded-2xl" />
-                  <Skeleton className="h-40 w-full rounded-2xl" />
-                  <Skeleton className="h-48 w-full rounded-2xl" />
+            {loading ? (
+              <div className="mx-auto w-full max-w-4xl space-y-5">
+                <Skeleton className="h-28 w-full rounded-xl" />
+                <div className="flex gap-6">
+                  <Skeleton className="hidden lg:block h-48 w-52 rounded-xl" />
+                  <div className="flex-1 space-y-4">
+                    <Skeleton className="h-56 w-full rounded-xl" />
+                    <Skeleton className="h-40 w-full rounded-xl" />
+                    <Skeleton className="h-32 w-full rounded-xl" />
+                  </div>
                 </div>
-              ) : (
-                <motion.div variants={stagger} initial="hidden" animate="show" className="flex flex-col gap-4">
-                  {/* Telegram Integration */}
-                  <TelegramSection />
+              </div>
+            ) : (
+              <motion.div variants={stagger} initial="hidden" animate="show" className="mx-auto w-full max-w-4xl flex flex-col gap-5">
 
-                  {/* Money in Hours */}
-                  <motion.div variants={fadeUp} className="card-elevated rounded-xl bg-card p-5">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-gradient-to-br from-blue-500/15 to-cyan-500/15">
-                          <IconClock className="h-4 w-4 text-blue-500" />
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-semibold">Money in Hours</h3>
-                          <p className="text-[11px] text-muted-foreground">See expenses as work hours</p>
-                        </div>
+                {/* ═══ Profile Header ═══ */}
+                <motion.div
+                  variants={fadeUp}
+                  id="profile"
+                  ref={(el) => { sectionRefs.current.profile = el }}
+                  className="card-elevated rounded-xl bg-card overflow-hidden"
+                >
+                  <div className="relative bg-gradient-to-r from-primary/8 via-primary/5 to-transparent px-6 py-6">
+                    {/* Subtle dots pattern */}
+                    <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)", backgroundSize: "20px 20px" }} />
+                    <div className="relative flex items-center gap-4">
+                      <div className="flex items-center justify-center h-14 w-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/10 text-primary text-xl font-bold">
+                        OR
                       </div>
-                      <ToggleSwitch checked={mihEnabled} onChange={() => setMihEnabled(!mihEnabled)} />
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      <div>
-                        <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider block mb-1.5">
-                          Monthly Income
-                        </label>
-                        <input
-                          type="number"
-                          min={0}
-                          value={monthlyIncome || ""}
-                          onChange={e => setMonthlyIncome(Number(e.target.value) || 0)}
-                          placeholder="e.g. 80000"
-                          className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-ring"
-                        />
+                      <div className="flex-1 min-w-0">
+                        <h2 className="text-lg font-bold tracking-tight">Om Rajpal</h2>
+                        <p className="text-sm text-muted-foreground mt-0.5">Manage your preferences and integrations</p>
                       </div>
-                      <div>
-                        <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider block mb-1.5">
-                          Hours / Month
-                        </label>
-                        <input
-                          type="number"
-                          min={1}
-                          value={workingHours}
-                          onChange={e => setWorkingHours(Number(e.target.value) || 176)}
-                          className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-ring"
-                        />
+                      <div className="hidden sm:flex items-center gap-2">
+                        <div className="flex items-center gap-1.5 rounded-full bg-muted/60 border border-border/40 px-3 py-1">
+                          <IconSettings className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground">v1.0</span>
+                        </div>
                       </div>
                     </div>
-
-                    {mihEnabled && computedRate > 0 && (
-                      <div className="mt-3 rounded-lg bg-muted/40 border border-border/40 p-3 flex items-center justify-between">
-                        <div>
-                          <p className="text-xs text-muted-foreground">Hourly rate</p>
-                          <p className="text-lg font-bold tabular-nums">{formatINR(Math.round(computedRate))}<span className="text-xs font-normal text-muted-foreground">/hr</span></p>
-                        </div>
-                        <div className="text-right">
-                          <p className="text-[11px] text-muted-foreground">A {formatINR(500)} expense</p>
-                          <p className="text-xs font-semibold text-blue-600 dark:text-blue-400">
-                            = {(500 / computedRate).toFixed(1)} hrs work
-                          </p>
-                        </div>
-                      </div>
-                    )}
-                  </motion.div>
-
-                  {/* Ghost Budget */}
-                  <motion.div variants={fadeUp} className="card-elevated rounded-xl bg-card p-5">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-gradient-to-br from-purple-500/15 to-violet-500/15">
-                          <IconGhost className="h-4 w-4 text-purple-500" />
-                        </div>
-                        <div>
-                          <h3 className="text-sm font-semibold">Ghost Budget</h3>
-                          <p className="text-[11px] text-muted-foreground">Track what perfect budgeting saves</p>
-                        </div>
-                      </div>
-                      <ToggleSwitch checked={ghostEnabled} onChange={() => setGhostEnabled(!ghostEnabled)} />
-                    </div>
-                  </motion.div>
-
-                  {/* Save Button */}
-                  <motion.div variants={fadeUp}>
-                    <Button onClick={handleSave} disabled={saving} className="w-full">
-                      <IconDeviceFloppy className="h-4 w-4 mr-2" />
-                      {saving ? "Saving..." : "Save Settings"}
-                    </Button>
-                  </motion.div>
+                  </div>
                 </motion.div>
-              )}
-            </div>
+
+                {/* ═══ Main layout: sidebar nav + content ═══ */}
+                <div className="flex gap-6">
+
+                  {/* Desktop section nav */}
+                  <motion.nav
+                    variants={fadeUp}
+                    className="hidden lg:flex flex-col gap-1 w-48 shrink-0 sticky top-24 self-start"
+                  >
+                    {NAV_SECTIONS.map(({ id, label, icon: Icon }) => (
+                      <button
+                        key={id}
+                        onClick={() => scrollToSection(id)}
+                        className={`flex items-center gap-2.5 rounded-lg px-3 py-2.5 text-left text-sm font-medium transition-all duration-150 ${
+                          activeSection === id
+                            ? "bg-primary/10 text-primary border border-primary/15"
+                            : "text-muted-foreground hover:bg-muted/50 hover:text-foreground border border-transparent"
+                        }`}
+                      >
+                        <Icon className="h-4 w-4" />
+                        <span>{label}</span>
+                        {activeSection === id && (
+                          <IconChevronRight className="h-3.5 w-3.5 ml-auto" />
+                        )}
+                      </button>
+                    ))}
+                  </motion.nav>
+
+                  {/* Content sections */}
+                  <div className="flex-1 min-w-0 flex flex-col gap-5">
+
+                    {/* ═══ Integrations ═══ */}
+                    <motion.div
+                      variants={fadeUp}
+                      id="integrations"
+                      ref={(el) => { sectionRefs.current.integrations = el }}
+                    >
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-gradient-to-br from-sky-500/15 to-blue-500/15">
+                          <IconBrandTelegram className="h-4 w-4 text-sky-500" />
+                        </div>
+                        <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                          Integrations
+                        </h3>
+                      </div>
+                      <TelegramCard />
+                    </motion.div>
+
+                    {/* ═══ Features ═══ */}
+                    <motion.div
+                      variants={fadeUp}
+                      id="features"
+                      ref={(el) => { sectionRefs.current.features = el }}
+                    >
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-gradient-to-br from-violet-500/15 to-purple-500/15">
+                          <IconPuzzle className="h-4 w-4 text-violet-500" />
+                        </div>
+                        <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                          Features
+                        </h3>
+                      </div>
+
+                      <div className="flex flex-col gap-3">
+                        {/* Money in Hours */}
+                        <div className="card-elevated rounded-xl bg-card overflow-hidden">
+                          <div className="flex items-center justify-between px-5 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="flex items-center justify-center h-9 w-9 rounded-xl bg-gradient-to-br from-blue-500/15 to-cyan-500/15 border border-blue-500/10">
+                                <IconClock className="h-4.5 w-4.5 text-blue-500" />
+                              </div>
+                              <div>
+                                <h4 className="text-sm font-semibold">Money in Hours</h4>
+                                <p className="text-xs text-muted-foreground mt-0.5">See expenses as work hours to build perspective</p>
+                              </div>
+                            </div>
+                            <ToggleSwitch checked={mihEnabled} onChange={() => setMihEnabled(!mihEnabled)} />
+                          </div>
+
+                          <AnimatePresence>
+                            {mihEnabled && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+                                className="overflow-hidden"
+                              >
+                                <div className="border-t border-border/40 px-5 py-4 space-y-3">
+                                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    <div>
+                                      <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider block mb-1.5">
+                                        Monthly Income
+                                      </label>
+                                      <input
+                                        type="number"
+                                        min={0}
+                                        value={monthlyIncome || ""}
+                                        onChange={e => setMonthlyIncome(Number(e.target.value) || 0)}
+                                        placeholder="e.g. 80000"
+                                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-ring"
+                                      />
+                                    </div>
+                                    <div>
+                                      <label className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider block mb-1.5">
+                                        Hours / Month
+                                      </label>
+                                      <input
+                                        type="number"
+                                        min={1}
+                                        value={workingHours}
+                                        onChange={e => setWorkingHours(Number(e.target.value) || 176)}
+                                        className="w-full rounded-lg border border-border bg-background px-3 py-2 text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-ring"
+                                      />
+                                    </div>
+                                  </div>
+
+                                  {computedRate > 0 && (
+                                    <div className="rounded-lg bg-blue-500/5 border border-blue-500/10 p-3 flex items-center justify-between">
+                                      <div>
+                                        <p className="text-xs text-muted-foreground">Your hourly rate</p>
+                                        <p className="text-lg font-bold tabular-nums">{formatINR(Math.round(computedRate))}<span className="text-xs font-normal text-muted-foreground">/hr</span></p>
+                                      </div>
+                                      <div className="text-right">
+                                        <p className="text-[11px] text-muted-foreground">A {formatINR(500)} expense</p>
+                                        <p className="text-xs font-semibold text-blue-600 dark:text-blue-400">
+                                          = {(500 / computedRate).toFixed(1)} hrs work
+                                        </p>
+                                      </div>
+                                    </div>
+                                  )}
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+
+                        {/* Ghost Budget */}
+                        <div className="card-elevated rounded-xl bg-card overflow-hidden">
+                          <div className="flex items-center justify-between px-5 py-4">
+                            <div className="flex items-center gap-3">
+                              <div className="flex items-center justify-center h-9 w-9 rounded-xl bg-gradient-to-br from-purple-500/15 to-violet-500/15 border border-purple-500/10">
+                                <IconGhost className="h-4.5 w-4.5 text-purple-500" />
+                              </div>
+                              <div>
+                                <h4 className="text-sm font-semibold">Ghost Budget</h4>
+                                <p className="text-xs text-muted-foreground mt-0.5">Track what perfect budgeting would save you</p>
+                              </div>
+                            </div>
+                            <ToggleSwitch checked={ghostEnabled} onChange={() => setGhostEnabled(!ghostEnabled)} />
+                          </div>
+
+                          <AnimatePresence>
+                            {ghostEnabled && (
+                              <motion.div
+                                initial={{ height: 0, opacity: 0 }}
+                                animate={{ height: "auto", opacity: 1 }}
+                                exit={{ height: 0, opacity: 0 }}
+                                transition={{ duration: 0.25, ease: [0.25, 0.1, 0.25, 1] }}
+                                className="overflow-hidden"
+                              >
+                                <div className="border-t border-border/40 px-5 py-4">
+                                  <p className="text-xs text-muted-foreground leading-relaxed">
+                                    Ghost Budget creates a shadow version of your spending that follows your budget perfectly.
+                                    Compare your actual spending against the ideal to see potential savings over time.
+                                  </p>
+                                </div>
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+                        </div>
+
+                        {/* Save features button */}
+                        <Button onClick={handleSave} disabled={saving} className="w-full" size="lg">
+                          <IconDeviceFloppy className="h-4 w-4 mr-2" />
+                          {saving ? "Saving..." : "Save Feature Settings"}
+                        </Button>
+                      </div>
+                    </motion.div>
+
+                    {/* ═══ Appearance ═══ */}
+                    <motion.div
+                      variants={fadeUp}
+                      id="appearance"
+                      ref={(el) => { sectionRefs.current.appearance = el }}
+                    >
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-gradient-to-br from-amber-500/15 to-orange-500/15">
+                          <IconPalette className="h-4 w-4 text-amber-500" />
+                        </div>
+                        <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                          Appearance
+                        </h3>
+                      </div>
+
+                      <div className="card-elevated rounded-xl bg-card px-5 py-4">
+                        <p className="text-sm font-medium mb-3">Theme</p>
+                        <div className="grid grid-cols-3 gap-2">
+                          {([
+                            { value: "light" as const, icon: IconSun, label: "Light" },
+                            { value: "dark" as const, icon: IconMoon, label: "Dark" },
+                            { value: "system" as const, icon: IconDeviceDesktop, label: "System" },
+                          ]).map(({ value, icon: Icon, label }) => (
+                            <button
+                              key={value}
+                              onClick={() => handleThemeChange(value)}
+                              className={`flex flex-col items-center gap-2 rounded-xl border p-4 text-sm font-medium transition-all duration-150 ${
+                                theme === value
+                                  ? "bg-primary/10 border-primary/20 text-primary"
+                                  : "bg-muted/20 border-border/40 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
+                              }`}
+                            >
+                              <Icon className="h-5 w-5" />
+                              <span className="text-xs">{label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </motion.div>
+                  </div>
+                </div>
+              </motion.div>
+            )}
           </div>
         </div>
       </SidebarInset>

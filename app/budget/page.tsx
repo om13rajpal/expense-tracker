@@ -1007,15 +1007,15 @@ export default function BudgetPage() {
                       iconColor: "text-amber-600 dark:text-amber-400",
                     },
                   ].map((stat) => (
-                    <div key={stat.label} className="px-5 py-4 flex items-start gap-3">
-                      <div className={`mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${stat.iconBg}`}>
-                        <stat.icon className={`h-4 w-4 ${stat.iconColor}`} />
+                    <div key={stat.label} className="px-3 sm:px-5 py-3 sm:py-4 flex items-start gap-2 sm:gap-3">
+                      <div className={`mt-0.5 flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg ${stat.iconBg}`}>
+                        <stat.icon className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${stat.iconColor}`} />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider leading-none mb-1.5">
+                        <p className="text-[10px] sm:text-[11px] font-medium text-muted-foreground uppercase tracking-wider leading-none mb-1.5">
                           {stat.label}
                         </p>
-                        <p className={`text-lg font-semibold tabular-nums leading-tight ${stat.color}`}>
+                        <p className={`text-base sm:text-lg font-semibold tabular-nums leading-tight truncate ${stat.color}`}>
                           {stat.value}
                         </p>
                         {stat.sub ? (

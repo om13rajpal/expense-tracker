@@ -246,7 +246,7 @@ async function testUnauthorized() {
 
 async function runAllTests() {
   console.log();
-  log(colors.yellow, '🚀 Finance Tracker API Test Suite');
+  log(colors.yellow, '🚀 Finova API Test Suite');
   log(colors.yellow, `Testing: ${BASE_URL}`);
 
   const results = [];

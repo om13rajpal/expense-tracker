@@ -32,7 +32,7 @@ const MAX_TOKENS = 4096
 const TEMPERATURE = 0.4
 
 function buildSystemPrompt(): string {
-  return `You are a personal financial advisor AI assistant for the user's Finance Tracker app. You have complete access to their financial data including transactions, investments, budgets, and goals.
+  return `You are a personal financial advisor AI assistant for the user's Finova app. You have complete access to their financial data including transactions, investments, budgets, and goals.
 
 Guidelines:
 - Always use INR (Rs.) for currency values, formatted in Indian notation (lakhs, crores)
@@ -265,8 +265,8 @@ export async function POST(request: NextRequest) {
           headers: {
             'Authorization': `Bearer ${apiKey}`,
             'Content-Type': 'application/json',
-            'HTTP-Referer': 'https://finance-tracker.local',
-            'X-Title': 'Finance Tracker AI Agent',
+            'HTTP-Referer': 'https://finova.local',
+            'X-Title': 'Finova AI Agent',
           },
           body: JSON.stringify({
             model: MODEL,

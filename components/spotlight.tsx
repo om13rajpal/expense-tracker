@@ -208,6 +208,7 @@ export function Spotlight() {
           className="overflow-hidden p-0 shadow-2xl max-w-xl rounded-xl border-border/50 bg-background/95 backdrop-blur-xl gap-0"
           onKeyDown={handleKeyDown}
           aria-label="Spotlight search"
+          hideCloseButton
         >
           <DialogTitle className="sr-only">Spotlight Search</DialogTitle>
           <DialogDescription className="sr-only">

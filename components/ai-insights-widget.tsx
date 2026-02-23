@@ -259,12 +259,12 @@ function StructuredInsightsView({
   return (
     <div className="space-y-4">
       {/* Health Score + Key Insight */}
-      <div className="flex items-start gap-3">
+      <div className="flex flex-wrap items-start gap-2 sm:gap-3">
         <HealthScoreBadge score={data.healthScore} />
         {data.keyInsight && (
-          <div className="flex items-start gap-1.5 min-w-0 flex-1">
+          <div className="flex items-start gap-1.5 min-w-0 flex-1 basis-40">
             <IconBulb className="h-3.5 w-3.5 mt-0.5 shrink-0 text-amber-500" />
-            <p className={`text-xs text-muted-foreground leading-relaxed ${compact ? "line-clamp-1" : "line-clamp-2"}`}>
+            <p className={`text-xs text-muted-foreground leading-relaxed ${compact ? "line-clamp-2" : "line-clamp-2"}`}>
               {data.keyInsight}
             </p>
           </div>
@@ -360,7 +360,7 @@ function StructuredInsightsView({
                     <Link
                       key={i}
                       href={link}
-                      className="group flex items-center gap-2.5 rounded-lg border border-border/50 bg-card px-3 py-2 transition-colors hover:bg-muted/40 hover:border-border"
+                      className="group flex items-center gap-2 sm:gap-2.5 rounded-lg border border-border/50 bg-card px-2.5 sm:px-3 py-2 transition-colors hover:bg-muted/40 hover:border-border"
                     >
                       <IconBolt className="h-3.5 w-3.5 text-primary shrink-0" />
                       <span className="text-xs font-medium flex-1 truncate group-hover:text-primary transition-colors">
@@ -373,8 +373,8 @@ function StructuredInsightsView({
                         {action.impact}
                       </Badge>
                       {action.savingAmount > 0 && (
-                        <span className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 tabular-nums shrink-0">
-                          {formatINR(action.savingAmount)}
+                        <span className="text-[10px] sm:text-[11px] font-medium text-emerald-600 dark:text-emerald-400 tabular-nums shrink-0">
+                          {formatCompact(action.savingAmount)}
                         </span>
                       )}
                     </Link>

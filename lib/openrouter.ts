@@ -56,8 +56,8 @@ export async function chatCompletion(
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
-        'HTTP-Referer': 'https://finance-tracker.local',
-        'X-Title': 'Finance Tracker AI',
+        'HTTP-Referer': 'https://finova.local',
+        'X-Title': 'Finova AI',
       },
       body: JSON.stringify({
         model,

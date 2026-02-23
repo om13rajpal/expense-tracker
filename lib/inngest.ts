@@ -43,6 +43,6 @@ type Events = {
 };
 
 export const inngest = new Inngest({
-  id: 'finance-tracker',
+  id: 'finova',
   schemas: new EventSchemas().fromRecord<Events>(),
 });
