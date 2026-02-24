@@ -9,10 +9,15 @@ import { Badge } from "@/components/ui/badge"
 import { MonthlyMetrics } from "@/lib/monthly-utils"
 import { IconTrendingUp, IconTrendingDown, IconAlertCircle } from "@tabler/icons-react"
 
+/**
+ * Props for the MonthlySummaryCard component.
+ * @property metrics - Pre-computed monthly financial metrics from `calculateMonthlyMetrics`.
+ */
 interface MonthlySummaryCardProps {
   metrics: MonthlyMetrics
 }
 
+/** Formats a number as INR currency with no decimal places. */
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",

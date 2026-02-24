@@ -1,6 +1,14 @@
 /**
- * Data processor for parsing and transforming transaction data
- * Handles CSV parsing, data validation, and transformation to Transaction objects
+ * Data processor for parsing and transforming transaction data.
+ *
+ * Provides the full CSV-to-Transaction pipeline: parsing CSV content,
+ * transforming raw rows into typed Transaction objects, validating fields,
+ * deduplicating, sorting, cleaning, and exporting back to CSV.
+ *
+ * Handles Indian-specific formats: INR currency symbols, comma separators,
+ * and parentheses for negative amounts.
+ *
+ * @module lib/data-processor
  */
 
 import {

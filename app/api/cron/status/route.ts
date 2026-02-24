@@ -8,10 +8,25 @@ import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, corsHeaders, handleOptions } from '@/lib/middleware';
 import { getMongoDb } from '@/lib/mongodb';
 
+/**
+ * OPTIONS /api/cron/status
+ * CORS preflight handler. Returns allowed methods and headers.
+ */
 export async function OPTIONS() {
   return handleOptions();
 }
 
+/**
+ * GET /api/cron/status
+ * Retrieve the latest run status for each cron job (prices, sync, analyze)
+ * plus a history of the last 10 cron runs across all job types.
+ * Unlike other cron endpoints, this uses user auth (not cron auth) for the dashboard.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @returns {200} `{ success: true, status: Record<string, { status, results, error, startedAt, finishedAt, durationMs }>, history: Array<{ job, status, startedAt, finishedAt, durationMs, error }> }`
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function GET(request: NextRequest) {
   return withAuth(async () => {
     try {

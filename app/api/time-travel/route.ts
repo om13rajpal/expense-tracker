@@ -1,11 +1,41 @@
+/**
+ * Time Travel API
+ * Provides historical spending comparisons for financial awareness:
+ * 1. "On this day" -- shows what the user spent on this date last year (+/- 1 day)
+ * 2. "Month-over-month" -- compares spending in the current month vs the same
+ *    number of elapsed days in the previous month
+ *
+ * Requires JWT authentication via the `auth-token` HTTP-only cookie.
+ *
+ * Endpoints:
+ *   GET /api/time-travel - Retrieve historical spending comparisons
+ *
+ * MongoDB collection: `transactions`
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, corsHeaders, handleOptions } from '@/lib/middleware';
 import { getMongoDb } from '@/lib/mongodb';
 
+/**
+ * OPTIONS /api/time-travel
+ * CORS preflight handler. Returns allowed methods and headers.
+ */
 export async function OPTIONS() {
   return handleOptions();
 }
 
+/**
+ * GET /api/time-travel
+ * Returns two comparison datasets:
+ * - `lastYear`: Top 10 expenses from this date last year (+/- 1 day window)
+ * - `monthComparison`: This month's spending vs last month's spending over the same number of elapsed days
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @returns {200} `{ success: true, lastYear: { date, transactions, totalSpent }, monthComparison: { thisMonth, lastMonth, change, changePercent, daysCompared } }`
+ * @returns {500} `{ success: false, error: string }` - Server error
+ */
 export async function GET(request: NextRequest) {
   return withAuth(async (_req, { user }) => {
     try {

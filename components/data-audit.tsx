@@ -22,8 +22,10 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
+/** Abbreviated day-of-week labels for the weekly distribution table. */
 const dayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"]
 
+/** Formats a number as INR currency with two decimal places. */
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -32,6 +34,11 @@ function formatCurrency(amount: number): string {
   }).format(amount)
 }
 
+/**
+ * Computes a percentile value from an array using linear interpolation.
+ * @param values - Numeric array to compute the percentile from.
+ * @param p      - Percentile to compute (0-1, e.g. 0.5 for median).
+ */
 function percentile(values: number[], p: number): number {
   if (!values.length) return 0
   const sorted = [...values].sort((a, b) => a - b)
@@ -43,6 +50,10 @@ function percentile(values: number[], p: number): number {
   return sorted[lower] * (1 - weight) + sorted[upper] * weight
 }
 
+/**
+ * Computes descriptive statistics (total, average, median, P25, P75, min, max)
+ * for an array of numeric amounts.
+ */
 function summarizeAmounts(values: number[]) {
   if (!values.length) {
     return { total: 0, average: 0, median: 0, p25: 0, p75: 0, min: 0, max: 0 }
@@ -59,6 +70,7 @@ function summarizeAmounts(values: number[]) {
   }
 }
 
+/** Amount histogram bucket definitions for the income/expense distribution table. */
 const amountBuckets = [
   { label: "0-100", min: 0, max: 100 },
   { label: "100-500", min: 100, max: 500 },

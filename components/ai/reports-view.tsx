@@ -1,3 +1,10 @@
+/**
+ * AI Reports view — tabbed dashboard of AI-generated financial reports.
+ * Provides four report types: Spending Analysis, Monthly Budget,
+ * Weekly Budget, and Investment Insights, each with structured data
+ * visualisations and markdown narrative sections.
+ * @module components/ai/reports-view
+ */
 "use client"
 
 import * as React from "react"
@@ -35,8 +42,16 @@ import { fadeUp } from "@/lib/motion"
 import { formatINR as formatCurrency } from "@/lib/format"
 import type { AiInsightType, InsightSection, MonthlyBudgetData, WeeklyBudgetData, InvestmentInsightsData } from "@/lib/ai-types"
 
-/* --- Accent configuration per card type --- */
-
+/**
+ * Metadata for each AI insight report type — controls the tab title,
+ * description, icon, and colour theme.
+ * @property type        - Discriminator matching the AiInsightType enum value.
+ * @property title       - Human-readable tab label.
+ * @property description - Short tagline shown in the report header.
+ * @property icon        - Tabler icon component rendered next to the title.
+ * @property iconBg      - Tailwind background class for the icon container.
+ * @property iconColor   - Tailwind text colour class for the icon.
+ */
 interface InsightMeta {
   type: AiInsightType
   title: string
@@ -46,6 +61,7 @@ interface InsightMeta {
   iconColor: string
 }
 
+/** Configuration array for the four AI report tabs. */
 const insightConfig: InsightMeta[] = [
   {
     type: "spending_analysis",
@@ -81,8 +97,12 @@ const insightConfig: InsightMeta[] = [
   },
 ]
 
-/* --- Relative timestamp helper --- */
-
+/**
+ * Formats an ISO date string as a human-readable relative timestamp
+ * (e.g. "3m ago", "Yesterday", "12 Jan").
+ * @param iso - ISO 8601 date string.
+ * @returns Relative time label.
+ */
 function relativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
   const mins = Math.floor(diff / 60000)
@@ -99,8 +119,7 @@ function relativeTime(iso: string): string {
   })
 }
 
-/* --- Severity styles --- */
-
+/** Tailwind theme tokens (border, bg, icon, badge) for each insight severity level. */
 const severityStyles: Record<string, { border: string; bg: string; icon: React.ComponentType<{ className?: string }>; iconColor: string; badge: string; badgeText: string }> = {
   positive: {
     border: "border-emerald-200/70 dark:border-emerald-800/50",
@@ -136,18 +155,19 @@ const severityStyles: Record<string, { border: string; bg: string; icon: React.C
   },
 }
 
+/** Resolves the severity style config, defaulting to "neutral". */
 function getSeverityStyle(severity?: string) {
   return severityStyles[severity || "neutral"] || severityStyles.neutral
 }
 
-/* --- Status badge for budget categories --- */
-
+/** Colour and label mapping for budget category status (on_track / over / under). */
 const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
   on_track: { label: "On track", color: "text-emerald-700 dark:text-emerald-300", bg: "bg-emerald-100 dark:bg-emerald-900/40" },
   over: { label: "Over", color: "text-rose-700 dark:text-rose-300", bg: "bg-rose-100 dark:bg-rose-900/40" },
   under: { label: "Under", color: "text-blue-700 dark:text-blue-300", bg: "bg-blue-100 dark:bg-blue-900/40" },
 }
 
+/** Pill badge showing the budget category's status (On track / Over / Under). */
 function StatusBadge({ status }: { status: string }) {
   const cfg = statusConfig[status] || statusConfig.on_track
   return (
@@ -157,16 +177,27 @@ function StatusBadge({ status }: { status: string }) {
   )
 }
 
-/* --- Priority colors --- */
-
+/** Dot and text colour classes for action item priority levels (high / medium / low). */
 const priorityColors: Record<string, { dot: string; text: string }> = {
   high: { dot: "bg-rose-500", text: "text-rose-600 dark:text-rose-400" },
   medium: { dot: "bg-amber-500", text: "text-amber-600 dark:text-amber-400" },
   low: { dot: "bg-emerald-500", text: "text-emerald-600 dark:text-emerald-400" },
 }
 
-/* --- Types --- */
-
+/**
+ * Return shape of the {@link useAiInsight} hook, providing both raw
+ * content and structured data for a single report type.
+ * @property content        - Raw markdown string (null when not yet loaded).
+ * @property sections       - Parsed InsightSection array from the AI response.
+ * @property structuredData - Typed JSON payload for structured visualisations.
+ * @property generatedAt    - ISO timestamp of when the insight was generated.
+ * @property fromCache      - Whether the data was served from cache.
+ * @property stale          - Whether the cached data is considered stale.
+ * @property isLoading      - True during the initial fetch.
+ * @property isRegenerating - True while a forced regeneration is in flight.
+ * @property error          - Error message string, or null if no error.
+ * @property regenerate     - Callback to force-regenerate the insight.
+ */
 interface InsightHookReturn {
   content: string | null
   sections: InsightSection[] | null
@@ -180,8 +211,15 @@ interface InsightHookReturn {
   regenerate: () => void
 }
 
-/* --- SpendingAnalysisData shape --- */
-
+/**
+ * Structured data shape returned by the spending_analysis AI report.
+ * @property healthScore    - 0-100 composite financial health score.
+ * @property summary        - Monthly income/expense/savings summary with a verdict.
+ * @property topCategories  - Top spending categories with amounts, trends, and suggestions.
+ * @property actionItems    - Prioritised money-saving recommendations.
+ * @property alerts         - Financial warnings and positive highlights.
+ * @property keyInsight     - One-sentence headline insight.
+ */
 interface SpendingAnalysisData {
   healthScore: number
   summary: { income: number; expenses: number; savings: number; savingsRate: number; verdict: string }
@@ -191,8 +229,10 @@ interface SpendingAnalysisData {
   keyInsight: string
 }
 
-/* --- Shared: Dashboard wrapper with loading/error/empty states --- */
-
+/**
+ * Shared wrapper that handles loading skeleton, error state, and
+ * regenerating indicator for every report dashboard tab.
+ */
 function DashboardShell({
   meta,
   insight,
@@ -245,8 +285,11 @@ function DashboardShell({
   )
 }
 
-/* --- Health Score Ring --- */
-
+/**
+ * SVG circular health score indicator with colour that shifts from
+ * green (>=70) to amber (>=40) to red (<40).
+ * @param score - Financial health score (0-100).
+ */
 function HealthScoreRing({ score }: { score: number }) {
   const radius = 54
   const stroke = 8
@@ -290,8 +333,11 @@ function HealthScoreRing({ score }: { score: number }) {
   )
 }
 
-/* --- SpendingDashboard --- */
-
+/**
+ * Spending Analysis dashboard tab. Renders health score ring, summary
+ * stats, top categories with trends, alerts, action items, and a
+ * markdown key insight.
+ */
 function SpendingDashboard({
   meta,
   insight,
@@ -453,8 +499,11 @@ function SpendingDashboard({
   )
 }
 
-/* --- MonthlyBudgetDashboard --- */
-
+/**
+ * Monthly Budget dashboard tab. Renders suggested category budgets
+ * with allocated amounts, percentages, and status badges, plus
+ * a narrative AI summary.
+ */
 function MonthlyBudgetDashboard({
   meta,
   insight,
@@ -586,8 +635,10 @@ function MonthlyBudgetDashboard({
   )
 }
 
-/* --- WeeklyBudgetDashboard --- */
-
+/**
+ * Weekly Budget dashboard tab. Displays weekly spending targets
+ * with daily allowances, focus areas, and an AI-written narrative.
+ */
 function WeeklyBudgetDashboard({
   meta,
   insight,
@@ -732,7 +783,11 @@ function WeeklyBudgetDashboard({
   )
 }
 
-/* --- InvestmentDashboard --- */
+/**
+ * Investment Insights dashboard tab. Shows portfolio summary (total value,
+ * returns, XIRR), sector allocation breakdown, individual holding cards,
+ * and AI-generated recommendations.
+ */
 
 function InvestmentDashboard({
   meta,
@@ -912,8 +967,7 @@ function InvestmentDashboard({
   )
 }
 
-/* --- Dashboard Header (shared) --- */
-
+/** Shared header bar for each report tab showing title, description, cache/stale status, and regenerate button. */
 function DashboardHeader({
   meta,
   insight,
@@ -979,8 +1033,10 @@ function DashboardHeader({
   )
 }
 
-/* --- Stat Tile --- */
-
+/**
+ * Small stat tile used inside report dashboards to display a single
+ * metric (currency, percentage, or raw number) with a coloured value.
+ */
 function StatTile({
   label,
   value,
@@ -1004,8 +1060,11 @@ function StatTile({
   )
 }
 
-/* --- InsightCard (fallback) --- */
-
+/**
+ * Fallback insight card used when a report has no structured data
+ * visualisation available. Renders the markdown content and parsed
+ * section cards with loading/error/stale handling.
+ */
 function InsightCard({
   meta,
   insight,
@@ -1109,8 +1168,7 @@ function InsightCard({
   )
 }
 
-/* --- Section Renderer (legacy fallback) --- */
-
+/** Renders an array of InsightSection objects as a grid of SectionCard components. */
 function SectionRenderer({ sections }: { sections: InsightSection[] }) {
   return (
     <div className="grid gap-3">
@@ -1121,6 +1179,11 @@ function SectionRenderer({ sections }: { sections: InsightSection[] }) {
   )
 }
 
+/**
+ * Renders a single InsightSection as a styled card. Supports
+ * "highlight", "action", and general section types with severity-based
+ * colouring and optional key-value detail rows.
+ */
 function SectionCard({ section }: { section: InsightSection }) {
   const style = getSeverityStyle(section.severity)
   const SeverityIcon = style.icon
@@ -1202,8 +1265,7 @@ function SectionCard({ section }: { section: InsightSection }) {
   )
 }
 
-/* --- Loading skeleton --- */
-
+/** Pulse skeleton placeholder shown while an AI report is being generated. */
 function LoadingSkeleton({ featured }: { featured?: boolean }) {
   return (
     <div className="space-y-3">
@@ -1226,8 +1288,7 @@ function LoadingSkeleton({ featured }: { featured?: boolean }) {
   )
 }
 
-/* --- Error state --- */
-
+/** Error state banner with specific messaging for API key issues and a Retry button. */
 function ErrorState({
   error,
   isApiKeyError,
@@ -1272,8 +1333,7 @@ function ErrorState({
   )
 }
 
-/* --- Empty / waiting state --- */
-
+/** Placeholder shown when there is no generated content or sections for a report. */
 function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center py-10 text-center">
@@ -1290,8 +1350,12 @@ function EmptyState() {
   )
 }
 
-/* --- ReportsView --- */
-
+/**
+ * Top-level AI Reports page exported for the `/ai` route's "Reports" tab.
+ * Renders a tab bar with four AI-generated report dashboards:
+ * Spending Analysis, Monthly Budget, Weekly Budget, and Investment Insights.
+ * Auth-guarded: redirects to `/login` when not authenticated.
+ */
 export function ReportsView() {
   const router = useRouter()
   const { isAuthenticated, isLoading: authLoading } = useAuth()

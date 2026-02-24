@@ -1,3 +1,22 @@
+/**
+ * Add bucket list item dialog component.
+ *
+ * Renders a modal dialog for creating new bucket list items with fields:
+ * - **Name** — required text input for the item name
+ * - **Target Amount** — required number input with optional "Look up" price search button
+ * - **Category** — dropdown selector (electronics, travel, vehicle, etc.)
+ * - **Priority** — dropdown selector (high, medium, low)
+ * - **Target Date** — optional date picker
+ * - **Monthly Allocation** — optional number input for monthly savings toward this item
+ * - **Description** — optional text input for notes
+ *
+ * The "Look up" button calls the Perplexity-powered price search API to auto-fill
+ * the target amount based on real-time web prices.
+ *
+ * All fields reset to defaults when the dialog is closed or an item is created.
+ *
+ * @module components/bucket-list/add-item-dialog
+ */
 "use client"
 
 import { useState } from "react"
@@ -21,6 +40,15 @@ import {
 import { IconSearch, IconLoader2 } from "@tabler/icons-react"
 import type { BucketListCategory, BucketListPriority } from "@/lib/types"
 
+/**
+ * Props for the AddItemDialog component.
+ *
+ * @property open - Whether the dialog is currently visible
+ * @property onOpenChange - Callback to toggle dialog visibility
+ * @property onSubmit - Callback with the form data when the user submits a new item
+ * @property onPriceLookup - Optional async callback to fetch the current price for a product name
+ * @property isPriceLooking - Whether a price lookup request is in progress
+ */
 interface AddItemDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -37,6 +65,10 @@ interface AddItemDialogProps {
   isPriceLooking?: boolean
 }
 
+/**
+ * Available category options for the category dropdown.
+ * Each entry maps an internal value to a display label.
+ */
 const categories: { value: BucketListCategory; label: string }[] = [
   { value: "electronics", label: "Electronics" },
   { value: "travel", label: "Travel" },
@@ -49,12 +81,25 @@ const categories: { value: BucketListCategory; label: string }[] = [
   { value: "other", label: "Other" },
 ]
 
+/**
+ * Available priority options for the priority dropdown.
+ * Each entry maps an internal value to a display label.
+ */
 const priorities: { value: BucketListPriority; label: string }[] = [
   { value: "high", label: "High" },
   { value: "medium", label: "Medium" },
   { value: "low", label: "Low" },
 ]
 
+/**
+ * Renders a modal dialog form for adding new bucket list items.
+ *
+ * Includes smart price lookup integration — when the user enters a name and clicks
+ * "Look up", it queries the Perplexity Sonar API for real-time pricing and auto-fills
+ * the target amount field. All form state resets after successful submission.
+ *
+ * @param props - Component props (see AddItemDialogProps)
+ */
 export function AddItemDialog({
   open,
   onOpenChange,
@@ -70,6 +115,7 @@ export function AddItemDialog({
   const [monthlyAllocation, setMonthlyAllocation] = useState("")
   const [description, setDescription] = useState("")
 
+  /** Resets all form fields to their default values. */
   function reset() {
     setName("")
     setTargetAmount("")
@@ -80,6 +126,10 @@ export function AddItemDialog({
     setDescription("")
   }
 
+  /**
+   * Handles form submission, validates required fields, calls onSubmit,
+   * then resets the form and closes the dialog.
+   */
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!name.trim() || !targetAmount) return
@@ -96,6 +146,10 @@ export function AddItemDialog({
     onOpenChange(false)
   }
 
+  /**
+   * Triggers a price lookup for the current item name and auto-fills
+   * the target amount if a price is found.
+   */
   async function handlePriceLookup() {
     if (!onPriceLookup || !name.trim()) return
     const price = await onPriceLookup(name.trim())

@@ -1,3 +1,8 @@
+/**
+ * Reusable skeleton loading placeholders for charts, metrics, dashboards,
+ * and data tables. Used throughout the app while data is being fetched.
+ * @module components/chart-skeleton
+ */
 import { Skeleton } from "@/components/ui/skeleton"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 

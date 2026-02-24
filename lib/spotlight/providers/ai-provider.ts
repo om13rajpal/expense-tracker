@@ -1,3 +1,12 @@
+/**
+ * Spotlight AI query provider: offers "Ask AI" as a search result for questions.
+ *
+ * Detects when the user is asking a question (interrogative words, "?" suffix,
+ * 5+ word inputs) and surfaces an "Ask AI" action that routes to the AI chat.
+ *
+ * @module lib/spotlight/providers/ai-provider
+ */
+
 import type { SpotlightProvider, SpotlightResult } from "../types"
 import { isAIQuery } from "../data/parsers"
 import { IconRobot } from "@tabler/icons-react"

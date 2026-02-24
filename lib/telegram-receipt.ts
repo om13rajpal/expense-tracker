@@ -1,17 +1,37 @@
 /**
  * Receipt photo processing via OpenRouter (Claude Sonnet vision).
- * Downloads the Telegram file and sends it for OCR/extraction.
+ *
+ * Downloads a receipt image from a Telegram file URL, converts it to
+ * base64, and sends it to the Claude Sonnet vision model for OCR
+ * extraction. Returns structured receipt data including merchant name,
+ * total amount, line items, date, and an auto-assigned expense category.
+ *
+ * @module lib/telegram-receipt
  */
 
+/** Structured data extracted from a receipt image via AI vision. */
 export interface ReceiptData {
+  /** Store or restaurant name. */
   merchant: string;
+  /** Total amount in INR. */
   amount: number;
+  /** Individual line items on the receipt. */
   items: string[];
+  /** Date from the receipt (YYYY-MM-DD), if visible. */
   date?: string;
+  /** Auto-assigned expense category (e.g. "Food & Dining", "Shopping"). */
   category?: string;
+  /** Extraction confidence: 0.85 if amount detected, 0.4 if partial, 0.2 on parse failure. */
   confidence: number;
 }
 
+/**
+ * Process a receipt image by downloading it and sending to Claude Sonnet for OCR.
+ *
+ * @param fileUrl - Public URL of the receipt image (from Telegram file API).
+ * @returns Structured ReceiptData with extracted merchant, amount, items, date, and category.
+ * @throws Error if OPENROUTER_API_KEY is not configured.
+ */
 export async function processReceiptImage(fileUrl: string): Promise<ReceiptData> {
   // Download the image as base64
   const imgRes = await fetch(fileUrl);

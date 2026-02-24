@@ -1,7 +1,17 @@
-// Transform Google Sheets transactions to DataTable format
+/**
+ * Transaction transformer for the DataTable component.
+ *
+ * Converts internal `Transaction` objects (with Date objects, enum types,
+ * and optional fields) into a flat `DataTableTransaction` shape suitable
+ * for client-side table rendering and sorting.
+ *
+ * @module lib/transform-transactions
+ */
+
 import type { Transaction } from './types';
 import { TransactionType } from './types';
 
+/** Flat transaction shape consumed by the DataTable component. */
 export interface DataTableTransaction {
   id: string;
   _id?: string;
@@ -14,6 +24,16 @@ export interface DataTableTransaction {
   merchant?: string;
 }
 
+/**
+ * Transform a single Transaction into a DataTableTransaction.
+ *
+ * Handles date conversion (Date or string to YYYY-MM-DD), maps the
+ * transaction type enum to a simple "income" | "expense" string,
+ * and extracts the MongoDB `_id` when present.
+ *
+ * @param transaction - Internal Transaction object.
+ * @returns Flat row suitable for the DataTable component.
+ */
 export function transformTransactionForTable(transaction: Transaction): DataTableTransaction {
   // Handle date conversion
   let dateStr: string;
@@ -42,6 +62,14 @@ export function transformTransactionForTable(transaction: Transaction): DataTabl
   };
 }
 
+/**
+ * Batch-transform an array of Transactions into DataTableTransaction rows.
+ *
+ * Returns an empty array if the input is null, undefined, or not an array.
+ *
+ * @param transactions - Array of internal Transaction objects.
+ * @returns Array of flat DataTableTransaction rows.
+ */
 export function transformTransactionsForTable(transactions: Transaction[]): DataTableTransaction[] {
   if (!transactions || !Array.isArray(transactions)) {
     return [];

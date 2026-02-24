@@ -17,10 +17,28 @@ import {
   updateChallengeProgress,
 } from '@/lib/gamification';
 
+/**
+ * OPTIONS /api/gamification
+ * CORS preflight handler. Returns allowed methods and headers.
+ */
 export const OPTIONS = handleOptions;
 
+/**
+ * @constant Minimum interval between badge re-checks to avoid redundant processing (5 minutes).
+ * If badges were checked within this window, the check is skipped on the current request.
+ */
 const BADGE_CHECK_INTERVAL_MS = 5 * 60 * 1000; // 5 minutes
 
+/**
+ * GET /api/gamification
+ * Returns a full gamification summary: XP, level, progress, badges, challenges, and streak.
+ * Runs badge unlock checks and challenge progress updates on each request
+ * (with a 5-minute debounce) to keep data fresh between cron runs.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @returns {200} `{ success: true, xp, level, levelName, progress, nextLevelXP, badges, challenges, streak }`
+ */
 export const GET = withAuth(async (_request: NextRequest, { user }) => {
   const db = await getMongoDb();
   const userId = user.userId;

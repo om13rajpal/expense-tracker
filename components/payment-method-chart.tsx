@@ -21,12 +21,19 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
+/**
+ * Single entry in the payment method chart data array.
+ * @property method - Payment method name (e.g. "UPI", "Card", "Cash").
+ * @property count  - Number of transactions using this method.
+ * @property amount - Total INR amount transacted via this method.
+ */
 interface PaymentMethodData {
   method: string
   count: number
   amount: number
 }
 
+/** Recharts ChartConfig for the count and amount bar series. */
 const chartConfig = {
   count: {
     label: "Transactions",
@@ -38,6 +45,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig
 
+/** Formats a number as INR currency with no decimal places. */
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",

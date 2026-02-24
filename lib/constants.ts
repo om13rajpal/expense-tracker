@@ -1,13 +1,23 @@
 /**
- * Constants for Finova
- * Includes colors, icons, and configuration values
+ * Application-wide constants for the Finova personal finance platform.
+ *
+ * Defines color palettes, icon mappings, display names, and configuration
+ * values for transaction categories, payment methods, and transaction types.
+ * Used by chart components, data tables, and UI elements across the app.
+ *
+ * Color values are hex strings compatible with Recharts and CSS.
+ * Icon names correspond to Lucide React icon components.
+ *
+ * @module lib/constants
  */
 
 import { TransactionCategory, PaymentMethod, TransactionType } from './types';
 
 /**
- * Category colors for charts and visualizations
- * Tailwind-compatible color values
+ * Hex color codes for each transaction category, used in pie charts,
+ * bar charts, and category badges. Colors are grouped by category type:
+ * green for income, blue for essentials, purple/pink for lifestyle,
+ * orange for financial, and gray for other.
  */
 export const CATEGORY_COLORS: Record<TransactionCategory, string> = {
   // Income categories - Green shades
@@ -51,7 +61,7 @@ export const CATEGORY_COLORS: Record<TransactionCategory, string> = {
 };
 
 /**
- * Payment method colors
+ * Hex color codes for each payment method, used in payment distribution charts.
  */
 export const PAYMENT_METHOD_COLORS: Record<PaymentMethod, string> = {
   [PaymentMethod.CASH]: '#22c55e',
@@ -67,7 +77,7 @@ export const PAYMENT_METHOD_COLORS: Record<PaymentMethod, string> = {
 };
 
 /**
- * Transaction type colors
+ * Hex color codes for each transaction type (income=green, expense=red, etc.).
  */
 export const TRANSACTION_TYPE_COLORS: Record<TransactionType, string> = {
   [TransactionType.INCOME]: '#10b981',
@@ -78,7 +88,8 @@ export const TRANSACTION_TYPE_COLORS: Record<TransactionType, string> = {
 };
 
 /**
- * Category icons (Lucide icon names)
+ * Lucide icon component names for each transaction category.
+ * Resolved at runtime by importing from the `lucide-react` package.
  */
 export const CATEGORY_ICONS: Record<TransactionCategory, string> = {
   // Income
@@ -122,7 +133,7 @@ export const CATEGORY_ICONS: Record<TransactionCategory, string> = {
 };
 
 /**
- * Payment method icons
+ * Lucide icon component names for each payment method.
  */
 export const PAYMENT_METHOD_ICONS: Record<PaymentMethod, string> = {
   [PaymentMethod.CASH]: 'Banknote',
@@ -138,7 +149,7 @@ export const PAYMENT_METHOD_ICONS: Record<PaymentMethod, string> = {
 };
 
 /**
- * Transaction type icons
+ * Lucide icon component names for each transaction type.
  */
 export const TRANSACTION_TYPE_ICONS: Record<TransactionType, string> = {
   [TransactionType.INCOME]: 'ArrowDownCircle',
@@ -149,7 +160,8 @@ export const TRANSACTION_TYPE_ICONS: Record<TransactionType, string> = {
 };
 
 /**
- * Category display names (user-friendly)
+ * User-friendly display names for each transaction category.
+ * Used in UI labels, dropdown menus, and report headings.
  */
 export const CATEGORY_DISPLAY_NAMES: Record<TransactionCategory, string> = {
   [TransactionCategory.SALARY]: 'Salary & Wages',
@@ -188,7 +200,8 @@ export const CATEGORY_DISPLAY_NAMES: Record<TransactionCategory, string> = {
 };
 
 /**
- * Category groups for organization
+ * Logical grouping of transaction categories by purpose.
+ * Used for NWI classification defaults and category filter UI sections.
  */
 export const CATEGORY_GROUPS = {
   income: [
@@ -232,23 +245,18 @@ export const CATEGORY_GROUPS = {
   ],
 };
 
-/**
- * Default currency symbol
- */
+/** Indian Rupee currency symbol for UI display. */
 export const CURRENCY_SYMBOL = '₹';
 
-/**
- * Currency code
- */
+/** ISO 4217 currency code for Indian Rupees. */
 export const CURRENCY_CODE = 'INR';
 
-/**
- * Locale for formatting
- */
+/** BCP 47 locale tag for Indian English formatting (en-IN). */
 export const LOCALE = 'en-IN';
 
 /**
- * Date format presets
+ * Common date format patterns used throughout the application.
+ * These are descriptive labels; actual formatting uses `Intl.DateTimeFormat`.
  */
 export const DATE_FORMATS = {
   SHORT: 'DD/MM/YYYY',
@@ -259,7 +267,8 @@ export const DATE_FORMATS = {
 } as const;
 
 /**
- * Chart color palette
+ * General-purpose color palette for charts with more categories than specific mappings.
+ * 10 distinct colors cycling through blue, green, amber, red, purple, pink, teal, orange, cyan, lime.
  */
 export const CHART_COLORS = [
   '#3b82f6', // blue
@@ -275,7 +284,8 @@ export const CHART_COLORS = [
 ];
 
 /**
- * Budget status thresholds
+ * Budget utilization thresholds for determining budget health status.
+ * Values represent the fraction of budget consumed.
  */
 export const BUDGET_THRESHOLDS = {
   ON_TRACK: 0.7,    // <= 70% of budget used
@@ -284,7 +294,8 @@ export const BUDGET_THRESHOLDS = {
 } as const;
 
 /**
- * Analytics period options
+ * Selectable time period options for the analytics date range picker.
+ * Numeric values represent days; string values indicate special calculation modes.
  */
 export const PERIOD_OPTIONS = [
   { label: 'Last 7 Days', value: 7 },
@@ -296,7 +307,7 @@ export const PERIOD_OPTIONS = [
 ] as const;
 
 /**
- * Default number of items to show
+ * Default limits for list displays and chart data points.
  */
 export const DEFAULT_LIMITS = {
   TOP_CATEGORIES: 5,
@@ -306,7 +317,7 @@ export const DEFAULT_LIMITS = {
 } as const;
 
 /**
- * CSV column headers
+ * Column header names for CSV export/import of transaction data.
  */
 export const CSV_HEADERS = [
   'date',
@@ -327,49 +338,70 @@ export const CSV_HEADERS = [
 ] as const;
 
 /**
- * Helper function to get category color
+ * Look up the hex color code for a given transaction category.
+ *
+ * @param category - The transaction category.
+ * @returns Hex color string, falling back to the Uncategorized color.
  */
 export function getCategoryColor(category: TransactionCategory): string {
   return CATEGORY_COLORS[category] || CATEGORY_COLORS[TransactionCategory.UNCATEGORIZED];
 }
 
 /**
- * Helper function to get category icon
+ * Look up the Lucide icon name for a given transaction category.
+ *
+ * @param category - The transaction category.
+ * @returns Lucide icon name string, falling back to the Uncategorized icon.
  */
 export function getCategoryIcon(category: TransactionCategory): string {
   return CATEGORY_ICONS[category] || CATEGORY_ICONS[TransactionCategory.UNCATEGORIZED];
 }
 
 /**
- * Helper function to get category display name
+ * Look up the user-friendly display name for a given transaction category.
+ *
+ * @param category - The transaction category.
+ * @returns Human-readable category name, falling back to the raw enum value.
  */
 export function getCategoryDisplayName(category: TransactionCategory): string {
   return CATEGORY_DISPLAY_NAMES[category] || category;
 }
 
 /**
- * Helper function to get payment method color
+ * Look up the hex color code for a given payment method.
+ *
+ * @param method - The payment method.
+ * @returns Hex color string, falling back to the "Other" payment method color.
  */
 export function getPaymentMethodColor(method: PaymentMethod): string {
   return PAYMENT_METHOD_COLORS[method] || PAYMENT_METHOD_COLORS[PaymentMethod.OTHER];
 }
 
 /**
- * Helper function to get payment method icon
+ * Look up the Lucide icon name for a given payment method.
+ *
+ * @param method - The payment method.
+ * @returns Lucide icon name string, falling back to the "Other" payment method icon.
  */
 export function getPaymentMethodIcon(method: PaymentMethod): string {
   return PAYMENT_METHOD_ICONS[method] || PAYMENT_METHOD_ICONS[PaymentMethod.OTHER];
 }
 
 /**
- * Helper function to get transaction type color
+ * Look up the hex color code for a given transaction type.
+ *
+ * @param type - The transaction type.
+ * @returns Hex color string.
  */
 export function getTransactionTypeColor(type: TransactionType): string {
   return TRANSACTION_TYPE_COLORS[type];
 }
 
 /**
- * Helper function to get transaction type icon
+ * Look up the Lucide icon name for a given transaction type.
+ *
+ * @param type - The transaction type.
+ * @returns Lucide icon name string.
  */
 export function getTransactionTypeIcon(type: TransactionType): string {
   return TRANSACTION_TYPE_ICONS[type];

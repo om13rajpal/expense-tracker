@@ -1,3 +1,10 @@
+/**
+ * Smart Roundup Savings card.
+ * Calculates how much the user could save if every expense were rounded
+ * up to the nearest Rs 100, and displays the total, per-transaction
+ * average, and top individual roundups.
+ * @module components/roundup-savings-card
+ */
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
@@ -8,6 +15,14 @@ import { formatINR } from "@/lib/format"
 import { spring } from "@/lib/motion"
 import { Skeleton } from "@/components/ui/skeleton"
 
+/**
+ * Shape of the roundup savings API response.
+ * @property success          - Whether the API call succeeded.
+ * @property totalRoundup     - Total hypothetical savings from rounding up all expenses.
+ * @property transactionCount - Number of transactions included in the calculation.
+ * @property averageRoundup   - Mean roundup amount per transaction.
+ * @property topRoundups      - Top individual transactions with the largest roundup deltas.
+ */
 interface RoundupData {
   success: boolean
   totalRoundup: number
@@ -16,11 +31,21 @@ interface RoundupData {
   topRoundups: Array<{ description: string; amount: number; roundup: number }>
 }
 
+/**
+ * Fetches roundup savings data from the API.
+ * @returns Parsed RoundupData JSON response.
+ */
 async function fetchRoundup(): Promise<RoundupData> {
   const res = await fetch("/api/roundup-savings", { credentials: "include" })
   return res.json()
 }
 
+/**
+ * Renders a dashboard card showing potential savings from rounding up
+ * every expense to the nearest Rs 100. Includes the aggregate amount,
+ * transaction count, average roundup, and a list of the top 3 roundups.
+ * Hidden when no savings data is available or the total is zero.
+ */
 export function RoundupSavingsCard() {
   const { data, isLoading } = useQuery({
     queryKey: ["roundup-savings"],

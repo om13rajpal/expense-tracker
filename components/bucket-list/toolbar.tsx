@@ -1,3 +1,17 @@
+/**
+ * Bucket list toolbar component.
+ *
+ * Provides filtering and sorting controls for the bucket list page:
+ * - **Status filter** — toggle group to filter by All / Wishlist / Saving / Completed
+ * - **Category filter** — dropdown to filter by item category (electronics, travel, etc.)
+ * - **Sort control** — dropdown to sort by priority, progress, amount, date, or name
+ * - **Add Item button** — right-aligned CTA to open the add item dialog
+ *
+ * The toolbar is responsive, wrapping controls on smaller screens while keeping
+ * the Add Item button right-aligned via flex margin-auto.
+ *
+ * @module components/bucket-list/toolbar
+ */
 "use client"
 
 import { IconPlus } from "@tabler/icons-react"
@@ -12,6 +26,17 @@ import {
 } from "@/components/ui/select"
 import type { BucketListCategory, BucketListStatus } from "@/lib/types"
 
+/**
+ * Props for the BucketListToolbar component.
+ *
+ * @property statusFilter - Currently selected status filter value
+ * @property onStatusChange - Callback when status filter changes
+ * @property categoryFilter - Currently selected category filter value
+ * @property onCategoryChange - Callback when category filter changes
+ * @property sortBy - Currently selected sort field
+ * @property onSortChange - Callback when sort field changes
+ * @property onAddClick - Callback when Add Item button is clicked
+ */
 interface ToolbarProps {
   statusFilter: BucketListStatus | "all"
   onStatusChange: (value: BucketListStatus | "all") => void
@@ -22,6 +47,10 @@ interface ToolbarProps {
   onAddClick: () => void
 }
 
+/**
+ * Human-readable labels for each category filter option.
+ * Includes "all" for the unfiltered state.
+ */
 const categoryLabels: Record<BucketListCategory | "all", string> = {
   all: "All Categories",
   electronics: "Electronics",
@@ -35,6 +64,15 @@ const categoryLabels: Record<BucketListCategory | "all", string> = {
   other: "Other",
 }
 
+/**
+ * Renders the filter/sort toolbar for the bucket list page.
+ *
+ * Contains a toggle group for status, dropdowns for category and sort order,
+ * and an Add Item button. All controls call their respective onChange callbacks
+ * to update parent state.
+ *
+ * @param props - Component props (see ToolbarProps)
+ */
 export function BucketListToolbar({
   statusFilter,
   onStatusChange,

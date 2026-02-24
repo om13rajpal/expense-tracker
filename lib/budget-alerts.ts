@@ -1,7 +1,12 @@
 /**
- * Budget Alert System
+ * Budget Alert System.
+ *
  * Compares per-category spending against budget limits and generates
  * prioritized alerts when spending approaches or exceeds budgets.
+ * Alerts are capped at {@link MAX_ALERTS} (5) to avoid notification fatigue,
+ * and sorted by severity (exceeded > critical > warning) then percentage.
+ *
+ * @module lib/budget-alerts
  */
 
 /**

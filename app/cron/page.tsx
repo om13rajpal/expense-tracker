@@ -1,3 +1,11 @@
+/**
+ * @module app/cron/page
+ * @description Cron Jobs admin dashboard for Finova. Displays the status
+ * of scheduled background jobs (price refresh, sheet sync, AI analysis),
+ * allows manual triggering of individual jobs via a CRON_SECRET prompt,
+ * and shows a table of the 10 most recent cron execution history entries.
+ * Status and history data are fetched from `/api/cron/status`.
+ */
 "use client"
 
 import * as React from "react"
@@ -64,12 +72,22 @@ const JOB_CONFIG: Record<string, { label: string; description: string; schedule:
   },
 }
 
+/**
+ * Formats a duration in milliseconds to a human-readable string.
+ * @param ms - Duration in milliseconds, or null/undefined.
+ * @returns A formatted string like "1.2s" or "350ms", or "-" if no value.
+ */
 function formatDuration(ms: number | null | undefined): string {
   if (!ms) return "-"
   if (ms < 1000) return `${ms}ms`
   return `${(ms / 1000).toFixed(1)}s`
 }
 
+/**
+ * Formats an ISO timestamp to a localized Indian date-time string.
+ * @param iso - An ISO 8601 date string, or undefined.
+ * @returns A locale-formatted string like "24 Feb 2026, 10:00 AM", or "Never".
+ */
 function formatTime(iso: string | undefined): string {
   if (!iso) return "Never"
   const d = new Date(iso)
@@ -79,6 +97,11 @@ function formatTime(iso: string | undefined): string {
   })
 }
 
+/**
+ * Returns a styled Badge component reflecting the cron job execution status.
+ * @param status - One of "success", "error", "skipped", or any other value (renders "Never run").
+ * @returns A JSX Badge element with appropriate color and icon.
+ */
 function statusBadge(status: string) {
   if (status === "success") {
     return (
@@ -108,6 +131,13 @@ function statusBadge(status: string) {
   )
 }
 
+/**
+ * Cron Jobs dashboard page component. Renders job status cards for each
+ * configured cron job, a manual trigger button (requires CRON_SECRET),
+ * and a recent-runs history table. Auth-guarded -- redirects to `/login`
+ * if the user is not authenticated.
+ * @returns The cron dashboard wrapped in the app sidebar layout.
+ */
 export default function CronPage() {
   const router = useRouter()
   const { isAuthenticated, isLoading: authLoading } = useAuth()

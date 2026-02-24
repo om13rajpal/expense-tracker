@@ -11,8 +11,21 @@ import { withCronAuth } from '@/lib/middleware';
 import { getMongoDb } from '@/lib/mongodb';
 import { runAiPipeline } from '@/lib/ai-pipeline';
 
+/** @constant MongoDB collection for logging cron job runs and their results. */
 const CRON_COLLECTION = 'cron_runs';
 
+/**
+ * GET /api/cron/analyze
+ * Weekly cron job that generates AI spending analyses for all users with transaction data.
+ * Runs the AI pipeline for six insight types: spending_analysis, monthly_budget,
+ * weekly_budget, investment_insights, tax_optimization, and planner_recommendation.
+ * Logs each run to the `cron_runs` collection.
+ *
+ * @requires Authentication - Cron secret via `Authorization` header or `CRON_SECRET` env var
+ *
+ * @returns {200} `{ success: true, usersProcessed: number, usersFailed: number }`
+ * @returns {500} `{ success: false, message: string }` - Error during analysis
+ */
 export async function GET(request: NextRequest) {
   return withCronAuth(async () => {
     const startedAt = new Date();

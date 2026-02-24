@@ -1,3 +1,18 @@
+/**
+ * Edit bucket list item dialog component.
+ *
+ * Renders a modal dialog for editing existing bucket list items. Includes all fields
+ * from the add dialog plus an "Add Funds" field that increments the saved amount
+ * rather than replacing it.
+ *
+ * When the dialog opens, all fields are pre-populated from the provided item.
+ * The Add Funds field defaults to empty and shows the current saved amount as helper text.
+ *
+ * Like the add dialog, includes "Look up" price search integration for updating
+ * the target amount based on current web prices.
+ *
+ * @module components/bucket-list/edit-item-dialog
+ */
 "use client"
 
 import { useState, useEffect } from "react"
@@ -25,6 +40,16 @@ import type {
   BucketListPriority,
 } from "@/lib/types"
 
+/**
+ * Props for the EditItemDialog component.
+ *
+ * @property open - Whether the dialog is currently visible
+ * @property onOpenChange - Callback to toggle dialog visibility
+ * @property item - The bucket list item to edit (null if no item selected)
+ * @property onSubmit - Callback with the item ID and updated fields when submitted
+ * @property onPriceLookup - Optional async callback to fetch the current price for a product name
+ * @property isPriceLooking - Whether a price lookup request is in progress
+ */
 interface EditItemDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -37,6 +62,9 @@ interface EditItemDialogProps {
   isPriceLooking?: boolean
 }
 
+/**
+ * Available category options for the category dropdown.
+ */
 const categories: { value: BucketListCategory; label: string }[] = [
   { value: "electronics", label: "Electronics" },
   { value: "travel", label: "Travel" },
@@ -49,12 +77,26 @@ const categories: { value: BucketListCategory; label: string }[] = [
   { value: "other", label: "Other" },
 ]
 
+/**
+ * Available priority options for the priority dropdown.
+ */
 const priorities: { value: BucketListPriority; label: string }[] = [
   { value: "high", label: "High" },
   { value: "medium", label: "Medium" },
   { value: "low", label: "Low" },
 ]
 
+/**
+ * Renders a modal dialog form for editing existing bucket list items.
+ *
+ * Pre-populates all form fields from the provided item on open.
+ * The "Add Funds" field uses addAmount to increment savedAmount server-side
+ * rather than replacing it, preventing race conditions with concurrent updates.
+ *
+ * Returns null if no item is provided (dialog should not render without an item).
+ *
+ * @param props - Component props (see EditItemDialogProps)
+ */
 export function EditItemDialog({
   open,
   onOpenChange,
@@ -72,6 +114,10 @@ export function EditItemDialog({
   const [description, setDescription] = useState("")
   const [addFunds, setAddFunds] = useState("")
 
+  /**
+   * Syncs form state with the provided item whenever it changes.
+   * This ensures the form reflects the latest item data when the dialog opens.
+   */
   useEffect(() => {
     if (item) {
       setName(item.name)
@@ -85,6 +131,10 @@ export function EditItemDialog({
     }
   }, [item])
 
+  /**
+   * Handles form submission, validates required fields, calls onSubmit
+   * with the item ID and updated fields, then closes the dialog.
+   */
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!item || !name.trim() || !targetAmount) return
@@ -101,6 +151,10 @@ export function EditItemDialog({
     onOpenChange(false)
   }
 
+  /**
+   * Triggers a price lookup for the current item name and auto-fills
+   * the target amount if a price is found.
+   */
   async function handlePriceLookup() {
     if (!onPriceLookup || !name.trim()) return
     const price = await onPriceLookup(name.trim())

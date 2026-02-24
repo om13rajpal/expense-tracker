@@ -1,5 +1,18 @@
+/**
+ * @module app/login/page
+ * @description Authentication page for Finova. Renders a centered login form
+ * with decorative gradient blurs in the background. The actual authentication
+ * logic (credential validation, session management) is handled by the
+ * `LoginForm` component.
+ */
 import { LoginForm } from "@/components/login-form"
 
+/**
+ * Login page component that displays the Finova branding and a secure
+ * sign-in form. Uses a minimal layout with background gradient effects
+ * and the shared `LoginForm` component for credential entry.
+ * @returns The login page JSX with branding header and login form.
+ */
 export default function LoginPage() {
   return (
     <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-background px-4">

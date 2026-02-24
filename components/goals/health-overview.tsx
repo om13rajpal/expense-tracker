@@ -1,3 +1,10 @@
+/**
+ * Financial Health Overview dashboard section.
+ * Displays a composite health score ring (0-100), stat bar with key
+ * metrics, and a score breakdown with animated progress bars for
+ * balance growth, safety net, spending balance, and investment rate.
+ * @module components/goals/health-overview
+ */
 "use client"
 
 import { motion, AnimatePresence } from "motion/react"
@@ -22,6 +29,7 @@ import { stagger, fadeUp, fadeUpSmall, scaleIn, numberPop, listItem } from "@/li
 // Helpers
 // ---------------------------------------------------------------------------
 
+/** Returns a Tailwind text colour class based on the health score tier (green/amber/orange/red). */
 function getScoreColor(score: number): string {
   if (score >= 75) return "text-emerald-600"
   if (score >= 50) return "text-amber-500"
@@ -29,6 +37,7 @@ function getScoreColor(score: number): string {
   return "text-rose-600"
 }
 
+/** Returns a hex stroke colour for the SVG score ring based on the score tier. */
 function getScoreRingColor(score: number): string {
   if (score >= 75) return "#10b981"
   if (score >= 50) return "#f59e0b"
@@ -36,6 +45,7 @@ function getScoreRingColor(score: number): string {
   return "#f43f5e"
 }
 
+/** Returns an RGBA glow colour for the drop-shadow around the score ring. */
 function getScoreGlowColor(score: number): string {
   if (score >= 75) return "rgba(16, 185, 129, 0.25)"
   if (score >= 50) return "rgba(245, 158, 11, 0.2)"
@@ -43,6 +53,7 @@ function getScoreGlowColor(score: number): string {
   return "rgba(244, 63, 94, 0.2)"
 }
 
+/** Returns Tailwind badge classes (bg + text) for the score label pill. */
 function getScoreBadgeBg(score: number): string {
   if (score >= 75) return "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400"
   if (score >= 50) return "bg-amber-500/10 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400"
@@ -50,6 +61,7 @@ function getScoreBadgeBg(score: number): string {
   return "bg-rose-500/10 text-rose-600 dark:bg-rose-500/15 dark:text-rose-400"
 }
 
+/** Maps a numeric score to a human-readable label (Excellent/Good/Needs Work/Critical). */
 function getScoreLabel(score: number): string {
   if (score >= 75) return "Excellent"
   if (score >= 50) return "Good"
@@ -57,6 +69,7 @@ function getScoreLabel(score: number): string {
   return "Critical"
 }
 
+/** Returns hex gradient endpoints for a breakdown bar based on its fill percentage. */
 function getBarGradient(pct: number): { from: string; to: string } {
   if (pct >= 75) return { from: "#34d399", to: "#10b981" }
   if (pct >= 50) return { from: "#fbbf24", to: "#f59e0b" }
@@ -68,6 +81,10 @@ function getBarGradient(pct: number): { from: string; to: string } {
 // Score Ring
 // ---------------------------------------------------------------------------
 
+/**
+ * Animated SVG circular ring showing the overall financial health score (0-100).
+ * Includes a gradient stroke and glow shadow that change colour by score tier.
+ */
 function ScoreRing({ score, size = 140 }: { score: number; size?: number }) {
   const strokeWidth = 12
   const radius = (size - strokeWidth) / 2
@@ -139,6 +156,10 @@ function ScoreRing({ score, size = 140 }: { score: number; size?: number }) {
 // Stat Item
 // ---------------------------------------------------------------------------
 
+/**
+ * Single stat item in the horizontal stat bar (icon + label + value).
+ * Stagger-animated with index-based delay.
+ */
 function StatItem({
   icon: Icon,
   label,
@@ -184,6 +205,10 @@ function StatItem({
 // Breakdown Bar
 // ---------------------------------------------------------------------------
 
+/**
+ * Single row in the score breakdown section showing a label, score/max,
+ * and an animated gradient bar. Hoverable with icon and tooltip.
+ */
 function BreakdownBar({
   label,
   score,
@@ -255,6 +280,7 @@ function BreakdownBar({
 // Loading Skeleton
 // ---------------------------------------------------------------------------
 
+/** Pulse skeleton placeholder shown while health data is loading. */
 function HealthOverviewSkeleton() {
   return (
     <div className="space-y-5">
@@ -298,6 +324,12 @@ function HealthOverviewSkeleton() {
 // Main Component
 // ---------------------------------------------------------------------------
 
+/**
+ * Renders the complete Financial Health Overview dashboard section:
+ * a 4-column stat bar, an animated score ring with label, and a
+ * 4-row breakdown of the score components (25 points each).
+ * Shows skeleton during loading and an error card on failure.
+ */
 export function HealthOverview() {
   const { data, isLoading, error: queryError } = useFinancialHealth()
   const metrics = data?.metrics ?? null

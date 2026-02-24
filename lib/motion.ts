@@ -1,6 +1,12 @@
 /**
- * Shared animation variants and transition configs.
- * Import from here instead of duplicating in each page.
+ * Shared Framer Motion animation variants and transition presets.
+ *
+ * Centralizes all animation constants so pages import them from a
+ * single source rather than duplicating configs. Includes spring and
+ * easing presets, stagger containers, fade/scale entrance variants,
+ * and specialized variants for number counters and list items.
+ *
+ * @module lib/motion
  */
 
 /** Transition presets for Framer Motion animations. */
@@ -54,7 +60,12 @@ export const numberPop = {
   },
 } as const
 
-/** For list items (staggered row entrance) */
+/**
+ * Factory for staggered list item entrance animations.
+ *
+ * @param index - Zero-based index of the item in the list (used to calculate stagger delay).
+ * @returns Framer Motion props object with initial, animate, and transition.
+ */
 export const listItem = (index: number) => ({
   initial: { opacity: 0, x: -8 },
   animate: { opacity: 1, x: 0 },

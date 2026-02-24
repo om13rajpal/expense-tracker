@@ -1,3 +1,10 @@
+/**
+ * AI-powered budget auto-tune dialog.
+ * Fetches suggested budget adjustments from the `/api/budgets/suggest`
+ * endpoint, displays a comparison table (current vs suggested with
+ * reasoning), and lets the user cherry-pick which categories to apply.
+ * @module components/planning/budget-suggestions
+ */
 "use client"
 
 import * as React from "react"
@@ -26,6 +33,13 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
+/**
+ * A single category's budget suggestion from the AI engine.
+ * @property currentBudget   - The user's current budget limit for this category.
+ * @property avg3Month       - Average actual spending over the last 3 months.
+ * @property suggestedBudget - AI-recommended budget amount.
+ * @property reasoning       - Human-readable explanation for the suggestion.
+ */
 interface CategorySuggestion {
   currentBudget: number
   avg3Month: number
@@ -33,6 +47,15 @@ interface CategorySuggestion {
   reasoning: string
 }
 
+/**
+ * Response shape from the budget suggestions API.
+ * @property success        - Whether the API call succeeded.
+ * @property suggestions    - Map of category name to its suggestion details.
+ * @property totalCurrent   - Sum of all current category budgets.
+ * @property totalSuggested - Sum of all suggested category budgets.
+ * @property monthsAnalyzed - Number of historical months the AI analysed.
+ * @property error          - Optional error message.
+ */
 interface SuggestResponse {
   success: boolean
   suggestions: Record<string, CategorySuggestion>
@@ -42,6 +65,11 @@ interface SuggestResponse {
   error?: string
 }
 
+/**
+ * Props for {@link BudgetSuggestions}.
+ * @property currentBudgets - Map of category name to current budget amount from parent state.
+ * @property onApply        - Callback to apply selected suggested budgets; parent persists via API.
+ */
 interface BudgetSuggestionsProps {
   /** Current budgets from parent state */
   currentBudgets: Record<string, number>
@@ -49,12 +77,14 @@ interface BudgetSuggestionsProps {
   onApply: (newBudgets: Record<string, number>) => Promise<void>
 }
 
+/** Returns a Tailwind text colour class based on whether the suggestion increases or decreases the budget. */
 function getChangeColor(current: number, suggested: number): string {
   if (suggested > current) return "text-amber-600 dark:text-amber-500"
   if (suggested < current) return "text-primary"
   return "text-muted-foreground"
 }
 
+/** Returns a coloured +/- badge element showing the INR delta between current and suggested budgets. */
 function getChangeBadge(current: number, suggested: number) {
   if (suggested === current) return null
   const diff = suggested - current
@@ -74,6 +104,12 @@ function getChangeBadge(current: number, suggested: number) {
   )
 }
 
+/**
+ * Renders the "Auto-tune Budgets" button and a dialog showing AI-generated
+ * category budget suggestions. Users can toggle individual categories on/off
+ * before applying. Shows a comparison table with current, 3-month average,
+ * suggested amounts, and the AI's reasoning per category.
+ */
 export function BudgetSuggestions({ currentBudgets, onApply }: BudgetSuggestionsProps) {
   const [open, setOpen] = useState(false)
   const [loading, setLoading] = useState(false)

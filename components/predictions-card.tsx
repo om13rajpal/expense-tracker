@@ -1,3 +1,10 @@
+/**
+ * Predictive analytics dashboard cards: budget burn rates, cash flow
+ * forecast, and goal on-track predictions. Uses the `/api/predictions`
+ * endpoint that runs projection algorithms over the user's transaction
+ * and budget data.
+ * @module components/predictions-card
+ */
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
@@ -15,6 +22,13 @@ import { Badge } from "@/components/ui/badge"
 import { Skeleton } from "@/components/ui/skeleton"
 import type { BurnRate, CashFlowForecast, GoalPrediction } from "@/lib/predictive"
 
+/**
+ * Aggregated prediction response from the API.
+ * @property success         - Whether the API call succeeded.
+ * @property burnRates       - Per-category budget burn rate projections.
+ * @property cashFlow        - Month-end cash flow forecast with confidence level.
+ * @property goalPredictions - Savings-goal progress and on-track predictions.
+ */
 interface PredictionsData {
   success: boolean
   burnRates: BurnRate[]
@@ -22,6 +36,11 @@ interface PredictionsData {
   goalPredictions: GoalPrediction[]
 }
 
+/**
+ * Fetches predictive analytics data from the API.
+ * @returns Parsed PredictionsData JSON response.
+ * @throws Error when the response indicates failure.
+ */
 async function fetchPredictions(): Promise<PredictionsData> {
   const res = await fetch("/api/predictions", { credentials: "include" })
   const data = await res.json()
@@ -29,12 +48,20 @@ async function fetchPredictions(): Promise<PredictionsData> {
   return data
 }
 
+/** Tailwind colour classes mapped to burn rate status levels. */
 const statusColors = {
   safe: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
   warning: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
   critical: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
 }
 
+/**
+ * Renders a three-section predictive analytics dashboard:
+ * 1. **Budget Burn Rates** – categories at risk of exhausting their budget.
+ * 2. **Cash Flow Forecast** – projected income, expenses, and surplus with confidence.
+ * 3. **Goal Predictions** – whether each savings goal is on track.
+ * Returns null when no data is available.
+ */
 export function PredictionsCard() {
   const { data, isLoading, error } = useQuery({
     queryKey: ["predictions"],

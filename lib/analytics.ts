@@ -1,6 +1,19 @@
 /**
- * Analytics engine for financial data analysis
- * Provides functions for aggregations, trends, and insights
+ * Analytics engine for financial data aggregation, trend computation, and insights.
+ *
+ * Provides the core computation layer for the Finova dashboard. Takes an array
+ * of transactions and produces:
+ * - Summary KPIs (total income/expenses, savings rate, daily average)
+ * - Category and payment method breakdowns for pie/donut charts
+ * - Monthly and daily time-series trends for line/bar charts
+ * - Top-N category and merchant rankings
+ * - Year-over-year growth comparisons with partial-year annualization
+ * - One-time vs. recurring expense separation
+ *
+ * All functions filter out non-completed transactions before aggregation.
+ * All monetary values are in INR.
+ *
+ * @module lib/analytics
  */
 
 import {
@@ -30,9 +43,16 @@ import {
 } from './utils';
 
 /**
- * Calculate comprehensive analytics from transactions
- * @param transactions - Array of transactions
- * @returns Complete analytics object
+ * Calculate comprehensive analytics from a set of transactions.
+ *
+ * This is the primary entry point for dashboard data. It computes all KPIs,
+ * breakdowns, trends, and rankings in a single pass, returning a complete
+ * `Analytics` object ready for UI consumption.
+ *
+ * Only completed transactions are included in calculations.
+ *
+ * @param transactions - The full array of transactions to analyze.
+ * @returns A complete `Analytics` object with all computed metrics and breakdowns.
  */
 export function calculateAnalytics(transactions: Transaction[]): Analytics {
   // Filter only completed transactions for analytics
@@ -109,10 +129,13 @@ export function calculateAnalytics(transactions: Transaction[]): Analytics {
 }
 
 /**
- * Calculate total amount for a specific transaction type
- * @param transactions - Array of transactions
- * @param type - Transaction type
- * @returns Total amount
+ * Calculate the total amount for a specific transaction type.
+ *
+ * Sums the `amount` field of all transactions matching the given type.
+ *
+ * @param transactions - Array of transactions to filter and sum.
+ * @param type - The transaction type to filter by (e.g. INCOME, EXPENSE).
+ * @returns Total amount in INR for the specified type.
  */
 export function calculateTotalByType(
   transactions: Transaction[],
@@ -126,10 +149,11 @@ export function calculateTotalByType(
 }
 
 /**
- * Calculate total amount by custom filter
- * @param transactions - Array of transactions
- * @param filter - Filter function
- * @returns Total amount
+ * Calculate total amount for transactions matching a custom predicate.
+ *
+ * @param transactions - Array of transactions to filter and sum.
+ * @param filter - A predicate function that returns `true` for transactions to include.
+ * @returns Total amount in INR for transactions passing the filter.
  */
 export function calculateTotalByFilter(
   transactions: Transaction[],
@@ -143,9 +167,14 @@ export function calculateTotalByFilter(
 }
 
 /**
- * Calculate category breakdown for expenses
- * @param transactions - Array of transactions
- * @returns Category breakdown array
+ * Calculate expense breakdown by transaction category.
+ *
+ * Groups completed expense transactions by category, computing each category's
+ * total amount, percentage share, and transaction count. Results are sorted
+ * by amount in descending order for chart rendering.
+ *
+ * @param transactions - Array of transactions (pre-filtered to expenses internally).
+ * @returns Array of `CategoryBreakdown` objects sorted by amount descending.
  */
 export function calculateCategoryBreakdown(
   transactions: Transaction[]
@@ -175,9 +204,14 @@ export function calculateCategoryBreakdown(
 }
 
 /**
- * Calculate payment method breakdown
- * @param transactions - Array of transactions
- * @returns Payment method breakdown array
+ * Calculate transaction volume breakdown by payment method.
+ *
+ * Groups all completed transactions by payment method (UPI, NEFT, IMPS, etc.),
+ * computing each method's total amount, percentage share, and count.
+ * Sorted by amount descending.
+ *
+ * @param transactions - Array of transactions to analyze.
+ * @returns Array of `PaymentMethodBreakdown` objects sorted by amount descending.
  */
 export function calculatePaymentMethodBreakdown(
   transactions: Transaction[]
@@ -205,9 +239,14 @@ export function calculatePaymentMethodBreakdown(
 }
 
 /**
- * Calculate monthly trends
- * @param transactions - Array of transactions
- * @returns Monthly trend data
+ * Calculate month-by-month income, expense, and savings trends.
+ *
+ * Groups completed transactions into calendar months using "YYYY-MM" keys,
+ * then computes income, expenses, savings, and savings rate for each month.
+ * Returns results sorted chronologically.
+ *
+ * @param transactions - Array of transactions to aggregate by month.
+ * @returns Array of `MonthlyTrend` objects sorted chronologically (oldest first).
  */
 export function calculateMonthlyTrends(
   transactions: Transaction[]
@@ -253,11 +292,16 @@ export function calculateMonthlyTrends(
 }
 
 /**
- * Calculate daily trends for a specific period
- * @param transactions - Array of transactions
- * @param startDate - Start date (optional)
- * @param endDate - End date (optional)
- * @returns Daily trend data
+ * Calculate day-by-day income, expense, and net trends for a date range.
+ *
+ * Groups completed transactions by calendar date, optionally filtered to a
+ * start/end date window. Computes daily income, expenses, net amount, and
+ * transaction count. Results are sorted chronologically.
+ *
+ * @param transactions - Array of transactions to aggregate by day.
+ * @param startDate - Optional inclusive start date for filtering.
+ * @param endDate - Optional inclusive end date for filtering.
+ * @returns Array of `DailyTrend` objects sorted chronologically.
  */
 export function calculateDailyTrends(
   transactions: Transaction[],
@@ -306,10 +350,15 @@ export function calculateDailyTrends(
 }
 
 /**
- * Calculate daily average spend
- * Divides total expenses by calendar days in the period (first to last transaction)
- * @param transactions - Array of transactions
- * @returns Daily average spend
+ * Calculate the average daily spending over the transaction period.
+ *
+ * Divides total expense amount by the number of calendar days between the
+ * earliest and latest transaction dates (inclusive). Uses all transaction dates
+ * (not just expense dates) to determine the period span, avoiding inflated
+ * averages when income arrives on boundary dates.
+ *
+ * @param transactions - Array of transactions (expenses are filtered internally).
+ * @returns Average daily spending in INR, or 0 if there are no expenses.
  */
 export function calculateDailyAverageSpend(
   transactions: Transaction[]
@@ -335,10 +384,14 @@ export function calculateDailyAverageSpend(
 }
 
 /**
- * Get top expense categories
- * @param transactions - Array of transactions
- * @param limit - Number of categories to return
- * @returns Top category summaries
+ * Get the top N expense categories ranked by total spending.
+ *
+ * Computes summary statistics for each category (total, count, average,
+ * percentage of total) and returns the highest-spending categories.
+ *
+ * @param transactions - Array of transactions (expenses filtered internally).
+ * @param limit - Maximum number of categories to return (default: 5).
+ * @returns Array of `CategorySummary` objects sorted by total amount descending.
  */
 export function getTopExpenseCategories(
   transactions: Transaction[],
@@ -372,10 +425,14 @@ export function getTopExpenseCategories(
 }
 
 /**
- * Get top merchants by spending
- * @param transactions - Array of transactions
- * @param limit - Number of merchants to return
- * @returns Top merchant summaries
+ * Get the top N merchants ranked by total transaction volume.
+ *
+ * Computes summary statistics for each merchant including the most frequently
+ * occurring category (primary category). Only completed transactions are included.
+ *
+ * @param transactions - Array of transactions to analyze.
+ * @param limit - Maximum number of merchants to return (default: 10).
+ * @returns Array of `MerchantSummary` objects sorted by total amount descending.
  */
 export function getTopMerchants(
   transactions: Transaction[],
@@ -415,10 +472,15 @@ export function getTopMerchants(
 }
 
 /**
- * Calculate financial summary for a specific period
- * @param transactions - Array of transactions
- * @param periodName - Name of the period (e.g., "January 2024")
- * @returns Financial summary
+ * Calculate a comprehensive financial summary for a labeled period.
+ *
+ * Aggregates income and expenses with category-level breakdowns, computes
+ * savings rate, and counts transactions by type. Used for period-specific
+ * reporting (monthly summaries, custom date ranges).
+ *
+ * @param transactions - Array of transactions for the period.
+ * @param periodName - Human-readable period label (e.g. "January 2026").
+ * @returns A `FinancialSummary` with income, expense, savings, and transaction details.
  */
 export function calculateFinancialSummary(
   transactions: Transaction[],
@@ -484,10 +546,14 @@ export function calculateFinancialSummary(
 }
 
 /**
- * Calculate category breakdown for a specific transaction type
- * @param transactions - Array of transactions
- * @param type - Transaction type
- * @returns Category breakdown array
+ * Calculate category breakdown filtered to a specific transaction type.
+ *
+ * Internal helper used by `calculateFinancialSummary()` to produce
+ * separate category breakdowns for income and expenses.
+ *
+ * @param transactions - Array of transactions to filter and group.
+ * @param type - Transaction type to include (INCOME or EXPENSE).
+ * @returns Array of `CategoryBreakdown` objects sorted by amount descending.
  */
 function calculateCategoryBreakdownForType(
   transactions: Transaction[],
@@ -516,9 +582,13 @@ function calculateCategoryBreakdownForType(
 }
 
 /**
- * Calculate income vs expense analysis
- * @param transactions - Array of transactions
- * @returns Income vs expense data
+ * Calculate a simple income-vs-expense comparison.
+ *
+ * Returns totals, their difference (net savings), and the income-to-expense
+ * ratio. A ratio > 1 means income exceeds expenses.
+ *
+ * @param transactions - Array of transactions to analyze.
+ * @returns An object with `income`, `expenses`, `difference`, and `ratio` fields.
  */
 export function calculateIncomeVsExpense(transactions: Transaction[]): {
   income: number;
@@ -541,11 +611,15 @@ export function calculateIncomeVsExpense(transactions: Transaction[]): {
 }
 
 /**
- * Calculate spending by category for a specific period
- * @param transactions - Array of transactions
- * @param startDate - Start date
- * @param endDate - End date
- * @returns Category breakdown for the period
+ * Get expense category breakdown for a specific date range.
+ *
+ * Filters transactions to the given date window and expense type,
+ * then delegates to `calculateCategoryBreakdown()`.
+ *
+ * @param transactions - Array of transactions to filter.
+ * @param startDate - Inclusive start date.
+ * @param endDate - Inclusive end date.
+ * @returns Array of `CategoryBreakdown` objects for the period.
  */
 export function getSpendingByPeriod(
   transactions: Transaction[],
@@ -561,11 +635,15 @@ export function getSpendingByPeriod(
 }
 
 /**
- * Calculate year-over-year growth
- * For the current (partial) year, annualizes data by multiplying by 12/monthsElapsed
- * @param transactions - Array of transactions
- * @param year - Year to compare
- * @returns Growth percentage and annualization flag
+ * Calculate year-over-year growth rates for income, expenses, and savings.
+ *
+ * Compares the given year to the previous year. If the given year is the
+ * current calendar year and is not yet complete, actual figures are annualized
+ * (multiplied by `12 / monthsElapsed`) for a fair comparison.
+ *
+ * @param transactions - Full transaction history.
+ * @param year - The year to calculate growth for (compared against `year - 1`).
+ * @returns Growth percentages for income, expenses, and savings, plus an `isAnnualized` flag.
  */
 export function calculateYearOverYearGrowth(
   transactions: Transaction[],
@@ -643,7 +721,8 @@ export function calculateYearOverYearGrowth(
 }
 
 /**
- * Result of separating one-time and recurring expenses
+ * Result of separating transactions into one-time large expenses and
+ * recurring daily expenses, with computed totals for each category.
  */
 export interface SeparatedExpenses {
   oneTime: Transaction[];
@@ -654,13 +733,16 @@ export interface SeparatedExpenses {
 }
 
 /**
- * Separate one-time large expenses from recurring daily expenses
- * Flags transactions above a threshold as "one-time" so analytics can show
- * both total and "recurring daily" views.
+ * Separate one-time large expenses from recurring/small daily expenses.
  *
- * @param transactions - Array of transactions
- * @param threshold - Amount threshold for one-time classification (default: 50000)
- * @returns Separated expense categories
+ * Transactions with amounts at or above the threshold are classified as
+ * "one-time" (e.g. large purchases, tuition fees, medical procedures),
+ * while those below are treated as recurring daily expenses. This allows
+ * the UI to show both "total" and "excluding one-time" expense views.
+ *
+ * @param transactions - Array of transactions to classify.
+ * @param threshold - Amount threshold in INR for one-time classification (default: 50,000).
+ * @returns A `SeparatedExpenses` object with arrays and totals for each category.
  */
 export function separateOneTimeExpenses(
   transactions: Transaction[],

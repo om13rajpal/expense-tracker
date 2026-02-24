@@ -1,7 +1,22 @@
+/**
+ * Search input component for the Spotlight command palette.
+ * Renders a search/loading icon, the text input with ARIA combobox
+ * attributes, and an escape-key hint badge.
+ * @module components/spotlight/spotlight-input
+ */
 "use client"
 
 import { IconSearch, IconLoader2 } from "@tabler/icons-react"
 
+/**
+ * Props for {@link SpotlightInput}.
+ * @property value       - Current input value.
+ * @property onChange     - Callback when the input value changes.
+ * @property loading     - Shows a spinner icon instead of the search icon.
+ * @property inputRef    - Ref forwarded to the underlying `<input>` element.
+ * @property activeIndex - Index of the currently highlighted result (for ARIA).
+ * @property hasResults  - Whether there are search results to reference.
+ */
 interface SpotlightInputProps {
   value: string
   onChange: (value: string) => void
@@ -11,6 +26,7 @@ interface SpotlightInputProps {
   hasResults: boolean
 }
 
+/** Spotlight search input with loading indicator and ARIA combobox support. */
 export function SpotlightInput({ value, onChange, loading, inputRef, activeIndex, hasResults }: SpotlightInputProps) {
   return (
     <div className="flex items-center gap-3 border-b border-border/40 px-4 py-3">

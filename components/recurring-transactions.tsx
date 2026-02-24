@@ -21,12 +21,21 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 import type { RecurringPattern } from "@/lib/recurring-detector"
 
+/**
+ * Props for the RecurringTransactions component.
+ * @property compact - Limits to 5 patterns and hides status badges.
+ */
 interface RecurringTransactionsProps {
   compact?: boolean
 }
 
+/** Classification of a recurring pattern: actively on-schedule, amount changed, or overdue. */
 type PatternStatus = "active" | "changed" | "overdue"
 
+/**
+ * Determines the status of a recurring pattern based on its next expected date
+ * and amount variance.
+ */
 function getPatternStatus(pattern: RecurringPattern): PatternStatus {
   const now = new Date()
   const nextDate = new Date(pattern.nextExpectedDate)
@@ -40,6 +49,7 @@ function getPatternStatus(pattern: RecurringPattern): PatternStatus {
   return "active"
 }
 
+/** Returns dot and badge Tailwind colour classes for a given pattern status. */
 function getStatusColor(status: PatternStatus) {
   switch (status) {
     case "active":
@@ -60,6 +70,7 @@ function getStatusColor(status: PatternStatus) {
   }
 }
 
+/** Converts a frequency enum value to a human-readable label. */
 function frequencyLabel(freq: RecurringPattern["frequency"]): string {
   switch (freq) {
     case "weekly": return "Weekly"
@@ -70,6 +81,7 @@ function frequencyLabel(freq: RecurringPattern["frequency"]): string {
   }
 }
 
+/** Formats an ISO date string as "d Mon" using the IST timezone. */
 function formatDate(dateStr: string): string {
   return new Date(dateStr).toLocaleDateString("en-IN", {
     day: "numeric",

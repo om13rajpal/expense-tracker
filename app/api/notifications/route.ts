@@ -11,10 +11,21 @@ import { ObjectId } from 'mongodb';
 import { getMongoDb } from '@/lib/mongodb';
 import { withAuth, corsHeaders, handleOptions, isValidObjectId } from '@/lib/middleware';
 
+/** @constant MongoDB collection name for notification documents. */
 const COLLECTION = 'notifications';
 
-// ─── GET ─────────────────────────────────────────────────────────────
-
+/**
+ * GET /api/notifications
+ * Fetch notifications for the authenticated user, sorted by creation date (newest first).
+ * Limited to the 50 most recent. Supports filtering to unread-only via query param.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @query {string} [unread="false"] - If "true", returns only unread notifications
+ *
+ * @returns {200} `{ success: true, notifications: Array<{ _id, type, title, message, read, createdAt, ... }> }`
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function GET(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {
@@ -51,8 +62,21 @@ export async function GET(request: NextRequest) {
   })(request);
 }
 
-// ─── PATCH ───────────────────────────────────────────────────────────
-
+/**
+ * PATCH /api/notifications
+ * Mark notifications as read. Supports two modes:
+ * - `{ markAllRead: true }`: Marks ALL unread notifications as read
+ * - `{ ids: string[] }`: Marks specific notifications by their ObjectIds
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @body {boolean} [markAllRead] - If true, marks all unread as read
+ * @body {string[]} [ids] - Array of notification ObjectIds to mark as read
+ *
+ * @returns {200} `{ success: true, modified: number }`
+ * @returns {400} `{ success: false, message: string }` - No valid IDs or missing params
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function PATCH(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {
@@ -110,8 +134,18 @@ export async function PATCH(request: NextRequest) {
   })(request);
 }
 
-// ─── DELETE ──────────────────────────────────────────────────────────
-
+/**
+ * DELETE /api/notifications?id=xxx
+ * Delete a single notification by its ObjectId.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @query {string} id - Notification ObjectId (required, must be valid)
+ *
+ * @returns {200} `{ success: true, deleted: boolean }`
+ * @returns {400} `{ success: false, message: string }` - Missing or invalid ID
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function DELETE(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {
@@ -144,8 +178,10 @@ export async function DELETE(request: NextRequest) {
   })(request);
 }
 
-// ─── OPTIONS ─────────────────────────────────────────────────────────
-
+/**
+ * OPTIONS /api/notifications
+ * CORS preflight handler. Returns allowed methods and headers.
+ */
 export async function OPTIONS() {
   return handleOptions();
 }

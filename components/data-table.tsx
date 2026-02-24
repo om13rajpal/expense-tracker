@@ -70,6 +70,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 
+/** Zod schema validating the shape of a table transaction row. */
 export const transactionSchema = z.object({
   id: z.string(),
   date: z.string(),
@@ -80,9 +81,10 @@ export const transactionSchema = z.object({
   paymentMethod: z.string(),
 })
 
+/** Inferred TypeScript type for a single transaction table row. */
 export type Transaction = z.infer<typeof transactionSchema>
 
-// Mock transaction data
+/** Sample transaction data used as a default when no real data is provided. */
 export const mockTransactions: Transaction[] = [
   {
     id: "1",
@@ -158,6 +160,7 @@ export const mockTransactions: Transaction[] = [
   },
 ]
 
+/** Formats a number as INR currency with no decimal places. */
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
@@ -166,7 +169,7 @@ function formatCurrency(amount: number): string {
   }).format(amount)
 }
 
-// Category color mapping
+/** Tailwind badge colour classes keyed by transaction category name. */
 const categoryColors: Record<string, string> = {
   "Food & Dining": "bg-orange-100 text-orange-700 dark:bg-orange-950 dark:text-orange-300",
   "Transport": "bg-blue-100 text-blue-700 dark:bg-blue-950 dark:text-blue-300",
@@ -179,7 +182,10 @@ const categoryColors: Record<string, string> = {
   "Investment": "bg-teal-100 text-teal-700 dark:bg-teal-950 dark:text-teal-300",
 }
 
-// Payment method icon mapping
+/**
+ * Resolves a Tabler icon component for a payment method string.
+ * Matches "card", "cash", "upi", "neft"/"imps"/"rtgs"; defaults to IconWallet.
+ */
 const getPaymentIcon = (method: string) => {
   const methodLower = method.toLowerCase()
   if (methodLower.includes('card')) return IconCreditCard
@@ -189,6 +195,7 @@ const getPaymentIcon = (method: string) => {
   return IconWallet
 }
 
+/** TanStack Table column definitions for the transaction table. */
 const columns: ColumnDef<Transaction>[] = [
   {
     id: "select",

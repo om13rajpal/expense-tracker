@@ -1,3 +1,11 @@
+/**
+ * Income Goal Tracker — fiscal-year income target with source-level
+ * breakdown. Shows progress ring, monthly income stacked bar chart,
+ * per-source actual-vs-expected bars, on-track/behind badges, and
+ * month-over-month growth. Supports CRUD for the income goal and
+ * its expected sources (salary, freelance, etc.).
+ * @module components/wealth/income-goal-tracker
+ */
 "use client"
 
 import * as React from "react"
@@ -49,24 +57,32 @@ import {
 } from "@/hooks/use-income-goals"
 import type { IncomeSource } from "@/hooks/use-income-goals"
 
-// ─── Types ───
-
+/**
+ * Form state shape for the income goal create/edit dialog.
+ * @property targetAmount - Annual income target as a string (for input binding).
+ * @property targetDate   - Target date string in YYYY-MM-DD format.
+ * @property sources      - Array of expected income sources with name, amount, and frequency.
+ */
 interface GoalFormData {
   targetAmount: string
   targetDate: string
   sources: { name: string; expected: string; frequency: string }[]
 }
 
+/** Default empty form state used when creating a new income goal. */
 const EMPTY_FORM: GoalFormData = {
   targetAmount: "",
   targetDate: "",
   sources: [{ name: "", expected: "", frequency: "monthly" }],
 }
 
+/** Available frequency options for income source entries. */
 const FREQUENCY_OPTIONS = ["monthly", "quarterly", "yearly", "one-time"]
 
-// ─── Progress Ring ───
-
+/**
+ * Animated SVG progress ring showing income goal completion percentage.
+ * Colour shifts from blue (<50%) to amber (<80%) to green (>=80%).
+ */
 function ProgressRing({
   percent,
   size = 120,
@@ -124,8 +140,7 @@ function ProgressRing({
   )
 }
 
-// ─── Custom Chart Tooltip ───
-
+/** Custom Recharts tooltip for the monthly income breakdown bar chart. */
 function ChartTooltipContent({
   active,
   payload,
@@ -154,16 +169,17 @@ function ChartTooltipContent({
   )
 }
 
-// ─── Month Label Helper ───
-
+/**
+ * Converts a "YYYY-MM" key to a short month/year label (e.g. "Jan '25").
+ * @param monthKey - Month key in "YYYY-MM" format.
+ */
 function formatMonthLabel(monthKey: string): string {
   const [year, month] = monthKey.split("-")
   const date = new Date(Number(year), Number(month) - 1)
   return date.toLocaleDateString("en-IN", { month: "short", year: "2-digit" })
 }
 
-// ─── Source Form Row ───
-
+/** Single row in the income source editor with name, expected amount, and frequency inputs. */
 function SourceRow({
   source,
   index,
@@ -225,8 +241,15 @@ function SourceRow({
   )
 }
 
-// ─── Main Component ───
-
+/**
+ * Top-level Income Goal Tracker card. Displays:
+ * - Progress ring with fiscal-year earnings vs target
+ * - On-track / behind badge and month-over-month growth
+ * - Monthly income stacked bar chart by source
+ * - Per-source actual vs expected progress bars
+ * - Create/edit/delete goal dialogs
+ * Returns a compact "Set Goal" banner when no goal exists.
+ */
 export function IncomeGoalTracker() {
   const { data, isLoading, error } = useIncomeGoal()
   const setGoalMutation = useSetIncomeGoal()
@@ -698,8 +721,11 @@ export function IncomeGoalTracker() {
   )
 }
 
-// ─── Goal Dialog (shared between create and edit) ───
-
+/**
+ * Shared dialog for creating or editing an income goal.
+ * Collects target amount, target date, and expected income sources
+ * with dynamic add/remove rows.
+ */
 function GoalDialog({
   open,
   onOpenChange,

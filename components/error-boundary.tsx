@@ -11,11 +11,21 @@ import { IconAlertTriangle, IconRefresh } from "@tabler/icons-react"
 import { Card, CardContent } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 
+/**
+ * Props for the ErrorBoundary class component.
+ * @property children - Component tree to wrap with error isolation.
+ * @property fallback - Optional custom fallback UI rendered on error.
+ */
 interface ErrorBoundaryProps {
   children: React.ReactNode
   fallback?: React.ReactNode
 }
 
+/**
+ * Internal state of the ErrorBoundary.
+ * @property hasError - Whether an error has been caught.
+ * @property error    - The caught Error instance, or null.
+ */
 interface ErrorBoundaryState {
   hasError: boolean
   error: Error | null

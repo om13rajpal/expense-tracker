@@ -1,9 +1,13 @@
 /**
- * Recurring Transaction Detection
+ * Recurring Transaction Detection (simple variant).
  *
- * Groups transactions by normalized merchant name, checks amount tolerance
- * and interval consistency, then classifies frequency as weekly, monthly,
- * quarterly, or yearly.
+ * Groups transactions by normalized merchant name (via {@link cleanBankText}),
+ * checks amount tolerance and interval consistency, then classifies the
+ * frequency as weekly, monthly, quarterly, or yearly. Lighter-weight than
+ * {@link module:lib/recurring-detector} -- no confidence scoring or
+ * subscription detection.
+ *
+ * @module lib/recurring
  */
 
 import { cleanBankText } from "@/lib/categorizer"
@@ -12,14 +16,23 @@ import { cleanBankText } from "@/lib/categorizer"
 // Types
 // ---------------------------------------------------------------------------
 
+/** A detected recurring transaction pattern and its constituent transactions. */
 export interface RecurringTransaction {
+  /** Original (un-normalized) merchant name. */
   merchant: string
+  /** Average transaction amount across all occurrences. */
   avgAmount: number
+  /** Detected payment frequency. */
   frequency: "weekly" | "monthly" | "quarterly" | "yearly"
+  /** Date of the most recent occurrence (YYYY-MM-DD). */
   lastDate: string
+  /** Predicted date of the next occurrence (YYYY-MM-DD). */
   nextExpected: string
+  /** Most common category among the grouped transactions. */
   category: string
+  /** Total number of occurrences found. */
   count: number
+  /** Individual transaction records contributing to this pattern. */
   transactions: { id: string; date: string; amount: number; description: string }[]
 }
 
@@ -30,6 +43,7 @@ export interface RecurringDetectionOptions {
   minOccurrences?: number
 }
 
+/** Minimal transaction shape required by the recurring detection algorithm. */
 export interface TransactionInput {
   id: string
   date: string
@@ -95,13 +109,17 @@ function addDays(isoDate: string, days: number): string {
  * Detect recurring transactions from a list of transactions.
  *
  * Algorithm:
- *   1. Normalize each merchant name via `cleanBankText`.
+ *   1. Normalize each merchant name via {@link cleanBankText}.
  *   2. Group transactions by normalized merchant.
  *   3. For groups meeting `minOccurrences`:
  *      a. Verify amount consistency (all within `avgAmount * tolerance`).
  *      b. Compute average interval between sorted dates.
  *      c. Classify the interval into a frequency band.
  *   4. Return results sorted by next expected date (ascending).
+ *
+ * @param transactions - Array of expense transactions to analyse.
+ * @param options - Detection parameters (amount tolerance, minimum occurrences).
+ * @returns Array of RecurringTransaction patterns sorted by next expected date.
  */
 export function detectRecurring(
   transactions: TransactionInput[],

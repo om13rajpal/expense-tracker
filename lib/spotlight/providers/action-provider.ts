@@ -1,3 +1,12 @@
+/**
+ * Spotlight action provider: matches user queries against quick actions.
+ *
+ * Searches the `actions` registry (add transaction, set budget, ask AI, sync data)
+ * using label and keyword matching with relevance scoring.
+ *
+ * @module lib/spotlight/providers/action-provider
+ */
+
 import type { SpotlightProvider, SpotlightResult } from "../types"
 import { actions } from "../data/pages"
 import { fuzzyCorrectInput } from "../data/parsers"

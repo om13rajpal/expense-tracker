@@ -11,6 +11,18 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { InfoTooltip } from "@/components/info-tooltip"
 
+/**
+ * Props for the MetricTile component.
+ * @property label      - Short metric name (e.g. "Total Balance").
+ * @property value      - Pre-formatted display value (e.g. "Rs 1,25,000").
+ * @property change     - Percentage change shown as a coloured trend badge.
+ * @property trendLabel - Optional text alongside the trend badge (e.g. "vs last month").
+ * @property icon       - Icon node rendered in a coloured square to the left.
+ * @property tone       - Controls badge colour: "positive" (green), "negative" (red), "neutral" (grey).
+ * @property tooltip    - Hover tooltip explaining the metric.
+ * @property iconBg     - Custom Tailwind background class for the icon container.
+ * @property iconColor  - Custom Tailwind text-color class for the icon.
+ */
 interface MetricTileProps {
   label: string
   value: string

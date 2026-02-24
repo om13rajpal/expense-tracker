@@ -23,18 +23,31 @@ import {
   projectInvestmentGrowth,
 } from '@/lib/projections';
 
-// Default expected annual returns by asset class
+/** @constant Default expected annual return for SIP projections (12% p.a.). */
 const DEFAULT_SIP_RETURN = 12;
+/** @constant Default expected annual return for direct stock holdings (15% p.a.). */
 const DEFAULT_STOCK_RETURN = 15;
+/** @constant Default expected annual return for mutual fund holdings (12% p.a.). */
 const DEFAULT_MF_RETURN = 12;
+/** @constant Default expected annual return for the overall portfolio (12% p.a.). */
 const DEFAULT_PORTFOLIO_RETURN = 12;
 
+/**
+ * Extract a human-readable error message from an unknown error value.
+ *
+ * @param error - The caught error (may be Error, string, or unknown)
+ * @returns A string error message
+ */
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Unknown error';
 }
 
 /**
- * Map a MongoDB document to a Transaction object.
+ * Map a raw MongoDB transaction document to a typed Transaction object.
+ * Applies safe defaults for missing fields and converts date strings to Date objects.
+ *
+ * @param doc - Raw MongoDB document from the `transactions` collection
+ * @returns A typed Transaction object
  */
 function mapDocToTransaction(doc: Record<string, unknown>): Transaction {
   return {
@@ -54,6 +67,21 @@ function mapDocToTransaction(doc: Record<string, unknown>): Transaction {
   };
 }
 
+/**
+ * GET /api/projections
+ * Compute and return comprehensive growth projections including:
+ * - SIP future value projections (5, 10, 20, 30 year horizons)
+ * - Emergency fund progress and timeline
+ * - Net worth growth trajectory
+ * - FIRE (Financial Independence, Retire Early) calculations
+ * - Portfolio investment growth projections
+ * Fetches transactions, stocks, mutual funds, SIPs, and debts for computation.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @returns {200} `{ success: true, data: GrowthProjection }`
+ * @returns {500} `{ success: false, error: string }` - Server error
+ */
 export async function GET(request: NextRequest) {
   return withAuth(async (_req, { user }) => {
     try {
@@ -305,6 +333,10 @@ export async function GET(request: NextRequest) {
   })(request);
 }
 
+/**
+ * OPTIONS /api/projections
+ * CORS preflight handler. Returns allowed methods and headers.
+ */
 export async function OPTIONS() {
   return handleOptions();
 }

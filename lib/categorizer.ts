@@ -1,7 +1,19 @@
 /**
- * Auto-categorization engine for transactions
- * Uses merchant names and keywords to classify transactions automatically
- * Includes fuzzy matching to handle bank-mangled merchant names
+ * Auto-categorization engine for transactions.
+ *
+ * Classifies transactions into {@link TransactionCategory} values by matching
+ * merchant names and descriptions against a comprehensive pattern database
+ * of Indian merchants, payment platforms, and service providers.
+ *
+ * Features:
+ * - Fuzzy matching via Jaro-Winkler similarity to handle bank-mangled names
+ * - Bank prefix stripping (UPI-, NEFT-, IMPS-, POS, etc.)
+ * - Priority ordering: longer/more-specific patterns match first
+ * - User-defined categorization rules (from MongoDB) override built-in patterns
+ * - AI-powered batch categorization via OpenRouter/Claude for unresolved transactions
+ * - Similar-merchant detection for "apply to similar" re-categorization
+ *
+ * @module lib/categorizer
  */
 
 import { TransactionCategory } from './types';

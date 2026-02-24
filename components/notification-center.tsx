@@ -28,8 +28,11 @@ import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import { useNotifications, type Notification } from "@/hooks/use-notifications"
 
-// --- Helpers ----------------------------------------------------------------
-
+/**
+ * Formats an ISO date string as a human-readable relative timestamp
+ * (e.g. "just now", "3m ago", "yesterday", "12 Jan").
+ * @param iso - ISO 8601 date string.
+ */
 function relativeTime(iso: string): string {
   const diff = Date.now() - new Date(iso).getTime()
   const minutes = Math.floor(diff / 60000)
@@ -46,6 +49,11 @@ function relativeTime(iso: string): string {
   })
 }
 
+/**
+ * Classifies a date into a display group for the notification list.
+ * @param iso - ISO 8601 date string.
+ * @returns One of "Today", "Yesterday", or "Earlier".
+ */
 function groupLabel(iso: string): "Today" | "Yesterday" | "Earlier" {
   const now = new Date()
   const d = new Date(iso)
@@ -56,6 +64,7 @@ function groupLabel(iso: string): "Today" | "Yesterday" | "Earlier" {
   return "Earlier"
 }
 
+/** Maps notification severity levels to their icon component and colour class. */
 const severityConfig: Record<
   Notification["severity"],
   { icon: typeof IconAlertCircle; className: string }
@@ -66,8 +75,11 @@ const severityConfig: Record<
   success: { icon: IconCircleCheck, className: "text-emerald-500" },
 }
 
-// --- Notification Item ------------------------------------------------------
-
+/**
+ * Single notification row showing severity icon, title, message,
+ * relative time, "View details" link, and hover-reveal mark-read
+ * and delete buttons.
+ */
 function NotificationItem({
   notification,
   onMarkRead,
@@ -153,8 +165,7 @@ function NotificationItem({
   )
 }
 
-// --- Empty State ------------------------------------------------------------
-
+/** Empty state illustration shown when there are no notifications. */
 function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-8 text-center px-4">

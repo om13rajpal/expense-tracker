@@ -8,6 +8,13 @@
 
 import { useState, useEffect, useCallback } from 'react';
 
+/**
+ * Represents the current authentication state of the user session.
+ * @property isAuthenticated - Whether the user has an active, verified session
+ * @property isLoading - True while an auth operation (login, logout, verify) is in progress
+ * @property username - The authenticated user's username, or null if not logged in
+ * @property error - Human-readable error message from the last failed auth operation, or null
+ */
 interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
@@ -15,6 +22,11 @@ interface AuthState {
   error: string | null;
 }
 
+/**
+ * Credentials payload sent to the login endpoint.
+ * @property username - The user's login username
+ * @property password - The user's plaintext password (transmitted over HTTPS)
+ */
 interface LoginCredentials {
   username: string;
   password: string;
@@ -22,8 +34,20 @@ interface LoginCredentials {
 
 /**
  * Provides authentication state and actions (login, logout, checkAuth).
- * Automatically verifies the session on mount.
- * @returns Auth state plus `login`, `logout`, and `checkAuth` callbacks.
+ * Automatically verifies the session on mount by calling `/api/auth/verify`.
+ *
+ * On successful login, a JWT token is stored in `localStorage` under the key
+ * `"auth-token"` for persistence across page reloads. On logout, that token
+ * is removed and the server-side session cookie is cleared.
+ *
+ * @returns An object containing:
+ *   - `isAuthenticated` - Whether the user is currently logged in
+ *   - `isLoading` - Whether an auth operation is in flight
+ *   - `username` - The logged-in user's name, or null
+ *   - `error` - The last error message, or null
+ *   - `login(credentials)` - Async function to authenticate with username/password
+ *   - `logout()` - Async function to end the session and clear tokens
+ *   - `checkAuth()` - Async function to re-verify the current session
  */
 export function useAuth() {
   const [state, setState] = useState<AuthState>({
@@ -34,7 +58,10 @@ export function useAuth() {
   });
 
   /**
-   * Check if user is authenticated
+   * Verifies the current session by calling `GET /api/auth/verify`.
+   * Updates authentication state based on the server response.
+   * Called automatically on hook mount.
+   * @returns A promise that resolves when the check completes (no return value)
    */
   const checkAuth = useCallback(async () => {
     try {
@@ -71,7 +98,10 @@ export function useAuth() {
   }, []);
 
   /**
-   * Login user
+   * Authenticates the user by posting credentials to `POST /api/auth/login`.
+   * On success, stores the JWT in localStorage and updates the auth state.
+   * @param credentials - The username and password to authenticate with
+   * @returns A promise resolving to `{ success: true }` or `{ success: false, error: string }`
    */
   const login = useCallback(async (credentials: LoginCredentials) => {
     setState(prev => ({ ...prev, isLoading: true, error: null }));
@@ -124,7 +154,9 @@ export function useAuth() {
   }, []);
 
   /**
-   * Logout user
+   * Ends the current user session by calling `POST /api/auth/logout`.
+   * Clears the JWT from localStorage and resets auth state to logged-out.
+   * @returns A promise resolving to `{ success: true }` or `{ success: false, error: string }`
    */
   const logout = useCallback(async () => {
     setState(prev => ({ ...prev, isLoading: true }));

@@ -7,6 +7,19 @@
 import { inngest } from '@/lib/inngest';
 import { getMongoDb } from '@/lib/mongodb';
 
+/**
+ * Inngest cron function that computes monthly ghost budget snapshots.
+ *
+ * @trigger Cron schedule: `0 23 1 * *` (1st of each month at 11:00 PM UTC).
+ * @steps
+ *   1. `compute-ghost-budgets` -- For each user with ghost budget enabled:
+ *      - Loads their budget categories and previous month's expenses.
+ *      - Computes per-category overspend (actual - budgeted when over).
+ *      - Calculates cumulative savings gap across all historical snapshots.
+ *      - Stores the snapshot in `ghost_budget_snapshots` collection.
+ *      - Skips if snapshot already exists for the month (idempotent).
+ * @returns Object with the number of users processed.
+ */
 export const ghostBudgetSnapshot = inngest.createFunction(
   { id: 'ghost-budget-snapshot', name: 'Monthly Ghost Budget Snapshot' },
   { cron: '0 23 1 * *' },

@@ -12,6 +12,18 @@ import type { AiInsightType } from '@/lib/ai-types';
 
 const CRON_COLLECTION = 'cron_runs';
 
+/**
+ * Inngest function that generates AI insights for a single user.
+ *
+ * @trigger `finance/insights.generate` event with `{ userId, types, trigger }` payload.
+ * @steps
+ *   1. For each requested insight type, runs the AI pipeline (`runAiPipeline`).
+ *      Investment insights include web search for market context.
+ *   2. Logs the generation results (success/failure per type) to the `cron_runs` collection.
+ * @concurrency Global limit of 3, per-user limit of 1.
+ * @retries Up to 2 retries on failure.
+ * @returns Object containing the userId and per-type results with status.
+ */
 export const generateUserInsights = inngest.createFunction(
   {
     id: 'generate-user-insights',

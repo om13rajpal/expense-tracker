@@ -11,10 +11,17 @@ import { withCronAuth } from '@/lib/middleware';
 import { getMongoDb } from '@/lib/mongodb';
 import { fetchLatestNAV } from '@/lib/mfapi';
 
+/** @constant MongoDB collection for logging cron job runs and their results. */
 const CRON_COLLECTION = 'cron_runs';
 
 /**
- * Fetch a stock quote from Yahoo Finance (no auth required).
+ * Fetch a stock quote from Yahoo Finance's public chart API.
+ * Uses the v8 chart endpoint which does not require an API key.
+ * Has a 10-second timeout to prevent hanging.
+ *
+ * @param symbol - Stock ticker symbol (e.g., "RELIANCE")
+ * @param exchange - Exchange code (e.g., "NSE", "BSE"). Determines Yahoo suffix (.NS or .BO)
+ * @returns Object with current price, change, and changePercent, or null on failure
  */
 async function fetchStockPrice(
   symbol: string,
@@ -52,6 +59,17 @@ async function fetchStockPrice(
   }
 }
 
+/**
+ * GET /api/cron/prices
+ * Daily cron job that refreshes stock prices (via Yahoo Finance) and mutual fund NAVs
+ * (via MFAPI) for all users. Deduplicates symbols before fetching.
+ * Logs each run to the `cron_runs` collection with success/failure stats.
+ *
+ * @requires Authentication - Cron secret via `Authorization` header or `CRON_SECRET` env var
+ *
+ * @returns {200} `{ success: true, stocksUpdated, stocksFailed, fundsUpdated, fundsFailed }`
+ * @returns {500} `{ success: false, message: string }` - Error during processing
+ */
 export async function GET(request: NextRequest) {
   return withCronAuth(async () => {
     const startedAt = new Date();

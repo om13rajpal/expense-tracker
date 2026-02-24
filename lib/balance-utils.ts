@@ -1,6 +1,17 @@
 /**
- * Balance tracking utilities for accurate account balance calculations
- * Uses actual balance data from Google Sheets instead of calculating from scratch
+ * Balance tracking utilities for accurate account balance calculations.
+ *
+ * Uses actual running-balance data imported from Google Sheets rather than
+ * reconstructing balances from income minus expenses. This approach is more
+ * accurate when the user began tracking mid-way through their financial history.
+ *
+ * Provides functions for:
+ * - Calculating account summaries (opening, closing, net change)
+ * - Looking up balances at specific dates
+ * - Building balance-over-time trend data for charts
+ * - Validating balance consistency across adjacent transactions
+ *
+ * @module lib/balance-utils
  */
 
 import { Transaction } from './types';
@@ -39,12 +50,17 @@ function sortByDateDesc(a: Transaction, b: Transaction): number {
 }
 
 /**
- * Account summary with actual balance from sheet data
+ * Account summary derived from actual balance fields in imported sheet data.
+ * All amounts are in INR.
  */
 export interface AccountSummary {
+  /** Balance after the most recent (chronologically last) transaction. */
   currentBalance: number;
+  /** Balance of the chronologically first transaction. */
   startingBalance: number;
+  /** Calculated balance *before* the very first transaction (reverse-engineered). */
   openingBalance: number;
+  /** Difference between current balance and opening balance. */
   netChange: number;
 }
 

@@ -1,11 +1,40 @@
+/**
+ * Roundup Savings API
+ * Calculates hypothetical "roundup" savings for the current month by rounding
+ * each expense transaction up to the nearest Rs.100 and summing the differences.
+ * This shows how much the user could save with a roundup savings strategy.
+ *
+ * Requires JWT authentication via the `auth-token` HTTP-only cookie.
+ *
+ * Endpoints:
+ *   GET /api/roundup-savings - Compute roundup savings for the current month
+ *
+ * MongoDB collection: `transactions`
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, corsHeaders, handleOptions } from '@/lib/middleware';
 import { getMongoDb } from '@/lib/mongodb';
 
+/**
+ * OPTIONS /api/roundup-savings
+ * CORS preflight handler. Returns allowed methods and headers.
+ */
 export async function OPTIONS() {
   return handleOptions();
 }
 
+/**
+ * GET /api/roundup-savings
+ * Compute roundup savings potential for the current month. Each expense is rounded
+ * up to the nearest Rs.100, and the difference is the "roundup" amount.
+ * Returns the total, average per transaction, and top 5 largest roundups.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @returns {200} `{ success: true, totalRoundup: number, transactionCount: number, averageRoundup: number, topRoundups: Array<{ description, amount, roundup }> }`
+ * @returns {500} `{ success: false, error: string }` - Server error
+ */
 export async function GET(request: NextRequest) {
   return withAuth(async (_req, { user }) => {
     try {

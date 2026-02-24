@@ -1,9 +1,25 @@
+/**
+ * Animated XP progress bar used in the gamification system.
+ * Displays current level, XP earned, and an animated gradient fill
+ * with a shimmer effect toward the next level threshold.
+ * @module components/xp-progress-bar
+ */
 "use client"
 
 import { motion } from "motion/react"
 import { IconBolt } from "@tabler/icons-react"
 import { cn } from "@/lib/utils"
 
+/**
+ * Props for {@link XPProgressBar}.
+ * @property totalXP     - Cumulative experience points earned by the user.
+ * @property level       - Current gamification level number.
+ * @property levelName   - Human-readable label for the level (e.g. "Budget Ninja").
+ * @property progress    - Percentage (0-100) toward the next level.
+ * @property nextLevelXP - XP threshold for the next level, or null if at max level.
+ * @property className   - Optional CSS class for the wrapper div.
+ * @property compact     - When true, hides the level label row (used in sidebar).
+ */
 interface XPProgressBarProps {
   totalXP: number
   level: number
@@ -15,6 +31,10 @@ interface XPProgressBarProps {
   compact?: boolean
 }
 
+/**
+ * Renders an animated gradient progress bar (amber-to-rose) with a shimmer
+ * overlay, showing level info and XP remaining until the next level.
+ */
 export function XPProgressBar({
   totalXP,
   level,

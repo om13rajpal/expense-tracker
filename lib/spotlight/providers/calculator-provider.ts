@@ -1,3 +1,13 @@
+/**
+ * Spotlight calculator provider: evaluates EMI, SIP, and math expressions.
+ *
+ * Parses the user's query for calculator patterns (e.g. "emi 10L 8.5% 20y",
+ * "sip 5000 12% 10y", "5000 + 3000") and returns formatted results with
+ * INR-formatted values.
+ *
+ * @module lib/spotlight/providers/calculator-provider
+ */
+
 import type { SpotlightProvider, SpotlightResult } from "../types"
 import { parseCalculator } from "../data/parsers"
 import { calculate } from "@/lib/command-palette/calculator"

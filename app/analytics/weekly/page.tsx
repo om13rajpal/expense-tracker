@@ -1,3 +1,12 @@
+/**
+ * @module app/analytics/weekly/page
+ * @description Standalone Weekly Analytics page for Finova. Provides a week-by-week
+ * financial breakdown with a week selector, period bridge (opening/closing balance
+ * with inflows/outflows), summary metric cards (income, expenses, net change, daily avg),
+ * a daily income-vs-expenses bar chart, top spending categories, and the largest individual
+ * transactions for the selected week. Weeks are computed from transaction data using
+ * `@/lib/weekly-utils` and balances from `@/lib/balance-utils`.
+ */
 "use client"
 
 import * as React from "react"
@@ -42,6 +51,11 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
+/**
+ * Formats a numeric amount as an Indian Rupee currency string with no decimals.
+ * @param amount - The monetary value to format.
+ * @returns Formatted string like "₹1,23,456".
+ */
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -50,6 +64,13 @@ function formatCurrency(amount: number): string {
   }).format(amount)
 }
 
+/**
+ * Weekly Analytics page component. Renders a week selector with prev/next navigation,
+ * a period bridge card, four metric summary cards, a daily bar chart, top categories,
+ * and top expenses list. Supports week switching via dropdown and arrow buttons.
+ * Auth-guarded -- redirects to `/login` if unauthenticated.
+ * @returns The weekly analytics page wrapped in the app sidebar layout.
+ */
 export default function WeeklyAnalyticsPage() {
   const router = useRouter()
   const { isAuthenticated, isLoading: authLoading } = useAuth()

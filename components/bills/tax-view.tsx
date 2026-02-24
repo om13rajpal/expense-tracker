@@ -1,3 +1,10 @@
+/**
+ * Indian Tax Planner view — comprehensive tax planning dashboard.
+ * Covers income breakdown, Section 80C / 80D / HRA / other deductions,
+ * old vs new regime comparison with a stacked bar chart, and optimisation
+ * suggestions. All amounts are in INR per Indian tax year (April-March).
+ * @module components/bills/tax-view
+ */
 "use client"
 
 import * as React from "react"
@@ -184,9 +191,13 @@ function detectInvestmentDeductions(sips: SIPItem[]): { ppf: number; elss: numbe
 }
 
 // ---------------------------------------------------------------------------
-// Tax View Component
-// ---------------------------------------------------------------------------
-
+/**
+ * Top-level Tax Planner page exported for the `/bills` route's "Tax" tab.
+ * Renders an income breakdown, deduction editor with category sections
+ * (80C, 80D, HRA, Other), a regime comparison bar chart (old vs new),
+ * and optimisation tips. Auth-guarded: redirects to `/login` when not
+ * authenticated.
+ */
 export function TaxView() {
   const { isAuthenticated, isLoading: authLoading } = useAuth()
   const router = useRouter()

@@ -15,15 +15,34 @@ import { corsHeaders, handleOptions, withAuth } from '@/lib/middleware';
 import { getDefaultNWIConfig } from '@/lib/nwi';
 import { TransactionCategory, NWIConfig } from '@/lib/types';
 
+/** @constant MongoDB collection name for NWI configuration documents. */
 const COLLECTION = 'nwi_config';
 
-// Enable Next.js caching for this route
+/**
+ * @constant Next.js ISR revalidation interval in seconds.
+ * Caches the NWI config response for 5 minutes.
+ */
 export const revalidate = 300; // 5 minutes
 
+/**
+ * OPTIONS /api/nwi-config
+ * CORS preflight handler. Returns allowed methods and headers.
+ */
 export async function OPTIONS() {
   return handleOptions();
 }
 
+/**
+ * GET /api/nwi-config
+ * Fetch the user's NWI (Needs/Wants/Investments/Savings) configuration.
+ * Seeds default configuration on first access if none exists.
+ * Response is cached for 5 minutes via Next.js ISR.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @returns {200} `{ success: true, config: NWIConfig }`
+ * @returns {500} `{ success: false, error: string }` - Server error
+ */
 export async function GET(request: NextRequest) {
   return withAuth(async (_req, { user }) => {
     try {
@@ -91,6 +110,20 @@ export async function GET(request: NextRequest) {
   })(request);
 }
 
+/**
+ * PUT /api/nwi-config
+ * Update the user's NWI allocation percentages and category mappings.
+ * Validates that all four bucket percentages sum to 100.
+ * Auto-deduplicates categories across buckets by priority: savings > investments > wants > needs.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @body {NWIConfig} config - The updated NWI configuration with needs, wants, investments, savings buckets
+ *
+ * @returns {200} `{ success: true, config: NWIConfig }`
+ * @returns {400} `{ success: false, error: string }` - Invalid percentages (must sum to 100)
+ * @returns {500} `{ success: false, error: string }` - Server error
+ */
 export async function PUT(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {

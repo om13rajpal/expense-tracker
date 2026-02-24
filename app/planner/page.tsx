@@ -1,3 +1,12 @@
+/**
+ * @module app/planner/page
+ * @description Financial Planner page for Finova. Provides an interactive budget
+ * planner with income/expense allocation, NWI (Needs-Wants-Investments) split
+ * recommendations, AI-powered planner insights, and pie/bar chart visualizations.
+ * Users can configure income sources, allocate funds across categories, receive
+ * AI recommendations via the `useAiInsight` hook, and save/load planner presets.
+ * Data is fetched client-side via React Query hooks and the `/api/planner` endpoints.
+ */
 "use client"
 
 import * as React from "react"
@@ -117,6 +126,13 @@ function formatPct(amount: number, total: number): string {
 
 // ─── Main ───
 
+/**
+ * Main Planner page component. Renders an interactive financial planner
+ * with income entry, NWI allocation sliders, category-level budget breakdown,
+ * AI-powered recommendations, and Recharts-based pie/bar visualizations.
+ * Requires authentication -- redirects to `/login` if unauthenticated.
+ * @returns The planner page wrapped in the app sidebar layout.
+ */
 export default function PlannerPage() {
   const router = useRouter()
   const { isAuthenticated, isLoading: authLoading } = useAuth()

@@ -1,3 +1,13 @@
+/**
+ * @module app/dashboard/page
+ * @description Main dashboard page for Finova. Provides an at-a-glance financial
+ * overview with key metrics (balance, income, expenses, savings rate), a mini
+ * category breakdown bar chart, top spending categories list, recent transactions,
+ * AI insights widget, sync button, and contextual banners for data edge cases
+ * (partial months, missing data). Metrics are computed from the `useTransactions`
+ * hook using monthly utility functions. The dashboard is the primary landing page
+ * after authentication.
+ */
 "use client"
 
 import * as React from "react"
@@ -111,6 +121,13 @@ const STAT_CONFIG = [
   },
 ] as const
 
+/**
+ * Dashboard page component. Renders the primary financial overview with stat cards
+ * (balance, income, expenses, savings rate), a category breakdown bar chart, top
+ * spending categories, recent transactions list, AI insights widget, and sync controls.
+ * Includes partial-month detection and contextual banners. Auth-guarded.
+ * @returns The dashboard page wrapped in the app sidebar layout.
+ */
 export default function DashboardPage() {
   const router = useRouter()
   const { isAuthenticated, isLoading: authLoading } = useAuth()

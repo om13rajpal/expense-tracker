@@ -1,11 +1,44 @@
+/**
+ * Ghost Budget API
+ * Computes the "ghost budget" -- the gap between what the user budgeted
+ * and what they actually spent. Tracks cumulative over-budget spending
+ * to visualize the cost of budget overruns over time.
+ *
+ * If the ghost budget feature is disabled in user settings, returns `{ enabled: false }`.
+ * Historical snapshots are stored for month-over-month tracking.
+ *
+ * Requires JWT authentication via the `auth-token` HTTP-only cookie.
+ *
+ * Endpoints:
+ *   GET /api/ghost-budget - Retrieve ghost budget data for current and past months
+ *
+ * MongoDB collections: `user_settings`, `ghost_budget_snapshots`, `budget_categories`, `transactions`
+ */
+
 import { NextRequest, NextResponse } from 'next/server';
 import { withAuth, corsHeaders, handleOptions } from '@/lib/middleware';
 import { getMongoDb } from '@/lib/mongodb';
 
+/**
+ * OPTIONS /api/ghost-budget
+ * CORS preflight handler. Returns allowed methods and headers.
+ */
 export async function OPTIONS() {
   return handleOptions();
 }
 
+/**
+ * GET /api/ghost-budget
+ * Retrieve ghost budget data including current month actual vs budgeted spending,
+ * the gap (over-budget amount), cumulative gap across months, and per-category breakdown.
+ * Returns up to 12 months of historical snapshots.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @returns {200} `{ success: true, enabled: false }` - Feature disabled
+ * @returns {200} `{ success: true, enabled: true, currentMonth: { actual, budgeted, gap }, cumulativeGap, history: Array<{ month, ghostSavings, cumulativeGap }>, categoryBreakdown: Array<{ category, actual, budgeted, gap }> }`
+ * @returns {500} `{ success: false, error: string }` - Server error
+ */
 export async function GET(request: NextRequest) {
   return withAuth(async (_req, { user }) => {
     try {
@@ -77,6 +110,15 @@ export async function GET(request: NextRequest) {
   })(request);
 }
 
+/**
+ * Compute the ghost budget data for the current month on-the-fly.
+ * Compares actual expense transactions against budget category limits to calculate
+ * the over-budget gap per category and in total.
+ *
+ * @param db - MongoDB database instance
+ * @param userId - The authenticated user's ID
+ * @returns Object with `actual`, `budgeted`, `gap` totals and `categoryBreakdown` array
+ */
 async function computeCurrentMonth(db: Awaited<ReturnType<typeof getMongoDb>>, userId: string) {
   const now = new Date();
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();

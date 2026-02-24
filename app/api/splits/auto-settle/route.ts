@@ -1,3 +1,18 @@
+/**
+ * Splits Auto-Settle API
+ * Automatically matches bank transactions to split contacts and creates
+ * settlement records. Uses name-matching heuristics against transaction
+ * descriptions and merchant fields.
+ *
+ * Requires JWT authentication via the `auth-token` HTTP-only cookie.
+ *
+ * Endpoints:
+ *   POST /api/splits/auto-settle - Scan bank transactions and auto-create settlements
+ *
+ * MongoDB collections: `splits_expenses`, `splits_settlements`, `splits_contacts`,
+ *   `splits_auto_settled`, `transactions`
+ */
+
 import { NextRequest, NextResponse } from "next/server"
 import { getMongoDb } from "@/lib/mongodb"
 import { corsHeaders, handleOptions, withAuth } from "@/lib/middleware"
@@ -199,6 +214,10 @@ export async function POST(request: NextRequest) {
   })(request)
 }
 
+/**
+ * OPTIONS /api/splits/auto-settle
+ * CORS preflight handler. Returns allowed methods and headers.
+ */
 export async function OPTIONS() {
   return handleOptions()
 }

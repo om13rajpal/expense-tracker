@@ -1,3 +1,21 @@
+/**
+ * Full AI insight generation pipeline.
+ *
+ * Orchestrates a 5-stage process for each insight type:
+ *   1. **Collect** — fetch user transactions, investments, goals, NWI config, and tax data from MongoDB.
+ *   2. **Enrich** — optionally search for market context via Tavily (investment insights only).
+ *   3. **Prompt** — build system + user messages from templates in ai-prompts.ts.
+ *   4. **Generate** — call OpenRouter (Claude) for structured JSON output.
+ *   5. **Persist** — save the result to MongoDB with pruning of old analyses.
+ *
+ * Supports caching (24-hour staleness window) and force-regeneration.
+ * Parses 6 structured JSON formats: spending analysis, monthly budget,
+ * weekly budget, investment insights, tax optimization, and planner
+ * recommendation. Falls back to raw markdown when JSON parsing fails.
+ *
+ * @module lib/ai-pipeline
+ */
+
 import { getMongoDb } from './mongodb';
 import { calculateAnalytics, separateOneTimeExpenses } from './analytics';
 import { calculateAccountSummary } from './balance-utils';
@@ -11,9 +29,12 @@ import type { Transaction, TransactionCategory, TransactionType, PaymentMethod, 
 import type { AiInsightType, AiAnalysisDoc, InsightSection, PipelineContext, PipelineOptions, PipelineResult, TaxTipData, SpendingAnalysisData, MonthlyBudgetData, WeeklyBudgetData, InvestmentInsightsData, PlannerRecommendationData } from './ai-types';
 import type { Document } from 'mongodb';
 
-const STALENESS_MS = 24 * 60 * 60 * 1000; // 24 hours
+/** Duration after which a cached AI analysis is considered stale (24 hours). */
+const STALENESS_MS = 24 * 60 * 60 * 1000;
+/** Maximum number of AI analysis documents retained per type per user. */
 const MAX_ANALYSES_PER_TYPE = 5;
 
+/** Convert a raw MongoDB document into a typed Transaction object. */
 function toTransaction(doc: Record<string, unknown>): Transaction {
   return {
     id: (doc.txnId as string) || (doc._id as { toString(): string })?.toString() || '',
@@ -32,6 +53,7 @@ function toTransaction(doc: Record<string, unknown>): Transaction {
   };
 }
 
+/** Check whether a cached AI analysis has exceeded the staleness window. */
 function isStale(doc: AiAnalysisDoc): boolean {
   const generatedAt = new Date(doc.generatedAt).getTime();
   return Date.now() - generatedAt > STALENESS_MS;

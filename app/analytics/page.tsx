@@ -1,3 +1,13 @@
+/**
+ * @module app/analytics/page
+ * @description Financial analytics dashboard for Finova. Provides monthly and yearly
+ * spending/income analysis with interactive charts. Features include a month selector,
+ * monthly summary cards with income/expense/savings metrics, category breakdown pie charts,
+ * payment method distribution, daily spending trend lines, year-over-year growth comparison,
+ * balance trend area charts, and one-time vs recurring expense separation. Also integrates
+ * a weekly analytics sub-view. All data is derived from the `useTransactions` hook with
+ * analytics computed via utility functions from `@/lib/analytics` and `@/lib/monthly-utils`.
+ */
 "use client"
 
 import * as React from "react"
@@ -175,6 +185,13 @@ function TrendLegend({
   )
 }
 
+/**
+ * Analytics page component. Renders a tabbed analytics dashboard with Monthly
+ * (summary cards, category/payment charts, daily trends, balance chart) and
+ * Weekly (delegated to `WeeklyAnalyticsContent`) views. Includes a month selector,
+ * year-over-year comparison, and spending anomaly detection. Auth-guarded.
+ * @returns The analytics page wrapped in the app sidebar layout.
+ */
 export default function AnalyticsPage() {
   const router = useRouter()
   const { isAuthenticated, isLoading: authLoading } = useAuth()

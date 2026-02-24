@@ -1,10 +1,18 @@
 /**
- * MFAPI.in integration for fetching mutual fund NAV data.
- * Free API, no authentication required.
- * Docs: https://api.mfapi.in
+ * MFAPI.in integration for fetching Indian mutual fund NAV data.
+ *
+ * Uses the free, unauthenticated MFAPI.in REST API to search for schemes,
+ * retrieve latest and historical NAV values, and calculate trailing returns
+ * (1Y, 3Y, 5Y annualized). Also provides a hardcoded lookup table of
+ * well-known scheme codes for common index, flexi-cap, and small/mid-cap funds.
+ *
+ * @see https://api.mfapi.in
+ * @module lib/mfapi
  */
 
+/** Full scheme data response from MFAPI.in including metadata and NAV history. */
 export interface MFAPISchemeData {
+  /** Fund metadata (house, type, category, code, name). */
   meta: {
     fund_house: string
     scheme_type: string
@@ -12,40 +20,60 @@ export interface MFAPISchemeData {
     scheme_code: number
     scheme_name: string
   }
+  /** Historical NAV entries, most recent first. Dates are DD-MM-YYYY format. */
   data: Array<{
     date: string
     nav: string
   }>
+  /** API response status string. */
   status: string
 }
 
+/** Lightweight search result containing only scheme code and name. */
 export interface MFAPISearchResult {
+  /** AMFI scheme code (unique numeric identifier). */
   schemeCode: number
+  /** Full scheme name including plan and option (e.g. "UTI Nifty 50 Index Fund - Direct Plan - Growth"). */
   schemeName: string
 }
 
+/** Result of a latest-NAV lookup for a single scheme. */
 export interface NAVResult {
+  /** AMFI scheme code. */
   schemeCode: number
+  /** Scheme display name. */
   schemeName: string
+  /** Most recent NAV value. */
   latestNAV: number
+  /** Date of the latest NAV (DD-MM-YYYY from API). */
   date: string
 }
 
+/** Annualized trailing return for a specific lookback period (e.g. 1Y, 3Y, 5Y). */
 export interface TrailingReturn {
+  /** Human-readable period label (e.g. "1Y", "3Y", "5Y"). */
   period: string
+  /** Number of years for this lookback window. */
   years: number
+  /** Annualized return as a percentage (e.g. 12.5 means 12.5%). */
   annualizedReturn: number
+  /** NAV at the start of the lookback period. */
   startNAV: number
+  /** NAV at the end (most recent). */
   endNAV: number
+  /** Start date as YYYY-MM-DD. */
   startDate: string
+  /** End date as YYYY-MM-DD. */
   endDate: string
 }
 
 const MFAPI_BASE = "https://api.mfapi.in/mf"
 
 /**
- * Search for mutual fund schemes by name.
- * Returns matching scheme codes and names.
+ * Search for mutual fund schemes by name via the MFAPI.in search endpoint.
+ *
+ * @param query - Free-text search string (e.g. "UTI Nifty 50").
+ * @returns Array of matching scheme codes and names, or empty array on failure.
  */
 export async function searchSchemes(query: string): Promise<MFAPISearchResult[]> {
   const response = await fetch(`${MFAPI_BASE}/search?q=${encodeURIComponent(query)}`)
@@ -59,7 +87,13 @@ export async function searchSchemes(query: string): Promise<MFAPISearchResult[]>
 }
 
 /**
- * Fetch latest NAV for a given scheme code.
+ * Fetch the latest NAV for a given AMFI scheme code.
+ *
+ * Tries the `/latest` endpoint first; falls back to fetching full history
+ * and extracting the most recent entry if the `/latest` route fails.
+ *
+ * @param schemeCode - AMFI scheme code (e.g. 120716).
+ * @returns NAVResult with latest value, or `null` on failure.
  */
 export async function fetchLatestNAV(schemeCode: number): Promise<NAVResult | null> {
   try {
@@ -93,7 +127,10 @@ export async function fetchLatestNAV(schemeCode: number): Promise<NAVResult | nu
 }
 
 /**
- * Fetch full NAV history for a scheme.
+ * Fetch the complete NAV history for a scheme.
+ *
+ * @param schemeCode - AMFI scheme code.
+ * @returns Full MFAPISchemeData including metadata and all historical NAV entries, or `null` on failure.
  */
 export async function fetchNAVHistory(schemeCode: number): Promise<MFAPISchemeData | null> {
   try {
@@ -106,7 +143,10 @@ export async function fetchNAVHistory(schemeCode: number): Promise<MFAPISchemeDa
 }
 
 /**
- * Fetch latest NAVs for multiple scheme codes in parallel.
+ * Fetch latest NAVs for multiple scheme codes concurrently.
+ *
+ * @param schemeCodes - Array of AMFI scheme codes.
+ * @returns Record mapping scheme code to its NAVResult (only successful lookups included).
  */
 export async function fetchMultipleNAVs(schemeCodes: number[]): Promise<Record<number, NAVResult>> {
   const results: Record<number, NAVResult> = {}
@@ -119,8 +159,14 @@ export async function fetchMultipleNAVs(schemeCodes: number[]): Promise<Record<n
 }
 
 /**
- * Calculate trailing returns from NAV history.
- * Returns annualized returns for 1Y, 3Y, 5Y periods.
+ * Calculate trailing annualized returns from a scheme's NAV history.
+ *
+ * Computes 1-year, 3-year, and 5-year annualized returns by finding the
+ * closest NAV entry to each lookback date (within 30 days tolerance)
+ * and applying the CAGR formula. Requires at least 6 months of data.
+ *
+ * @param navHistory - Full scheme data with historical NAV entries.
+ * @returns Array of TrailingReturn objects (only periods with sufficient data).
  */
 export function calculateTrailingReturns(navHistory: MFAPISchemeData): TrailingReturn[] {
   if (!navHistory.data?.length) return []
@@ -209,8 +255,16 @@ export const COMMON_SCHEME_CODES: Record<string, number> = {
 }
 
 /**
- * Fuzzy match a scheme name to find the best matching scheme code.
- * Tries exact match first, then partial match.
+ * Fuzzy-match a scheme name to find the best matching AMFI scheme code.
+ *
+ * Resolution order:
+ * 1. Case-insensitive substring match against {@link COMMON_SCHEME_CODES}.
+ * 2. Search via MFAPI.in API, preferring exact matches.
+ * 3. Among API results, prefer "Direct" + "Growth" plans.
+ * 4. Falls back to the first API result.
+ *
+ * @param schemeName - Human-entered scheme name to look up.
+ * @returns AMFI scheme code, or `null` if no match found.
  */
 export async function findSchemeCode(schemeName: string): Promise<number | null> {
   // Direct lookup in common schemes

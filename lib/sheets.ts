@@ -1,8 +1,18 @@
 /**
- * Google Sheets integration for transaction data.
- * Fetches bank transactions from a Google Sheet (public CSV or authenticated API),
- * parses Indian bank statement formats (UPI/IMPS/NEFT), auto-categorizes,
- * and falls back to demo data when the sheet is unavailable.
+ * Google Sheets integration for importing bank transaction data.
+ *
+ * Fetches transactions from a Google Sheet in two modes:
+ * 1. **Public CSV export** (no auth): Works for "Anyone with link can view" sheets
+ * 2. **Authenticated API**: Uses Google API key or service account credentials
+ *
+ * Parses Indian bank statement formats, extracting merchants from UPI/IMPS/NEFT
+ * description patterns, auto-detecting payment methods, and running
+ * auto-categorization via the categorizer engine. Falls back to demo data
+ * when the sheet is unavailable.
+ *
+ * Includes an in-memory cache to avoid re-fetching on rapid consecutive calls.
+ *
+ * @module lib/sheets
  */
 import { google } from 'googleapis';
 import type { GoogleAuth } from 'google-auth-library';

@@ -9,6 +9,12 @@
 import { useEffect, useRef } from "react"
 import { useRouter } from "next/navigation"
 
+/**
+ * Configuration callbacks for single-key shortcuts.
+ * @property onQuickAdd - Callback invoked when the user presses `n` or `Ctrl+N` to add a new transaction
+ * @property onSearch - Callback invoked when the user presses `/` or `Ctrl+K` to focus the search input
+ * @property onHelp - Callback invoked when the user presses `?` to display the shortcuts help overlay
+ */
 interface KeyboardShortcutsOptions {
   onQuickAdd?: () => void
   onSearch?: () => void
@@ -16,15 +22,46 @@ interface KeyboardShortcutsOptions {
 }
 
 /**
- * Attaches global keydown listeners for app-wide shortcuts.
- * @param options - Callbacks for quick-add (`n`), search (`/` or `Ctrl+K`), and help (`?`).
+ * Attaches global keydown listeners for app-wide keyboard shortcuts.
+ *
+ * **Single-key shortcuts:**
+ * - `n` or `Ctrl+N` -- Quick-add a new transaction
+ * - `?` -- Show keyboard shortcuts help
+ * - `/` or `Ctrl+K` -- Focus search
+ * - `Escape` -- Cancel any pending chord
+ *
+ * **Two-key "go to" chords (press `g` then a letter within 500 ms):**
+ * - `g d` -- Dashboard
+ * - `g t` -- Transactions
+ * - `g a` -- Analytics
+ * - `g b` -- Budget
+ * - `g i` -- Investments
+ * - `g h` -- Financial Health
+ * - `g g` -- Goals
+ * - `g p` -- Planner
+ * - `g s` -- Subscriptions
+ * - `g x` -- Tax
+ * - `g l` -- Learn
+ * - `g n` -- AI Agent
+ *
+ * All shortcuts are suppressed when the active element is an `INPUT`,
+ * `TEXTAREA`, `SELECT`, or `contentEditable` element.
+ *
+ * @param options - Optional callbacks for quick-add, search, and help shortcuts
  */
 export function useKeyboardShortcuts(options: KeyboardShortcutsOptions = {}) {
   const router = useRouter()
+  /** Tracks the first key of a pending two-key chord (currently only "g"). */
   const pendingChord = useRef<string | null>(null)
+  /** Timer handle for the 500 ms chord expiry window. */
   const chordTimeout = useRef<ReturnType<typeof setTimeout> | null>(null)
 
   useEffect(() => {
+    /**
+     * Global keydown event handler that dispatches to the appropriate
+     * shortcut action or starts/completes a chord sequence.
+     * @param e - The native keyboard event
+     */
     function handleKeyDown(e: KeyboardEvent) {
       // Skip when typing in input/textarea/contenteditable
       const target = e.target as HTMLElement
@@ -69,6 +106,7 @@ export function useKeyboardShortcuts(options: KeyboardShortcutsOptions = {}) {
         pendingChord.current = null
         if (chordTimeout.current) clearTimeout(chordTimeout.current)
 
+        /** Route map for the second key of a "g + letter" navigation chord. */
         const routes: Record<string, string> = {
           d: "/dashboard",
           t: "/transactions",

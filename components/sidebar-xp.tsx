@@ -1,9 +1,20 @@
+/**
+ * Compact XP progress widget shown in the sidebar footer.
+ * Links to the full gamification page when clicked.
+ * @module components/sidebar-xp
+ */
 "use client"
 
 import Link from "next/link"
 import { useGamification } from "@/hooks/use-gamification"
 import { XPProgressBar } from "@/components/xp-progress-bar"
 
+/**
+ * Renders a compact XP progress bar inside the app sidebar.
+ * Fetches the current gamification state (level, XP, progress) and
+ * links through to `/gamification` for the full experience.
+ * Hidden while loading or when gamification data is unavailable.
+ */
 export function SidebarXP() {
   const { xp, isLoading } = useGamification()
 

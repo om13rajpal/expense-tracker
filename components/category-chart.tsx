@@ -15,13 +15,19 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart"
 
+/**
+ * Single entry in the category breakdown donut chart.
+ * @property category   - Display name of the expense category.
+ * @property amount     - Total spent in this category (INR).
+ * @property percentage - Share of total expenses (0-100).
+ */
 interface CategoryData {
   category: string
   amount: number
   percentage: number
 }
 
-// Theme-aware palette using CSS variables
+/** Theme-aware colour palette drawn from CSS custom properties for pie chart segments. */
 const COLORS = [
   "var(--chart-1)",
   "var(--chart-2)",
@@ -32,12 +38,14 @@ const COLORS = [
   "var(--primary)",
 ]
 
+/** Recharts ChartConfig mapping the `amount` data key to its tooltip label. */
 const chartConfig = {
   amount: {
     label: "Amount",
   },
 } satisfies ChartConfig
 
+/** Formats a number as INR currency with no decimal places. */
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",

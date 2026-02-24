@@ -1,3 +1,14 @@
+/**
+ * Spotlight search orchestrator that coordinates all search providers.
+ *
+ * Runs synchronous providers (navigation, actions, calculator, expense, AI)
+ * immediately for instant results, then dispatches async providers (transaction
+ * search via API) and merges results. Groups and orders results by category
+ * priority: Pages > Transactions > Actions > Calculator > Quick Expense > Ask AI.
+ *
+ * @module lib/spotlight/orchestrator
+ */
+
 import type { SpotlightProvider, SpotlightResult, ResultGroup, SpotlightCategory } from "./types"
 import { navigationProvider } from "./providers/navigation-provider"
 import { transactionProvider } from "./providers/transaction-provider"
@@ -6,6 +17,7 @@ import { calculatorProvider } from "./providers/calculator-provider"
 import { expenseProvider } from "./providers/expense-provider"
 import { aiProvider } from "./providers/ai-provider"
 
+/** Display order for result group sections in the Spotlight overlay. */
 const GROUP_ORDER: SpotlightCategory[] = [
   "navigation",
   "transaction",
@@ -15,6 +27,7 @@ const GROUP_ORDER: SpotlightCategory[] = [
   "ai",
 ]
 
+/** Human-readable section headings for each result category. */
 const GROUP_LABELS: Record<SpotlightCategory, string> = {
   navigation: "Pages",
   transaction: "Transactions",
@@ -24,6 +37,7 @@ const GROUP_LABELS: Record<SpotlightCategory, string> = {
   ai: "Ask AI",
 }
 
+/** Providers that execute synchronously and return results instantly. */
 const syncProviders: SpotlightProvider[] = [
   navigationProvider,
   actionProvider,
@@ -32,10 +46,20 @@ const syncProviders: SpotlightProvider[] = [
   aiProvider,
 ]
 
+/** Providers that require async API calls (debounced, run after sync results). */
 const asyncProviders: SpotlightProvider[] = [
   transactionProvider,
 ]
 
+/**
+ * Merge and group an array of search results by category.
+ *
+ * Groups results, orders groups by `GROUP_ORDER`, sorts results within
+ * each group by score descending, and applies section labels.
+ *
+ * @param allResults - Flat array of results from all providers.
+ * @returns Ordered array of `ResultGroup` objects.
+ */
 function mergeResults(allResults: SpotlightResult[]): ResultGroup[] {
   const grouped = new Map<SpotlightCategory, SpotlightResult[]>()
 
@@ -54,8 +78,11 @@ function mergeResults(allResults: SpotlightResult[]): ResultGroup[] {
     }))
 }
 
+/** Result of a synchronous search pass, indicating whether async results are pending. */
 export interface SearchResult {
+  /** Grouped and sorted search results from sync providers. */
   groups: ResultGroup[]
+  /** Whether async providers should also be invoked (true when query is 2+ chars). */
   hasAsync: boolean
 }
 

@@ -11,8 +11,21 @@ import { getMongoDb } from '@/lib/mongodb';
 import { fetchTransactionsFromSheet, clearCache } from '@/lib/sheets';
 import { persistTransactions } from '@/lib/persist-transactions';
 
+/** @constant MongoDB collection for logging cron job runs and their results. */
 const CRON_COLLECTION = 'cron_runs';
 
+/**
+ * GET /api/cron/sync
+ * Periodic cron job that syncs transactions from a configured Google Sheet.
+ * Clears the in-memory cache first to force a fresh fetch, then persists
+ * the transactions to MongoDB. Skips gracefully if no sheet is configured (demo mode).
+ * Logs each run to the `cron_runs` collection.
+ *
+ * @requires Authentication - Cron secret via `Authorization` header or `CRON_SECRET` env var
+ *
+ * @returns {200} `{ success: true, message, count, persisted }`
+ * @returns {500} `{ success: false, message: string }` - Error during sync
+ */
 export async function GET(request: NextRequest) {
   return withCronAuth(async () => {
     const startedAt = new Date();

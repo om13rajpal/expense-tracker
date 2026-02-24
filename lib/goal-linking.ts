@@ -1,9 +1,13 @@
 /**
- * Goal Auto-Contribution Linking
+ * Goal Auto-Contribution Linking.
  *
  * Scans transactions to detect contributions toward savings goals
  * by matching on category membership and keyword presence in
- * descriptions and merchant names.
+ * descriptions and merchant names. Provides default link configs
+ * for common goal types (emergency fund, education, investment)
+ * and supports custom per-goal configurations.
+ *
+ * @module lib/goal-linking
  */
 
 /**

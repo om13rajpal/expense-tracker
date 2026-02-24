@@ -1,12 +1,21 @@
 /**
  * XIRR (Extended Internal Rate of Return) calculator.
- * Uses Newton-Raphson method to find the annualized return rate
- * for irregular cash flows.
+ *
+ * Uses Newton-Raphson iteration to find the annualized return rate for
+ * irregular cash flows (investments at different dates). Falls back to
+ * bisection search when Newton-Raphson fails to converge. Also provides
+ * a convenience wrapper for investment portfolios and a simple CAGR
+ * fallback for lump-sum calculations.
+ *
+ * @module lib/xirr
  */
 
+/** A single cash flow event in an investment timeline. */
 export interface CashFlow {
+  /** Date of the cash flow. */
   date: Date
-  amount: number // Negative for investments (outflows), positive for redemptions/current value
+  /** Amount in INR. Negative for outflows (investments), positive for inflows (redemptions/current value). */
+  amount: number
 }
 
 /**
@@ -164,7 +173,13 @@ export function calculateInvestmentXIRR(
 }
 
 /**
- * Calculate simple annualized return (CAGR) as a fallback.
+ * Calculate simple annualized return (CAGR) as a fallback for lump-sum investments.
+ *
+ * @param investedAmount - Original amount invested.
+ * @param currentValue - Current portfolio value.
+ * @param startDate - Date of the original investment.
+ * @param endDate - Valuation date (defaults to today).
+ * @returns CAGR as a percentage (e.g. 12.5 means 12.5%), or 0 if inputs are invalid.
  */
 export function calculateCAGR(
   investedAmount: number,

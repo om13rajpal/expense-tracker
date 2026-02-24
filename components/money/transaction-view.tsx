@@ -1,3 +1,10 @@
+/**
+ * Transaction management view — full CRUD for financial transactions.
+ * Features add/edit dialog, inline quick-add, multi-select with bulk
+ * delete, search/filter by category/status/type, month navigation,
+ * and grouped-by-date display with summary stats.
+ * @module components/money/transaction-view
+ */
 "use client"
 
 import * as React from "react"
@@ -180,6 +187,13 @@ function PaymentMethodIcon({ method, className = "size-3.5" }: { method: string;
   }
 }
 
+/**
+ * Top-level Transaction page exported for the `/money` route's "Transactions" tab.
+ * Renders a month navigator, search/filter toolbar, quick-add row,
+ * grouped-by-date transaction list with edit/delete, multi-select bulk
+ * actions, and monthly summary metrics (income, expenses, net).
+ * Auth-guarded: redirects to `/login` when not authenticated.
+ */
 export function TransactionView() {
   const router = useRouter()
   const { isAuthenticated, isLoading: authLoading } = useAuth()

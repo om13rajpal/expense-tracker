@@ -1,3 +1,10 @@
+/**
+ * Net Worth tracker view — displays total assets, total debts, and net
+ * worth with a timeline area chart, debt management CRUD, asset pie
+ * chart, and hero metric display. Supports adding/editing/deleting debts
+ * and shows an auto-calculated net worth timeline from transaction history.
+ * @module components/goals/net-worth-view
+ */
 "use client"
 
 import * as React from "react"
@@ -57,9 +64,21 @@ import { formatINR as formatCurrency, formatCompact, formatCompactAxis } from "@
 import { stagger, fadeUp, numberPop } from "@/lib/motion"
 
 // ---------------------------------------------------------------------------
-// Types
-// ---------------------------------------------------------------------------
-
+/**
+ * A single debt/liability tracked by the user.
+ * @property id               - Unique debt identifier.
+ * @property name             - Human-readable label (e.g. "Home Loan SBI").
+ * @property type             - Debt category (home_loan, car_loan, etc.).
+ * @property principal        - Original loan amount in INR.
+ * @property interestRate     - Annual interest rate as a percentage.
+ * @property emiAmount        - Monthly EMI amount in INR.
+ * @property tenure           - Loan tenure in months.
+ * @property startDate        - ISO date when the loan started.
+ * @property paidEMIs         - Number of EMIs already paid.
+ * @property remainingBalance - Outstanding balance in INR.
+ * @property status           - Whether the debt is active or closed.
+ * @property notes            - Optional free-text notes.
+ */
 interface Debt {
   id: string
   name: string
@@ -75,10 +94,7 @@ interface Debt {
   notes?: string
 }
 
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
+/** Available debt type options for the add/edit debt form. */
 const DEBT_TYPES = [
   { value: "home_loan", label: "Home Loan" },
   { value: "car_loan", label: "Car Loan" },
@@ -180,10 +196,10 @@ function AssetPieTooltip({ active, payload }: {
   )
 }
 
-// ---------------------------------------------------------------------------
-// Net Worth Hero Section
-// ---------------------------------------------------------------------------
-
+/**
+ * Hero section displaying the net worth headline, total assets, total
+ * debts, and an asset allocation pie chart with interactive tooltip.
+ */
 function NetWorthHero({
   metrics,
   totalDebts,
@@ -335,10 +351,11 @@ function NetWorthHero({
   )
 }
 
-// ---------------------------------------------------------------------------
-// Debt Form Dialog
-// ---------------------------------------------------------------------------
-
+/**
+ * Dialog form for adding or editing a debt/liability.
+ * Collects name, type, principal, interest rate, EMI, tenure,
+ * start date, and notes. Reused for both create and edit flows.
+ */
 function DebtFormDialog({
   open,
   onOpenChange,
@@ -507,8 +524,11 @@ function DebtFormDialog({
   )
 }
 
-// ---------------------------------------------------------------------------
-// Debt Tracker Section
+/**
+ * Debt Tracker section with CRUD operations, progress bars per debt,
+ * total outstanding summary, and status filtering. Uses TanStack
+ * Query mutations with optimistic invalidation.
+ */
 // ---------------------------------------------------------------------------
 
 function DebtTrackerSection() {
@@ -809,10 +829,11 @@ function DebtTrackerSection() {
   )
 }
 
-// ---------------------------------------------------------------------------
-// Net Worth Timeline Chart
-// ---------------------------------------------------------------------------
-
+/**
+ * Stacked area chart showing the net worth timeline over the last
+ * several months. Plots bank balance + investment value as separate
+ * gradient areas with a custom tooltip.
+ */
 function NetWorthTimeline({ metrics }: { metrics: FinancialHealthMetrics }) {
   return (
     <motion.div variants={fadeUp} className="card-elevated rounded-xl p-6">
@@ -952,9 +973,11 @@ function NetWorthViewSkeleton() {
   )
 }
 
-// ---------------------------------------------------------------------------
-// Main Component
-// ---------------------------------------------------------------------------
+/**
+ * Top-level Net Worth page exported for the `/goals` route's "Net Worth" tab.
+ * Composes the hero section (assets vs debts), debt tracker with full CRUD,
+ * and net worth timeline chart. Shows skeleton during loading.
+ */
 
 export function NetWorthView() {
   const { data, isLoading, error: queryError } = useFinancialHealth()

@@ -1,3 +1,10 @@
+/**
+ * Ghost Budget card — a behavioural nudge showing how much richer
+ * a hypothetical "ghost self" who stayed perfectly on budget would be.
+ * Displays cumulative overspend, current-month gap, top overspend
+ * categories, and a mini sparkline history bar chart.
+ * @module components/ghost-budget-card
+ */
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
@@ -8,6 +15,15 @@ import { formatINR } from "@/lib/format"
 import { spring } from "@/lib/motion"
 import { Skeleton } from "@/components/ui/skeleton"
 
+/**
+ * Shape of the ghost budget API response.
+ * @property success           - Whether the API call succeeded.
+ * @property enabled           - Whether the ghost budget feature is turned on.
+ * @property currentMonth      - This month's actual vs budgeted spending and gap.
+ * @property cumulativeGap     - Running total overspend across all tracked months.
+ * @property history           - Per-month ghost savings and cumulative gap over time.
+ * @property categoryBreakdown - Per-category actual vs budget breakdown for the current month.
+ */
 interface GhostBudgetData {
   success: boolean
   enabled: boolean
@@ -17,11 +33,22 @@ interface GhostBudgetData {
   categoryBreakdown?: Array<{ category: string; actual: number; budgeted: number; gap: number }>
 }
 
+/**
+ * Fetches ghost budget data from the API.
+ * @returns Parsed GhostBudgetData JSON response.
+ */
 async function fetchGhostBudget(): Promise<GhostBudgetData> {
   const res = await fetch("/api/ghost-budget", { credentials: "include" })
   return res.json()
 }
 
+/**
+ * Renders the Ghost Budget card. Shows the cumulative gap between the
+ * user's actual spending and their budgeted amounts, broken down by
+ * current month and top over-budget categories. Includes a mini bar
+ * chart of historical ghost savings. Returns null when the feature
+ * is disabled or the user is perfectly on budget.
+ */
 export function GhostBudgetCard() {
   const { data, isLoading } = useQuery({
     queryKey: ["ghost-budget"],

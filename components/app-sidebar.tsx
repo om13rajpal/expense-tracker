@@ -11,7 +11,6 @@ import {
   IconChecklist,
   IconDashboard,
   IconFileInvoice,
-  IconFlame,
   IconPigMoney,
   IconReceipt2,
   IconSparkles,
@@ -35,6 +34,7 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar"
 
+/** Flat list of primary sidebar navigation items (Money through Bucket List). */
 const navItems: NavItem[] = [
   { title: "Money",        url: "/money",        icon: IconReceipt2 },
   { title: "Budget",       url: "/budget",       icon: IconPigMoney },
@@ -42,10 +42,10 @@ const navItems: NavItem[] = [
   { title: "Investments",  url: "/investments",  icon: IconTrendingUp },
   { title: "Tax & Bills",  url: "/bills",        icon: IconFileInvoice },
   { title: "AI Assistant", url: "/ai",           icon: IconSparkles },
-  { title: "Discover",     url: "/discover",     icon: IconFlame },
   { title: "Bucket List",  url: "/bucket-list",  icon: IconChecklist },
 ]
 
+/** Static user profile data shown in the sidebar footer. */
 const userData = {
   name: "Om Rajpal",
   email: "omrajpal",

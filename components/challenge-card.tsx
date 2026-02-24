@@ -1,3 +1,9 @@
+/**
+ * Gamification challenge card with animated progress ring, status
+ * badges, XP rewards, and join/skip actions. Each challenge type
+ * has its own themed colour and icon.
+ * @module components/challenge-card
+ */
 "use client"
 
 import * as React from "react"
@@ -21,8 +27,12 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { cn } from "@/lib/utils"
 
-// ─── Per-challenge config (mirrors the CATEGORY_CONFIG pattern from goals) ──
-
+/**
+ * Visual theme configuration for each challenge type.
+ * Keys are challenge IDs (e.g. "log_30", "save_20") and values contain
+ * the Tabler icon component, Tailwind colour classes for text, ring
+ * stroke, background, and border.
+ */
 const CHALLENGE_CONFIG: Record<string, {
   icon: React.ElementType
   color: string
@@ -88,6 +98,7 @@ const CHALLENGE_CONFIG: Record<string, {
   },
 }
 
+/** Fallback theme used when a challenge ID has no entry in CHALLENGE_CONFIG. */
 const DEFAULT_CONFIG = {
   icon: IconTarget,
   color: "text-primary",
@@ -96,12 +107,23 @@ const DEFAULT_CONFIG = {
   border: "border-primary/20",
 }
 
+/**
+ * Resolves the visual theme config for a given challenge ID.
+ * Falls back to {@link DEFAULT_CONFIG} for unknown IDs.
+ */
 function getConfig(challengeId: string) {
   return CHALLENGE_CONFIG[challengeId] ?? DEFAULT_CONFIG
 }
 
-// ─── Progress Ring (matches goals/page.tsx ProgressRing exactly) ──
-
+/**
+ * Animated SVG circular progress indicator.
+ * @param percent     - Completion percentage (clamped 0-100).
+ * @param size        - Diameter in pixels (default 56).
+ * @param strokeWidth - Ring stroke width in pixels (default 4).
+ * @param className   - Optional CSS class for the wrapper.
+ * @param ringClass   - Tailwind stroke class for the filled arc.
+ * @param delay       - Animation delay in seconds before the arc animates in.
+ */
 function ProgressRing({
   percent,
   size = 56,
@@ -153,8 +175,23 @@ function ProgressRing({
   )
 }
 
-// ─── Challenge Card ──
-
+/**
+ * Props for {@link ChallengeCard}.
+ * @property challengeId - Unique key used to look up visual theme config.
+ * @property name        - Human-readable challenge title.
+ * @property description - Short description of the challenge objective.
+ * @property target      - Numeric target the user must reach to complete.
+ * @property current     - User's current progress value toward the target.
+ * @property progress    - Completion percentage (0-100).
+ * @property xpReward    - XP awarded upon completion.
+ * @property status      - Current status string (e.g. "active", "completed").
+ * @property joined      - Whether the user has joined this challenge.
+ * @property onJoin      - Callback fired when the user clicks "Join Challenge".
+ * @property onSkip      - Callback fired when the user clicks "Skip Challenge".
+ * @property isJoining   - Disables the join button while the mutation is in flight.
+ * @property isSkipping  - Disables the skip button while the mutation is in flight.
+ * @property className   - Optional CSS class for the card wrapper.
+ */
 interface ChallengeCardProps {
   challengeId: string
   name: string
@@ -172,6 +209,14 @@ interface ChallengeCardProps {
   className?: string
 }
 
+/**
+ * Renders a gamification challenge card with:
+ * - Themed icon and colour based on the challenge type
+ * - Status badge (Available / Active / Completed)
+ * - XP reward pill
+ * - Animated progress ring and linear progress bar (when joined)
+ * - Join / Skip action buttons
+ */
 export function ChallengeCard({
   challengeId,
   name,

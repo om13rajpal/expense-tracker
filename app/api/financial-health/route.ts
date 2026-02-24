@@ -10,7 +10,10 @@
  *   - Income profile / stability
  */
 
-// Enable Next.js caching for this route
+/**
+ * @constant Next.js ISR revalidation interval in seconds.
+ * Caches the financial health response for 5 minutes to reduce computation load.
+ */
 export const revalidate = 300; // 5 minutes
 
 import { NextRequest, NextResponse } from 'next/server';
@@ -30,12 +33,22 @@ import { calculateAccountSummary } from '@/lib/balance-utils';
 import { average } from '@/lib/utils';
 import { getBalanceAtDate } from '@/lib/balance-utils';
 
+/**
+ * Extract a human-readable error message from an unknown error value.
+ *
+ * @param error - The caught error (may be Error, string, or unknown)
+ * @returns A string error message
+ */
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Unknown error';
 }
 
 /**
- * Map a MongoDB document to a Transaction object.
+ * Map a raw MongoDB transaction document to a typed Transaction object.
+ * Applies safe defaults for missing fields and converts date strings to Date objects.
+ *
+ * @param doc - Raw MongoDB document from the `transactions` collection
+ * @returns A typed Transaction object
  */
 function mapDocToTransaction(doc: Record<string, unknown>): Transaction {
   return {
@@ -55,6 +68,19 @@ function mapDocToTransaction(doc: Record<string, unknown>): Transaction {
   };
 }
 
+/**
+ * GET /api/financial-health
+ * Compute and return a comprehensive FinancialHealthMetrics object.
+ * Fetches transactions, stocks, mutual funds, SIPs, debts, and savings goals
+ * to compute emergency fund ratio, expense velocity, financial freedom score,
+ * net worth timeline, and income stability metrics.
+ * Response is cached for 5 minutes via Next.js ISR.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @returns {200} `{ success: true, data: FinancialHealthMetrics }`
+ * @returns {500} `{ success: false, error: string }` - Server error
+ */
 export async function GET(request: NextRequest) {
   return withAuth(async (_req, { user }) => {
     try {
@@ -347,6 +373,10 @@ export async function GET(request: NextRequest) {
   })(request);
 }
 
+/**
+ * OPTIONS /api/financial-health
+ * CORS preflight handler. Returns allowed methods and headers.
+ */
 export async function OPTIONS() {
   return handleOptions();
 }

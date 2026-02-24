@@ -1,3 +1,13 @@
+/**
+ * @module app/settings/page
+ * @description User settings page for Finova. Organized into sections: Profile
+ * (display name, avatar), Integrations (Telegram bot linking with code generation,
+ * notification preferences for daily summary, budget alerts, and weekly digest),
+ * Features (ghost budget toggle, other feature flags), and Appearance (theme toggle
+ * for light/dark/system modes). Telegram integration supports link/unlink flows with
+ * code expiry. Settings are persisted via the `useSettings` and related mutation hooks
+ * against `/api/settings` endpoints.
+ */
 "use client"
 
 import * as React from "react"
@@ -37,6 +47,11 @@ import { Skeleton } from "@/components/ui/skeleton"
 
 // ─── Shared toggle switch ────────────────────────────────────────────
 
+/**
+ * Accessible toggle switch component styled as a sliding pill.
+ * Used throughout the settings page for boolean preference toggles.
+ * @param props - Contains `checked` state and `onChange` callback.
+ */
 function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: () => void }) {
   return (
     <button
@@ -66,6 +81,11 @@ type SectionId = (typeof NAV_SECTIONS)[number]["id"]
 
 // ─── Telegram integration section ────────────────────────────────────
 
+/**
+ * Telegram integration card component. Handles the full Telegram bot linking flow:
+ * generating a link code, displaying it with expiry countdown, unlinking,
+ * and configuring notification preferences (daily summary, budget alerts, weekly digest).
+ */
 function TelegramCard() {
   const { data: settings, isLoading: settingsLoading } = useSettings()
   const linkMutation = useLinkTelegram()
@@ -292,6 +312,12 @@ function TelegramCard() {
 
 // ─── Main settings page ──────────────────────────────────────────────
 
+/**
+ * Settings page component. Renders a section-based settings UI with a side navigation
+ * panel (Profile, Integrations, Features, Appearance) and corresponding content sections
+ * with smooth scroll-to behavior. Auth-guarded -- redirects to `/login` if unauthenticated.
+ * @returns The settings page wrapped in the app sidebar layout.
+ */
 export default function SettingsPage() {
   const router = useRouter()
   const { isAuthenticated, isLoading: authLoading } = useAuth()

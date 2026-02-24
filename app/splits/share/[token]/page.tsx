@@ -1,3 +1,12 @@
+/**
+ * @module app/splits/share/[token]/page
+ * @description Public share page for expense split balances. Accessed via a unique
+ * token URL (no authentication required). Displays the group name, member list,
+ * per-person balance breakdown (who owes whom), and recent activity (expenses and
+ * settlements). Data is fetched from `/api/splits/share/[token]`. Used to share
+ * split balances with non-app users. Shows an error state if the token is invalid
+ * or expired.
+ */
 "use client"
 
 import * as React from "react"
@@ -27,6 +36,13 @@ interface ShareData {
   }[]
 }
 
+/**
+ * Public share page component. Fetches shared split data by token from the API
+ * and renders group info, per-person balance cards (color-coded by owe direction),
+ * and a recent activity timeline. No authentication required. Shows loading skeleton,
+ * error state, or empty state as appropriate.
+ * @returns The public share view with group balances and activity, or an error message.
+ */
 export default function SharePage() {
   const params = useParams<{ token: string }>()
   const [data, setData] = React.useState<ShareData | null>(null)

@@ -16,6 +16,7 @@ import {
 
 import { cn } from "@/lib/utils"
 
+/** Tailwind border/background/text classes keyed by banner severity variant. */
 const variantStyles = {
   info: "border-blue-200 bg-blue-50/80 text-blue-800 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300",
   warning: "border-amber-200 bg-amber-50/80 text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300",
@@ -23,6 +24,7 @@ const variantStyles = {
   error: "border-rose-200 bg-rose-50/80 text-rose-800 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300",
 }
 
+/** Maps each banner variant to its default Tabler icon component. */
 const variantIcons = {
   info: IconInfoCircle,
   warning: IconAlertTriangle,
@@ -30,6 +32,15 @@ const variantIcons = {
   error: IconAlertCircle,
 }
 
+/**
+ * Props for the ContextBanner component.
+ * @property variant     - Visual severity: info, warning, success, or error.
+ * @property title       - Primary message text.
+ * @property description - Optional secondary text below the title.
+ * @property dismissible - Whether the banner shows a close button (default true).
+ * @property icon        - Custom icon node; falls back to variant default icon.
+ * @property className   - Additional CSS classes for the wrapper.
+ */
 interface ContextBannerProps {
   variant: "info" | "warning" | "success" | "error"
   title: string

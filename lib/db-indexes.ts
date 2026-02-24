@@ -1,11 +1,31 @@
 /**
- * MongoDB index definitions for production performance.
- * Called once on first getMongoDb() invocation.
+ * MongoDB index definitions for production query performance.
+ *
+ * Creates compound and unique indexes on all collections used by Finova:
+ * transactions, AI analyses, rate limits, gamification (streaks, XP, badges,
+ * challenges), categorization rules/cache, agent threads, user settings,
+ * and bucket list items.
+ *
+ * Called once per process lifecycle on the first `getMongoDb()` invocation.
+ * Index creation is idempotent (MongoDB silently skips existing indexes)
+ * and guarded by a flag to avoid repeated calls.
+ *
+ * @module lib/db-indexes
  */
 import type { Db } from 'mongodb';
 
+/** Guard flag to ensure indexes are only created once per process. */
 let indexesEnsured = false;
 
+/**
+ * Create all required MongoDB indexes if they don't already exist.
+ *
+ * Executes all `createIndex` calls in parallel via `Promise.all`.
+ * On failure, logs a warning but does not throw, leaving `indexesEnsured`
+ * as `false` so the next `getMongoDb()` call retries.
+ *
+ * @param db - The MongoDB `Db` instance to create indexes on.
+ */
 export async function ensureIndexes(db: Db): Promise<void> {
   if (indexesEnsured) return;
 

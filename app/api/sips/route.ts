@@ -13,6 +13,13 @@ import { ObjectId } from "mongodb"
 import { getMongoDb } from "@/lib/mongodb"
 import { corsHeaders, handleOptions, isValidObjectId, withAuth } from "@/lib/middleware"
 
+/**
+ * Convert a MongoDB SIP document to an API response object,
+ * transforming the `_id` ObjectId to a string representation.
+ *
+ * @param doc - Raw MongoDB document from the `sips` collection
+ * @returns The document with `_id` converted to a string
+ */
 function toSipResponse(doc: Record<string, unknown>) {
   return {
     ...doc,
@@ -20,6 +27,15 @@ function toSipResponse(doc: Record<string, unknown>) {
   }
 }
 
+/**
+ * GET /api/sips
+ * List all SIPs for the authenticated user, sorted by creation date (newest first).
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @returns {200} `{ success: true, items: Array<SIP> }`
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function GET(request: NextRequest) {
   return withAuth(async (_req, { user }) => {
     try {
@@ -43,6 +59,27 @@ export async function GET(request: NextRequest) {
   })(request)
 }
 
+/**
+ * POST /api/sips
+ * Add a single SIP or bulk-import multiple SIPs.
+ * When `items` array is provided, performs a bulk insert.
+ * When `replaceAll: true` is set with bulk import, deletes all existing SIPs first.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @body {string} name - SIP/fund name (required)
+ * @body {string} provider - Fund provider/AMC name (required)
+ * @body {number} monthlyAmount - Monthly SIP amount in INR (required, > 0)
+ * @body {string} startDate - SIP start date ISO string (required)
+ * @body {number} [expectedAnnualReturn] - Expected annual return percentage
+ * @body {string} [status="active"] - One of "active", "paused", "cancelled"
+ * @body {Array} [items] - Bulk import array (same fields as above per item)
+ * @body {boolean} [replaceAll] - If true with items, deletes all before import
+ *
+ * @returns {201} `{ success: true, item: SIP }` (single) or `{ success: true, insertedCount, errors }` (bulk)
+ * @returns {400} `{ success: false, message: string }` - Missing or invalid fields
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function POST(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {
@@ -160,6 +197,25 @@ export async function POST(request: NextRequest) {
   })(request)
 }
 
+/**
+ * PUT /api/sips?id=xxx
+ * Update an existing SIP. Only provided fields are modified.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @query {string} id - SIP ObjectId (required, must be valid)
+ * @body {string} [name] - Updated SIP name
+ * @body {string} [provider] - Updated provider
+ * @body {number} [monthlyAmount] - Updated monthly amount
+ * @body {string} [startDate] - Updated start date
+ * @body {number|null} [expectedAnnualReturn] - Updated expected return
+ * @body {string} [status] - Updated status ("active", "paused", "cancelled")
+ *
+ * @returns {200} `{ success: true, item: SIP | null }`
+ * @returns {400} `{ success: false, message: string }` - Invalid ID or no valid fields
+ * @returns {404} `{ success: false, message: string }` - SIP not found
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function PUT(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {
@@ -228,6 +284,18 @@ export async function PUT(request: NextRequest) {
   })(request)
 }
 
+/**
+ * DELETE /api/sips?id=xxx
+ * Delete a SIP by its ObjectId.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @query {string} id - SIP ObjectId (required, must be valid)
+ *
+ * @returns {200} `{ success: true, deleted: boolean }`
+ * @returns {400} `{ success: false, message: string }` - Missing or invalid ID
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function DELETE(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {
@@ -256,6 +324,10 @@ export async function DELETE(request: NextRequest) {
   })(request)
 }
 
+/**
+ * OPTIONS /api/sips
+ * CORS preflight handler. Returns allowed methods and headers.
+ */
 export async function OPTIONS() {
   return handleOptions()
 }

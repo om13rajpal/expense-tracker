@@ -10,6 +10,16 @@ import { getMongoDb } from "@/lib/mongodb"
 import { corsHeaders, handleOptions, withAuth } from "@/lib/middleware"
 import { getDefaultTaxConfig } from "@/lib/tax"
 
+/**
+ * GET /api/tax
+ * Retrieve the authenticated user's saved tax configuration.
+ * Returns defaults from `getDefaultTaxConfig()` if no config exists.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @returns {200} `{ success: true, config: TaxConfig }`
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function GET(request: NextRequest) {
   return withAuth(async (_req, { user }) => {
     try {
@@ -41,6 +51,18 @@ export async function GET(request: NextRequest) {
   })(request)
 }
 
+/**
+ * PUT /api/tax
+ * Save or update the user's tax configuration via upsert.
+ * Only allowlisted scalar and object fields are persisted (80C, 80D, HRA, income, regime, etc.).
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @body {TaxConfig} - Tax configuration fields (grossAnnualIncome, section80C, section80D, hra, preferredRegime, etc.)
+ *
+ * @returns {200} `{ success: true, config: TaxConfig }`
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function PUT(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {
@@ -99,6 +121,10 @@ export async function PUT(request: NextRequest) {
   })(request)
 }
 
+/**
+ * OPTIONS /api/tax
+ * CORS preflight handler. Returns allowed methods and headers.
+ */
 export async function OPTIONS() {
   return handleOptions()
 }

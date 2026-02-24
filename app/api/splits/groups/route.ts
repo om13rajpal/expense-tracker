@@ -1,8 +1,40 @@
+/**
+ * Splits Groups API
+ * Manages groups for organizing shared expenses (e.g., trips, roommates, events).
+ * Each group has a list of member names; "Me" is always auto-included.
+ *
+ * All endpoints require JWT authentication via the `auth-token` HTTP-only cookie.
+ * Data is scoped to the authenticated user via `userId`.
+ *
+ * Endpoints:
+ *   GET    /api/splits/groups          - List all groups or fetch single by ?id=xxx
+ *   POST   /api/splits/groups          - Create a new group
+ *   PATCH  /api/splits/groups          - Update an existing group
+ *   DELETE /api/splits/groups?id=xxx   - Delete a group by ID
+ *
+ * MongoDB collection: `splits_groups`
+ */
+
 import { NextRequest, NextResponse } from "next/server"
 import { ObjectId } from "mongodb"
 import { getMongoDb } from "@/lib/mongodb"
 import { corsHeaders, handleOptions, withAuth } from "@/lib/middleware"
 
+/**
+ * GET /api/splits/groups
+ * Retrieve all groups for the authenticated user (sorted by most recently updated),
+ * or a single group when the `id` query parameter is provided.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @query {string} [id] - If provided, returns a single group by ObjectId
+ *
+ * @returns {200} `{ success: true, groups: Array<{ _id, name, members, description, isArchived, createdAt, updatedAt }> }`
+ *   or `{ success: true, group: { ... } }` when fetching by ID
+ * @returns {400} `{ success: false, message: string }` - Invalid group ID format
+ * @returns {404} `{ success: false, message: string }` - Group not found (single fetch)
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function GET(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {
@@ -75,6 +107,20 @@ export async function GET(request: NextRequest) {
   })(request)
 }
 
+/**
+ * POST /api/splits/groups
+ * Create a new split group. "Me" is automatically added to the members list if not present.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @body {string} name - Group name (required, non-empty)
+ * @body {string[]} members - Array of member names (at least one required)
+ * @body {string} [description] - Optional group description
+ *
+ * @returns {201} `{ success: true, group: { _id, name, members, description, isArchived, createdAt, updatedAt } }`
+ * @returns {400} `{ success: false, message: string }` - Missing name or empty members
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function POST(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {
@@ -129,6 +175,23 @@ export async function POST(request: NextRequest) {
   })(request)
 }
 
+/**
+ * PATCH /api/splits/groups
+ * Update an existing split group. Only provided fields are modified.
+ * If members are updated, "Me" is auto-included if absent.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @body {string} id - Group ObjectId (required, must be valid 24-char hex)
+ * @body {string} [name] - Updated group name
+ * @body {string} [description] - Updated description
+ * @body {boolean} [isArchived] - Archive/unarchive the group
+ * @body {string[]} [members] - Updated member list
+ *
+ * @returns {200} `{ success: true, modifiedCount: number }`
+ * @returns {400} `{ success: false, message: string }` - Invalid or missing group ID
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function PATCH(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {
@@ -171,6 +234,18 @@ export async function PATCH(request: NextRequest) {
   })(request)
 }
 
+/**
+ * DELETE /api/splits/groups?id=xxx
+ * Delete a split group by its ObjectId.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @query {string} id - Group ObjectId (required, must be valid 24-char hex)
+ *
+ * @returns {200} `{ success: true, deletedCount: number }`
+ * @returns {400} `{ success: false, message: string }` - Missing or invalid ID
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function DELETE(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {
@@ -202,6 +277,10 @@ export async function DELETE(request: NextRequest) {
   })(request)
 }
 
+/**
+ * OPTIONS /api/splits/groups
+ * CORS preflight handler. Returns allowed methods and headers.
+ */
 export async function OPTIONS() {
   return handleOptions()
 }

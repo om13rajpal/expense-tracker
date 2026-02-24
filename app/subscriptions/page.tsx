@@ -1,3 +1,13 @@
+/**
+ * @module app/subscriptions/page
+ * @description Subscription tracker page for Finova. Manages recurring subscription
+ * payments with features including: add/edit/delete subscriptions with service logos
+ * (via logo.dev), frequency configuration (weekly/monthly/yearly), category tagging,
+ * payment history tracking, auto-detection of payments from synced transactions,
+ * upcoming renewal alerts, and summary metrics (monthly/yearly cost, active count).
+ * Popular services are pre-configured for quick-add. Data is managed via React Query
+ * against `/api/subscriptions` endpoints.
+ */
 "use client"
 
 import * as React from "react"
@@ -355,6 +365,13 @@ function blankForm() {
 
 // ─── Main component ───
 
+/**
+ * Subscriptions page component. Renders a two-tab interface (Active / All) with
+ * summary metric tiles, a searchable/filterable subscription list with service logos,
+ * add/edit dialogs with popular service quick-picks, payment history views, and
+ * upcoming renewal indicators. Requires authentication.
+ * @returns The subscriptions page wrapped in the app sidebar layout.
+ */
 export default function SubscriptionsPage() {
   const router = useRouter()
   const { isAuthenticated, isLoading: authLoading } = useAuth()

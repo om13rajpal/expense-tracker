@@ -1,8 +1,17 @@
 /**
- * Notification generator functions
+ * Notification generator functions.
  *
- * These functions inspect MongoDB data and create notification documents
- * when thresholds are crossed.  They are invoked by Inngest cron workflows.
+ * Inspects MongoDB data and creates notification documents in the
+ * `notifications` collection when financial thresholds are crossed.
+ * Invoked by Inngest cron workflows. Includes:
+ * - Budget breach alerts (80% warning, 100% critical)
+ * - Subscription renewal reminders (3-day lookahead)
+ * - Weekly financial digest summaries
+ * - Telegram dispatch for linked accounts
+ *
+ * All generators include 24-hour deduplication to prevent alert spam.
+ *
+ * @module lib/notifications
  */
 
 import type { Db } from 'mongodb';
@@ -18,6 +27,7 @@ import {
 
 // ─── Types ───────────────────────────────────────────────────────────
 
+/** Discriminated union of notification categories. */
 export type NotificationType =
   | 'budget_breach'
   | 'goal_milestone'
@@ -25,18 +35,28 @@ export type NotificationType =
   | 'renewal_alert'
   | 'insight';
 
+/** Severity levels controlling visual styling and sort priority. */
 export type NotificationSeverity = 'critical' | 'warning' | 'info' | 'success';
 
+/** MongoDB document shape for a notification. */
 export interface NotificationDoc {
+  /** Owner user identifier. */
   userId: string;
+  /** Notification category. */
   type: NotificationType;
+  /** Short headline (e.g. "Food & Dining budget exceeded"). */
   title: string;
+  /** Detailed notification body. */
   message: string;
+  /** Visual severity level. */
   severity: NotificationSeverity;
+  /** Whether the user has seen/acknowledged the notification. */
   read: boolean;
+  /** Optional deep-link URL (e.g. "/budget"). */
   actionUrl?: string;
-  /** Extra key used for deduplication (e.g. budget category name) */
+  /** Extra key used for deduplication (e.g. "budget:Food & Dining:critical"). */
   dedupKey?: string;
+  /** ISO timestamp of creation. */
   createdAt: string;
 }
 

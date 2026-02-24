@@ -1,3 +1,19 @@
+/**
+ * Price comparison panel for bucket list items.
+ *
+ * Displays real-time pricing data fetched from web searches via Perplexity Sonar.
+ * The panel shows:
+ * - **Deal alerts** — highlighted in emerald with discount percentages and external links
+ * - **Price comparisons** — list of prices from various retailers with source links
+ * - **Freshness indicator** — shows when prices were last checked (e.g., "2h ago")
+ * - **Refresh button** — triggers a new price search
+ * - **Source citations** — numbered links to original data sources
+ *
+ * The panel renders nothing if both prices and deals arrays are empty,
+ * keeping the card clean when no pricing data has been fetched yet.
+ *
+ * @module components/bucket-list/price-panel
+ */
 "use client"
 
 import { IconRefresh, IconExternalLink } from "@tabler/icons-react"
@@ -6,6 +22,15 @@ import { Badge } from "@/components/ui/badge"
 import { formatINR } from "@/lib/format"
 import type { PriceSnapshot, DealAlert } from "@/lib/types"
 
+/**
+ * Props for the PricePanel component.
+ *
+ * @property prices - Array of price snapshots from different retailers
+ * @property deals - Array of active deal alerts with discount info
+ * @property citations - Optional array of source URLs from the Perplexity search
+ * @property onRefresh - Callback to trigger a new price search
+ * @property isRefreshing - Whether a price refresh is currently in progress
+ */
 interface PricePanelProps {
   prices: PriceSnapshot[]
   deals: DealAlert[]
@@ -14,6 +39,12 @@ interface PricePanelProps {
   isRefreshing?: boolean
 }
 
+/**
+ * Converts an ISO date string to a human-readable relative time string.
+ *
+ * @param dateStr - ISO 8601 date string to convert
+ * @returns Relative time string like "just now", "5m ago", "2h ago", or "3d ago"
+ */
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime()
   const mins = Math.floor(diff / 60000)
@@ -25,6 +56,16 @@ function timeAgo(dateStr: string): string {
   return `${days}d ago`
 }
 
+/**
+ * Renders a price comparison panel within a bucket list item card.
+ *
+ * Shows deal alerts prominently with emerald highlighting, followed by a list
+ * of prices from different sources. Each entry can link to the original retailer page.
+ * Returns null when there is no price data to display.
+ *
+ * @param props - Component props (see PricePanelProps)
+ * @returns The price panel JSX or null if no data
+ */
 export function PricePanel({
   prices,
   deals,

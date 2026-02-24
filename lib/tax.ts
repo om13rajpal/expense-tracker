@@ -9,7 +9,9 @@
 // Types
 // ---------------------------------------------------------------------------
 
+/** Complete tax input configuration covering income, deductions, and HRA for both regimes. */
 export interface TaxConfig {
+  /** Gross annual salary income in INR. */
   grossAnnualIncome: number
   otherIncome: {
     fdInterest: number
@@ -46,7 +48,9 @@ export interface TaxConfig {
   preferredRegime: "old" | "new" | "auto"
 }
 
+/** Detailed tax breakdown for a single regime with slab-by-slab analysis. */
 export interface TaxBreakdown {
+  /** Which tax regime this breakdown represents. */
   regime: "old" | "new"
   grossIncome: number
   totalOtherIncome: number
@@ -72,10 +76,15 @@ export interface TaxBreakdown {
   slabBreakdown: { slab: string; rate: string; tax: number }[]
 }
 
+/** Side-by-side comparison of Old vs. New tax regimes with a recommendation. */
 export interface TaxComparison {
+  /** Full breakdown under the Old regime. */
   old: TaxBreakdown
+  /** Full breakdown under the New regime. */
   new: TaxBreakdown
+  /** Which regime results in lower tax (or user's preference if not "auto"). */
   recommended: "old" | "new"
+  /** Absolute difference in total tax between the two regimes (in INR). */
   savings: number
 }
 
@@ -370,8 +379,17 @@ function calculateNewRegime(config: TaxConfig): TaxBreakdown {
 
 /**
  * Calculate tax under both Old and New regimes and recommend the better one.
- * Includes full deduction handling, HRA exemption, Section 87A rebate,
- * marginal relief, surcharge, and 4% health & education cess.
+ *
+ * Computes full breakdowns for each regime including:
+ * - Standard deduction (Rs.50K old / Rs.75K new)
+ * - HRA exemption (old regime only)
+ * - Sections 80C, 80D, 80TTA, 24, 80E, 80CCD(1B) deductions (old regime only)
+ * - Slab-by-slab tax computation
+ * - Section 87A rebate (Rs.12,500 old / Rs.25,000 new) with marginal relief
+ * - Surcharge and 4% Health & Education Cess
+ *
+ * @param config - Complete tax configuration with income, deductions, and HRA details.
+ * @returns TaxComparison with both regimes, the recommended one, and potential savings.
  */
 export function calculateTax(config: TaxConfig): TaxComparison {
   const oldResult = calculateOldRegime(config)
@@ -387,7 +405,12 @@ export function calculateTax(config: TaxConfig): TaxComparison {
   return { old: oldResult, new: newResult, recommended, savings }
 }
 
-/** Return a zero-valued TaxConfig as a starting point for new users. */
+/**
+ * Return a zero-valued TaxConfig as a starting point for new users.
+ * All numeric fields default to 0, regime defaults to "auto".
+ *
+ * @returns TaxConfig with all amounts zeroed out.
+ */
 export function getDefaultTaxConfig(): TaxConfig {
   return {
     grossAnnualIncome: 0,

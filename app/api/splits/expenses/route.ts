@@ -1,8 +1,36 @@
+/**
+ * Splits Expenses API
+ * Manages shared expenses within the bill-splitting feature.
+ * Supports three split types: equal, exact, and percentage-based.
+ *
+ * All endpoints require JWT authentication via the `auth-token` HTTP-only cookie.
+ * Data is scoped to the authenticated user via `userId`.
+ *
+ * Endpoints:
+ *   GET    /api/splits/expenses          - List expenses (optionally by group)
+ *   POST   /api/splits/expenses          - Create a new split expense
+ *   DELETE /api/splits/expenses?id=xxx   - Delete an expense by ID
+ *
+ * MongoDB collection: `splits_expenses`
+ */
+
 import { NextRequest, NextResponse } from "next/server"
 import { ObjectId } from "mongodb"
 import { getMongoDb } from "@/lib/mongodb"
 import { corsHeaders, handleOptions, withAuth } from "@/lib/middleware"
 
+/**
+ * GET /api/splits/expenses
+ * Retrieve all split expenses for the authenticated user, optionally filtered by group.
+ * Results are sorted by date (newest first), then by creation time.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @query {string} [groupId] - Filter expenses by group ID
+ *
+ * @returns {200} `{ success: true, expenses: Array<{ _id, groupId, description, amount, paidBy, splitType, splits, date, category, createdAt }> }`
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function GET(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {
@@ -46,6 +74,28 @@ export async function GET(request: NextRequest) {
   })(request)
 }
 
+/**
+ * POST /api/splits/expenses
+ * Create a new split expense. Supports three split strategies:
+ * - "equal": Divides the amount equally among all listed people (with remainder correction)
+ * - "percentage": Each person's share is computed from their percentage (must sum to 100)
+ * - "exact": Each person's share is specified directly (must sum to total amount)
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @body {string} description - Expense description (required, non-empty)
+ * @body {number} amount - Total expense amount (required, > 0)
+ * @body {string} paidBy - Name of the person who paid (required)
+ * @body {string} splitType - One of "equal", "exact", or "percentage"
+ * @body {Array<{ person: string, amount: number }>} splits - Split allocation per person
+ * @body {string} [groupId] - Optional group ID to associate the expense with
+ * @body {string} [date] - Expense date (ISO string, defaults to now)
+ * @body {string} [category] - Expense category label
+ *
+ * @returns {201} `{ success: true, expense: { _id, ... } }`
+ * @returns {400} `{ success: false, message: string }` - Validation failure
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function POST(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {
@@ -159,6 +209,18 @@ export async function POST(request: NextRequest) {
   })(request)
 }
 
+/**
+ * DELETE /api/splits/expenses?id=xxx
+ * Delete a split expense by its ObjectId.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @query {string} id - Expense ObjectId (required, must be valid 24-char hex)
+ *
+ * @returns {200} `{ success: true, deletedCount: number }`
+ * @returns {400} `{ success: false, message: string }` - Missing or invalid ID
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function DELETE(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {
@@ -190,6 +252,10 @@ export async function DELETE(request: NextRequest) {
   })(request)
 }
 
+/**
+ * OPTIONS /api/splits/expenses
+ * CORS preflight handler. Returns allowed methods and headers.
+ */
 export async function OPTIONS() {
   return handleOptions()
 }

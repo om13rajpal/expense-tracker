@@ -1,34 +1,51 @@
 /**
- * Budget category mapping configuration
- * Maps budget display categories to actual transaction categories
+ * Budget category mapping configuration.
  *
- * DEFAULT_BUDGETS and BUDGET_CATEGORY_MAPPING serve as seed data.
- * At runtime the user's custom categories are fetched from MongoDB
- * (collection: budget_categories) and merged on top.
+ * Maps human-readable budget display categories (e.g. "Food & Dining")
+ * to the underlying {@link TransactionCategory} enum values used in
+ * transaction records. {@link DEFAULT_BUDGETS} and {@link BUDGET_CATEGORY_MAPPING}
+ * serve as seed data for new users. At runtime the user's custom categories
+ * are fetched from MongoDB (`budget_categories` collection) and merged on top.
+ *
+ * Also provides reverse-mapping utilities so that raw transaction categories
+ * can be resolved back to their parent budget category for aggregation.
+ *
+ * @module lib/budget-mapping
  */
 
 import { TransactionCategory } from './types';
 
 /**
- * Budget category definition (shared between seed data and MongoDB docs)
+ * Budget category definition shared between seed data and MongoDB documents.
  */
 export interface BudgetCategoryConfig {
+  /** Human-readable name shown in the UI (e.g. "Food & Dining"). */
   displayName: string;
+  /** Transaction categories that roll up into this budget category. */
   transactionCategories: TransactionCategory[];
+  /** Short description explaining what this budget category covers. */
   description: string;
 }
 
 /**
- * MongoDB document shape for a single budget category
+ * MongoDB document shape for a single budget category.
  */
 export interface BudgetCategoryDoc {
+  /** MongoDB ObjectId (absent before insertion). */
   _id?: string;
+  /** Owner user identifier. */
   userId: string;
+  /** Display name of the budget category. */
   name: string;
+  /** Raw transaction category strings that map to this budget. */
   transactionCategories: string[];
+  /** Human-readable description of the category scope. */
   description: string;
+  /** Monthly budget limit in INR. */
   budgetAmount: number;
+  /** ISO timestamp of document creation. */
   createdAt: string;
+  /** ISO timestamp of most recent update. */
   updatedAt: string;
 }
 
@@ -113,17 +130,23 @@ export const BUDGET_CATEGORY_MAPPING: Record<string, BudgetCategoryConfig> = {
 };
 
 /**
- * Get all budget category names (from default seed)
+ * Get all budget category names from the default seed mapping.
+ *
+ * @returns Array of budget category display names.
  */
 export function getBudgetCategories(): string[] {
   return Object.keys(BUDGET_CATEGORY_MAPPING);
 }
 
 /**
- * Get transaction categories for a budget category.
- * "Others" is a catch-all: it includes every TransactionCategory not claimed
- * by any other budget category in the mapping.
- * Accepts an optional dynamic mapping to check first (from user's DB config).
+ * Get the transaction categories that belong to a given budget category.
+ *
+ * The "Others" budget is a catch-all: it dynamically includes every
+ * {@link TransactionCategory} not claimed by any other budget category.
+ *
+ * @param budgetCategory - Budget category display name.
+ * @param dynamicMapping - Optional user-specific mapping from MongoDB; falls back to default seed.
+ * @returns Array of transaction categories that roll up into this budget.
  */
 export function getTransactionCategoriesForBudget(
   budgetCategory: string,
@@ -148,7 +171,11 @@ export function getTransactionCategoriesForBudget(
 }
 
 /**
- * Get budget category for a transaction category
+ * Look up the parent budget category for a given transaction category.
+ *
+ * @param transactionCategory - The raw transaction category to look up.
+ * @param dynamicMapping - Optional user-specific mapping from MongoDB.
+ * @returns Budget category display name, or `null` if not mapped.
  */
 export function getBudgetCategoryForTransaction(
   transactionCategory: TransactionCategory,
@@ -180,8 +207,13 @@ export const DEFAULT_BUDGETS: Record<string, number> = {
 };
 
 /**
- * Convert BudgetCategoryDoc[] from MongoDB into the runtime formats
- * used by the budget page (a budgets record and a category mapping).
+ * Convert an array of {@link BudgetCategoryDoc} from MongoDB into the
+ * runtime formats consumed by the budget page: a `budgets` record
+ * (category name -> monthly limit) and a `mapping` record
+ * (category name -> {@link BudgetCategoryConfig}).
+ *
+ * @param docs - Budget category documents from MongoDB.
+ * @returns Object with `budgets` and `mapping` records.
  */
 export function docsToRuntime(docs: BudgetCategoryDoc[]): {
   budgets: Record<string, number>;
@@ -217,6 +249,10 @@ const FINANCIAL_CATEGORIES = new Set([
   'Savings', 'Investment', 'Loan Payment', 'Credit Card', 'Tax',
 ]);
 
+/**
+ * @param docs - Budget category documents (only `name` and `transactionCategories` are used).
+ * @returns Record mapping raw transaction category string to its parent budget category name.
+ */
 export function buildReverseCategoryMap(
   docs: Pick<BudgetCategoryDoc, 'name' | 'transactionCategories'>[]
 ): Record<string, string> {
@@ -235,8 +271,14 @@ export function buildReverseCategoryMap(
 
 /**
  * Map a raw transaction category to its budget category name.
- * Returns the original category unchanged if it's an income/financial
- * category or already a budget name.
+ *
+ * Returns the original category unchanged if it is an income/financial
+ * category (Salary, Investment, etc.) or is already a budget-level name.
+ *
+ * @param rawCategory - The transaction-level category string.
+ * @param reverseMap - Reverse lookup map produced by {@link buildReverseCategoryMap}.
+ * @param budgetNames - Set of known budget category names.
+ * @returns The resolved budget category name, or the original if no mapping applies.
  */
 export function mapToBudgetCategory(
   rawCategory: string,
@@ -250,8 +292,12 @@ export function mapToBudgetCategory(
 }
 
 /**
- * Build seed documents from the hardcoded defaults.
- * Used when a user has no categories in MongoDB yet.
+ * Build seed budget category documents from the hardcoded defaults.
+ * Used to initialise the `budget_categories` collection when a new user
+ * has no categories in MongoDB yet.
+ *
+ * @param userId - The user identifier to attach to each seed document.
+ * @returns Array of budget category documents (without `_id`) ready for insertion.
  */
 export function buildSeedDocs(userId: string): Omit<BudgetCategoryDoc, '_id'>[] {
   const now = new Date().toISOString();

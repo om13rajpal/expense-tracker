@@ -1,3 +1,10 @@
+/**
+ * Inline AI answer panel shown at the bottom of the Spotlight dialog.
+ * Streams a response from the `/api/ai/spotlight-answer` endpoint
+ * using the Vercel AI SDK `useCompletion` hook and renders the result
+ * as Markdown with a thinking skeleton / streaming animation.
+ * @module components/spotlight/spotlight-ai-inline
+ */
 "use client"
 
 import { useEffect, useRef, useMemo, useState } from "react"
@@ -7,10 +14,15 @@ import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
 import { useCompletion } from "@ai-sdk/react"
 
+/**
+ * Props for {@link SpotlightAIInline}.
+ * @property query - The user's natural-language question to send to the AI.
+ */
 interface SpotlightAIInlineProps {
   query: string
 }
 
+/** Rotating phase messages shown during the AI thinking/loading state. */
 const THINKING_PHASES = [
   "Understanding your question…",
   "Analyzing your financial data…",
@@ -105,6 +117,12 @@ function FinishedResponse({ text }: { text: string }) {
   )
 }
 
+/**
+ * Inline AI answer panel rendered below the Spotlight results.
+ * Triggers a streamed completion on mount, shows a thinking skeleton
+ * while waiting, a streaming text view with blinking cursor during
+ * token output, and a finished Markdown view once complete.
+ */
 export function SpotlightAIInline({ query }: SpotlightAIInlineProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const hasStarted = useRef(false)

@@ -11,13 +11,23 @@ import { corsHeaders, handleOptions, withAuth } from '@/lib/middleware'
 import { calculateGoalProgress } from '@/lib/savings-goals'
 import type { SavingsGoalConfig } from '@/lib/types'
 
+/**
+ * Extract a human-readable error message from an unknown error value.
+ *
+ * @param error - The caught error (may be Error, string, or unknown)
+ * @returns A string error message
+ */
 function getErrorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Unknown error'
 }
 
 /**
  * Safely execute an async function, returning null on failure.
- * Allows partial success: one sub-fetch failing won't break the rest.
+ * Allows partial success when fetching linked data -- one sub-fetch
+ * failing won't break the rest of the planner response.
+ *
+ * @param fn - Async function to execute
+ * @returns The result of `fn()`, or null if it throws
  */
 async function safeFetch<T>(fn: () => Promise<T>): Promise<T | null> {
   try {
@@ -28,6 +38,17 @@ async function safeFetch<T>(fn: () => Promise<T>): Promise<T | null> {
   }
 }
 
+/**
+ * GET /api/planner
+ * Fetch the user's saved financial plan along with linked data from other features
+ * (savings goals, income goals, debts, subscriptions, budget, tax config).
+ * Each linked data fetch is wrapped in `safeFetch` for graceful partial failure.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @returns {200} `{ success: true, plan: object, linkedData: { savingsGoals, incomeGoals, debts, subscriptions, budget, taxConfig } }`
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function GET(request: NextRequest) {
   return withAuth(async (_req, { user }) => {
     try {
@@ -222,6 +243,23 @@ export async function GET(request: NextRequest) {
   })(request)
 }
 
+/**
+ * POST /api/planner
+ * Save or update the user's financial plan via upsert.
+ * Stores monthly income, investment allocations, savings, needs/wants split, and goal allocations.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @body {number} [monthlyIncome] - Monthly income in INR
+ * @body {object} [investments] - Investment allocation breakdown
+ * @body {number} [savings] - Savings allocation
+ * @body {number} [needs] - Needs allocation
+ * @body {number} [wants] - Wants allocation
+ * @body {object} [goalAllocations] - Per-goal allocation mapping
+ *
+ * @returns {200} `{ success: true, plan: object }`
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function POST(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {
@@ -262,6 +300,10 @@ export async function POST(request: NextRequest) {
   })(request)
 }
 
+/**
+ * OPTIONS /api/planner
+ * CORS preflight handler. Returns allowed methods and headers.
+ */
 export async function OPTIONS() {
   return handleOptions()
 }

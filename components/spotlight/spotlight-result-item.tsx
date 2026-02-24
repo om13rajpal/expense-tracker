@@ -1,9 +1,23 @@
+/**
+ * Single result row inside the Spotlight search results list.
+ * Renders a category-themed icon, title, optional subtitle, badge,
+ * date, and amount with colour coding based on the result type.
+ * @module components/spotlight/spotlight-result-item
+ */
 "use client"
 
 import { formatINR } from "@/lib/format"
 import { cn } from "@/lib/utils"
 import type { SpotlightResult } from "@/lib/spotlight/types"
 
+/**
+ * Props for {@link SpotlightResultItem}.
+ * @property result       - The search result data to render.
+ * @property active       - Whether this item is currently highlighted.
+ * @property index        - Flat index for ARIA and hover tracking.
+ * @property onMouseEnter - Callback when the mouse enters this row.
+ * @property onSelect     - Callback when this result is activated.
+ */
 interface SpotlightResultItemProps {
   result: SpotlightResult
   active: boolean
@@ -12,6 +26,10 @@ interface SpotlightResultItemProps {
   onSelect: (result: SpotlightResult) => void
 }
 
+/**
+ * Renders a single Spotlight result row with icon, title, subtitle,
+ * optional badge/date/amount, and active-state highlight.
+ */
 export function SpotlightResultItem({
   result,
   active,

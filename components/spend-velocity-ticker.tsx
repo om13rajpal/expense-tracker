@@ -1,3 +1,9 @@
+/**
+ * Live spend velocity ticker card.
+ * Calculates and animates the user's current spending rate in
+ * rupees per hour for the month, updating every second.
+ * @module components/spend-velocity-ticker
+ */
 "use client"
 
 import { useState, useEffect, useRef } from "react"
@@ -5,6 +11,11 @@ import { useQuery } from "@tanstack/react-query"
 import { motion, useSpring, useTransform } from "motion/react"
 import { IconActivityHeartbeat } from "@tabler/icons-react"
 
+/**
+ * Fetches month-to-date total expenses by deriving them from the
+ * predictions endpoint's daily average and elapsed days.
+ * @returns Object with `totalExpenses` for the current month so far.
+ */
 async function fetchMonthExpenses(): Promise<{ totalExpenses: number }> {
   // Reuse the predictions endpoint which already aggregates expenses
   const res = await fetch("/api/predictions", { credentials: "include" })
@@ -17,6 +28,11 @@ async function fetchMonthExpenses(): Promise<{ totalExpenses: number }> {
   return { totalExpenses }
 }
 
+/**
+ * Spring-animated number that smoothly interpolates to the target value.
+ * Used to create a "live ticker" feel for the spend velocity display.
+ * @param value - Target numeric value to animate toward.
+ */
 function AnimatedNumber({ value }: { value: number }) {
   const spring = useSpring(0, { stiffness: 40, damping: 20 })
   const display = useTransform(spring, (v) => v.toFixed(2))
@@ -34,6 +50,12 @@ function AnimatedNumber({ value }: { value: number }) {
   return <span>{displayVal}</span>
 }
 
+/**
+ * Renders a dashboard card showing the user's live spend velocity
+ * in Rs/hr for the current month. Recalculates every second using
+ * total expenses divided by hours elapsed since month start.
+ * Hidden when no expense data is available.
+ */
 export function SpendVelocityTicker() {
   const { data } = useQuery({
     queryKey: ["month-expenses-velocity"],

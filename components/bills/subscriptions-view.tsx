@@ -1,3 +1,9 @@
+/**
+ * Subscriptions & recurring bills management view.
+ * Full CRUD for subscriptions with category filtering, cost summary,
+ * renewal timeline, and upcoming-payment alerts.
+ * @module components/bills/subscriptions-view
+ */
 "use client"
 
 import * as React from "react"
@@ -333,8 +339,12 @@ function blankForm() {
   }
 }
 
-// --- Main component ---
-
+/**
+ * Top-level Subscriptions page exported for the `/bills` route's
+ * "Subscriptions" tab. Provides an add/edit dialog, category filters,
+ * monthly/yearly cost summaries, and a scrollable subscription card grid.
+ * Auth-guarded: redirects to `/login` when not authenticated.
+ */
 export function SubscriptionsView() {
   const router = useRouter()
   const { isAuthenticated, isLoading: authLoading } = useAuth()

@@ -1,3 +1,14 @@
+/**
+ * @module app/goals/page
+ * @description Financial Goals page for Finova. Provides a comprehensive goal tracking
+ * system with multiple tabs: Overview (active goals grid with progress), Savings Goals
+ * (target-based savings with milestone tracking and area charts), Net Worth tracking
+ * (historical net worth with asset breakdown charts), and FIRE calculator (Financial
+ * Independence Retire Early with projections, SWP analysis, and line charts).
+ * Supports adding/editing/deleting goals with icons, linking goals to investment accounts,
+ * and computing FIRE numbers based on expenses and corpus targets. Data is fetched via
+ * React Query from `/api/goals` and `/api/financial-health` endpoints.
+ */
 "use client"
 
 import * as React from "react"
@@ -374,6 +385,13 @@ function ProgressRing({
 
 // ─── Component ───
 
+/**
+ * Goals page component. Renders a four-tab interface: Overview (goal cards with progress),
+ * Savings (savings goals with milestones, contribution history charts), Net Worth
+ * (historical tracking with area charts), and FIRE (retirement calculator with
+ * projection charts). Supports full CRUD for goals and FIRE configuration. Auth-guarded.
+ * @returns The goals page wrapped in the app sidebar layout.
+ */
 export default function GoalsPage() {
   const router = useRouter()
   const searchParams = useSearchParams()

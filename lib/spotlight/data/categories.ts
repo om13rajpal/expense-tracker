@@ -1,3 +1,15 @@
+/**
+ * Spotlight category data: color classes, keyword-to-category mappings,
+ * payment method mappings, and fuzzy spelling correction for natural
+ * language expense input.
+ *
+ * @module lib/spotlight/data/categories
+ */
+
+/**
+ * Tailwind CSS background and text color classes for each expense category.
+ * Applied to category badges in Spotlight search results.
+ */
 export const CATEGORY_COLORS: Record<string, string> = {
   Dining: "bg-orange-500/15 text-orange-600 dark:text-orange-400",
   Groceries: "bg-green-500/15 text-green-600 dark:text-green-400",
@@ -13,6 +25,10 @@ export const CATEGORY_COLORS: Record<string, string> = {
   Fitness: "bg-lime-500/15 text-lime-600 dark:text-lime-400",
 }
 
+/**
+ * Keyword-to-category mapping for expense inference.
+ * Maps common Indian brand names, food items, and spending keywords to categories.
+ */
 export const CATEGORY_MAP: Record<string, string> = {
   food: "Dining", dinner: "Dining", lunch: "Dining", breakfast: "Dining",
   swiggy: "Dining", zomato: "Dining", restaurant: "Dining", cafe: "Dining",
@@ -47,6 +63,10 @@ export const CATEGORY_MAP: Record<string, string> = {
   charity: "Charity", donation: "Charity",
 }
 
+/**
+ * Keyword-to-payment-method mapping for expense inference.
+ * Maps Indian payment app names and method abbreviations.
+ */
 export const PAYMENT_METHOD_MAP: Record<string, string> = {
   upi: "UPI", gpay: "UPI", phonepe: "UPI", paytm: "UPI",
   cash: "Cash",
@@ -55,6 +75,10 @@ export const PAYMENT_METHOD_MAP: Record<string, string> = {
   netbanking: "Net Banking", "net banking": "Net Banking", neft: "Net Banking",
 }
 
+/**
+ * Common misspelling-to-correct-spelling mapping for fuzzy input correction.
+ * Handles typos for Indian brand names and common expense keywords.
+ */
 export const FUZZY_MAP: Record<string, string> = {
   swigy: "swiggy", swigi: "swiggy", swggy: "swiggy",
   zomto: "zomato", zomatto: "zomato", zomat: "zomato",

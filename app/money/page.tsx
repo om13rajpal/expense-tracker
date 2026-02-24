@@ -1,3 +1,10 @@
+/**
+ * @module app/money/page
+ * @description Money hub page for Finova. Consolidates the Transactions and Analytics
+ * views into a single tabbed interface. The active tab is controlled via the `?tab=`
+ * URL search parameter, defaulting to "transactions". Delegates rendering to the
+ * `TransactionView` and `AnalyticsView` components which handle their own data fetching.
+ */
 "use client"
 
 import * as React from "react"
@@ -15,6 +22,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TransactionView } from "@/components/money/transaction-view"
 import { AnalyticsView } from "@/components/money/analytics-view"
 
+/**
+ * Money page component. Renders a two-tab layout (Transactions, Analytics) with
+ * URL-synced tab state. Each tab delegates to a self-contained view component.
+ * Auth-guarded -- redirects to `/login` if unauthenticated.
+ * @returns The money page wrapped in the app sidebar layout.
+ */
 export default function MoneyPage() {
   const router = useRouter()
   const searchParams = useSearchParams()

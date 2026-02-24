@@ -39,7 +39,8 @@ function sortByDateDesc(a: Transaction, b: Transaction): number {
 }
 
 /**
- * Month identifier interface
+ * Lightweight identifier for a specific calendar month, used for
+ * navigation and comparison across the monthly view.
  */
 export interface MonthIdentifier {
   year: number;
@@ -48,7 +49,8 @@ export interface MonthIdentifier {
 }
 
 /**
- * Comprehensive monthly metrics interface
+ * Comprehensive monthly metrics including balances, income/expenses,
+ * derived rates, transaction counts, and period information.
  */
 export interface MonthlyMetrics {
   year: number;

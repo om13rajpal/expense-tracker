@@ -1,3 +1,12 @@
+/**
+ * Spotlight quick expense provider: parses natural language expense entries.
+ *
+ * Detects expense patterns in the user's query (e.g. "spent 500 on food",
+ * "uber 250 upi") and returns a result that can create a transaction.
+ *
+ * @module lib/spotlight/providers/expense-provider
+ */
+
 import type { SpotlightProvider, SpotlightResult } from "../types"
 import { parseExpense } from "../data/parsers"
 import { formatINR } from "@/lib/format"

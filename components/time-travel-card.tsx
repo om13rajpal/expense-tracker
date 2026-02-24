@@ -1,3 +1,9 @@
+/**
+ * Financial Time Travel card — shows what the user was spending
+ * "on this day last year" and compares month-to-date spending
+ * against the same period in the previous month.
+ * @module components/time-travel-card
+ */
 "use client"
 
 import { useQuery } from "@tanstack/react-query"
@@ -9,6 +15,12 @@ import { formatINR } from "@/lib/format"
 import { spring } from "@/lib/motion"
 import { Skeleton } from "@/components/ui/skeleton"
 
+/**
+ * Shape of the time-travel API response.
+ * @property success         - Whether the API call succeeded.
+ * @property lastYear        - Transactions from the same calendar date one year ago.
+ * @property monthComparison - Month-to-date spending comparison with the previous month.
+ */
 interface TimeTravelData {
   success: boolean
   lastYear: {
@@ -25,11 +37,21 @@ interface TimeTravelData {
   }
 }
 
+/**
+ * Fetches time-travel comparison data from the API.
+ * @returns Parsed TimeTravelData JSON response.
+ */
 async function fetchTimeTravel(): Promise<TimeTravelData> {
   const res = await fetch("/api/time-travel", { credentials: "include" })
   return res.json()
 }
 
+/**
+ * Renders a dashboard card with two sections:
+ * 1. **On this day last year** – list of transactions from the same date 12 months ago.
+ * 2. **Month comparison** – spending delta (amount and %) vs the same point last month.
+ * Returns null when the API returns no data.
+ */
 export function TimeTravelCard() {
   const { data, isLoading } = useQuery({
     queryKey: ["time-travel"],

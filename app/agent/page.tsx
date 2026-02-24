@@ -1,3 +1,13 @@
+/**
+ * @module app/agent/page
+ * @description AI Chat Agent page for Finova. Provides a conversational interface
+ * where users can ask questions about their finances, get spending analysis,
+ * budgeting advice, and investment guidance. Features include threaded conversations
+ * with persistence, quick action prompts, streaming AI responses rendered with
+ * ReactMarkdown, a sidebar sheet for browsing/managing chat history, and Lottie
+ * animations for the idle state. Messages stream via the `/api/agent/chat` endpoint
+ * and thread history is managed through `/api/agent/threads`.
+ */
 "use client"
 
 import * as React from "react"
@@ -479,6 +489,13 @@ function ThreadSidebarContent({
 
 /* ─── Main page ─── */
 
+/**
+ * AI Agent chat page component. Renders a full-screen chat interface with
+ * a message list, streaming response display, quick action chips, and a
+ * slide-out thread history panel. Supports creating new threads, loading
+ * previous conversations, and deleting threads. Auth-guarded.
+ * @returns The AI agent chat page wrapped in the app sidebar layout.
+ */
 export default function AgentPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth()
   const router = useRouter()

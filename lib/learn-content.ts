@@ -1,19 +1,37 @@
 /**
- * Static content for the Learn section: topic definitions, markdown articles,
+ * Static content for the Learn section of the Finova app.
+ *
+ * Contains topic definitions, navigational sections, full markdown articles,
  * and quiz questions covering investing, budgeting, tax, and FIRE.
+ * All content is tailored to the Indian financial context (INR, Indian tax
+ * sections, Indian brokers and platforms, BSE/NSE, etc.).
+ *
+ * Exports:
+ * - {@link SECTIONS} - Navigational section groupings
+ * - {@link TOPICS} / {@link TOPICS_MAP} - All topic definitions
+ * - {@link TOPIC_CONTENT} - Full markdown articles keyed by topic ID
+ * - {@link TOPIC_QUIZZES} - Quiz questions keyed by topic ID
+ *
+ * @module lib/learn-content
  */
 
 import type { LearnTopic, QuizQuestion } from './learn-types'
 
 /* ─── Section definitions ─── */
 
-/** A navigational section grouping related learn topics. */
+/** A navigational section grouping related learn topics in the Learn tab UI. */
 export interface LearnSection {
+  /** Unique section identifier (e.g. "getting-started"). */
   id: string
+  /** Section display title. */
   title: string
+  /** Tabler icon name for the section header. */
   icon: string
+  /** Tailwind gradient classes for the section card. */
   gradient: string
+  /** Tailwind gradient classes for the accent background. */
   accentBg: string
+  /** Ordered list of topic IDs belonging to this section. */
   topicIds: string[]
 }
 

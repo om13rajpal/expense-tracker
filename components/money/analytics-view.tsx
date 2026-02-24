@@ -1,3 +1,11 @@
+/**
+ * Money Analytics view — monthly and weekly financial analytics with
+ * interactive charts, category breakdowns, trends, and period navigation.
+ * Supports two sub-views: Monthly Analytics (with balance area chart,
+ * category bar chart, spending comparison) and Weekly Analytics (daily
+ * breakdown, top categories, top expenses).
+ * @module components/money/analytics-view
+ */
 "use client"
 
 import * as React from "react"
@@ -165,6 +173,13 @@ function TrendLegend({
   )
 }
 
+/**
+ * Top-level Analytics page exported for the `/money` route's "Analytics" tab.
+ * Renders a monthly/weekly toggle with period navigation, balance trend
+ * area chart, category breakdown bar chart, spending comparison, and
+ * the full WeeklyAnalyticsContent component.
+ * Auth-guarded: redirects to `/login` when not authenticated.
+ */
 export function AnalyticsView() {
   const { isAuthenticated, isLoading: authLoading } = useAuth()
   const { transactions, isLoading: transactionsLoading } = useTransactions()

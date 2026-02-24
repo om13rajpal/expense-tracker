@@ -9,6 +9,18 @@ import { inngest } from '@/lib/inngest';
 import { getMongoDb } from '@/lib/mongodb';
 import { sendMessage, formatDailySummaryMessage } from '@/lib/telegram';
 
+/**
+ * Inngest cron function that sends daily financial summaries via Telegram.
+ *
+ * @trigger Cron schedule: `0 16 * * *` (daily at 4:00 PM UTC / 9:30 PM IST).
+ * @steps
+ *   1. `send-daily-summaries` -- For each user with Telegram linked and dailySummary enabled:
+ *      - Fetches today's transactions from MongoDB.
+ *      - Aggregates total income, total expenses, and top 5 spending categories.
+ *      - Formats and sends the summary message via Telegram bot API.
+ *      - Skips users with zero transactions for the day.
+ * @returns Object with usersChecked count and summariesSent count.
+ */
 export const telegramDailySummary = inngest.createFunction(
   { id: 'telegram-daily-summary', name: 'Telegram Daily Summary' },
   { cron: '0 16 * * *' },

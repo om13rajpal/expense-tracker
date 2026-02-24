@@ -1,3 +1,12 @@
+/**
+ * Spotlight navigation provider: matches user queries against app pages.
+ *
+ * When the query is empty, returns the first 6 pages as suggestions.
+ * When a query is provided, scores pages by label and keyword match quality.
+ *
+ * @module lib/spotlight/providers/navigation-provider
+ */
+
 import type { SpotlightProvider, SpotlightResult } from "../types"
 import { pages } from "../data/pages"
 import { fuzzyCorrectInput } from "../data/parsers"

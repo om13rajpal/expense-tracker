@@ -11,10 +11,15 @@ import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts"
 import { QuickAddTransaction } from "@/components/quick-add"
 import { IconPlus } from "@tabler/icons-react"
 
+/**
+ * Shape of the keyboard shortcuts context.
+ * @property openQuickAdd - Opens the quick-add transaction dialog.
+ */
 interface ShortcutsContextType {
   openQuickAdd: () => void
 }
 
+/** React context providing keyboard-shortcut callbacks to child components. */
 const ShortcutsContext = createContext<ShortcutsContextType>({
   openQuickAdd: () => {},
 })

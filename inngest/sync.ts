@@ -1,6 +1,10 @@
 /**
- * Daily scheduled sync: Google Sheets -> MongoDB.
- * Runs at 6:00 AM UTC, emits `finance/sync.completed` on success.
+ * @module inngest/sync
+ * @description Daily scheduled transaction sync from Google Sheets to MongoDB.
+ * Runs at 6:00 AM UTC, fetches all transactions from the configured Google Sheet,
+ * persists them to the transactions collection (with deduplication), logs the run
+ * to `cron_runs`, and emits a `finance/sync.completed` event to trigger downstream
+ * workflows (insight generation, subscription payment detection).
  */
 import { inngest } from '@/lib/inngest';
 import { getMongoDb } from '@/lib/mongodb';
@@ -9,6 +13,18 @@ import { persistTransactions } from '@/lib/persist-transactions';
 
 const CRON_COLLECTION = 'cron_runs';
 
+/**
+ * Inngest cron function that syncs transactions from Google Sheets to MongoDB.
+ *
+ * @trigger Cron schedule: `0 6 * * *` (daily at 6:00 AM UTC).
+ * @steps
+ *   1. `sync-sheets-to-mongo` -- Clears sheet cache, fetches all transactions from
+ *      Google Sheets via `fetchTransactionsFromSheet`, and persists them to MongoDB
+ *      via `persistTransactions`. Skips gracefully in demo mode.
+ *   2. Emits `finance/sync.completed` event with userIds and transaction count
+ *      (only when transactions were actually synced).
+ * @returns Object with skipped flag, transaction count, persisted count, and userIds.
+ */
 export const syncTransactions = inngest.createFunction(
   { id: 'sync-transactions', name: 'Sync Google Sheets Transactions' },
   { cron: '0 6 * * *' }, // Daily at 6:00 AM UTC

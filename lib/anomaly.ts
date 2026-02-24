@@ -1,46 +1,72 @@
 /**
- * Transaction Anomaly Detection
- * Flags unusual spending using statistical analysis.
+ * Transaction anomaly detection engine for flagging unusual spending patterns.
  *
- * Two detection strategies:
- * 1. Per-category statistical outliers (mean + N*stddev)
- * 2. First-time large merchants (single occurrence above median threshold)
+ * Uses two complementary detection strategies:
+ * 1. **Per-category statistical outliers**: Groups expenses by category, computes
+ *    mean and standard deviation over a configurable lookback window, and flags
+ *    transactions exceeding `mean + N * stddev` (default N=2).
+ * 2. **First-time large merchants**: Identifies merchants with only a single
+ *    transaction in the entire history, where that transaction's amount exceeds
+ *    2x the overall median expense amount.
+ *
+ * Results include severity classification (low/medium/high based on sigma distance)
+ * and expected amount ranges for user context.
+ *
+ * @module lib/anomaly
  */
 
 /**
- * Represents a detected spending anomaly.
+ * Represents a single detected spending anomaly with context for the user.
  */
 export interface Anomaly {
+  /** ID of the flagged transaction. */
   transactionId: string;
+  /** Description of the flagged transaction. */
   description: string;
+  /** Absolute amount of the flagged transaction (INR). */
   amount: number;
+  /** Date of the transaction in "YYYY-MM-DD" format. */
   date: string;
+  /** Spending category of the transaction. */
   category: string;
+  /** Human-readable explanation of why this was flagged. */
   reason: string;
+  /** Severity level based on statistical distance from normal. */
   severity: "low" | "medium" | "high";
+  /** Expected normal range for this category (min/max in INR). */
   expectedRange: { min: number; max: number };
 }
 
 /**
- * Configuration options for anomaly detection.
+ * Configuration options for tuning the anomaly detection algorithm.
  */
 export interface AnomalyOptions {
-  /** Number of standard deviations above mean to flag. Default: 2 */
+  /** Number of standard deviations above the category mean to flag as anomalous (default: 2). */
   stdDevThreshold?: number;
-  /** How many months of history to consider. Default: 3 */
+  /** Number of months of transaction history to include in the analysis window (default: 3). */
   lookbackMonths?: number;
-  /** Minimum transactions per category to analyze. Default: 5 */
+  /** Minimum number of transactions required per category before statistical analysis is applied (default: 5). */
   minTransactions?: number;
 }
 
-/** Shape of a transaction record used by the anomaly detector. */
+/**
+ * Minimal transaction shape required by the anomaly detector.
+ * Decoupled from the full Transaction interface to allow flexible input sources.
+ */
 export interface AnomalyTransaction {
+  /** Unique transaction identifier. */
   id: string;
+  /** Transaction date as an ISO string or "YYYY-MM-DD". */
   date: string;
+  /** Transaction description text. */
   description: string;
+  /** Merchant or payee name. */
   merchant: string;
+  /** Transaction amount in INR (may be negative for expenses). */
   amount: number;
+  /** Spending category name. */
   category: string;
+  /** Transaction type ("income" or "expense"). */
   type: string;
 }
 

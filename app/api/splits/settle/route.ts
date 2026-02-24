@@ -1,7 +1,33 @@
+/**
+ * Splits Settlements API
+ * Records payments made between people to settle split expense debts.
+ *
+ * All endpoints require JWT authentication via the `auth-token` HTTP-only cookie.
+ * Data is scoped to the authenticated user via `userId`.
+ *
+ * Endpoints:
+ *   GET  /api/splits/settle  - List all settlements (optionally by group)
+ *   POST /api/splits/settle  - Record a new settlement payment
+ *
+ * MongoDB collection: `splits_settlements`
+ */
+
 import { NextRequest, NextResponse } from "next/server"
 import { getMongoDb } from "@/lib/mongodb"
 import { corsHeaders, handleOptions, withAuth } from "@/lib/middleware"
 
+/**
+ * GET /api/splits/settle
+ * Retrieve all settlement records for the authenticated user, optionally filtered by group.
+ * Results are sorted by date (newest first), then by creation time.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @query {string} [groupId] - Filter settlements by group ID
+ *
+ * @returns {200} `{ success: true, settlements: Array<{ _id, groupId, paidBy, paidTo, amount, date, notes, createdAt }> }`
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function GET(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {
@@ -43,6 +69,23 @@ export async function GET(request: NextRequest) {
   })(request)
 }
 
+/**
+ * POST /api/splits/settle
+ * Record a new settlement payment between two people.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @body {string} paidBy - Name of the person making the payment (required)
+ * @body {string} paidTo - Name of the person receiving the payment (required)
+ * @body {number} amount - Settlement amount in INR (required, > 0)
+ * @body {string} [groupId] - Optional group ID to associate the settlement with
+ * @body {string} [date] - Settlement date (ISO string, defaults to now)
+ * @body {string} [notes] - Optional notes about the settlement
+ *
+ * @returns {201} `{ success: true, settlement: { _id, groupId, paidBy, paidTo, amount, date, notes, createdAt } }`
+ * @returns {400} `{ success: false, message: string }` - Missing required fields or invalid amount
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function POST(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {
@@ -89,6 +132,10 @@ export async function POST(request: NextRequest) {
   })(request)
 }
 
+/**
+ * OPTIONS /api/splits/settle
+ * CORS preflight handler. Returns allowed methods and headers.
+ */
 export async function OPTIONS() {
   return handleOptions()
 }

@@ -1,17 +1,38 @@
 /**
  * Core gamification engine: XP levels, badges, streaks, and monthly challenges.
+ *
+ * Implements a comprehensive gamification system to encourage consistent
+ * financial tracking. Features include:
+ * - **XP Levels**: 10 progression tiers from "Beginner" to "Financial Legend"
+ * - **Badges**: 25+ badges across onboarding, milestones, behavioral, and skill categories
+ * - **Streaks**: Daily logging streaks with freeze tokens and milestone rewards
+ * - **Monthly Challenges**: Rotating goals like "Save 20%" or "Stay under budget"
+ *
+ * All state is persisted in MongoDB collections: `user_xp`, `user_streaks`,
+ * `user_badges`, `user_challenges`, and `xp_events`.
+ *
  * @module lib/gamification
  */
 import type { Db } from 'mongodb';
 
 // ─── XP Levels ─────────────────────────────────────────────────────────
 
+/**
+ * Defines a single XP level with its threshold requirement.
+ */
 export interface XPLevel {
+  /** Numeric level (1-10). */
   level: number;
+  /** Display name for this level (e.g. "Money Manager"). */
   name: string;
+  /** Minimum XP required to reach this level. */
   threshold: number;
 }
 
+/**
+ * XP level progression table. Each level requires progressively more XP.
+ * Level 10 ("Financial Legend") is the maximum at 5500 XP.
+ */
 export const XP_LEVELS: XPLevel[] = [
   { level: 1, name: 'Beginner', threshold: 0 },
   { level: 2, name: 'Penny Saver', threshold: 100 },
@@ -25,6 +46,10 @@ export const XP_LEVELS: XPLevel[] = [
   { level: 10, name: 'Financial Legend', threshold: 5500 },
 ];
 
+/**
+ * Actions that earn the user XP points.
+ * Each action maps to a fixed XP reward in `XP_ACTIONS`.
+ */
 export type XPAction =
   | 'expense_logged'
   | 'budget_created'
@@ -37,6 +62,7 @@ export type XPAction =
   | 'bucket_list_completed'
   | 'bucket_list_milestone';
 
+/** XP reward amounts for each action type. */
 export const XP_ACTIONS: Record<XPAction, number> = {
   expense_logged: 5,
   budget_created: 20,
@@ -52,17 +78,29 @@ export const XP_ACTIONS: Record<XPAction, number> = {
 
 // ─── Badges ────────────────────────────────────────────────────────────
 
+/** Classification of badge types for organizing the badge gallery. */
 export type BadgeCategory = 'onboarding' | 'milestones' | 'behavioral' | 'skill';
 
+/**
+ * Static definition of an unlockable badge.
+ * Badge unlock logic is in `checkBadgeUnlocks()`.
+ */
 export interface BadgeDef {
+  /** Unique badge identifier (e.g. "first_expense"). */
   id: string;
+  /** Display name shown in the UI. */
   name: string;
+  /** Explanation of what the badge represents. */
   description: string;
+  /** Tabler icon component name. */
   icon: string;
+  /** Badge category for gallery grouping. */
   category: BadgeCategory;
+  /** Human-readable description of the unlock condition. */
   condition: string;
 }
 
+/** Complete catalog of all unlockable badges (25+). */
 export const BADGES: BadgeDef[] = [
   // Onboarding
   { id: 'first_expense', name: 'First Expense', description: 'Log your first expense', icon: 'IconReceipt', category: 'onboarding', condition: 'Log 1 transaction' },
@@ -101,15 +139,26 @@ export const BADGES: BadgeDef[] = [
 
 // ─── Monthly Challenges ────────────────────────────────────────────────
 
+/**
+ * Static definition of a monthly challenge template.
+ * Active challenges are tracked per-user per-month in the `user_challenges` collection.
+ */
 export interface ChallengeDef {
+  /** Unique challenge identifier. */
   id: string;
+  /** Display name shown in the UI. */
   name: string;
+  /** Description of what the user needs to do. */
   description: string;
+  /** Numeric target value to complete the challenge. */
   target: number;
+  /** Metric key used to calculate progress (e.g. "days_logged", "savings_rate"). */
   metric: string;
+  /** XP reward awarded on challenge completion. */
   xpReward: number;
 }
 
+/** Pool of monthly challenge templates. A subset is assigned to each user per month. */
 export const CHALLENGES: ChallengeDef[] = [
   { id: 'log_30', name: 'Daily Logger', description: 'Log at least one expense every day this month', target: 30, metric: 'days_logged', xpReward: 150 },
   { id: 'save_20', name: 'Savings Sprint', description: 'Save at least 20% of your income this month', target: 20, metric: 'savings_rate', xpReward: 200 },
@@ -123,14 +172,31 @@ export const CHALLENGES: ChallengeDef[] = [
 
 // ─── Helper: Level calculator ──────────────────────────────────────────
 
+/**
+ * Computed level information for a given XP total.
+ */
 export interface LevelInfo {
+  /** Current level number (1-10). */
   level: number;
+  /** Current level display name. */
   name: string;
+  /** The user's total XP. */
   currentXP: number;
+  /** XP threshold for the next level, or null if at max level. */
   nextLevelXP: number | null;
+  /** Progress toward the next level as a percentage (0-100). */
   progress: number;
 }
 
+/**
+ * Determine the user's level and progress based on their total XP.
+ *
+ * Iterates through `XP_LEVELS` to find the highest level whose threshold
+ * the user has reached, then calculates progress toward the next level.
+ *
+ * @param xp - The user's total XP points.
+ * @returns A `LevelInfo` object with level details and progress percentage.
+ */
 export function getLevelForXP(xp: number): LevelInfo {
   let currentLevel = XP_LEVELS[0];
   for (const lvl of XP_LEVELS) {
@@ -158,13 +224,33 @@ export function getLevelForXP(xp: number): LevelInfo {
 
 // ─── Award XP ──────────────────────────────────────────────────────────
 
+/**
+ * Result of awarding XP to a user, including level-up detection.
+ */
 export interface AwardXPResult {
+  /** User's new total XP after the award. */
   totalXP: number;
+  /** User's current level after the award. */
   level: number;
+  /** Display name of the current level. */
   levelName: string;
+  /** Whether this XP award caused a level-up. */
   leveledUp: boolean;
 }
 
+/**
+ * Award XP points to a user for a specific action.
+ *
+ * Records the XP event in `xp_events`, updates the user's total XP and
+ * level in `user_xp`, and detects level-ups by comparing before/after levels.
+ *
+ * @param db - MongoDB database instance.
+ * @param userId - The user to award XP to.
+ * @param action - The action that earned the XP (for audit trail).
+ * @param xp - Number of XP points to award.
+ * @param description - Human-readable description of why XP was awarded.
+ * @returns An `AwardXPResult` with the new totals and level-up flag.
+ */
 export async function awardXP(
   db: Db,
   userId: string,
@@ -205,12 +291,34 @@ export async function awardXP(
 
 // ─── Streaks ───────────────────────────────────────────────────────────
 
+/**
+ * Result of updating a user's daily logging streak.
+ */
 export interface StreakResult {
+  /** Current consecutive day streak. */
   currentStreak: number;
+  /** Longest streak ever achieved. */
   longestStreak: number;
+  /** Whether the streak was extended or created today (false if already logged today). */
   isNew: boolean;
 }
 
+/**
+ * Update a user's daily logging streak.
+ *
+ * Handles three cases:
+ * 1. **First log ever**: Creates a new streak record starting at 1.
+ * 2. **Already logged today**: Returns existing streak without changes.
+ * 3. **Consecutive day**: Increments the streak. If a day was missed but the
+ *    user has a freeze token, the token is consumed and the streak continues.
+ * 4. **Streak broken**: Resets to 1.
+ *
+ * Also checks streak milestones (7, 30, 100, 365 days) and awards XP.
+ *
+ * @param db - MongoDB database instance.
+ * @param userId - The user whose streak to update.
+ * @returns A `StreakResult` with current/longest streak and whether it changed.
+ */
 export async function updateStreak(db: Db, userId: string): Promise<StreakResult> {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -290,6 +398,23 @@ export async function updateStreak(db: Db, userId: string): Promise<StreakResult
 
 // ─── Badge Checks ──────────────────────────────────────────────────────
 
+/**
+ * Check all badge unlock conditions for a user and award newly unlocked badges.
+ *
+ * Evaluates conditions across multiple categories:
+ * - **Onboarding**: First expense, budget, goal, investment, all-set-up
+ * - **Milestones**: 100/500/1000 transactions, streaks, account anniversary
+ * - **Behavioral**: Perfect month, bill crusher, safety net, super saver, impulse control
+ * - **Skill**: Categorization expert, budget guru, health nut
+ * - **Bucket List**: Dream big, wish warrior, deal hunter
+ *
+ * Each newly unlocked badge is inserted into `user_badges` and awards bonus XP.
+ *
+ * @param db - MongoDB database instance.
+ * @param userId - The user to check badges for.
+ * @param trigger - Optional context for what triggered the check (unused, for future use).
+ * @returns Array of badge IDs that were newly unlocked during this check.
+ */
 export async function checkBadgeUnlocks(db: Db, userId: string, trigger?: string): Promise<string[]> {
   const newlyUnlocked: string[] = [];
 
@@ -560,6 +685,20 @@ export async function checkBadgeUnlocks(db: Db, userId: string, trigger?: string
 
 // ─── Challenge Progress ────────────────────────────────────────────────
 
+/**
+ * Recalculate progress for all active monthly challenges for a user.
+ *
+ * Iterates through the user's active challenges for the current month,
+ * queries the relevant metric from MongoDB (days logged, savings rate,
+ * budget compliance, streak length, etc.), updates the progress percentage,
+ * and marks completed challenges with an XP reward.
+ *
+ * Supported metrics: `days_logged`, `categorized`, `streak_days`, `savings_rate`,
+ * `budget_compliance`, `no_impulse_days`, `portfolio_views`, `dining_reduction`.
+ *
+ * @param db - MongoDB database instance.
+ * @param userId - The user whose challenges to update.
+ */
 export async function updateChallengeProgress(db: Db, userId: string): Promise<void> {
   const now = new Date();
   const monthKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;

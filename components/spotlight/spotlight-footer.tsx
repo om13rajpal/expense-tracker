@@ -1,5 +1,11 @@
+/**
+ * Footer bar for the Spotlight dialog showing keyboard shortcut hints
+ * (arrow keys to navigate, Enter to select, Escape to close).
+ * @module components/spotlight/spotlight-footer
+ */
 "use client"
 
+/** Renders a row of keyboard shortcut badges at the bottom of the Spotlight dialog. */
 export function SpotlightFooter() {
   return (
     <div className="flex items-center gap-3 border-t border-border/40 px-4 py-2">

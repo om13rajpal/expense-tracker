@@ -1,3 +1,14 @@
+/**
+ * @module app/financial-health/page
+ * @description Financial Health score page for Finova. Calculates and displays a
+ * composite financial health score (0-100) based on savings rate, debt-to-income ratio,
+ * emergency fund coverage, investment diversification, and budget adherence. Features
+ * include an animated score ring visualization, component score breakdowns with progress
+ * bars, net worth tracking with area charts, asset allocation pie charts, a full debt
+ * tracker with EMI calculations and payoff dates, AI-powered health assessment, and
+ * contextual CTA actions based on the score. Data is fetched via the `useFinancialHealth`
+ * hook from `/api/financial-health` endpoints.
+ */
 "use client"
 
 import * as React from "react"
@@ -178,6 +189,11 @@ const EMPTY_DEBT_FORM = {
 // Helpers
 // ---------------------------------------------------------------------------
 
+/**
+ * Returns a Tailwind text color class based on the financial health score tier.
+ * @param score - Financial health score from 0 to 100.
+ * @returns Tailwind color class string (red for poor, amber for fair, emerald for good).
+ */
 function getScoreColor(score: number): string {
   if (score >= 75) return "text-emerald-600"
   if (score >= 50) return "text-amber-500"
@@ -185,6 +201,11 @@ function getScoreColor(score: number): string {
   return "text-rose-600"
 }
 
+/**
+ * Returns an SVG stroke color for the score ring arc based on score tier.
+ * @param score - Financial health score from 0 to 100.
+ * @returns CSS color string for the SVG ring stroke.
+ */
 function getScoreRingColor(score: number): string {
   if (score >= 75) return "#10b981"
   if (score >= 50) return "#f59e0b"
@@ -192,6 +213,11 @@ function getScoreRingColor(score: number): string {
   return "#f43f5e"
 }
 
+/**
+ * Returns a CSS glow/shadow color for the score display based on score tier.
+ * @param score - Financial health score from 0 to 100.
+ * @returns CSS rgba color string for the glow effect.
+ */
 function getScoreGlowColor(score: number): string {
   if (score >= 75) return "rgba(16, 185, 129, 0.25)"
   if (score >= 50) return "rgba(245, 158, 11, 0.2)"
@@ -199,6 +225,11 @@ function getScoreGlowColor(score: number): string {
   return "rgba(244, 63, 94, 0.2)"
 }
 
+/**
+ * Returns a Tailwind background class for the score label badge.
+ * @param score - Financial health score from 0 to 100.
+ * @returns Tailwind background color class string.
+ */
 function getScoreBadgeBg(score: number): string {
   if (score >= 75) return "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400"
   if (score >= 50) return "bg-amber-500/10 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400"
@@ -206,6 +237,11 @@ function getScoreBadgeBg(score: number): string {
   return "bg-rose-500/10 text-rose-600 dark:bg-rose-500/15 dark:text-rose-400"
 }
 
+/**
+ * Returns a human-readable label for the financial health score tier.
+ * @param score - Financial health score from 0 to 100.
+ * @returns Label string like "Excellent", "Good", "Fair", or "Needs Work".
+ */
 function getScoreLabel(score: number): string {
   if (score >= 75) return "Excellent"
   if (score >= 50) return "Good"
@@ -213,6 +249,11 @@ function getScoreLabel(score: number): string {
   return "Critical"
 }
 
+/**
+ * Returns gradient colors for progress bars based on the completion percentage.
+ * @param pct - Percentage value from 0 to 100.
+ * @returns Object with `from`, `to` hex colors and a Tailwind `className` for the gradient.
+ */
 function getBarGradient(pct: number): { from: string; to: string; className: string } {
   if (pct >= 75) return { from: "#34d399", to: "#10b981", className: "emerald" }
   if (pct >= 50) return { from: "#fbbf24", to: "#f59e0b", className: "amber" }
@@ -220,6 +261,12 @@ function getBarGradient(pct: number): { from: string; to: string; className: str
   return { from: "#fb7185", to: "#f43f5e", className: "rose" }
 }
 
+/**
+ * Calculates the next EMI due date based on loan start date and number of paid EMIs.
+ * @param startDate - ISO date string of the loan start date.
+ * @param paidEMIs - Number of EMIs already paid.
+ * @returns Date object representing the next due date.
+ */
 function calculateNextDueDate(startDate: string, paidEMIs: number): Date {
   const start = new Date(startDate)
   const next = new Date(start)
@@ -227,6 +274,11 @@ function calculateNextDueDate(startDate: string, paidEMIs: number): Date {
   return next
 }
 
+/**
+ * Formats a Date object to a short Indian locale date string.
+ * @param date - The Date to format.
+ * @returns Formatted string like "24 Feb 2026".
+ */
 function formatDate(date: Date): string {
   return date.toLocaleDateString("en-IN", {
     day: "2-digit",
@@ -240,6 +292,11 @@ function formatDate(date: Date): string {
 // Score Ring Component (Premium)
 // ---------------------------------------------------------------------------
 
+/**
+ * Animated SVG ring component that visually represents the financial health score.
+ * The arc fills proportionally to the score with color-coded tiers.
+ * @param props - Contains the score (0-100) and optional size in pixels.
+ */
 function ScoreRing({ score, size = 160 }: { score: number; size?: number }) {
   const strokeWidth = 14
   const radius = (size - strokeWidth) / 2
@@ -316,6 +373,11 @@ function ScoreRing({ score, size = 160 }: { score: number; size?: number }) {
 // Stat Item for the top bar
 // ---------------------------------------------------------------------------
 
+/**
+ * Compact stat display used in the net worth hero section.
+ * Shows a labeled value with an optional trend indicator and subtitle.
+ * @param props - Label, formatted value, optional trend direction and subtitle.
+ */
 function StatItem({
   icon: Icon,
   label,
@@ -361,6 +423,12 @@ function StatItem({
 // Breakdown Bar (Enhanced with gradients and hover)
 // ---------------------------------------------------------------------------
 
+/**
+ * Component score breakdown bar with animated fill and label.
+ * Displays a single health metric with its score out of the maximum, a progress
+ * bar with gradient coloring, and a descriptive label.
+ * @param props - Component name, score, maximum possible score, and description.
+ */
 function BreakdownBar({
   label,
   score,
@@ -443,6 +511,11 @@ function BreakdownBar({
 // Custom Tooltip for Net Worth Chart
 // ---------------------------------------------------------------------------
 
+/**
+ * Custom Recharts tooltip for the net worth area chart.
+ * Displays the month label with formatted asset, liability, and net worth values.
+ * @param props - Recharts tooltip props (active, payload, label).
+ */
 function NetWorthTooltip({ active, payload, label }: {
   active?: boolean
   payload?: Array<{ value: number; dataKey: string; color: string }>
@@ -474,6 +547,11 @@ function NetWorthTooltip({ active, payload, label }: {
 // Asset Allocation Pie Chart Tooltip
 // ---------------------------------------------------------------------------
 
+/**
+ * Custom Recharts tooltip for the asset allocation pie chart.
+ * Shows the category name with its formatted value.
+ * @param props - Recharts tooltip props (active, payload).
+ */
 function AssetPieTooltip({ active, payload }: {
   active?: boolean
   payload?: Array<{ name: string; value: number; payload: { color: string } }>
@@ -498,6 +576,12 @@ function AssetPieTooltip({ active, payload }: {
 // Net Worth Hero Section
 // ---------------------------------------------------------------------------
 
+/**
+ * Hero section displaying net worth summary, asset allocation pie chart,
+ * and historical net worth area chart. Shows total assets, liabilities,
+ * net worth, and month-over-month change.
+ * @param props - Contains assets, liabilities, net worth, monthly delta, allocation data, and trend data.
+ */
 function NetWorthHero({
   metrics,
   totalDebts,
@@ -659,6 +743,11 @@ function NetWorthHero({
 // Add/Edit Debt Dialog
 // ---------------------------------------------------------------------------
 
+/**
+ * Dialog form for adding or editing a debt/loan entry in the debt tracker.
+ * Supports fields for name, type, principal, interest rate, EMI, tenure, and start date.
+ * @param props - Open state, onClose handler, optional initial data for editing, and onSave callback.
+ */
 function DebtFormDialog({
   open,
   onOpenChange,
@@ -831,6 +920,11 @@ function DebtFormDialog({
 // Debt Tracker Section
 // ---------------------------------------------------------------------------
 
+/**
+ * Full debt tracker section with summary metrics, debt list, add/edit dialogs,
+ * and individual debt detail views showing EMI schedule and payoff progress.
+ * Fetches debt data via React Query from `/api/financial-health/debts`.
+ */
 function DebtTrackerSection() {
   const queryClient = useQueryClient()
   const [showAddDebt, setShowAddDebt] = useState(false)
@@ -1154,6 +1248,12 @@ interface CtaAction {
   variant: "default" | "outline"
 }
 
+/**
+ * Generates contextual call-to-action suggestions based on the health score tier.
+ * Lower scores get more urgent improvement suggestions; higher scores get optimization tips.
+ * @param score - Financial health score from 0 to 100.
+ * @returns Object with a motivational message and array of CTA action objects.
+ */
 function getCtaActions(score: number): { message: string; actions: CtaAction[] } {
   if (score < 30) {
     return {
@@ -1187,6 +1287,10 @@ function getCtaActions(score: number): { message: string; actions: CtaAction[] }
   }
 }
 
+/**
+ * CTA section that renders personalized action recommendations based on the health score.
+ * @param props - Contains the current financial health score.
+ */
 function ScoreCtaSection({ score }: { score: number }) {
   const { message, actions } = getCtaActions(score)
 
@@ -1224,6 +1328,10 @@ function ScoreCtaSection({ score }: { score: number }) {
 // Loading Skeleton
 // ---------------------------------------------------------------------------
 
+/**
+ * Loading skeleton placeholder for the financial health page.
+ * Renders shimmer placeholders matching the layout of the score ring, breakdowns, and charts.
+ */
 function HealthLoadingSkeleton() {
   return (
     <div className="space-y-5">
@@ -1317,6 +1425,13 @@ function HealthLoadingSkeleton() {
 // Page Component
 // ---------------------------------------------------------------------------
 
+/**
+ * Financial Health page component. Orchestrates the full health dashboard including
+ * the animated score ring, component breakdowns, net worth hero section, debt tracker,
+ * AI health assessment, and contextual CTAs. Auth-guarded -- redirects to `/login`
+ * if unauthenticated.
+ * @returns The financial health page wrapped in the app sidebar layout.
+ */
 export default function FinancialHealthPage() {
   const router = useRouter()
   const { isAuthenticated, isLoading: authLoading } = useAuth()

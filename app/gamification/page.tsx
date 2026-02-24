@@ -1,3 +1,13 @@
+/**
+ * @module app/gamification/page
+ * @description Gamification and achievements page for Finova. Displays the user's
+ * XP level and progress, daily transaction logging streak with freeze token support,
+ * unlocked/locked badge collection organized by category (consistency, budgeting,
+ * saving, milestones, etc.), and monthly challenges with progress tracking. Features
+ * include Lottie animations for celebrations, streak freeze usage, badge category
+ * filtering with vibrant color themes, and animated XP progress bars. Data is fetched
+ * via the `useGamification` and `useStreakFreeze` hooks from `/api/gamification`.
+ */
 "use client"
 
 import * as React from "react"
@@ -396,6 +406,12 @@ function BadgeDetailOverlay({
 
 // ─── Main page ────────────────────────────────────────────────────────
 
+/**
+ * Gamification page component. Renders the XP progress bar, streak display with
+ * freeze tokens, badge collection grid with category filters and unlock animations,
+ * and active monthly challenges with progress indicators. Auth-guarded.
+ * @returns The gamification page wrapped in the app sidebar layout.
+ */
 export default function GamificationPage() {
   const router = useRouter()
   const { isAuthenticated, isLoading: authLoading } = useAuth()

@@ -1,9 +1,16 @@
 /**
- * Financial Health Metrics Engine
+ * Financial Health Metrics Engine.
  *
- * Provides composite scoring, trend analysis, and financial health indicators
- * including emergency fund ratio, expense velocity, income profiling,
- * financial freedom scoring, and net worth timeline construction.
+ * Provides composite scoring, trend analysis, and financial health indicators:
+ * - Emergency fund ratio (months of expenses covered by current balance)
+ * - Expense velocity (3-month rolling average comparison)
+ * - Financial Freedom Score (0-100 composite from savings, emergency fund, NWI, investments)
+ * - Net worth timeline (merging bank balances with investment values)
+ * - Income profiling (stability, variability, average monthly income)
+ *
+ * All functions are pure computations with no database or API calls.
+ *
+ * @module lib/financial-health
  */
 
 import type {

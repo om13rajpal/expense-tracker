@@ -1,33 +1,71 @@
 /**
- * OpenRouter API client for AI-powered financial insights
- * Uses OpenRouter to access Claude and other models for spending analysis
+ * OpenRouter API client for AI-powered financial insights.
+ *
+ * Uses OpenRouter as a unified gateway to access Claude (Anthropic) and other
+ * LLM models for spending analysis, tax tips, budget recommendations, and
+ * investment insights. Includes context-building utilities that convert raw
+ * financial data into concise Markdown summaries for token-efficient LLM prompts.
+ *
+ * @module lib/openrouter
  */
 
+/** Base URL for the OpenRouter chat completions API. */
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions';
 
+/**
+ * A single message in an OpenRouter chat conversation.
+ */
 export interface OpenRouterMessage {
+  /** Role of the message sender. */
   role: 'system' | 'user' | 'assistant';
+  /** Text content of the message. */
   content: string;
 }
 
+/**
+ * Raw response from the OpenRouter chat completions API.
+ */
 export interface OpenRouterResponse {
+  /** Unique response identifier. */
   id: string;
+  /** Array of completion choices (typically one). */
   choices: {
+    /** The assistant's response message. */
     message: {
+      /** Always "assistant" for responses. */
       role: string;
+      /** Generated text content. */
       content: string;
     };
+    /** Reason generation stopped (e.g. "stop", "length"). */
     finish_reason: string;
   }[];
+  /** Token usage statistics for billing and monitoring. */
   usage?: {
+    /** Number of tokens in the input prompt. */
     prompt_tokens: number;
+    /** Number of tokens in the generated response. */
     completion_tokens: number;
+    /** Total tokens consumed. */
     total_tokens: number;
   };
 }
 
 /**
- * Send a chat completion request to OpenRouter
+ * Send a chat completion request to OpenRouter and return the assistant's response.
+ *
+ * Includes a 30-second timeout via AbortController. Defaults to Claude Sonnet 4.5
+ * with moderate temperature (0.3) for factual financial analysis.
+ *
+ * @param messages - The conversation messages (system prompt + user query).
+ * @param options - Optional model configuration overrides.
+ * @param options.model - OpenRouter model ID (default: "anthropic/claude-sonnet-4.5").
+ * @param options.maxTokens - Maximum tokens in the response (default: 3000).
+ * @param options.temperature - Sampling temperature (default: 0.3).
+ * @returns The assistant's response text content.
+ * @throws {Error} If `OPENROUTER_API_KEY` is not configured.
+ * @throws {Error} If the request times out after 30 seconds.
+ * @throws {Error} If the API returns a non-200 status code.
  */
 export async function chatCompletion(
   messages: OpenRouterMessage[],
@@ -91,8 +129,24 @@ export async function chatCompletion(
 }
 
 /**
- * Build a financial context summary from transaction data
- * Keeps token count manageable by summarizing instead of sending raw data
+ * Build a Markdown-formatted financial context summary from transaction data.
+ *
+ * Summarizes income, expenses, savings, category breakdowns, large one-time
+ * expenses, and monthly trends into a concise format suitable for LLM prompts.
+ * Keeps token count manageable by aggregating rather than sending raw transactions.
+ *
+ * @param params - Aggregated financial data to summarize.
+ * @param params.totalIncome - Total income in INR.
+ * @param params.totalExpenses - Total expenses in INR.
+ * @param params.savingsRate - Savings rate as a percentage.
+ * @param params.topCategories - Top expense categories with amounts and percentages.
+ * @param params.monthlyTrends - Recent monthly income/expense/savings trends.
+ * @param params.dailyAverage - Average daily spending in INR.
+ * @param params.recurringExpenses - Total recurring expense amount in INR.
+ * @param params.oneTimeExpenses - Optional large one-time expenses to highlight.
+ * @param params.accountBalance - Optional current bank account balance in INR.
+ * @param params.openingBalance - Optional opening balance in INR.
+ * @returns A Markdown string ready for injection into an LLM system prompt.
  */
 export function buildFinancialContext(params: {
   totalIncome: number;
@@ -146,7 +200,18 @@ export function buildFinancialContext(params: {
 }
 
 /**
- * Build SIP/investment context for insights
+ * Build a Markdown-formatted investment portfolio context for LLM analysis.
+ *
+ * Summarizes SIPs, stock holdings, and mutual fund positions into a concise
+ * format for the investment insights prompt.
+ *
+ * @param params - Portfolio data to summarize.
+ * @param params.sips - Active SIPs with name, monthly amount, provider, and status.
+ * @param params.stocks - Stock holdings with symbol, shares, average cost, and current price.
+ * @param params.mutualFunds - Mutual fund holdings with invested amount, current value, and returns.
+ * @param params.totalInvested - Total capital deployed across all investments (INR).
+ * @param params.totalCurrentValue - Total current market value of all investments (INR).
+ * @returns A Markdown string ready for injection into an LLM system prompt.
  */
 export function buildInvestmentContext(params: {
   sips: { name: string; monthly: number; provider: string; status: string }[];
@@ -191,6 +256,13 @@ export function buildInvestmentContext(params: {
   return lines.join('\n');
 }
 
+/**
+ * Format a number as a simple Indian Rupee string with Indian grouping.
+ * Local helper that avoids importing from format.ts (avoids circular deps).
+ *
+ * @param amount - The amount in INR.
+ * @returns Formatted string like "Rs.1,25,000".
+ */
 function formatINR(amount: number): string {
   return `Rs.${amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
 }

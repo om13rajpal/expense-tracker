@@ -1,24 +1,41 @@
 /**
- * Enhanced Recurring Transaction Detection
+ * Enhanced Recurring Transaction Detection.
  *
- * Detects recurring patterns from transaction history with confidence scoring,
- * subscription detection, and next-date prediction.
+ * A more sophisticated version of {@link module:lib/recurring} that adds:
+ * - Confidence scoring (0-1) based on occurrence count, interval consistency, and amount variance
+ * - Subscription detection (low amount variance or subscription-like categories)
+ * - Biweekly frequency support
+ * - Minimum 3 occurrences and 0.3 confidence threshold
+ *
+ * @module lib/recurring-detector
  */
 
 import type { Transaction } from "@/lib/types"
 
+/** A detected recurring expense pattern with confidence scoring and subscription detection. */
 export interface RecurringPattern {
+  /** Original merchant name (un-normalized). */
   merchant: string
+  /** Most common category among matched transactions. */
   category: string
+  /** Average transaction amount across all occurrences (INR). */
   averageAmount: number
+  /** Detected payment frequency. */
   frequency: "weekly" | "biweekly" | "monthly" | "quarterly" | "annual"
-  confidence: number // 0-1
+  /** Confidence score from 0 (low) to 1 (high), based on occurrence count, interval consistency, and amount variance. */
+  confidence: number
+  /** Date of the most recent occurrence (YYYY-MM-DD). */
   lastDate: string
+  /** Predicted date of the next occurrence (YYYY-MM-DD). */
   nextExpectedDate: string
+  /** Total number of matching transactions found. */
   occurrences: number
+  /** Cumulative amount spent across all occurrences (INR). */
   totalSpent: number
+  /** Whether the pattern is likely a subscription (low variance or subscription-like category). */
   isSubscription: boolean
-  amountVariance: number // % variance in amounts
+  /** Coefficient of variation of transaction amounts as a percentage. */
+  amountVariance: number
 }
 
 // Subscription-like categories
@@ -114,8 +131,14 @@ function calculateConfidence(
 
 /**
  * Detect recurring expense patterns from transaction history.
- * Groups by normalized merchant, classifies frequency, calculates confidence,
- * and predicts next expected dates. Minimum 3 occurrences and 0.3 confidence.
+ *
+ * Groups expense transactions by normalized merchant name, classifies
+ * each group's payment frequency (weekly through annual), calculates a
+ * weighted confidence score, and predicts the next expected payment date.
+ * Only returns patterns with 3+ occurrences and confidence >= 0.3.
+ *
+ * @param transactions - Full transaction list (only expenses are analyzed).
+ * @returns Array of RecurringPattern sorted by next expected date ascending.
  */
 export function detectRecurringTransactions(
   transactions: Transaction[]

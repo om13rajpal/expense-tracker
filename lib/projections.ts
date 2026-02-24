@@ -1,9 +1,17 @@
 /**
- * Growth Projections & FIRE Calculator Engine
+ * Growth Projections & FIRE Calculator Engine.
  *
- * Provides financial projection functions for SIP future value,
- * emergency fund progress, net worth growth, FIRE calculations,
- * and investment growth projections.
+ * Provides pure-computation financial projection functions:
+ * - SIP future value using the standard annuity formula
+ * - Emergency fund progress and time-to-target
+ * - Net worth growth projections with compound returns
+ * - FIRE (Financial Independence, Retire Early) calculations including
+ *   the 4% rule, year-by-year simulation, and required monthly savings
+ * - Investment growth projections at 3, 5, and 10 year horizons
+ *
+ * All calculations use annual return percentages and INR amounts.
+ *
+ * @module lib/projections
  */
 
 import { FIRECalculation } from './types';

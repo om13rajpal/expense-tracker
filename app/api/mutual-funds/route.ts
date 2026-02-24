@@ -13,6 +13,13 @@ import { ObjectId } from "mongodb"
 import { getMongoDb } from "@/lib/mongodb"
 import { corsHeaders, handleOptions, isValidObjectId, withAuth } from "@/lib/middleware"
 
+/**
+ * Convert a MongoDB mutual fund document to an API response object,
+ * transforming the `_id` ObjectId to a string representation.
+ *
+ * @param doc - Raw MongoDB document from the `mutual_funds` collection
+ * @returns The document with `_id` converted to a string
+ */
 function toFundResponse(doc: Record<string, unknown>) {
   return {
     ...doc,
@@ -20,6 +27,15 @@ function toFundResponse(doc: Record<string, unknown>) {
   }
 }
 
+/**
+ * GET /api/mutual-funds
+ * List all mutual fund holdings for the authenticated user, sorted by creation date (newest first).
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @returns {200} `{ success: true, items: Array<MutualFundHolding> }`
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function GET(request: NextRequest) {
   return withAuth(async (_req, { user }) => {
     try {
@@ -43,6 +59,20 @@ export async function GET(request: NextRequest) {
   })(request)
 }
 
+/**
+ * POST /api/mutual-funds
+ * Bulk-import mutual fund holdings. Validates each item for required fields.
+ * When `replaceAll: true`, deletes all existing holdings before import.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @body {Array<{ schemeName, units, investedValue, currentValue, amc?, category?, subCategory?, folioNumber?, source?, returns?, xirr? }>} items - Array of fund holdings (required)
+ * @body {boolean} [replaceAll] - If true, deletes all existing holdings before import
+ *
+ * @returns {201} `{ success: true, insertedCount: number, errors: Array<{ index, message }> }`
+ * @returns {400} `{ success: false, message: string }` - Missing items or no valid rows
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function POST(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {
@@ -124,6 +154,25 @@ export async function POST(request: NextRequest) {
   })(request)
 }
 
+/**
+ * PUT /api/mutual-funds?id=xxx
+ * Update an existing mutual fund holding. Only provided fields are modified.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @query {string} id - Fund holding ObjectId (required, must be valid)
+ * @body {string} [schemeName] - Updated scheme name
+ * @body {string} [amc] - Updated AMC name
+ * @body {number} [units] - Updated units held
+ * @body {number} [investedValue] - Updated invested amount
+ * @body {number} [currentValue] - Updated current value
+ * @body {number} [returns] - Updated returns amount
+ *
+ * @returns {200} `{ success: true, item: MutualFundHolding | null }`
+ * @returns {400} `{ success: false, message: string }` - Invalid ID or no valid fields
+ * @returns {404} `{ success: false, message: string }` - Fund not found
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function PUT(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {
@@ -198,6 +247,18 @@ export async function PUT(request: NextRequest) {
   })(request)
 }
 
+/**
+ * DELETE /api/mutual-funds?id=xxx
+ * Delete a mutual fund holding by its ObjectId.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @query {string} id - Fund holding ObjectId (required, must be valid)
+ *
+ * @returns {200} `{ success: true, deleted: boolean }`
+ * @returns {400} `{ success: false, message: string }` - Missing or invalid ID
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function DELETE(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {
@@ -226,6 +287,10 @@ export async function DELETE(request: NextRequest) {
   })(request)
 }
 
+/**
+ * OPTIONS /api/mutual-funds
+ * CORS preflight handler. Returns allowed methods and headers.
+ */
 export async function OPTIONS() {
   return handleOptions()
 }

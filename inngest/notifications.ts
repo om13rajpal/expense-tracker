@@ -12,9 +12,14 @@ import {
 } from '@/lib/notifications';
 
 /**
- * Daily budget breach check at 8 PM UTC.
- * Compares current-month spend against each budget category and creates
- * warning/critical notifications when thresholds are crossed.
+ * Inngest cron function for daily budget breach detection.
+ *
+ * @trigger Cron schedule: `0 20 * * *` (daily at 8:00 PM UTC).
+ * @steps
+ *   1. `check-budgets` -- Compares current-month spend against each budget category
+ *      for all users. Creates warning (80% threshold) and critical (100% threshold)
+ *      notifications when spending limits are approached or exceeded.
+ * @returns Object indicating the check was completed.
  */
 export const budgetBreachCheck = inngest.createFunction(
   { id: 'budget-breach-check', name: 'Daily Budget Breach Check' },
@@ -30,9 +35,13 @@ export const budgetBreachCheck = inngest.createFunction(
 );
 
 /**
- * Daily renewal alert at 9 AM UTC.
- * Checks subscriptions renewing within the next 3 days and creates
- * reminder notifications.
+ * Inngest cron function for daily subscription renewal alerts.
+ *
+ * @trigger Cron schedule: `0 9 * * *` (daily at 9:00 AM UTC).
+ * @steps
+ *   1. `check-renewals` -- Scans all active subscriptions for those renewing within
+ *      the next 3 days. Creates reminder notifications for upcoming charges.
+ * @returns Object indicating the check was completed.
  */
 export const renewalAlert = inngest.createFunction(
   { id: 'renewal-alert', name: 'Daily Subscription Renewal Alert' },
@@ -48,8 +57,14 @@ export const renewalAlert = inngest.createFunction(
 );
 
 /**
- * Weekly digest every Sunday at 9 AM UTC.
- * Summarises: total spent this week, top categories, savings rate, portfolio change.
+ * Inngest cron function for the weekly financial digest.
+ *
+ * @trigger Cron schedule: `0 9 * * 0` (every Sunday at 9:00 AM UTC).
+ * @steps
+ *   1. `generate-digest` -- Compiles a weekly summary for all users including:
+ *      total spent, top spending categories, savings rate, and portfolio value change.
+ *      Creates a digest notification for each user.
+ * @returns Object indicating the digest was generated.
  */
 export const weeklyDigest = inngest.createFunction(
   { id: 'weekly-digest', name: 'Weekly Financial Digest' },

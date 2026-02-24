@@ -9,12 +9,19 @@
  *   "paid 1200 for food"  -> expense, Dining, 1200
  */
 
+/** Structured result from parsing a natural-language Telegram expense message. */
 export interface ParsedExpense {
+  /** Cleaned description with filler words removed and first letter capitalized. */
   description: string;
+  /** Extracted amount in INR. */
   amount: number;
+  /** Detected transaction type based on income keyword presence. */
   type: 'income' | 'expense';
+  /** Inferred expense category (e.g. "Food & Dining", "Transport"), if a keyword matched. */
   category?: string;
+  /** Detected payment method (e.g. "UPI", "Cash", "Credit Card"), if a keyword matched. */
   paymentMethod?: string;
+  /** Confidence in the parse: 0.6 base, 0.8 for keyword category match, 0.9 for explicit category. */
   confidence: number;
 }
 
@@ -81,6 +88,22 @@ const PAYMENT_KEYWORDS: Record<string, string[]> = {
 
 // ─── Parser ─────────────────────────────────────────────────────────
 
+/**
+ * Parse a natural-language Telegram message into structured expense data.
+ *
+ * Supported patterns:
+ * - "Coffee 250" -- description first, amount second
+ * - "250 Coffee" -- amount first, description second
+ * - "Uber 350 transport" -- explicit category hint at end
+ * - "Salary 50000 income" -- income keyword detection
+ * - "paid 1200 for food" -- filler word removal
+ *
+ * Rejects amounts > 10 lakh or with 10+ digits. Returns `null` if no
+ * amount is found in the text.
+ *
+ * @param text - Raw Telegram message text.
+ * @returns ParsedExpense or `null` if no amount could be extracted.
+ */
 export function parseExpenseMessage(text: string): ParsedExpense | null {
   const trimmed = text.trim();
   if (!trimmed) return null;

@@ -11,12 +11,26 @@ import { NextRequest, NextResponse } from "next/server"
 import { corsHeaders, handleOptions, withAuth } from "@/lib/middleware"
 import { getMongoDb } from "@/lib/mongodb"
 
+/**
+ * Response shape from Finnhub quote API.
+ * @property c - Current price
+ * @property d - Price change (absolute)
+ * @property dp - Price change (percentage)
+ */
 type FinnhubQuote = {
   c: number
   d: number
   dp: number
 }
 
+/**
+ * Convert a stock symbol and exchange to the Finnhub symbol format.
+ * Indian NSE stocks use ".NS" suffix, BSE uses ".BO", US stocks are passed as-is.
+ *
+ * @param symbol - Stock ticker symbol (e.g., "RELIANCE")
+ * @param exchange - Exchange code (e.g., "NSE", "BSE", "NASDAQ")
+ * @returns Finnhub-compatible symbol string
+ */
 function toFinnhubSymbol(symbol: string, exchange: string): string {
   const ex = exchange.toUpperCase()
   if (ex === "NSE") return `${symbol}.NS`
@@ -24,6 +38,15 @@ function toFinnhubSymbol(symbol: string, exchange: string): string {
   return symbol
 }
 
+/**
+ * Convert a stock symbol and exchange to the Google Finance ID format.
+ * Uses "SYMBOL:EXCHANGE" format (e.g., "RELIANCE:NSE", "AAPL:NASDAQ").
+ * Defaults to NSE if the exchange is not recognized.
+ *
+ * @param symbol - Stock ticker symbol
+ * @param exchange - Exchange code (e.g., "NSE", "BSE", "NASDAQ", "NYSE")
+ * @returns Google Finance-compatible identifier string
+ */
 function toGoogleFinanceId(symbol: string, exchange: string): string {
   const ex = exchange.toUpperCase()
   if (ex === "NSE" || ex === "BSE") return `${symbol}:${ex}`
@@ -177,6 +200,22 @@ async function fetchFinnhubQuote(
   }
 }
 
+/**
+ * GET /api/stocks/quotes?symbols=RELIANCE,TCS,...
+ * Fetch live stock prices for the given comma-separated symbols.
+ * Uses a multi-source fallback strategy depending on the exchange:
+ * - Indian stocks (NSE/BSE): Google Finance -> Yahoo Finance -> Finnhub -> alternate exchange
+ * - US stocks (NASDAQ/NYSE): Finnhub -> Yahoo Finance -> Google Finance
+ * Each source has a 10-second timeout. All symbols are fetched in parallel.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @query {string} symbols - Comma-separated stock ticker symbols (required)
+ *
+ * @returns {200} `{ success: true, quotes: Record<string, { current, change, changePercent, source }> }`
+ * @returns {400} `{ success: false, message: string }` - Missing symbols parameter
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function GET(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {
@@ -285,6 +324,10 @@ export async function GET(request: NextRequest) {
   })(request)
 }
 
+/**
+ * OPTIONS /api/stocks/quotes
+ * CORS preflight handler. Returns allowed methods and headers.
+ */
 export async function OPTIONS() {
   return handleOptions()
 }

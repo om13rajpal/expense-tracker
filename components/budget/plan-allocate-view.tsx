@@ -1,3 +1,9 @@
+/**
+ * Budget Plan & Allocate view — interactive budget planner with income
+ * input, Needs/Wants/Investments/Savings allocation pie chart, per-category
+ * budget cards with editable limits, and a plan-vs-actual bar chart.
+ * @module components/budget/plan-allocate-view
+ */
 "use client"
 
 import * as React from "react"
@@ -102,8 +108,13 @@ function formatPct(amount: number, total: number): string {
   return `${pct(amount, total).toFixed(1)}%`
 }
 
-// ── Main ──
-
+/**
+ * Top-level Budget Plan & Allocate page for the `/budget` route.
+ * Provides income input, a doughnut chart of the NWIS (Needs/Wants/
+ * Investments/Savings) split, editable per-category budget cards,
+ * a plan-vs-actual bar chart, and AI budget suggestion integration.
+ * Auth-guarded: redirects to `/login` when not authenticated.
+ */
 export function PlanAllocateView() {
   const router = useRouter()
   const { isAuthenticated } = useAuth()

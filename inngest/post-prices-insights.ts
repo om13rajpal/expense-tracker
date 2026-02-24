@@ -10,6 +10,17 @@ import type { AiInsightType } from '@/lib/ai-types';
 
 const POST_PRICES_TYPES: AiInsightType[] = ['investment_insights'];
 
+/**
+ * Inngest function that fans out investment insight generation after price refresh.
+ *
+ * @trigger `finance/prices.updated` event (emitted by the prices cron).
+ * @steps
+ *   1. `discover-investment-users` -- Finds all distinct userIds from stocks and
+ *      mutual_funds collections.
+ *   2. Emits `finance/insights.generate` events for each user requesting
+ *      investment_insights type.
+ * @returns Object with the number of investment users found.
+ */
 export const postPricesInsights = inngest.createFunction(
   { id: 'post-prices-insights', name: 'Generate Investment Insights After Price Refresh' },
   { event: 'finance/prices.updated' },

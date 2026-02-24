@@ -11,10 +11,21 @@ import { NextRequest, NextResponse } from "next/server"
 import { getMongoDb } from "@/lib/mongodb"
 import { corsHeaders, handleOptions, withAuth } from "@/lib/middleware"
 
-// ---------------------------------------------------------------------------
-// GET - List threads or fetch a single thread
-// ---------------------------------------------------------------------------
-
+/**
+ * GET /api/agent/threads
+ * List all conversation threads (summary: id, title, dates, message count) or
+ * fetch a single thread with full messages when `?id=xxx` is provided.
+ * Thread list is sorted by most recently updated.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @query {string} [id] - Thread ID to fetch a specific thread with messages
+ *
+ * @returns {200} `{ success: true, threads: Array<{ threadId, title, createdAt, updatedAt, messageCount }> }`
+ *   or `{ success: true, thread: { threadId, title, messages, createdAt, updatedAt } }`
+ * @returns {404} `{ success: false, message: string }` - Thread not found (single fetch)
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function GET(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {
@@ -78,10 +89,19 @@ export async function GET(request: NextRequest) {
   })(request)
 }
 
-// ---------------------------------------------------------------------------
-// DELETE - Remove a thread by ID
-// ---------------------------------------------------------------------------
-
+/**
+ * DELETE /api/agent/threads?id=xxx
+ * Delete a conversation thread and all its messages.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @query {string} id - Thread ID to delete (required)
+ *
+ * @returns {200} `{ success: true }`
+ * @returns {400} `{ success: false, message: string }` - Missing thread ID
+ * @returns {404} `{ success: false, message: string }` - Thread not found
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function DELETE(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {
@@ -118,10 +138,10 @@ export async function DELETE(request: NextRequest) {
   })(request)
 }
 
-// ---------------------------------------------------------------------------
-// OPTIONS - CORS preflight
-// ---------------------------------------------------------------------------
-
+/**
+ * OPTIONS /api/agent/threads
+ * CORS preflight handler. Returns allowed methods and headers.
+ */
 export async function OPTIONS() {
   return handleOptions()
 }

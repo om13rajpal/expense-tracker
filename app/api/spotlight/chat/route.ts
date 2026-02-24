@@ -1,3 +1,22 @@
+/**
+ * Spotlight Chat API
+ * Provides quick, concise AI-powered answers to financial queries from the
+ * spotlight search bar. Streams responses back using the Vercel AI SDK.
+ *
+ * Uses manual authentication (not `withAuth`) to support the streaming response
+ * type from `streamText`. Authenticates via JWT extracted from the `auth-token`
+ * HTTP-only cookie or Authorization header.
+ *
+ * The AI model receives the user's full financial context and answers
+ * in 2-4 sentences max, using INR and Indian notation.
+ *
+ * Endpoints:
+ *   POST /api/spotlight/chat - Send a quick financial question, receive a streamed answer
+ *
+ * AI Model: Claude Sonnet 4.5 via OpenRouter
+ * Max output: 1024 tokens | Temperature: 0.4
+ */
+
 import { streamText } from "ai"
 import { createOpenAI } from "@ai-sdk/openai"
 import { NextRequest, NextResponse } from "next/server"
@@ -6,6 +25,21 @@ import { verifyToken } from "@/lib/auth"
 import { getMongoDb } from "@/lib/mongodb"
 import { fetchAllFinancialData, buildFinancialContext } from "@/lib/financial-context"
 
+/**
+ * POST /api/spotlight/chat
+ * Stream a concise AI response to a quick financial question.
+ * Uses manual JWT authentication (extracts and verifies token directly).
+ * Fetches the user's complete financial data to provide context-aware answers.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie or Authorization header
+ *
+ * @body {string} prompt - The user's financial question (required, non-empty)
+ *
+ * @returns {200} Streaming text response (text/plain with chunked transfer encoding)
+ * @returns {400} `{ success: false, message: string }` - Missing prompt
+ * @returns {401} `{ success: false, message: string }` - Missing or invalid authentication token
+ * @returns {500} `{ success: false, message: string }` - AI service not configured or server error
+ */
 export async function POST(request: NextRequest) {
   // Manual auth (avoids withAuth's NextResponse type constraint)
   const token = extractToken(request)
@@ -74,6 +108,10 @@ ${context}`
   }
 }
 
+/**
+ * OPTIONS /api/spotlight/chat
+ * CORS preflight handler. Returns allowed methods and headers.
+ */
 export async function OPTIONS() {
   return handleOptions()
 }

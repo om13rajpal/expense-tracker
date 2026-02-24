@@ -17,9 +17,15 @@ import { getMongoDb } from '@/lib/mongodb';
 import { buildReverseCategoryMap, mapToBudgetCategory } from '@/lib/budget-mapping';
 import type { Transaction, TransactionCategory } from '@/lib/types';
 
+/**
+ * Summary of a transaction persistence operation.
+ */
 export interface PersistResult {
+  /** Number of new transactions inserted (first-time sync). */
   upsertedCount: number;
+  /** Number of existing transactions whose fields were updated. */
   modifiedCount: number;
+  /** Total operations performed: `upsertedCount + modifiedCount`. */
   total: number;
 }
 

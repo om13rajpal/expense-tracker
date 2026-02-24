@@ -18,6 +18,17 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 
+/**
+ * Dashboard hero KPI data shape.
+ * @property totalBalance     - Current aggregate account balance.
+ * @property monthlySpend     - Total expenses in the current month.
+ * @property monthlyIncome    - Total income in the current month.
+ * @property avgMonthlySavings - Average savings over the last 6 months.
+ * @property balanceChange    - Percentage change in balance vs previous month.
+ * @property spendChange      - Percentage change in spending vs previous month.
+ * @property incomeChange     - Percentage change in income vs previous month.
+ * @property savingsChange    - Percentage change in savings vs previous month.
+ */
 interface FinanceMetrics {
   totalBalance: number
   monthlySpend: number
@@ -29,7 +40,7 @@ interface FinanceMetrics {
   savingsChange: number
 }
 
-// Helper function to format currency
+/** Formats a number as INR currency with no decimal places. */
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat('en-IN', {
     style: 'currency',
@@ -38,7 +49,7 @@ function formatCurrency(amount: number): string {
   }).format(amount)
 }
 
-// Mock data - replace with real data from API
+/** Demo financial metrics used as a default when no API data is available. */
 const mockMetrics: FinanceMetrics = {
   totalBalance: 125000,
   monthlySpend: 45200,

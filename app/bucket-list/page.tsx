@@ -1,3 +1,21 @@
+/**
+ * Bucket list page — tracks items the user wants to buy or experience.
+ *
+ * This is the main page for the bucket list feature at `/bucket-list`.
+ * It provides a full CRUD interface for dream items with:
+ * - **Summary cards** — aggregate stats (total items, completed, target, progress)
+ * - **Filtering** — by status (wishlist/saving/completed) and category
+ * - **Sorting** — by priority, progress, amount, date, or name
+ * - **Item cards** — rich visual cards with product images, progress bars, and actions
+ * - **Price search** — web-powered price lookup with image retrieval via Perplexity Sonar
+ * - **AI strategy** — per-item savings strategies generated using financial context
+ * - **Add/Edit dialogs** — modal forms for creating and updating items
+ *
+ * Authentication is required; unauthenticated users are redirected to `/login`.
+ * All data operations use React Query hooks for cache management and optimistic updates.
+ *
+ * @module app/bucket-list/page
+ */
 "use client"
 
 import * as React from "react"

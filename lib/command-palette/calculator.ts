@@ -1,3 +1,17 @@
+/**
+ * Financial calculator for the Spotlight command palette.
+ *
+ * Supports three calculation types:
+ * - **EMI**: Equated Monthly Installment for loans using standard amortization formula
+ * - **SIP**: Systematic Investment Plan future value using compound interest
+ * - **Math**: Arithmetic expression evaluation with safety sanitization
+ *
+ * @module lib/command-palette/calculator
+ */
+
+/**
+ * Input data for a calculator operation.
+ */
 export interface CalculatorData {
   type: "emi" | "sip" | "math"
   expression: string
@@ -10,6 +24,7 @@ export interface CalculatorData {
   mathExpression?: string
 }
 
+/** Result of an EMI (Equated Monthly Installment) calculation. */
 export interface EMIResult {
   monthlyEMI: number
   totalAmount: number
@@ -19,6 +34,7 @@ export interface EMIResult {
   tenureYears: number
 }
 
+/** Result of a SIP (Systematic Investment Plan) future value calculation. */
 export interface SIPResult {
   futureValue: number
   totalInvested: number
@@ -28,17 +44,31 @@ export interface SIPResult {
   years: number
 }
 
+/** Result of a simple arithmetic expression evaluation. */
 export interface MathResult {
   result: number
   expression: string
 }
 
+/** Discriminated union of calculator results or an error. */
 export type CalculatorResult =
   | { type: "emi"; data: EMIResult }
   | { type: "sip"; data: SIPResult }
   | { type: "math"; data: MathResult }
   | { type: "error"; message: string }
 
+/**
+ * Calculate the Equated Monthly Installment (EMI) for a loan.
+ *
+ * Uses the standard amortization formula:
+ * `EMI = P * r * (1+r)^n / ((1+r)^n - 1)`
+ * where P = principal, r = monthly rate, n = total months.
+ *
+ * @param principal - Loan principal amount in INR.
+ * @param annualRate - Annual interest rate (e.g. 8.5 for 8.5%).
+ * @param tenureYears - Loan tenure in years.
+ * @returns An `EMIResult` with monthly EMI, total payment, and total interest.
+ */
 export function calculateEMI(principal: number, annualRate: number, tenureYears: number): EMIResult {
   const monthlyRate = annualRate / 12 / 100
   const months = tenureYears * 12
@@ -58,6 +88,18 @@ export function calculateEMI(principal: number, annualRate: number, tenureYears:
   return { monthlyEMI, totalAmount, totalInterest, principal, rate: annualRate, tenureYears }
 }
 
+/**
+ * Calculate the future value of a SIP (Systematic Investment Plan).
+ *
+ * Uses the compound interest annuity formula:
+ * `FV = P * ((1+r)^n - 1) / r * (1+r)`
+ * where P = monthly investment, r = monthly return rate, n = total months.
+ *
+ * @param monthly - Monthly SIP investment amount in INR.
+ * @param annualReturn - Expected annual return rate (e.g. 12 for 12%).
+ * @param years - Investment horizon in years.
+ * @returns A `SIPResult` with future value, total invested, and wealth gained.
+ */
 export function calculateSIP(monthly: number, annualReturn: number, years: number): SIPResult {
   const monthlyRate = annualReturn / 12 / 100
   const months = years * 12
@@ -76,6 +118,16 @@ export function calculateSIP(monthly: number, annualReturn: number, years: numbe
   return { futureValue, totalInvested, wealthGained, monthlyAmount: monthly, expectedReturn: annualReturn, years }
 }
 
+/**
+ * Safely evaluate a simple arithmetic expression.
+ *
+ * Sanitizes input to only allow digits, operators, parentheses, dots, and spaces.
+ * Uses `Function` constructor for evaluation in a sandboxed scope.
+ *
+ * @param expression - The math expression to evaluate (e.g. "5000 + 3000 * 2").
+ * @returns The numeric result.
+ * @throws {Error} If the expression contains invalid characters or produces a non-finite result.
+ */
 function evaluateMath(expression: string): number {
   // Sanitize: only allow digits, operators, parentheses, dots, spaces, commas, percent
   const sanitized = expression.replace(/,/g, "").replace(/%/g, "/100")
@@ -91,6 +143,12 @@ function evaluateMath(expression: string): number {
   return result
 }
 
+/**
+ * Route a calculator request to the appropriate calculation function.
+ *
+ * @param data - Calculator input with type discriminator and parameters.
+ * @returns A `CalculatorResult` with the typed result or an error message.
+ */
 export function calculate(data: CalculatorData): CalculatorResult {
   try {
     switch (data.type) {

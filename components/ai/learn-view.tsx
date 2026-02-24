@@ -1,3 +1,10 @@
+/**
+ * AI Learn view — interactive financial education module.
+ * Covers budgeting, investing, taxes, insurance, and more with
+ * categorised topic cards, markdown lessons, quizzes with XP rewards,
+ * personalised recommendations, and progress tracking.
+ * @module components/ai/learn-view
+ */
 "use client"
 
 import * as React from "react"
@@ -56,8 +63,7 @@ import {
 } from "@/lib/learn-content"
 import type { LearnProgress, QuizQuestion } from "@/lib/learn-types"
 
-/* --- Icon map --- */
-
+/** Maps Tabler icon string names to their component references for dynamic resolution. */
 const ICON_MAP: Record<string, React.ElementType> = {
   IconSchool,
   IconBulb,
@@ -77,14 +83,18 @@ const ICON_MAP: Record<string, React.ElementType> = {
   IconScale,
 }
 
+/**
+ * Resolves a Tabler icon component by its string name.
+ * Falls back to {@link IconBulb} for unknown names.
+ */
 function getIcon(name: string): React.ElementType {
   return ICON_MAP[name] || IconBulb
 }
 
-/* --- Difficulty helpers --- */
-
+/** Topic difficulty level. */
 type Difficulty = "beginner" | "intermediate" | "advanced"
 
+/** Returns Tailwind badge classes (bg, text, border) for a difficulty level. */
 function difficultyColor(d: Difficulty) {
   switch (d) {
     case "beginner":
@@ -96,6 +106,7 @@ function difficultyColor(d: Difficulty) {
   }
 }
 
+/** Returns Tailwind icon container classes for a difficulty level. */
 function difficultyIconBg(d: Difficulty) {
   switch (d) {
     case "beginner":
@@ -107,6 +118,7 @@ function difficultyIconBg(d: Difficulty) {
   }
 }
 
+/** Returns Tailwind gradient classes for a difficulty level. */
 function difficultyGradient(d: Difficulty) {
   switch (d) {
     case "beginner":
@@ -118,12 +130,12 @@ function difficultyGradient(d: Difficulty) {
   }
 }
 
+/** Capitalises the first letter of a difficulty string. */
 function difficultyLabel(d: Difficulty) {
   return d.charAt(0).toUpperCase() + d.slice(1)
 }
 
-/* --- Daily financial tips --- */
-
+/** Rotating pool of daily financial tips displayed in the Learn hero area (India-focused). */
 const DAILY_TIPS = [
   "Pay yourself first. Set up auto-debit for SIPs on the day you receive your salary.",
   "The 50/30/20 rule is a great starting point: 50% needs, 30% wants, 20% savings.",
@@ -147,6 +159,7 @@ const DAILY_TIPS = [
   "Financial independence is not about being rich. It is about having enough so work becomes a choice, not a necessity.",
 ]
 
+/** Selects a deterministic daily tip based on the day-of-year index. */
 function getDailyTip(): string {
   const now = new Date()
   const dayOfYear = Math.floor(
@@ -155,10 +168,10 @@ function getDailyTip(): string {
   return DAILY_TIPS[dayOfYear % DAILY_TIPS.length]
 }
 
-/* --- Status helpers --- */
-
+/** User's progress status for a single learning topic. */
 type ProgressStatus = "unread" | "read" | "quizzed" | "mastered"
 
+/** Returns label, CSS classes, and icon for a topic progress status badge. */
 function statusBadge(status: ProgressStatus) {
   switch (status) {
     case "mastered":
@@ -172,8 +185,11 @@ function statusBadge(status: ProgressStatus) {
   }
 }
 
-/* --- Progress motivational copy --- */
-
+/**
+ * Returns an encouraging message and icon based on overall learning progress.
+ * @param percent   - Completion percentage across all topics (0-100).
+ * @param readCount - Total number of topics read.
+ */
 function getMotivationalCopy(percent: number, readCount: number): { text: string; icon: React.ElementType } {
   if (readCount === 0) return { text: "Begin your journey to financial mastery", icon: IconRocket }
   if (percent === 100) return { text: "You have mastered every topic. Brilliant.", icon: IconTrophy }
@@ -183,8 +199,7 @@ function getMotivationalCopy(percent: number, readCount: number): { text: string
   return { text: "You are off to a strong start. Keep going!", icon: IconFlame }
 }
 
-/* --- Hooks --- */
-
+/** Fetches the user's per-topic learning progress from the API. */
 function useLearnProgress() {
   return useQuery<LearnProgress[]>({
     queryKey: ["learn-progress"],
@@ -198,12 +213,19 @@ function useLearnProgress() {
   })
 }
 
+/**
+ * Response shape for the investment portfolio check.
+ * @property hasStocks      - Whether the user holds any stocks.
+ * @property hasMutualFunds - Whether the user holds any mutual funds.
+ * @property hasSips        - Whether the user has active SIPs.
+ */
 interface InvestmentCheckResponse {
   hasStocks: boolean
   hasMutualFunds: boolean
   hasSips: boolean
 }
 
+/** Checks whether the user has stocks, mutual funds, or SIPs to personalise topic recommendations. */
 function useInvestmentCheck() {
   return useQuery<InvestmentCheckResponse>({
     queryKey: ["learn-investment-check"],
@@ -223,6 +245,11 @@ function useInvestmentCheck() {
   })
 }
 
+/**
+ * Subset of the financial health API response used by the recommendation engine.
+ * @property success - Whether the API call succeeded.
+ * @property metrics - Optional metrics including emergency fund months and overall score.
+ */
 interface FinancialHealthData {
   success: boolean
   metrics?: {
@@ -231,6 +258,7 @@ interface FinancialHealthData {
   }
 }
 
+/** Fetches the user's financial health metrics for the Learn recommendation engine. */
 function useFinancialHealthForLearn() {
   return useQuery<FinancialHealthData>({
     queryKey: ["financial-health"],
@@ -243,7 +271,11 @@ function useFinancialHealthForLearn() {
   })
 }
 
-/* --- Recommendation engine --- */
+/**
+ * Recommendation engine — builds a prioritised list of unread topics
+ * based on the user's financial health, investment holdings, and
+ * learning progress. Topics are scored and sorted by relevance.
+ */
 
 interface Recommendation {
   topicId: string
@@ -335,8 +367,11 @@ function buildRecommendations(
     }))
 }
 
-/* --- Quiz component --- */
-
+/**
+ * Interactive quiz section shown at the bottom of a topic detail view.
+ * Presents multiple-choice questions, grades them on submission,
+ * records XP and progress to the API, and displays a results summary.
+ */
 function QuizSection({
   topicId,
   questions,
@@ -567,8 +602,11 @@ function QuizSection({
   )
 }
 
-/* --- Topic detail view --- */
-
+/**
+ * Full topic detail view displaying the lesson content as rendered
+ * Markdown, the quiz section (if available), and the user's progress
+ * status. Records the topic as "read" on first mount.
+ */
 function TopicDetailView({
   topicId,
   progress,
@@ -779,8 +817,11 @@ function TopicDetailView({
   )
 }
 
-/* --- Topic card for grid view --- */
-
+/**
+ * Grid-view topic card displaying the topic icon, title, difficulty
+ * badge, progress status, and an estimated reading time. Click to
+ * open the topic detail view.
+ */
 function TopicGridCard({
   topicId,
   progress,
@@ -871,8 +912,11 @@ function TopicGridCard({
   )
 }
 
-/* --- Recommended section --- */
-
+/**
+ * "Recommended For You" horizontal card section showing AI-personalised
+ * topic suggestions based on the user's financial profile. Each card
+ * shows the reason for the recommendation and links to the topic detail.
+ */
 function RecommendedSection({
   recommendations,
   isLoading,
@@ -988,8 +1032,10 @@ function RecommendedSection({
   )
 }
 
-/* --- Section block for grid view --- */
-
+/**
+ * Collapsible section block in the topic grid showing a section
+ * header with progress count and a grid of TopicGridCard children.
+ */
 function SectionGridBlock({
   section,
   progressMap,
@@ -1092,7 +1138,12 @@ function SectionGridBlock({
   )
 }
 
-/* --- LearnView --- */
+/**
+ * Top-level Learn page exported for the `/ai` route's "Learn" tab.
+ * Renders a hero progress bar, daily tip, personalised recommendations,
+ * searchable/filterable topic grid grouped by section, and an inline
+ * topic detail / quiz view. Auth-guarded.
+ */
 
 export function LearnView() {
   const { isAuthenticated, isLoading } = useAuth()
@@ -1425,25 +1476,6 @@ export function LearnView() {
                   </motion.div>
                 )
               })()}
-
-              {/* Discover link */}
-              {!searchQuery && difficultyFilter === "all" && (
-                <motion.div variants={fadeUp}>
-                  <a
-                    href="/discover"
-                    className="flex items-center gap-3 rounded-xl border border-border/60 bg-gradient-to-r from-purple-500/5 via-pink-500/5 to-orange-500/5 p-4 transition-all hover:shadow-md hover:border-primary/20 group"
-                  >
-                    <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-purple-500/15 to-pink-500/15">
-                      <IconStar className="h-5 w-5 text-purple-500" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-foreground">Discover</p>
-                      <p className="text-xs text-muted-foreground">Fun facts and insights from your finances</p>
-                    </div>
-                    <span className="text-xs text-primary font-medium opacity-60 group-hover:opacity-100 transition-opacity">View &rarr;</span>
-                  </a>
-                </motion.div>
-              )}
 
               {/* Search + filter */}
               <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-3">

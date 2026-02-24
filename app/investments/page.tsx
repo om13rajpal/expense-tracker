@@ -1,3 +1,13 @@
+/**
+ * @module app/investments/page
+ * @description Investment portfolio management page for Finova. Provides a comprehensive
+ * view of stock and mutual fund holdings with real-time prices, XIRR/CAGR performance
+ * calculations, asset allocation pie charts, portfolio value area charts, and SIP tracking.
+ * Supports adding/editing/deleting stocks and mutual funds, Groww CSV import for mutual
+ * fund transactions, manual SIP entry, and portfolio-level analytics. Data is fetched from
+ * `/api/investments` endpoints and prices are refreshed via the inngest price cron job.
+ * Includes Recharts visualizations for allocation breakdown and historical performance.
+ */
 "use client"
 
 import * as React from "react"
@@ -182,6 +192,14 @@ function CustomBarTooltip({ active, payload, label }: { active?: boolean; payloa
   )
 }
 
+/**
+ * Investments page component. Renders a tabbed interface with Overview (portfolio summary,
+ * allocation charts), Stocks (holdings table with live prices, add/edit/delete),
+ * Mutual Funds (fund holdings, NAV tracking, Groww import), and SIPs (SIP tracker,
+ * add/edit). Features XIRR and CAGR performance metrics, day-change indicators, and
+ * responsive Recharts visualizations. Requires authentication.
+ * @returns The investments page wrapped in the app sidebar layout.
+ */
 export default function InvestmentsPage() {
   const router = useRouter()
   const { isAuthenticated, isLoading: authLoading } = useAuth()

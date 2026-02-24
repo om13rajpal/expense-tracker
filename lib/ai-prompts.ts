@@ -1,5 +1,20 @@
+/**
+ * LLM system prompts and user message builder for the AI insight pipeline.
+ *
+ * Contains one system prompt per insight type (spending analysis, monthly
+ * budget, weekly budget, investment insights, tax optimization, planner
+ * recommendation). Each prompt specifies the strict JSON response schema
+ * the LLM must follow, including field types and business rules.
+ *
+ * Also provides `getSystemPrompt()` and `buildUserMessage()` helpers
+ * consumed by `ai-pipeline.ts` to assemble the final chat completion call.
+ *
+ * @module lib/ai-prompts
+ */
+
 import type { AiInsightType, PipelineContext } from './ai-types';
 
+/** System prompt for spending analysis: health score, top categories, action items, alerts. */
 export const SPENDING_ANALYSIS_PROMPT = `You are a personal finance advisor for an Indian user. Analyze their financial data and provide actionable insights.
 
 RESPONSE FORMAT (strict):
@@ -53,6 +68,7 @@ RULES:
 - Use Indian finance context (mention Rs. in text strings, use Indian comma separators in descriptions).
 - Keep insights specific with exact rupee amounts, not generic advice.`;
 
+/** System prompt for monthly budget: 50/30/20 allocation, category budgets, savings opportunities. */
 export const MONTHLY_BUDGET_PROMPT = `You are a personal finance advisor for an Indian user. Create a detailed monthly budget recommendation.
 
 RESPONSE FORMAT (strict):
@@ -128,6 +144,7 @@ RULES:
 - positiveNote: Must be genuinely positive and specific to their data.
 - Use Indian finance context with Rs. prefix in text strings and Indian comma separators.`;
 
+/** System prompt for weekly budget: weekly target, daily limit, category status, quick wins. */
 export const WEEKLY_BUDGET_PROMPT = `You are a personal finance advisor for an Indian user. Create a weekly spending plan based on monthly budget and current progress.
 
 RESPONSE FORMAT (strict):
@@ -176,6 +193,7 @@ RULES:
 - weeklyRule: One memorable, specific rule with an INR amount.
 - Use Indian finance context with Rs. prefix in text strings and Indian comma separators.`;
 
+/** System prompt for investment insights: portfolio analysis, stock/MF review, diversification. */
 export const INVESTMENT_INSIGHTS_PROMPT = `You are an Indian investment advisor. Analyze the user's investment portfolio and provide insights.
 
 RESPONSE FORMAT (strict):
@@ -239,6 +257,7 @@ RULES:
 - goalAlignment: Reference the user's specific goals if available, otherwise provide general guidance.
 - Use Indian finance context with Rs. prefix in text strings and Indian comma separators.`;
 
+/** System prompt for tax optimization: regime comparison, deduction utilization, savings tips. */
 export const TAX_OPTIMIZATION_PROMPT = `You are an Indian tax advisor specializing in income tax planning for FY 2025-26 (AY 2026-27). Analyze the user's financial data and recommend tax-saving strategies under both Old and New regimes.
 
 RESPONSE FORMAT (strict):
@@ -289,6 +308,7 @@ RULES:
 - totalSavingPotential: Sum of all tip savingAmounts plus regime savings.
 - Keep insights specific and actionable with exact rupee amounts.`;
 
+/** System prompt for planner recommendation: plan health, allocation review, goal feasibility. */
 export const PLANNER_RECOMMENDATION_PROMPT = `You are a personal finance planner for an Indian user. Analyze their financial plan (monthly allocations for needs, wants, savings, investments) against their actual spending data, goals, and portfolio. Provide a plan health assessment with actionable recommendations.
 
 RESPONSE FORMAT (strict):
@@ -345,6 +365,7 @@ RULES:
 - All amounts must be numbers (not strings). Use INR values.
 - Keep insights specific and actionable with exact rupee amounts.`;
 
+/** Lookup table mapping each insight type to its LLM system prompt. */
 const PROMPT_MAP: Record<AiInsightType, string> = {
   spending_analysis: SPENDING_ANALYSIS_PROMPT,
   monthly_budget: MONTHLY_BUDGET_PROMPT,
@@ -354,12 +375,27 @@ const PROMPT_MAP: Record<AiInsightType, string> = {
   planner_recommendation: PLANNER_RECOMMENDATION_PROMPT,
 };
 
-/** Get the LLM system prompt for a given AI insight type. */
+/**
+ * Get the LLM system prompt for a given AI insight type.
+ *
+ * @param type - The insight type (e.g. "spending_analysis", "tax_optimization").
+ * @returns The system prompt string with strict JSON schema instructions.
+ */
 export function getSystemPrompt(type: AiInsightType): string {
   return PROMPT_MAP[type];
 }
 
-/** Assemble the user message for the LLM from pipeline context data. */
+/**
+ * Assemble the user message for the LLM from pipeline context data.
+ *
+ * Concatenates all available context sections (financial, investment,
+ * NWI, health, goals, market, tax, planner) and appends a type-specific
+ * analysis request at the end.
+ *
+ * @param type - The insight type being generated.
+ * @param ctx - The collected pipeline context for the user.
+ * @returns A formatted user message string to send to the LLM.
+ */
 export function buildUserMessage(type: AiInsightType, ctx: PipelineContext): string {
   const parts: string[] = ['Here is my financial data:\n'];
 

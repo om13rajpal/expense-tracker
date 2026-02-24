@@ -17,6 +17,14 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
+/**
+ * Props for the SyncButton component.
+ * @property onSync    - Async callback performing the actual sync. Defaults to a 2s mock delay.
+ * @property variant   - Button style variant (default "outline").
+ * @property size      - Button size variant (default "default").
+ * @property showLabel - Whether to display the "Sync with Sheets" label (default true).
+ * @property className - Additional CSS classes for the button.
+ */
 interface SyncButtonProps {
   onSync?: () => Promise<void>
   variant?: "default" | "outline" | "ghost"

@@ -1,6 +1,12 @@
 /**
- * Savings Goals utility functions
- * Calculates progress, projections, and required contributions for savings goals.
+ * Savings Goals utility functions.
+ *
+ * Provides pure-computation helpers for savings goal progress tracking:
+ * - Required monthly contribution to meet a target date
+ * - Projected completion date at a given savings rate
+ * - Full progress metrics including on-track analysis
+ *
+ * @module lib/savings-goals
  */
 
 import type { SavingsGoalConfig, SavingsGoalProgress } from './types';
@@ -20,7 +26,12 @@ function monthsBetweenNowAndDate(targetDate: string): number {
 
 /**
  * Calculate the required monthly contribution to reach a savings goal by its target date.
- * If the target date has passed (or is this month), returns the full remaining amount.
+ *
+ * If the goal is already complete, returns 0. If the target date has passed
+ * (or is this month), returns the full remaining amount as a lump sum.
+ *
+ * @param goal - Savings goal configuration with target amount, current amount, and target date.
+ * @returns Required monthly contribution in INR.
  */
 export function calculateRequiredMonthly(goal: SavingsGoalConfig): number {
   const remaining = goal.targetAmount - goal.currentAmount;
@@ -34,8 +45,11 @@ export function calculateRequiredMonthly(goal: SavingsGoalConfig): number {
 
 /**
  * Project when a savings goal will be completed given a monthly savings rate.
- * Returns an ISO date string for the projected completion, or null if already
- * complete or if the savings rate is non-positive (will never complete).
+ *
+ * @param goal - Savings goal configuration.
+ * @param monthlySavings - Monthly savings rate being applied toward this goal.
+ * @returns ISO date string for the projected completion, or `null` if already
+ *          complete or if the savings rate is non-positive (will never complete).
  */
 export function projectGoalCompletion(
   goal: SavingsGoalConfig,
@@ -54,8 +68,16 @@ export function projectGoalCompletion(
 
 /**
  * Calculate full progress metrics for a savings goal.
- * Optionally accepts an external monthlySavings figure (e.g. derived from
- * actual transaction data) to refine the on-track calculation.
+ *
+ * Computes percentage complete, required monthly contribution, on-track
+ * status, and projected completion date. Optionally accepts an external
+ * `monthlySavings` figure (e.g. derived from actual transaction data)
+ * to refine the on-track calculation alongside the goal's own
+ * `monthlyContribution` field.
+ *
+ * @param goal - Savings goal configuration.
+ * @param monthlySavings - Optional external monthly savings figure for on-track refinement.
+ * @returns Full SavingsGoalProgress with all computed metrics.
  */
 export function calculateGoalProgress(
   goal: SavingsGoalConfig,

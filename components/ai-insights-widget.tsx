@@ -29,8 +29,16 @@ import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { formatINR, formatCompact } from "@/lib/format"
 
-/* ─── Types matching SpendingAnalysisData from ai-types.ts ─── */
-
+/**
+ * Structured data shape parsed from the spending_analysis AI response.
+ * Mirrors the SpendingAnalysisData type in ai-types.ts.
+ * @property healthScore    - 0-100 composite financial health score.
+ * @property summary        - Monthly income/expense/savings breakdown with verdict.
+ * @property topCategories  - Top spending categories with amounts, trends, and suggestions.
+ * @property actionItems    - Prioritised money-saving recommendations with impact levels.
+ * @property alerts         - Warnings and positive highlights from the AI.
+ * @property keyInsight     - One-sentence headline insight.
+ */
 interface SpendingAnalysisData {
   healthScore: number
   summary: {
@@ -88,6 +96,10 @@ const ACTION_LINK_MAP: Record<string, string> = {
   deduction: "/tax",
 }
 
+/**
+ * Resolves a deep-link URL for an action item based on keyword matching
+ * against the category and title. Falls back to "/ai-insights".
+ */
 function getActionLink(category: string, title: string): string {
   const combined = `${category} ${title}`.toLowerCase()
   for (const [keyword, link] of Object.entries(ACTION_LINK_MAP)) {
@@ -96,8 +108,10 @@ function getActionLink(category: string, title: string): string {
   return "/ai-insights"
 }
 
-/* ─── Health Score Badge ─── */
-
+/**
+ * Compact pill badge showing the financial health score (0-100) with
+ * a colour-coded label (Healthy / Needs Work / At Risk).
+ */
 function HealthScoreBadge({ score }: { score: number }) {
   const color =
     score >= 70
@@ -121,20 +135,21 @@ function HealthScoreBadge({ score }: { score: number }) {
   )
 }
 
-/* ─── Compact Category Chip ─── */
-
+/** Maps spending trend direction to its Tabler icon component. */
 const TREND_ICONS = {
   up: IconTrendingUp,
   down: IconTrendingDown,
   stable: IconMinus,
 } as const
 
+/** Maps spending trend direction to its Tailwind text colour class. */
 const TREND_COLORS = {
   up: "text-rose-500",
   down: "text-emerald-500",
   stable: "text-muted-foreground",
 } as const
 
+/** Compact chip showing a spending category's name, amount, percentage, and trend arrow. */
 function CategoryChip({
   name,
   amount,
@@ -163,16 +178,14 @@ function CategoryChip({
   )
 }
 
-/* ─── Impact badge color ─── */
-
+/** Maps action item impact levels (high/medium/low) to Tailwind badge colour classes. */
 const IMPACT_STYLES = {
   high: "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/15",
   medium: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/15",
   low: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/15",
 } as const
 
-/* ─── Alert badge config ─── */
-
+/** Maps alert types (warning/critical/positive) to background, icon, and icon-colour classes. */
 const ALERT_STYLES = {
   warning: {
     bg: "bg-amber-500/5 border-amber-500/15",
@@ -191,8 +204,10 @@ const ALERT_STYLES = {
   },
 } as const
 
-/* ─── Action Item Card ─── */
-
+/**
+ * Clickable card for a single AI action item that links to the relevant page.
+ * Shows impact badge, description, and potential saving amount.
+ */
 function ActionItemCard({
   title,
   description,
@@ -237,8 +252,12 @@ function ActionItemCard({
   )
 }
 
-/* ─── Structured Spending Insights View ─── */
-
+/**
+ * Renders the structured AI spending analysis: health score, summary stats,
+ * top categories, alerts, and action-item recommendations.
+ * @param data    - Parsed SpendingAnalysisData from the AI response.
+ * @param compact - When true, limits categories, actions, and alerts for dashboard use.
+ */
 function StructuredInsightsView({
   data,
   compact,
@@ -391,8 +410,10 @@ function StructuredInsightsView({
   )
 }
 
-/* ─── Main Widget ─── */
-
+/**
+ * Props for the AiInsightsWidget.
+ * @property compact - When true, truncates the view for dashboard embedding.
+ */
 interface AiInsightsWidgetProps {
   compact?: boolean
 }

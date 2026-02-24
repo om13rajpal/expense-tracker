@@ -1,3 +1,12 @@
+/**
+ * @module app/learn/page
+ * @description Financial Literacy learning hub for Finova. Presents a structured
+ * curriculum of personal finance topics organized into sections (Basics, Intermediate,
+ * Advanced). Each topic includes rich content, interactive quizzes, and progress
+ * tracking persisted via the `/api/learn` endpoints. Features include topic search,
+ * section filtering, bookmarking, streak tracking, and AI-generated content rendered
+ * with ReactMarkdown. Progress and quiz scores are loaded via React Query.
+ */
 "use client"
 
 import * as React from "react"
@@ -947,6 +956,13 @@ function SectionGridBlock({
 
 /* ─── Main page ─── */
 
+/**
+ * Learn page component. Renders the full financial literacy learning experience
+ * including a topic grid, section filters, search, detailed topic views with
+ * markdown content, interactive quizzes with scoring, and user progress tracking.
+ * Requires authentication -- redirects to `/login` if unauthenticated.
+ * @returns The learn page wrapped in the app sidebar layout.
+ */
 export default function LearnPage() {
   const { isAuthenticated, isLoading } = useAuth()
   const router = useRouter()

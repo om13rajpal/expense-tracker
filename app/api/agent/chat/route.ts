@@ -26,11 +26,22 @@ import { checkRateLimit } from '@/lib/rate-limit'
 // Constants
 // ---------------------------------------------------------------------------
 
+/** @constant OpenRouter API endpoint for chat completions. */
 const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
+/** @constant AI model identifier used for chat responses (Claude Sonnet 4.5). */
 const MODEL = 'anthropic/claude-sonnet-4.5'
+/** @constant Maximum tokens for AI response generation. */
 const MAX_TOKENS = 4096
+/** @constant Temperature for AI response (0.4 = focused but not deterministic). */
 const TEMPERATURE = 0.4
 
+/**
+ * Build the system prompt for the AI financial advisor.
+ * Includes guidelines for using INR, referencing actual data,
+ * and responding in markdown format. Injects today's date.
+ *
+ * @returns The system prompt string
+ */
 function buildSystemPrompt(): string {
   return `You are a personal financial advisor AI assistant for the user's Finova app. You have complete access to their financial data including transactions, investments, budgets, and goals.
 

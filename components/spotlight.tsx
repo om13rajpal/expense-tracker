@@ -1,3 +1,10 @@
+/**
+ * Global command palette / spotlight search dialog (Cmd+K / Ctrl+K).
+ * Provides page navigation, inline calculator, quick expense adding,
+ * recent command history, and streamed AI answers — all from a single
+ * search input.
+ * @module components/spotlight
+ */
 "use client"
 
 import * as React from "react"
@@ -22,6 +29,12 @@ import { clearRecentCommands } from "@/lib/command-palette/recent-commands"
 import { pages } from "@/lib/spotlight/data/pages"
 import type { SpotlightResult } from "@/lib/spotlight/types"
 
+/**
+ * Renders the Spotlight search dialog opened via Cmd+K / Ctrl+K.
+ * Features fuzzy page search, inline math evaluation, quick expense
+ * adding ("add [amount] [desc]"), recent command history with clear,
+ * and a streamed AI inline answer panel.
+ */
 export function Spotlight() {
   const router = useRouter()
   const inputRef = React.useRef<HTMLInputElement>(null)

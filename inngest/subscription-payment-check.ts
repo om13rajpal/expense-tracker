@@ -9,6 +9,12 @@ import { inngest } from "@/lib/inngest"
 import { getMongoDb } from "@/lib/mongodb"
 import { fuzzyMatch } from "@/lib/categorizer"
 
+/**
+ * Computes the next expected payment date based on the last payment and frequency.
+ * @param from - ISO date string of the last payment.
+ * @param frequency - Payment frequency: "weekly", "monthly", or "yearly".
+ * @returns ISO date string (YYYY-MM-DD) of the next expected payment.
+ */
 function computeNextExpected(from: string, frequency: string): string {
   const d = new Date(from)
   if (isNaN(d.getTime())) return from
@@ -26,6 +32,19 @@ function computeNextExpected(from: string, frequency: string): string {
   return d.toISOString().split("T")[0]
 }
 
+/**
+ * Inngest function that auto-detects subscription payments from synced transactions.
+ *
+ * @trigger `finance/sync.completed` event with `{ userIds }` payload.
+ * @workflow For each synced user:
+ *   1. Loads all active subscriptions and recent transactions (past 60 days).
+ *   2. For each subscription, searches for matching transactions using fuzzy merchant
+ *      matching within a +/-5 day window around the expected date, or within the last 10 days.
+ *   3. Validates amount tolerance (within 20% of expected).
+ *   4. On match: updates lastCharged, computes nextExpected, and appends to paymentHistory.
+ *   5. Deduplicates via transactionId in paymentHistory (idempotent).
+ * @returns Object with checked and matched subscription counts.
+ */
 export const subscriptionPaymentCheck = inngest.createFunction(
   {
     id: "subscription-payment-check",

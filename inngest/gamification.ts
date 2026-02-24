@@ -8,9 +8,15 @@ import { getMongoDb } from '@/lib/mongodb';
 import { checkBadgeUnlocks, updateChallengeProgress, CHALLENGES } from '@/lib/gamification';
 
 /**
- * Daily streak check at 6 PM UTC.
- * Breaks streaks for users who haven't logged a transaction today,
- * consuming a freeze token if available.
+ * Inngest cron function for daily transaction logging streak checks.
+ *
+ * @trigger Cron schedule: `0 18 * * *` (daily at 6:00 PM UTC).
+ * @steps
+ *   1. `check-streaks` -- Finds all users whose last log date is not today and have
+ *      an active streak. For users who missed 2+ days:
+ *      - If freeze tokens are available, consumes one to preserve the streak.
+ *      - Otherwise, resets the streak to 0.
+ * @returns Object with checked, broken, and frozen counts.
  */
 export const dailyStreakCheck = inngest.createFunction(
   { id: 'daily-streak-check', name: 'Daily Streak Check' },
@@ -63,8 +69,14 @@ export const dailyStreakCheck = inngest.createFunction(
 );
 
 /**
- * Daily badge check at 7 PM UTC.
- * Evaluates badge unlock conditions for all users and creates notifications.
+ * Inngest cron function for daily badge unlock evaluation.
+ *
+ * @trigger Cron schedule: `30 19 * * *` (daily at 7:30 PM UTC).
+ * @steps
+ *   1. `check-badges` -- Iterates all users, evaluates badge unlock conditions
+ *      via `checkBadgeUnlocks`, creates success notifications for newly earned badges,
+ *      and updates monthly challenge progress via `updateChallengeProgress`.
+ * @returns Object with usersChecked and badgesUnlocked counts.
  */
 export const dailyBadgeCheck = inngest.createFunction(
   { id: 'daily-badge-check', name: 'Daily Badge Check' },
@@ -104,8 +116,13 @@ export const dailyBadgeCheck = inngest.createFunction(
 );
 
 /**
- * Weekly freeze token grant every Monday at midnight UTC.
- * Grants 1 streak freeze token per user (max 2).
+ * Inngest cron function for weekly streak freeze token grants.
+ *
+ * @trigger Cron schedule: `0 0 * * 1` (every Monday at midnight UTC).
+ * @steps
+ *   1. `grant-freeze-tokens` -- Grants 1 freeze token to all users who have fewer
+ *      than the maximum of 2 tokens. Uses a bulk MongoDB updateMany operation.
+ * @returns Object with the number of tokens granted.
  */
 export const weeklyFreezeGrant = inngest.createFunction(
   { id: 'weekly-freeze-grant', name: 'Weekly Freeze Token Grant' },
@@ -124,8 +141,14 @@ export const weeklyFreezeGrant = inngest.createFunction(
 );
 
 /**
- * Monthly challenge rotation on the 1st at 11 PM UTC.
- * Closes expired challenges and makes new ones available.
+ * Inngest cron function for monthly challenge rotation.
+ *
+ * @trigger Cron schedule: `0 23 1 * *` (1st of each month at 11:00 PM UTC).
+ * @steps
+ *   1. `rotate-challenges` -- Closes the previous month's active challenges as expired,
+ *      then creates a new `available_challenges` document for the current month with
+ *      the full challenge catalogue from the CHALLENGES config.
+ * @returns Object with closedChallenges count and the new month key.
  */
 export const monthlyChallengeRotation = inngest.createFunction(
   { id: 'monthly-challenge-rotation', name: 'Monthly Challenge Rotation' },

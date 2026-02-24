@@ -10,6 +10,12 @@ import { MonthIdentifier } from "@/lib/monthly-utils"
 import { IconChevronLeft, IconChevronRight } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 
+/**
+ * Props for the MonthSelector component.
+ * @property availableMonths - Ordered list of selectable months.
+ * @property selectedMonth   - Currently active month.
+ * @property onMonthChange   - Callback fired when the user picks a different month.
+ */
 interface MonthSelectorProps {
   availableMonths: MonthIdentifier[]
   selectedMonth: MonthIdentifier

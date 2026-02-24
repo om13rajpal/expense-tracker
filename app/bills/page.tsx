@@ -1,3 +1,11 @@
+/**
+ * @module app/bills/page
+ * @description Bills hub page for Finova. Consolidates three billing-related features
+ * into a single tabbed interface: Subscriptions (recurring payment tracker), Splits
+ * (expense splitting and group settlements), and Tax (Indian tax planner). The active
+ * tab is driven by the `?tab=` URL parameter, defaulting to "subscriptions". Each tab
+ * renders a dedicated view component (`SubscriptionsView`, `SplitsView`, `TaxView`).
+ */
 "use client"
 
 import * as React from "react"
@@ -24,6 +32,12 @@ import { TaxView } from "@/components/bills/tax-view"
 const VALID_TABS = ["subscriptions", "splits", "tax"] as const
 type TabValue = (typeof VALID_TABS)[number]
 
+/**
+ * Bills page component. Renders a three-tab layout (Subscriptions, Splits, Tax)
+ * with URL-synced tab state. Delegates to `SubscriptionsView`, `SplitsView`, and
+ * `TaxView` respectively. Auth-guarded -- redirects to login if unauthenticated.
+ * @returns The bills page wrapped in the app sidebar layout.
+ */
 export default function BillsPage() {
   const router = useRouter()
   const searchParams = useSearchParams()

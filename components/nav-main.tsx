@@ -15,7 +15,12 @@ import {
   SidebarGroupContent,
 } from "@/components/ui/sidebar"
 
-/** Shape of a flat navigation item. */
+/**
+ * Shape of a flat navigation item.
+ * @property title - Display label shown in the sidebar.
+ * @property url   - Route path the link navigates to.
+ * @property icon  - Tabler icon component rendered beside the title.
+ */
 export interface NavItem {
   title: string
   url: string

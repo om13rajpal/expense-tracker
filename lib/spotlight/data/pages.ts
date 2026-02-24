@@ -1,3 +1,12 @@
+/**
+ * Page navigation entries and quick actions for the Spotlight overlay.
+ *
+ * Defines the searchable pages and actions with their icons, URLs, and
+ * keyword associations for fuzzy matching in the navigation provider.
+ *
+ * @module lib/spotlight/data/pages
+ */
+
 import {
   IconDashboard,
   IconReceipt2,
@@ -15,6 +24,7 @@ import {
 } from "@tabler/icons-react"
 import type { ComponentType } from "react"
 
+/** A navigable page or action entry in the Spotlight search index. */
 export interface PageEntry {
   label: string
   url: string
@@ -22,6 +32,7 @@ export interface PageEntry {
   keywords: string[]
 }
 
+/** All navigable pages in the Finova application with search keywords. */
 export const pages: PageEntry[] = [
   { label: "Dashboard", url: "/dashboard", icon: IconDashboard, keywords: ["home", "overview", "summary"] },
   { label: "Money", url: "/money", icon: IconReceipt2, keywords: ["transactions", "payments", "expenses", "income", "history", "analytics", "charts", "graphs", "reports", "statistics"] },
@@ -34,6 +45,7 @@ export const pages: PageEntry[] = [
   { label: "Settings", url: "/settings", icon: IconSettings, keywords: ["preferences", "telegram", "config", "hourly rate"] },
 ]
 
+/** Quick actions accessible from the Spotlight overlay. */
 export const actions: PageEntry[] = [
   { label: "Add transaction", url: "/money?tab=transactions&action=add", icon: IconPlus, keywords: ["new", "create", "expense", "income"] },
   { label: "Set budget", url: "/budget?action=add", icon: IconCoinRupee, keywords: ["new", "create", "limit", "category"] },

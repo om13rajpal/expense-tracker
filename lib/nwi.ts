@@ -1,3 +1,14 @@
+/**
+ * Needs / Wants / Investments / Savings (NWI) split calculator.
+ *
+ * Classifies every expense or investment transaction into one of four
+ * budgeting buckets based on the user's NWI configuration. Then builds
+ * per-bucket metrics (target vs. actual amounts, category breakdown)
+ * and returns a complete NWISplit for dashboard consumption.
+ *
+ * @module lib/nwi
+ */
+
 import {
   TransactionCategory,
   TransactionType,
@@ -10,6 +21,7 @@ import {
 } from './types';
 import { isCompletedStatus, sum, calculatePercentage } from './utils';
 
+/** Essential spending categories assigned to the "Needs" bucket by default. */
 const DEFAULT_NEEDS_CATEGORIES: TransactionCategory[] = [
   TransactionCategory.RENT,
   TransactionCategory.UTILITIES,
@@ -21,6 +33,7 @@ const DEFAULT_NEEDS_CATEGORIES: TransactionCategory[] = [
   TransactionCategory.EDUCATION,
 ];
 
+/** Discretionary spending categories assigned to the "Wants" bucket by default. */
 const DEFAULT_WANTS_CATEGORIES: TransactionCategory[] = [
   TransactionCategory.DINING,
   TransactionCategory.ENTERTAINMENT,
@@ -32,16 +45,24 @@ const DEFAULT_WANTS_CATEGORIES: TransactionCategory[] = [
   TransactionCategory.GIFTS,
 ];
 
+/** Categories routed to the "Investments" bucket by default. */
 const DEFAULT_INVESTMENTS_CATEGORIES: TransactionCategory[] = [
   TransactionCategory.INVESTMENT,
   TransactionCategory.LOAN_PAYMENT,
   TransactionCategory.TAX,
 ];
 
+/** Categories routed to the "Savings" bucket by default. */
 const DEFAULT_SAVINGS_CATEGORIES: TransactionCategory[] = [
   TransactionCategory.SAVINGS,
 ];
 
+/**
+ * Build a default NWI configuration following the 50/30/10/10 split.
+ *
+ * @param userId - Owner of the configuration.
+ * @returns A fresh NWIConfig with default category assignments.
+ */
 export function getDefaultNWIConfig(userId: string): NWIConfig {
   return {
     userId,
@@ -53,6 +74,20 @@ export function getDefaultNWIConfig(userId: string): NWIConfig {
   };
 }
 
+/**
+ * Classify a single transaction into an NWI bucket.
+ *
+ * Resolution order:
+ * 1. Manual `nwiOverride` on the transaction document.
+ * 2. Category membership in the user's NWI config (needs > savings > investments > wants).
+ * 3. Defaults to "wants" if no match is found.
+ *
+ * Non-expense/non-investment types also default to "wants".
+ *
+ * @param transaction - The transaction to classify.
+ * @param config - The user's NWI bucket configuration.
+ * @returns The NWI bucket type this transaction belongs to.
+ */
 export function classifyTransaction(
   transaction: Transaction,
   config: NWIConfig
@@ -77,6 +112,17 @@ export function classifyTransaction(
   return 'wants';
 }
 
+/**
+ * Build a single NWI bucket with actual vs. target metrics and category breakdown.
+ *
+ * @param label - Human-readable bucket label (e.g. "Needs").
+ * @param targetPercentage - Configured target percentage of income.
+ * @param totalIncome - Total income for the period.
+ * @param transactions - Completed expense/investment transactions.
+ * @param config - User's NWI configuration.
+ * @param bucketType - The bucket type to filter for.
+ * @returns Fully computed NWIBucket with category breakdown.
+ */
 function buildBucket(
   label: string,
   targetPercentage: number,
@@ -131,6 +177,17 @@ function buildBucket(
   };
 }
 
+/**
+ * Calculate the full NWI split for a set of transactions.
+ *
+ * Filters to completed expense and investment transactions, computes
+ * total income from completed income transactions, and then builds
+ * each of the four buckets (needs, wants, investments, savings).
+ *
+ * @param transactions - All transactions for the period.
+ * @param config - The user's NWI bucket configuration.
+ * @returns A complete NWISplit with all four buckets and total income.
+ */
 export function calculateNWISplit(
   transactions: Transaction[],
   config: NWIConfig

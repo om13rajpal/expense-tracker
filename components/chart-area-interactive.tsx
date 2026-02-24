@@ -33,9 +33,10 @@ import {
   ToggleGroupItem,
 } from "@/components/ui/toggle-group"
 
+/** Short description used by chart catalogue tooling. */
 export const description = "Interactive expense tracking chart"
 
-// Mock data for monthly expenses (last 6 months)
+/** Mock monthly income and expense data for the last 6 months. */
 const monthlyData = [
   { date: "2025-08", expenses: 42300, income: 75000 },
   { date: "2025-09", expenses: 38500, income: 75000 },
@@ -45,7 +46,7 @@ const monthlyData = [
   { date: "2026-01", expenses: 45200, income: 75000 },
 ]
 
-// Mock data for daily expenses (current month - January 2026)
+/** Mock daily expense data for the current month (January 2026). */
 const dailyData = Array.from({ length: 26 }, (_, i) => {
   const day = i + 1
   return {
@@ -54,6 +55,7 @@ const dailyData = Array.from({ length: 26 }, (_, i) => {
   }
 })
 
+/** Recharts ChartConfig mapping expense and income series to their labels and CSS variable colours. */
 const chartConfig = {
   expenses: {
     label: "Expenses",

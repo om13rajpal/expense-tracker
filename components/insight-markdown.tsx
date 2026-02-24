@@ -9,6 +9,7 @@
 import ReactMarkdown, { type Components } from "react-markdown"
 import remarkGfm from "remark-gfm"
 
+/** Custom react-markdown component overrides styled to match the Finova design system. */
 const mdComponents: Components = {
   h1: ({ children }) => (
     <h1 className="text-base font-bold mt-4 mb-2 text-foreground">{children}</h1>

@@ -1,11 +1,24 @@
 /**
- * Shared financial context builder
+ * Shared financial context builder.
  *
- * Fetches all relevant MongoDB collections for a user and builds a
- * comprehensive text summary suitable for LLM system prompts.
+ * Fetches all relevant MongoDB collections for a user in parallel and
+ * builds a comprehensive structured-text summary suitable for injecting
+ * into LLM system prompts. Covers:
+ * - Account overview (balance, income, expenses, savings rate)
+ * - Monthly summary (last 6 months)
+ * - Expense category breakdown
+ * - Budget categories with current-month spend vs. limits
+ * - Stock holdings and mutual fund positions
+ * - Active SIPs and NWI configuration
+ * - Savings goals with on-track analysis
+ * - Recurring expenses and top merchants
+ * - Previous AI analysis highlights
+ * - Recent 30 transactions as a markdown table
  *
- * Extracted from app/api/agent/chat/route.ts so both the full agent
+ * Extracted from `app/api/agent/chat/route.ts` so both the full AI agent
  * and the spotlight search can share the same rich context.
+ *
+ * @module lib/financial-context
  */
 
 import type { Db } from 'mongodb'
@@ -14,14 +27,33 @@ import type { Db } from 'mongodb'
 // Helpers
 // ---------------------------------------------------------------------------
 
+/**
+ * Format a number as an Indian-locale currency string (Rs.X,XX,XXX).
+ *
+ * @param amount - Amount in INR.
+ * @returns Formatted string like "Rs.1,50,000".
+ */
 export function fmt(amount: number): string {
   return `Rs.${amount.toLocaleString('en-IN', { maximumFractionDigits: 0 })}`
 }
 
+/**
+ * Format a number as a percentage string with one decimal place.
+ *
+ * @param value - Percentage value (e.g. 12.5).
+ * @returns Formatted string like "12.5%".
+ */
 export function pct(value: number): string {
   return `${value.toFixed(1)}%`
 }
 
+/**
+ * Safely convert an unknown value to a YYYY-MM-DD date string.
+ * Returns "N/A" if the value is falsy or not a valid date.
+ *
+ * @param d - Date-like value (string, Date, or unknown).
+ * @returns ISO date string (YYYY-MM-DD) or "N/A".
+ */
 export function safeDate(d: unknown): string {
   if (!d) return 'N/A'
   const date = typeof d === 'string' ? new Date(d) : d as Date
@@ -33,18 +65,39 @@ export function safeDate(d: unknown): string {
 // Data fetching — all collections in parallel
 // ---------------------------------------------------------------------------
 
+/** Aggregated financial data fetched from all relevant MongoDB collections. */
 export interface FinancialData {
+  /** Most recent 500 transactions sorted by date descending. */
   transactions: Record<string, unknown>[]
+  /** All stock holdings. */
   stocks: Record<string, unknown>[]
+  /** All mutual fund holdings. */
   mutualFunds: Record<string, unknown>[]
+  /** All SIP (Systematic Investment Plan) records. */
   sips: Record<string, unknown>[]
+  /** Budget category documents with limits. */
   budgetCategories: Record<string, unknown>[]
+  /** Active user-defined categorization rules. */
   categorizationRules: Record<string, unknown>[]
+  /** Needs/Wants/Investments configuration, or null if not set. */
   nwiConfig: Record<string, unknown> | null
+  /** All savings goals. */
   savingsGoals: Record<string, unknown>[]
+  /** Most recent 5 AI analysis documents. */
   aiAnalyses: Record<string, unknown>[]
 }
 
+/**
+ * Fetch all financial data for a user from MongoDB in parallel.
+ *
+ * Queries 9 collections concurrently: transactions (last 500), stocks,
+ * mutual_funds, sips, budget_categories, categorization_rules (enabled only),
+ * nwi_config, savings_goals, and ai_analyses (last 5).
+ *
+ * @param db - MongoDB Db instance.
+ * @param userId - User identifier.
+ * @returns Aggregated FinancialData across all collections.
+ */
 export async function fetchAllFinancialData(db: Db, userId: string): Promise<FinancialData> {
   const [
     transactions,
@@ -106,6 +159,18 @@ export async function fetchAllFinancialData(db: Db, userId: string): Promise<Fin
 // Context builder — turns raw data into a concise, structured text summary
 // ---------------------------------------------------------------------------
 
+/**
+ * Build a comprehensive structured-text financial summary from raw data.
+ *
+ * Produces a multi-section markdown string covering account overview,
+ * monthly trends, category breakdown, budgets, investments, SIPs,
+ * NWI config, savings goals, recurring expenses, top merchants,
+ * AI analysis history, and recent transactions. Designed to be injected
+ * into LLM system prompts to provide full financial context.
+ *
+ * @param data - Aggregated financial data from {@link fetchAllFinancialData}.
+ * @returns Multi-section markdown string summarising all financial data.
+ */
 export function buildFinancialContext(data: FinancialData): string {
   const lines: string[] = []
   const { transactions, stocks, mutualFunds, sips, budgetCategories, nwiConfig, savingsGoals, aiAnalyses } = data

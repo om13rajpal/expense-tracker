@@ -1,3 +1,12 @@
+/**
+ * @module app/transactions/page
+ * @description Transactions management page for Finova. Displays a comprehensive,
+ * sortable, filterable, and paginated table of all financial transactions. Supports
+ * bulk selection, inline editing, adding/deleting transactions, CSV export, category
+ * filtering, date range filtering, payment method filtering, and multi-column sorting.
+ * Transaction data is loaded via the `useTransactions` hook backed by Google Sheets sync
+ * and MongoDB persistence. Includes NWI (Needs-Wants-Investments) configuration awareness.
+ */
 "use client"
 
 import * as React from "react"
@@ -186,6 +195,13 @@ function PaymentMethodIcon({ method, className = "size-3.5" }: { method: string;
   }
 }
 
+/**
+ * Transactions page component. Renders a full-featured transaction table with
+ * search, multi-filter support (category, type, status, payment method, date range),
+ * sortable columns, bulk actions (select all, delete), inline add/edit dialogs,
+ * CSV export, and pagination. Requires authentication.
+ * @returns The transactions page wrapped in the app sidebar layout.
+ */
 export default function TransactionsPage() {
   const router = useRouter()
   const { isAuthenticated, isLoading: authLoading } = useAuth()

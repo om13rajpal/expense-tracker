@@ -1,3 +1,13 @@
+/**
+ * @module app/ai-insights/page
+ * @description AI Insights dashboard page for Finova. Displays a collection of
+ * AI-generated financial insight cards including spending analysis, monthly/weekly
+ * budget recommendations, investment insights, and tax optimization suggestions.
+ * Each insight type is loaded via the `useAiInsight` hook and rendered with
+ * structured markdown. Supports manual refresh of individual insight types and
+ * displays generation timestamps. Uses tabbed sections for spending, monthly budget,
+ * weekly budget, and investment insights with type-specific structured data rendering.
+ */
 "use client"
 
 import * as React from "react"
@@ -173,6 +183,13 @@ const priorityColors: Record<string, { dot: string; text: string }> = {
 
 /* ─── Page component ─── */
 
+/**
+ * AI Insights page component. Renders a grid of insight cards, each representing
+ * a different AI analysis type (spending, monthly budget, weekly budget, investments).
+ * Each card shows the AI-generated analysis with structured data sections, refresh
+ * controls, and generation metadata. Requires authentication.
+ * @returns The AI insights page wrapped in the app sidebar layout.
+ */
 export default function AiInsightsPage() {
   const router = useRouter()
   const { isAuthenticated, isLoading: authLoading } = useAuth()

@@ -10,6 +10,15 @@ import * as React from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 
+/**
+ * Props for the PeriodBridge component.
+ * @property title          - Card heading (e.g. "Week 4 Bridge").
+ * @property periodLabel    - Subtitle describing the period (e.g. "21 Jan - 27 Jan 2026").
+ * @property openingBalance - Balance at the start of the period.
+ * @property inflow         - Total income received during the period.
+ * @property outflow        - Total expenses during the period.
+ * @property closingBalance - Balance at the end of the period.
+ */
 interface PeriodBridgeProps {
   title: string
   periodLabel: string
@@ -19,6 +28,7 @@ interface PeriodBridgeProps {
   closingBalance: number
 }
 
+/** Formats a number as INR currency with no decimal places. */
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",

@@ -45,10 +45,19 @@ import {
   YAxis,
 } from "recharts"
 
+/**
+ * Props for {@link WeeklyAnalyticsContent}.
+ * @property transactions - Full transaction list; week filtering is handled internally.
+ */
 interface WeeklyAnalyticsContentProps {
   transactions: Transaction[]
 }
 
+/**
+ * Formats a number as INR currency without decimal places.
+ * @param amount - Numeric amount in INR.
+ * @returns Formatted currency string (e.g. "Rs 12,500").
+ */
 function formatCurrency(amount: number): string {
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
@@ -57,7 +66,9 @@ function formatCurrency(amount: number): string {
   }).format(amount)
 }
 
+/** CSS custom property for the income bar chart colour. */
 const CHART_INCOME = "var(--chart-1)"
+/** CSS custom property for the expense bar chart colour. */
 const CHART_EXPENSE = "var(--chart-5)"
 
 /**

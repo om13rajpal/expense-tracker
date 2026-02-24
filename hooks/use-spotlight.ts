@@ -1,3 +1,9 @@
+/**
+ * Spotlight / command-palette hook.
+ * Powers the Cmd+K / Ctrl+K overlay with synchronous and asynchronous
+ * search providers, keyboard navigation, and an expandable AI query mode.
+ * @module hooks/use-spotlight
+ */
 "use client"
 
 import { useReducer, useCallback, useRef, useEffect } from "react"
@@ -5,6 +11,7 @@ import type { SpotlightState, SpotlightAction, ResultGroup } from "@/lib/spotlig
 import { searchSync, searchAsync, flattenResults } from "@/lib/spotlight/orchestrator"
 import { getRecentCommands } from "@/lib/command-palette/recent-commands"
 
+/** Default spotlight state when the overlay is closed. */
 const initialState: SpotlightState = {
   open: false,
   query: "",
@@ -15,10 +22,24 @@ const initialState: SpotlightState = {
   aiQuery: "",
 }
 
+/**
+ * Calculates the total number of results across all result groups.
+ * Used for bounds-checking the active index during keyboard navigation.
+ * @param groups - Array of grouped search results
+ * @returns The total count of individual results across all groups
+ */
 function getTotalResults(groups: ResultGroup[]): number {
   return groups.reduce((sum, g) => sum + g.results.length, 0)
 }
 
+/**
+ * Pure reducer that manages all spotlight state transitions.
+ * Handles opening/closing, query changes, result updates, keyboard
+ * navigation (next/prev/set), loading state, and AI expansion.
+ * @param state - Current spotlight state
+ * @param action - The dispatched action describing the state change
+ * @returns The new spotlight state
+ */
 function reducer(state: SpotlightState, action: SpotlightAction): SpotlightState {
   switch (action.type) {
     case "OPEN":
@@ -56,10 +77,40 @@ function reducer(state: SpotlightState, action: SpotlightAction): SpotlightState
   }
 }
 
+/**
+ * Provides complete spotlight (command palette) functionality including
+ * search, keyboard navigation, and AI query expansion.
+ *
+ * **Search behaviour:**
+ * - Synchronous providers (page routes, commands) run immediately on keystroke
+ * - Asynchronous providers (transaction search, AI suggestions) are debounced by 200 ms
+ * - Previous async searches are aborted when a new keystroke arrives
+ * - When the query is empty and the overlay is open, recent commands are shown instead
+ *
+ * **Keyboard shortcuts:**
+ * - `Cmd+K` / `Ctrl+K` or `Cmd+Space` toggles the overlay open/closed
+ *
+ * @returns An object containing:
+ *   - `state` - The full SpotlightState (open, query, groups, activeIndex, loading, aiExpanded, aiQuery)
+ *   - `flat` - Flattened array of all search results across groups
+ *   - `activeResult` - The currently highlighted result object, or null
+ *   - `recentCommands` - Array of recently used commands (shown when query is empty)
+ *   - `open()` - Opens the spotlight overlay
+ *   - `close()` - Closes the spotlight overlay and resets state
+ *   - `setQuery(q)` - Updates the search query and triggers providers
+ *   - `moveNext()` - Moves the active highlight to the next result (wraps around)
+ *   - `movePrev()` - Moves the active highlight to the previous result (wraps around)
+ *   - `setActive(i)` - Sets the active highlight to a specific index (e.g. on hover)
+ *   - `expandAI(q)` - Expands the AI query panel with the given query
+ *   - `collapseAI()` - Collapses the AI query panel
+ */
 export function useSpotlight() {
   const [state, dispatch] = useReducer(reducer, initialState)
+  /** Controller to abort in-flight async search requests when a new query arrives. */
   const abortRef = useRef<AbortController | null>(null)
+  /** Timer handle for the 200 ms debounce on async search providers. */
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  /** Monotonically increasing ID to detect stale async search responses. */
   const searchIdRef = useRef(0)
 
   // Run search when query changes
@@ -125,13 +176,21 @@ export function useSpotlight() {
     return () => document.removeEventListener("keydown", handleKeyDown)
   }, [state.open])
 
+  /** Opens the spotlight overlay, resetting all state to defaults. */
   const open = useCallback(() => dispatch({ type: "OPEN" }), [])
+  /** Closes the spotlight overlay and resets all state. */
   const close = useCallback(() => dispatch({ type: "CLOSE" }), [])
+  /** Updates the search query, resets the active index, and triggers search providers. */
   const setQuery = useCallback((q: string) => dispatch({ type: "SET_QUERY", query: q }), [])
+  /** Moves the keyboard highlight to the next result, wrapping from last to first. */
   const moveNext = useCallback(() => dispatch({ type: "MOVE_NEXT" }), [])
+  /** Moves the keyboard highlight to the previous result, wrapping from first to last. */
   const movePrev = useCallback(() => dispatch({ type: "MOVE_PREV" }), [])
+  /** Sets the keyboard highlight to a specific index (used for mouse hover). */
   const setActive = useCallback((i: number) => dispatch({ type: "SET_ACTIVE", index: i }), [])
+  /** Expands the inline AI query panel with the given query text. */
   const expandAI = useCallback((q: string) => dispatch({ type: "EXPAND_AI", query: q }), [])
+  /** Collapses the inline AI query panel. */
   const collapseAI = useCallback(() => dispatch({ type: "COLLAPSE_AI" }), [])
 
   const flat = flattenResults(state.groups)

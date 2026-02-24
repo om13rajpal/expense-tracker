@@ -1,3 +1,13 @@
+/**
+ * Spotlight transaction search provider: fetches matching transactions via API.
+ *
+ * This is the only async provider. It calls `/api/transactions/search` with
+ * the user's query (debounced, minimum 2 characters) and returns up to 5
+ * transaction results with category badges, amounts, and dates.
+ *
+ * @module lib/spotlight/providers/transaction-provider
+ */
+
 import type { SpotlightProvider, SpotlightResult } from "../types"
 import { CATEGORY_COLORS } from "../data/categories"
 import { IconReceipt } from "@tabler/icons-react"

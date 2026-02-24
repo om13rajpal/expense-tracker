@@ -1,3 +1,9 @@
+/**
+ * AI Chat view — full-screen conversational interface for the Finance Agent.
+ * Supports multi-turn threaded conversations with streaming responses,
+ * conversation history sidebar, quick-action prompts, and Lottie hero animation.
+ * @module components/ai/chat-view
+ */
 "use client"
 
 import * as React from "react"
@@ -40,11 +46,24 @@ import {
 
 /* --- Types --- */
 
+/**
+ * A single message in the chat conversation.
+ * @property role    - Whether the message is from the user or the AI assistant.
+ * @property content - Raw text (may contain Markdown for assistant messages).
+ */
 interface ChatMessage {
   role: "user" | "assistant"
   content: string
 }
 
+/**
+ * Lightweight thread summary returned by the threads listing API.
+ * @property threadId    - Unique identifier for the conversation thread.
+ * @property title       - Auto-generated thread title based on the first message.
+ * @property preview     - Truncated preview of the last assistant response.
+ * @property updatedAt   - ISO timestamp of the most recent message.
+ * @property messageCount - Total number of messages in the thread.
+ */
 interface ThreadSummary {
   threadId: string
   title: string
@@ -53,6 +72,14 @@ interface ThreadSummary {
   messageCount: number
 }
 
+/**
+ * Full thread payload returned when loading a specific conversation.
+ * @property threadId  - Unique identifier for the conversation thread.
+ * @property title     - Auto-generated thread title.
+ * @property messages  - Complete ordered list of messages with timestamps.
+ * @property createdAt - ISO timestamp of thread creation.
+ * @property updatedAt - ISO timestamp of the latest message.
+ */
 interface ThreadFull {
   threadId: string
   title: string
@@ -61,8 +88,10 @@ interface ThreadFull {
   updatedAt: string
 }
 
-/* --- Quick actions --- */
-
+/**
+ * Pre-defined quick-action buttons displayed on the chat landing screen.
+ * Each action includes an icon, label, full prompt text, and theme colours.
+ */
 const quickActions = [
   {
     icon: IconWallet,
@@ -114,8 +143,7 @@ const quickActions = [
   },
 ]
 
-/* --- Markdown components for react-markdown --- */
-
+/** Custom react-markdown component overrides for rendering assistant responses with Finova styling. */
 const mdComponents: Components = {
   h1: ({ children }) => (
     <h1 className="text-base font-bold mt-4 mb-2 text-foreground">{children}</h1>
@@ -194,8 +222,7 @@ const mdComponents: Components = {
   ),
 }
 
-/* --- Thinking dots --- */
-
+/** Animated three-dot loading indicator shown while the assistant is generating a response. */
 function ThinkingDots() {
   return (
     <div className="flex items-center gap-1.5 py-1">
@@ -216,8 +243,11 @@ function ThinkingDots() {
   )
 }
 
-/* --- Memoized chat bubble --- */
-
+/**
+ * Memoized chat bubble component rendering a single user or assistant message.
+ * User messages display as plain text; assistant messages are rendered as Markdown.
+ * Shows animated thinking dots when the assistant content is empty (still streaming).
+ */
 const ChatBubble = memo(function ChatBubble({
   role,
   content,
@@ -271,8 +301,11 @@ const ChatBubble = memo(function ChatBubble({
   )
 })
 
-/* --- Animated hero orb --- */
-
+/**
+ * Animated decorative orb displayed on the chat landing screen as a fallback
+ * when the Lottie animation fails to load. Features pulsing glow, rotating
+ * ring, and a floating robot icon.
+ */
 function HeroOrb() {
   return (
     <div className="relative h-28 w-28">
@@ -314,8 +347,12 @@ function HeroOrb() {
   )
 }
 
-/* --- Strip markdown for preview text --- */
-
+/**
+ * Strips common Markdown syntax from text to produce a plain-text preview.
+ * Removes bold, italic, code, headings, links, and list markers.
+ * @param text - Raw Markdown string.
+ * @returns Plain-text version suitable for thread preview display.
+ */
 function stripMarkdown(text: string): string {
   return text
     .replace(/\*\*(.*?)\*\*/g, '$1')
@@ -328,8 +365,11 @@ function stripMarkdown(text: string): string {
     .trim()
 }
 
-/* --- Thread list item --- */
-
+/**
+ * Memoized thread list item showing the thread title, preview text,
+ * relative timestamp, and message count. Includes hover-reveal delete
+ * button with inline confirmation.
+ */
 const ThreadItem = memo(function ThreadItem({
   thread,
   isActive,
@@ -406,8 +446,11 @@ const ThreadItem = memo(function ThreadItem({
   )
 })
 
-/* --- Thread sidebar content --- */
-
+/**
+ * Thread sidebar content shared between the desktop inline panel and the
+ * mobile bottom sheet. Renders a "New Chat" button followed by the
+ * scrollable thread list with loading/empty states.
+ */
 function ThreadSidebarContent({
   threads,
   isLoading,
@@ -474,8 +517,15 @@ function ThreadSidebarContent({
   )
 }
 
-/* --- ChatView --- */
-
+/**
+ * Full-page AI Chat view exported for the `/ai` route.
+ * Features:
+ * - Multi-turn threaded conversations with streamed AI responses
+ * - Persistent thread history (sidebar on desktop, sheet on mobile)
+ * - Landing screen with hero animation, suggested prompts, and quick actions
+ * - Auto-scroll, auto-resize textarea, and abort-streaming support
+ * - Auth-guarded: redirects to `/login` when not authenticated
+ */
 export function ChatView() {
   const { isAuthenticated, isLoading: authLoading } = useAuth()
   const router = useRouter()

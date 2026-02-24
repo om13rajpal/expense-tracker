@@ -16,6 +16,17 @@ const ALL_TYPES: AiInsightType[] = [
   'planner_recommendation',
 ];
 
+/**
+ * Inngest cron function that triggers a full AI insights refresh for all users.
+ *
+ * @trigger Cron schedule: `0 22 * * *` (daily at 10:00 PM UTC / 3:30 AM IST).
+ * @steps
+ *   1. `discover-users` -- Finds all distinct userIds from the transactions collection.
+ *   2. Emits `finance/insights.generate` events for each user requesting all 6 insight
+ *      types: spending_analysis, monthly_budget, weekly_budget, investment_insights,
+ *      tax_optimization, and planner_recommendation.
+ * @returns Object with the number of users found.
+ */
 export const scheduledInsights = inngest.createFunction(
   { id: 'scheduled-insights', name: 'Daily Full AI Insights Refresh' },
   { cron: '0 22 * * *' }, // Daily at 10:00 PM UTC (3:30 AM IST next day)

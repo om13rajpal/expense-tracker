@@ -51,6 +51,19 @@ async function fetchStockPrice(
   }
 }
 
+/**
+ * Inngest cron function that refreshes all stock prices and mutual fund NAVs.
+ *
+ * @trigger Cron schedule: `0 10 * * 1-5` (weekdays at 10:00 AM UTC).
+ * @steps
+ *   1. `update-stock-prices` -- Fetches current prices for all stocks via Yahoo Finance,
+ *      updates currentPrice, dayChange, currentValue, and returns in MongoDB.
+ *   2. `update-mf-navs` -- Fetches latest NAVs for all mutual funds via MFAPI,
+ *      updates currentNAV, currentValue, and returns in MongoDB.
+ *   3. `log-cron-run` -- Records execution results in the `cron_runs` collection.
+ *   4. Emits `finance/prices.updated` event if any prices were updated.
+ * @returns Object with stocksUpdated, stocksFailed, fundsUpdated, fundsFailed counts.
+ */
 export const refreshPrices = inngest.createFunction(
   { id: 'refresh-prices', name: 'Refresh Stock & MF Prices' },
   { cron: '0 10 * * 1-5' }, // Weekdays at 10:00 AM UTC

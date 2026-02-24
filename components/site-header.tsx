@@ -14,6 +14,12 @@ import { StreakCounter } from "@/components/streak-counter"
 import { Separator } from "@/components/ui/separator"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 
+/**
+ * Props for the SiteHeader component.
+ * @property title    - Page title displayed in the header (defaults to "Dashboard").
+ * @property subtitle - Optional secondary text beside the title.
+ * @property actions  - Extra React nodes rendered in the right-side action area.
+ */
 interface SiteHeaderProps {
   title?: string
   subtitle?: string

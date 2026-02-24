@@ -1,22 +1,34 @@
 /**
- * Simple MongoDB-backed sliding window rate limiter.
- * Cleanup ($pull) runs separately; the check-and-push step uses
- * atomic findOneAndUpdate to prevent concurrent over-admission.
+ * MongoDB-backed sliding window rate limiter for API endpoints.
+ *
+ * Prevents abuse of expensive operations (AI analysis, price lookups, etc.)
+ * by tracking request timestamps per user per action. Uses a sliding window
+ * approach where timestamps older than the window are pruned, and new requests
+ * are only admitted if the window contains fewer than `maxRequests` entries.
+ *
+ * The admission step is atomic via `findOneAndUpdate` with an array-length
+ * condition, preventing concurrent requests from exceeding the limit.
+ *
+ * @module lib/rate-limit
  */
 import type { Db } from 'mongodb';
 
+/** MongoDB collection name for storing rate limit state. */
 const COLLECTION = 'ai_rate_limits';
 
 /**
- * Check whether a request should be allowed under the rate limit.
- * Uses a sliding window: keeps timestamps of recent calls and checks count.
+ * Check whether a request should be allowed under the sliding window rate limit.
  *
- * The admission step is atomic: findOneAndUpdate with an array-length
- * condition ensures concurrent requests can't both sneak past the limit.
- * (The preceding cleanup step is a separate operation, but benign — it
- * only removes expired entries and cannot cause over-admission.)
+ * First prunes expired timestamps from the window, then atomically attempts
+ * to push the current timestamp. The push only succeeds if the array has
+ * fewer than `maxRequests` entries (checked via a MongoDB array-length condition).
  *
- * @returns true if the request is allowed, false if rate-limited.
+ * @param db - MongoDB database instance.
+ * @param userId - The user making the request.
+ * @param action - The rate-limited action name (e.g. "ai_analysis", "price_lookup").
+ * @param maxRequests - Maximum number of requests allowed within the window.
+ * @param windowMs - Sliding window duration in milliseconds.
+ * @returns `true` if the request is allowed, `false` if the user is rate-limited.
  */
 export async function checkRateLimit(
   db: Db,

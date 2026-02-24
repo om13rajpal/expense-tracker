@@ -1,3 +1,14 @@
+/**
+ * @module app/budget/page
+ * @description Budget management page for Finova. Provides a full budgeting experience
+ * with NWI (Needs-Wants-Investments) split configuration, per-category budget allocation,
+ * real-time spend tracking against budgets with progress bars, overspend alerts,
+ * budget history comparison, auto-suggest budgets from past spending, and bar chart
+ * visualizations. Includes a "Ghost Budget" feature that tracks how much a perfect
+ * budgeter would have saved. Data is sourced from the `useTransactions` hook and
+ * NWI configuration from `useNWIConfig`. Supports partial month detection and
+ * context banners for data edge cases.
+ */
 "use client"
 
 import * as React from "react"
@@ -198,6 +209,14 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
   )
 }
 
+/**
+ * Budget page component. Renders a tabbed interface with Overview (NWI split,
+ * category budgets, spend progress, ghost budget), Manage (add/edit/delete budget
+ * categories, auto-suggest), and History (month-over-month comparison). Features
+ * include overspend alerts, bar chart visualizations, and partial-month awareness.
+ * Auth-guarded -- redirects to `/login` if unauthenticated.
+ * @returns The budget page wrapped in the app sidebar layout.
+ */
 export default function BudgetPage() {
   const router = useRouter()
   const { isAuthenticated, isLoading: authLoading } = useAuth()

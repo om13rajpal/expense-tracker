@@ -28,10 +28,22 @@ import { formatINR as formatCurrency, formatCompactAxis } from "@/lib/format"
 import { fadeUp, fadeUpSmall, stagger, listItem } from "@/lib/motion"
 import { Badge } from "@/components/ui/badge"
 
+/**
+ * Props for the SpendingComparison component.
+ * @property transactions - Full transaction array; the component filters by month internally.
+ */
 interface SpendingComparisonProps {
   transactions: Transaction[]
 }
 
+/**
+ * Computed comparison between current and previous month spending in a single category.
+ * @property category      - Category display name.
+ * @property current       - Current month total spend.
+ * @property previous      - Previous month total spend.
+ * @property change        - Absolute change (current minus previous).
+ * @property changePercent - Percentage change relative to previous month.
+ */
 interface CategoryComparison {
   category: string
   current: number
@@ -40,6 +52,7 @@ interface CategoryComparison {
   changePercent: number
 }
 
+/** Filters transactions to those occurring in the given year and month. */
 function getMonthTransactions(
   transactions: Transaction[],
   year: number,
@@ -51,6 +64,7 @@ function getMonthTransactions(
   })
 }
 
+/** Custom Recharts tooltip rendering current and previous month values. */
 function ComparisonTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null
   return (

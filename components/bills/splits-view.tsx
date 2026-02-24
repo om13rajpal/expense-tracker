@@ -1,3 +1,11 @@
+/**
+ * Bill Splits view — manage shared expenses, contacts, groups,
+ * settlements, and real-time balance tracking. Supports adding
+ * contacts, creating groups, logging split expenses, recording
+ * settlements, auto-settle via smart matching, shareable payment
+ * links, and a live activity feed.
+ * @module components/bills/splits-view
+ */
 "use client"
 
 import * as React from "react"
@@ -1849,7 +1857,12 @@ function ActivityTab() {
   )
 }
 
-/* --- Main Splits View --- */
+/**
+ * Top-level Bill Splits page exported for the `/bills` route's "Splits" tab.
+ * Renders metric tiles (total owed/owing, pending), tabbed views for
+ * Balances, Groups, Expenses, Settlements, and Activity, plus dialogs
+ * for adding contacts, groups, expenses, and settlements.
+ */
 export function SplitsView() {
   return (
     <div className="flex flex-1 flex-col">

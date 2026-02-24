@@ -13,6 +13,13 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 
+/**
+ * Props for the InfoTooltip component.
+ * @property text          - Tooltip content string.
+ * @property className     - Additional CSS classes for the trigger button wrapper.
+ * @property iconClassName - Additional CSS classes applied to the info icon.
+ * @property side          - Preferred tooltip placement (default "top").
+ */
 interface InfoTooltipProps {
   text: string
   className?: string

@@ -4,58 +4,103 @@
  * @module lib/splits-utils
  */
 
+/** A single person's share in a split expense. */
 export interface SplitEntry {
+  /** Person's name. */
   person: string
+  /** Their share amount in INR. */
   amount: number
 }
 
+/** A shared expense record with split details, stored in MongoDB. */
 export interface SplitExpense {
+  /** MongoDB ObjectId (absent before insertion). */
   _id?: string
+  /** Owner user identifier. */
   userId: string
+  /** Optional group this expense belongs to. */
   groupId?: string
+  /** What the expense was for. */
   description: string
+  /** Total expense amount in INR. */
   amount: number
+  /** Name of the person who paid. */
   paidBy: string
+  /** How the expense was split among participants. */
   splitType: "equal" | "exact" | "percentage"
+  /** Individual share breakdown. */
   splits: SplitEntry[]
+  /** Date of the expense (ISO string). */
   date: string
+  /** Optional spending category. */
   category?: string
+  /** ISO timestamp of creation. */
   createdAt: string
 }
 
+/** A settlement payment that reduces an outstanding debt between two people. */
 export interface Settlement {
+  /** MongoDB ObjectId (absent before insertion). */
   _id?: string
+  /** Owner user identifier. */
   userId: string
+  /** Optional group this settlement belongs to. */
   groupId?: string
+  /** Person making the payment. */
   paidBy: string
+  /** Person receiving the payment. */
   paidTo: string
+  /** Settlement amount in INR. */
   amount: number
+  /** Date of the settlement (ISO string). */
   date: string
+  /** Optional note about the settlement. */
   notes?: string
+  /** ISO timestamp of creation. */
   createdAt: string
 }
 
+/** Simple net balance for a person (positive = they owe you). */
 export interface Balance {
+  /** Person's name. */
   person: string
+  /** Net balance in INR. Positive means they owe you; negative means you owe them. */
   netBalance: number
 }
 
+/** Detailed balance for a person, split into directional components. */
 export interface DetailedBalance {
+  /** Person's name. */
   person: string
+  /** Net balance in INR (positive = they owe you). */
   netBalance: number
+  /** How much you owe this person (0 if they owe you). */
   youOwe: number
+  /** How much this person owes you (0 if you owe them). */
   theyOwe: number
 }
 
+/** A directed debt edge in the simplified debt graph (from -> to). */
 export interface DebtEdge {
+  /** Person who owes money. */
   from: string
+  /** Person who is owed money. */
   to: string
+  /** Amount to transfer in INR. */
   amount: number
 }
 
 /**
- * Compute net balances from expenses and settlements.
- * Positive netBalance = they owe you, Negative = you owe them.
+ * Compute net balances from expenses and settlements, from `selfName`'s perspective.
+ *
+ * Tracks pairwise debts: for each expense, each non-payer participant owes
+ * the payer their split share. Settlements reduce those debts. The result
+ * is a per-person DetailedBalance showing how much you owe and are owed.
+ *
+ * @param expenses - All split expense records.
+ * @param settlements - All settlement records.
+ * @param selfName - Your display name (default "Me").
+ * @returns Array of DetailedBalance sorted by net balance descending.
  */
 export function computeNetBalances(
   expenses: SplitExpense[],
@@ -118,7 +163,13 @@ export function computeNetBalances(
 }
 
 /**
- * Compute balances filtered by a specific group.
+ * Compute net balances scoped to a specific group.
+ *
+ * @param expenses - All split expense records (will be filtered by groupId).
+ * @param settlements - All settlement records (will be filtered by groupId).
+ * @param groupId - Group identifier to filter by.
+ * @param selfName - Your display name (default "Me").
+ * @returns Array of DetailedBalance for the group.
  */
 export function computeGroupBalances(
   expenses: SplitExpense[],
@@ -132,8 +183,14 @@ export function computeGroupBalances(
 }
 
 /**
- * Simplify debts to minimize number of transactions needed.
- * Uses a greedy algorithm: repeatedly match the largest creditor with the largest debtor.
+ * Simplify debts to minimise the number of settlement transactions needed.
+ *
+ * Uses a greedy algorithm that repeatedly matches the largest creditor with
+ * the largest debtor, transferring the minimum of the two amounts. This
+ * produces an optimal or near-optimal number of transfers.
+ *
+ * @param balances - Array of per-person net balances.
+ * @returns Minimal set of DebtEdge transfers to settle all debts.
  */
 export function simplifyDebts(balances: Balance[]): DebtEdge[] {
   // Clone and filter out zero balances

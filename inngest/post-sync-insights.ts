@@ -13,6 +13,15 @@ const POST_SYNC_TYPES: AiInsightType[] = [
   'weekly_budget',
 ];
 
+/**
+ * Inngest function that fans out AI insight generation after a transaction sync.
+ *
+ * @trigger `finance/sync.completed` event with `{ userIds }` payload.
+ * @steps
+ *   1. For each synced user, emits a `finance/insights.generate` event requesting
+ *      spending_analysis, monthly_budget, and weekly_budget insights.
+ * @returns Object with the number of users found and events dispatched.
+ */
 export const postSyncInsights = inngest.createFunction(
   { id: 'post-sync-insights', name: 'Generate Insights After Sync' },
   { event: 'finance/sync.completed' },

@@ -26,7 +26,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 
-// Common expense categories for quick selection
+/** Common expense categories shown in the quick-add category dropdown. */
 const QUICK_CATEGORIES = [
   "Shopping",
   "Dining",
@@ -40,6 +40,11 @@ const QUICK_CATEGORIES = [
   "Miscellaneous",
 ]
 
+/**
+ * Props for the QuickAddTransaction dialog.
+ * @property open         - Controlled open state of the dialog.
+ * @property onOpenChange - Callback when the dialog opens or closes.
+ */
 interface QuickAddProps {
   open: boolean
   onOpenChange: (open: boolean) => void

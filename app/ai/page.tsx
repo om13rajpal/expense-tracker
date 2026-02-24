@@ -1,3 +1,11 @@
+/**
+ * @module app/ai/page
+ * @description Unified AI Assistant hub for Finova. Consolidates three AI-powered
+ * features into a single tabbed interface: Chat (conversational AI agent), Reports
+ * (AI-generated financial reports/insights), and Learn (financial literacy education).
+ * The active tab is controlled via the `?tab=` URL search parameter, defaulting to "chat".
+ * Each tab renders a dedicated view component (`ChatView`, `ReportsView`, `LearnView`).
+ */
 "use client"
 
 import * as React from "react"
@@ -21,6 +29,13 @@ import { LearnView } from "@/components/ai/learn-view"
 const VALID_TABS = ["chat", "reports", "learn"] as const
 type TabValue = (typeof VALID_TABS)[number]
 
+/**
+ * AI Assistant page component. Renders a tabbed layout with Chat, Reports,
+ * and Learn tabs. Reads the initial tab from the `?tab=` search parameter and
+ * delegates rendering to `ChatView`, `ReportsView`, or `LearnView` respectively.
+ * Auth-guarded -- redirects to `/login` if the user is not authenticated.
+ * @returns The AI assistant page wrapped in the app sidebar layout.
+ */
 export default function AiPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth()
   const router = useRouter()

@@ -1,41 +1,70 @@
 /**
- * Budget calculation utilities
- * Handles pro-rating, projections, and spending calculations
+ * Budget calculation utilities.
+ *
+ * Handles pro-rating of budgets for partial months, full-month spending
+ * projections based on daily averages, and status classification for
+ * budget progress bars and alerts.
+ *
+ * @module lib/budget-utils
  */
 
 import { Transaction, TransactionCategory, CategoryBreakdown } from './types';
 import { getTransactionCategoriesForBudget } from './budget-mapping';
 
 /**
- * Budget period information
+ * Budget period information describing the date range and coverage
+ * of the currently active budget month.
  */
 export interface BudgetPeriod {
+  /** Earliest transaction date in the period. */
   startDate: Date;
+  /** Latest transaction date in the period. */
   endDate: Date;
+  /** Total calendar days in the month. */
   totalDays: number;
+  /** Calendar days elapsed so far (from day 1 to latest transaction). */
   elapsedDays: number;
+  /** Calendar days remaining until month end. */
   remainingDays: number;
+  /** Whether the period does not span the full calendar month. */
   isPartialMonth: boolean;
+  /** Human-readable period label (e.g. "January 1-24, 2026 (24 of 31 days)"). */
   periodLabel: string;
 }
 
 /**
- * Budget spending data
+ * Budget spending data for a single category, including actual vs.
+ * pro-rated vs. projected figures.
  */
 export interface BudgetSpending {
+  /** Budget category display name. */
   budgetCategory: string;
+  /** Full monthly budget limit in INR. */
   monthlyBudget: number;
+  /** Pro-rated budget for the elapsed portion of the month. */
   proratedBudget: number;
+  /** Actual amount spent so far in this category. */
   actualSpent: number;
+  /** Projected spend for the full month at the current daily rate. */
   projectedSpent: number;
+  /** Remaining budget (monthly limit minus actual spent). */
   remaining: number;
+  /** Percentage of monthly budget consumed (0-100+). */
   percentageUsed: number;
+  /** Whether actual spend has exceeded the full monthly budget. */
   isOverspent: boolean;
+  /** Number of transactions contributing to this category. */
   transactionCount: number;
 }
 
 /**
- * Calculate budget period information from transactions
+ * Calculate budget period information from a set of transactions.
+ *
+ * Determines the date range, elapsed days, and whether the month is
+ * partial (data does not cover the full calendar month).
+ *
+ * @param transactions - Array of transactions for the relevant month.
+ * @returns BudgetPeriod describing coverage and elapsed time.
  */
 export function calculateBudgetPeriod(transactions: Transaction[]): BudgetPeriod {
   if (transactions.length === 0) {
@@ -84,7 +113,18 @@ export function calculateBudgetPeriod(transactions: Transaction[]): BudgetPeriod
 }
 
 /**
- * Calculate spending for a budget category
+ * Calculate spending metrics for a single budget category.
+ *
+ * Matches transactions whose category is either a mapped transaction
+ * category or the budget category name itself (for manually re-categorized
+ * transactions). Pro-rates the budget for partial months and projects
+ * full-month spend based on the daily average.
+ *
+ * @param budgetCategory - Budget category display name.
+ * @param monthlyBudget - Full monthly budget limit in INR.
+ * @param categoryBreakdown - Per-category spending aggregation.
+ * @param period - Budget period metadata.
+ * @returns BudgetSpending with actual, pro-rated, and projected figures.
  */
 export function calculateBudgetSpending(
   budgetCategory: string,
@@ -141,7 +181,12 @@ export function calculateBudgetSpending(
 }
 
 /**
- * Calculate all budget spending data
+ * Calculate spending metrics for every budget category at once.
+ *
+ * @param budgets - Record mapping category name to monthly budget limit.
+ * @param categoryBreakdown - Per-category spending aggregation.
+ * @param period - Budget period metadata.
+ * @returns Array of BudgetSpending objects, one per budget category.
  */
 export function calculateAllBudgetSpending(
   budgets: Record<string, number>,
@@ -165,7 +210,10 @@ function getMonthName(date: Date): string {
 }
 
 /**
- * Get status for budget percentage
+ * Classify a budget percentage into a traffic-light status.
+ *
+ * @param percentageUsed - Budget usage as a percentage (0-100+).
+ * @returns `'danger'` if >= 100%, `'warning'` if >= 75%, otherwise `'success'`.
  */
 export function getBudgetStatus(percentageUsed: number): 'success' | 'warning' | 'danger' {
   if (percentageUsed >= 100) return 'danger';
@@ -174,7 +222,10 @@ export function getBudgetStatus(percentageUsed: number): 'success' | 'warning' |
 }
 
 /**
- * Get color class for budget status
+ * Get a Tailwind text colour class for a budget status percentage.
+ *
+ * @param percentageUsed - Budget usage as a percentage (0-100+).
+ * @returns Tailwind CSS class string (red/yellow/green).
  */
 export function getBudgetStatusColor(percentageUsed: number): string {
   if (percentageUsed >= 100) return 'text-red-500';
@@ -183,7 +234,10 @@ export function getBudgetStatusColor(percentageUsed: number): string {
 }
 
 /**
- * Get progress bar color for budget status
+ * Get a Tailwind background colour class for a budget progress bar.
+ *
+ * @param percentageUsed - Budget usage as a percentage (0-100+).
+ * @returns Tailwind CSS background class string (red/yellow/green).
  */
 export function getBudgetProgressColor(percentageUsed: number): string {
   if (percentageUsed >= 100) return 'bg-red-500';

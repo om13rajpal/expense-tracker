@@ -79,6 +79,7 @@ export async function POST(request: NextRequest) {
             deals: cached.deals,
             citations: cached.citations,
             summary: cached.summary,
+            imageUrl: cached.imageUrl,
             cached: true,
           },
           { headers: corsHeaders() }
@@ -90,6 +91,7 @@ export async function POST(request: NextRequest) {
       let deals: DealAlert[] = [];
       let citations: string[] = [];
       let summary = '';
+      let imageUrl: string | undefined;
 
       try {
         const result = await searchProductPrice(itemName.trim());
@@ -126,6 +128,10 @@ export async function POST(request: NextRequest) {
         }
 
         summary = typeof parsed.summary === 'string' ? parsed.summary : '';
+
+        if (typeof parsed.imageUrl === 'string' && parsed.imageUrl.startsWith('http')) {
+          imageUrl = parsed.imageUrl;
+        }
       } catch (parseError) {
         // Graceful fallback: return empty result if Perplexity fails or parsing fails
         console.error('Perplexity price lookup failed:', parseError);
@@ -150,6 +156,7 @@ export async function POST(request: NextRequest) {
         deals,
         citations,
         summary,
+        imageUrl,
         createdAt: new Date(),
         expiresAt: new Date(Date.now() + CACHE_TTL_MS),
       });
@@ -159,15 +166,16 @@ export async function POST(request: NextRequest) {
         try {
           const objectId = new ObjectId(itemId);
           const bucketCol = db.collection(BUCKET_COLLECTION);
+          const updateFields: Record<string, unknown> = {
+            priceHistory: prices,
+            dealAlerts: deals,
+            updatedAt: new Date().toISOString(),
+          };
+          if (imageUrl) updateFields.imageUrl = imageUrl;
+
           await bucketCol.updateOne(
             { _id: objectId, userId: user.userId },
-            {
-              $set: {
-                priceHistory: prices,
-                dealAlerts: deals,
-                updatedAt: new Date().toISOString(),
-              },
-            }
+            { $set: updateFields }
           );
         } catch {
           // Non-critical: log but don't fail the request
@@ -182,6 +190,7 @@ export async function POST(request: NextRequest) {
           deals,
           citations,
           summary,
+          imageUrl,
           cached: false,
         },
         { headers: corsHeaders() }

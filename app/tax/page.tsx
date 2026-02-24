@@ -1,3 +1,13 @@
+/**
+ * @module app/tax/page
+ * @description Indian Tax Planner page for Finova. Provides a comprehensive
+ * Old vs New tax regime comparison calculator with support for all major deductions
+ * (Section 80C, 80D, 80E, 80G, HRA, NPS, home loan interest). Features include
+ * automatic SIP/PPF/ELSS investment detection, slab-wise tax breakdown with bar charts,
+ * AI-powered tax optimization insights via the `useAiInsight` hook, real-time regime
+ * recommendation, and a savings/optimization suggestion panel. All calculations follow
+ * Indian Income Tax rules for FY 2024-25.
+ */
 "use client"
 
 import * as React from "react"
@@ -75,6 +85,12 @@ const DEBOUNCE_MS = 800
 // Helpers
 // ---------------------------------------------------------------------------
 
+/**
+ * Controlled currency input component with INR formatting.
+ * Displays the value with Indian numbering format and handles
+ * numeric-only input with an optional onBlur callback.
+ * @param props - Input props including value, onChange handler, and standard input attributes.
+ */
 function CurrencyInput({
   id,
   value,
@@ -122,6 +138,11 @@ function CurrencyInput({
   )
 }
 
+/**
+ * Layout wrapper for a labeled form field row in the tax planner.
+ * Renders a label with an optional tooltip on the left and children (input) on the right.
+ * @param props - Contains label text, optional tooltip, and children elements.
+ */
 function FieldRow({
   label,
   id,
@@ -146,6 +167,10 @@ function FieldRow({
   )
 }
 
+/**
+ * Section heading label used to divide form sections within the tax planner.
+ * @param props - Contains children to render as the section heading text.
+ */
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
     <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-3">
@@ -166,6 +191,12 @@ interface SIPItem {
   status: string
 }
 
+/**
+ * Detects 80C-eligible deductions from the user's SIP holdings.
+ * Scans fund names for PPF and ELSS keywords and sums their annual contributions.
+ * @param sips - Array of SIP items with name and monthly amount.
+ * @returns Object containing detected PPF and ELSS annual totals.
+ */
 function detectInvestmentDeductions(sips: SIPItem[]): { ppf: number; elss: number } {
   let ppf = 0
   let elss = 0
@@ -194,6 +225,13 @@ function detectInvestmentDeductions(sips: SIPItem[]): { ppf: number; elss: numbe
 // Page
 // ---------------------------------------------------------------------------
 
+/**
+ * Tax Planner page component. Renders a multi-section form for income and
+ * deduction entry, real-time Old vs New regime comparison with slab breakdowns,
+ * bar chart visualization, AI tax optimization insights, and a recommended
+ * regime indicator. Requires authentication.
+ * @returns The tax planner page wrapped in the app sidebar layout.
+ */
 export default function TaxPlannerPage() {
   const { isAuthenticated, isLoading: authLoading } = useAuth()
   const router = useRouter()
@@ -1287,6 +1325,11 @@ export default function TaxPlannerPage() {
 // Sub-components
 // ---------------------------------------------------------------------------
 
+/**
+ * Row component for the regime comparison summary table.
+ * Displays a labeled metric with old and new regime values side by side.
+ * @param props - Label text, old regime value, new regime value, and optional bold/highlight flags.
+ */
 function ComparisonRow({
   label,
   old,
@@ -1321,6 +1364,11 @@ function ComparisonRow({
   )
 }
 
+/**
+ * Individual tax slab row in the slab-wise breakdown table.
+ * Displays the income slab range, applicable rate, and computed tax amount.
+ * @param props - Slab range string, rate percentage string, and calculated tax amount.
+ */
 function SlabRow({ slab, rate, tax }: { slab: string; rate: string; tax: number }) {
   return (
     <div className="flex items-center justify-between text-xs">

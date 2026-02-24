@@ -1,3 +1,9 @@
+/**
+ * What-If budget simulator — lets the user adjust spending category
+ * percentages with plus/minus buttons and instantly see the projected
+ * impact on monthly savings and budget balance.
+ * @module components/budget/what-if-view
+ */
 "use client"
 
 import * as React from "react"
@@ -29,8 +35,11 @@ const CATEGORY_COLORS: Record<string, string> = {
   wants: "var(--chart-5)",
 }
 
-// ── Main ──
-
+/**
+ * Top-level What-If simulator page for the `/budget` route.
+ * Renders category sliders with +/- controls, real-time impact cards
+ * (savings delta, new balance projection), and a reset button.
+ */
 export function WhatIfView() {
   const { isAuthenticated } = useAuth()
 
@@ -270,7 +279,7 @@ export function WhatIfView() {
   )
 }
 
-// ── Sub-components ──
+/** Small card showing a single impact metric (e.g. savings delta or projected balance). */
 
 function ImpactCard({ label, value, isPositive, subtitle }: {
   label: string; value: number | string; isPositive?: boolean; subtitle?: string

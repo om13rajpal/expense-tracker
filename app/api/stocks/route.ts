@@ -13,6 +13,13 @@ import { ObjectId } from "mongodb"
 import { getMongoDb } from "@/lib/mongodb"
 import { corsHeaders, handleOptions, isValidObjectId, withAuth } from "@/lib/middleware"
 
+/**
+ * Convert a MongoDB stock document to an API response object,
+ * transforming the `_id` ObjectId to a string representation.
+ *
+ * @param doc - Raw MongoDB document from the `stocks` collection
+ * @returns The document with `_id` converted to a string
+ */
 function toStockResponse(doc: Record<string, unknown>) {
   return {
     ...doc,
@@ -20,6 +27,15 @@ function toStockResponse(doc: Record<string, unknown>) {
   }
 }
 
+/**
+ * GET /api/stocks
+ * List all stock holdings for the authenticated user, sorted by creation date (newest first).
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @returns {200} `{ success: true, items: Array<StockHolding> }`
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function GET(request: NextRequest) {
   return withAuth(async (_req, { user }) => {
     try {
@@ -43,6 +59,27 @@ export async function GET(request: NextRequest) {
   })(request)
 }
 
+/**
+ * POST /api/stocks
+ * Add a new stock holding or bulk-import multiple holdings.
+ * When `items` array is provided, performs a bulk insert.
+ * When `replaceAll: true` is set with bulk import, deletes all existing holdings first.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @body {string} symbol - Stock ticker symbol (e.g., "RELIANCE")
+ * @body {string} exchange - Exchange code (e.g., "NSE", "BSE", "NASDAQ")
+ * @body {number} shares - Number of shares held (> 0)
+ * @body {number} averageCost - Average purchase price per share in INR (> 0)
+ * @body {number} [expectedAnnualReturn] - Expected annual return percentage
+ * @body {string} [notes] - Optional notes
+ * @body {Array} [items] - Bulk import array of stock objects (same fields as above)
+ * @body {boolean} [replaceAll] - If true with items, deletes all existing holdings before import
+ *
+ * @returns {201} `{ success: true, item: StockHolding }` (single) or `{ success: true, insertedCount, errors }` (bulk)
+ * @returns {400} `{ success: false, message: string }` - Missing or invalid fields
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function POST(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {
@@ -157,6 +194,24 @@ export async function POST(request: NextRequest) {
   })(request)
 }
 
+/**
+ * PUT /api/stocks?id=xxx
+ * Update an existing stock holding. Only provided fields are modified.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @query {string} id - Stock holding ObjectId (required, must be valid)
+ * @body {string} [symbol] - Updated ticker symbol
+ * @body {string} [exchange] - Updated exchange code
+ * @body {number} [shares] - Updated number of shares
+ * @body {number} [averageCost] - Updated average cost per share
+ * @body {number|null} [expectedAnnualReturn] - Updated expected return
+ *
+ * @returns {200} `{ success: true, item: StockHolding | null }`
+ * @returns {400} `{ success: false, message: string }` - Invalid ID or no valid fields
+ * @returns {404} `{ success: false, message: string }` - Stock not found
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function PUT(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {
@@ -225,6 +280,18 @@ export async function PUT(request: NextRequest) {
   })(request)
 }
 
+/**
+ * DELETE /api/stocks?id=xxx
+ * Delete a stock holding by its ObjectId.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @query {string} id - Stock holding ObjectId (required, must be valid)
+ *
+ * @returns {200} `{ success: true, deleted: boolean }`
+ * @returns {400} `{ success: false, message: string }` - Missing or invalid ID
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function DELETE(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {
@@ -253,6 +320,10 @@ export async function DELETE(request: NextRequest) {
   })(request)
 }
 
+/**
+ * OPTIONS /api/stocks
+ * CORS preflight handler. Returns allowed methods and headers.
+ */
 export async function OPTIONS() {
   return handleOptions()
 }

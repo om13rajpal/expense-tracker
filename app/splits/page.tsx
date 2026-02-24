@@ -1,3 +1,12 @@
+/**
+ * @module app/splits/page
+ * @description Expense splitting and group settlement page for Finova. Allows users
+ * to manage contacts, create groups, add shared expenses with flexible split methods
+ * (equal, percentage, exact amounts), record settlements, view per-person balances,
+ * generate shareable links, and browse activity history. Data is managed via the
+ * `use-splits` hooks backed by `/api/splits/*` endpoints. Includes auto-settle
+ * detection from synced transactions.
+ */
 "use client"
 
 import * as React from "react"
@@ -1851,6 +1860,14 @@ function ActivityTab() {
 }
 
 /* ─── Main Page ─── */
+/**
+ * Splits page component. Renders a tabbed interface for expense splitting:
+ * Dashboard (overview metrics, balance summary), Groups (group management),
+ * Expenses (add/view shared expenses), Settlements (record and track payments),
+ * and Activity (recent activity feed). Supports shareable balance links.
+ * Requires authentication -- redirects to `/login` if unauthenticated.
+ * @returns The splits page wrapped in the app sidebar layout.
+ */
 export default function SplitsPage() {
   const router = useRouter()
   const { isAuthenticated, isLoading: authLoading } = useAuth()

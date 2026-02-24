@@ -12,6 +12,13 @@ import { ObjectId } from "mongodb"
 import { getMongoDb } from "@/lib/mongodb"
 import { corsHeaders, handleOptions, isValidObjectId, withAuth } from "@/lib/middleware"
 
+/**
+ * Convert a MongoDB mutual fund transaction document to an API response object,
+ * transforming the `_id` ObjectId to a string representation.
+ *
+ * @param doc - Raw MongoDB document from the `mutual_fund_transactions` collection
+ * @returns The document with `_id` converted to a string
+ */
 function toTxnResponse(doc: Record<string, unknown>) {
   return {
     ...doc,
@@ -19,6 +26,15 @@ function toTxnResponse(doc: Record<string, unknown>) {
   }
 }
 
+/**
+ * GET /api/mutual-funds/transactions
+ * List all mutual fund transactions for the authenticated user, sorted by date (newest first).
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @returns {200} `{ success: true, items: Array<MFTransaction> }`
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function GET(request: NextRequest) {
   return withAuth(async (_req, { user }) => {
     try {
@@ -42,6 +58,20 @@ export async function GET(request: NextRequest) {
   })(request)
 }
 
+/**
+ * POST /api/mutual-funds/transactions
+ * Bulk-import mutual fund transactions. Validates each item for required fields.
+ * When `replaceAll: true`, deletes all existing transactions before import.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @body {Array<{ schemeName, transactionType, amount, date, units?, nav? }>} items - Transaction array (required)
+ * @body {boolean} [replaceAll] - If true, deletes all existing transactions before import
+ *
+ * @returns {201} `{ success: true, insertedCount: number, errors: Array<{ index, message }> }`
+ * @returns {400} `{ success: false, message: string }` - Missing items or no valid rows
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function POST(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {
@@ -113,6 +143,18 @@ export async function POST(request: NextRequest) {
   })(request)
 }
 
+/**
+ * DELETE /api/mutual-funds/transactions?id=xxx
+ * Delete a mutual fund transaction by its ObjectId.
+ *
+ * @requires Authentication - JWT via `auth-token` cookie
+ *
+ * @query {string} id - Transaction ObjectId (required, must be valid)
+ *
+ * @returns {200} `{ success: true, deleted: boolean }`
+ * @returns {400} `{ success: false, message: string }` - Missing or invalid ID
+ * @returns {500} `{ success: false, message: string }` - Server error
+ */
 export async function DELETE(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {
@@ -141,6 +183,10 @@ export async function DELETE(request: NextRequest) {
   })(request)
 }
 
+/**
+ * OPTIONS /api/mutual-funds/transactions
+ * CORS preflight handler. Returns allowed methods and headers.
+ */
 export async function OPTIONS() {
   return handleOptions()
 }
