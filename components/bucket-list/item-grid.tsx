@@ -1,38 +1,29 @@
-/**
- * Bucket list item grid component.
- *
- * Groups bucket list items by their status (saving, wishlist, completed)
- * and renders them in a responsive grid layout with animated transitions.
- *
- * The grid uses three columns on desktop, two on tablet, and one on mobile.
- * Items within each status group are rendered using the BucketListItemCard component
- * with staggered fade-up entrance animations.
- *
- * Status groups are sorted in a fixed order: saving first, then wishlist, then completed,
- * so active items are always prominent.
- *
- * @module components/bucket-list/item-grid
- */
 "use client"
 
+import { useCallback } from "react"
 import { AnimatePresence, motion } from "motion/react"
-import { IconLoader2, IconHeart, IconCircleCheck } from "@tabler/icons-react"
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core"
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  rectSortingStrategy,
+  useSortable,
+} from "@dnd-kit/sortable"
+import { CSS } from "@dnd-kit/utilities"
+import { IconLoader2, IconHeart, IconCircleCheck, IconPlus } from "@tabler/icons-react"
 import { stagger, fadeUp } from "@/lib/motion"
+import { useReorderItems } from "@/hooks/use-bucket-list"
 import { BucketListItemCard } from "./item-card"
 import type { BucketListItem } from "@/lib/types"
 
-/**
- * Props for the BucketListItemGrid component.
- *
- * @property items - Filtered and sorted array of bucket list items to display
- * @property onUpdate - Callback to update an item's fields
- * @property onDelete - Callback to delete an item by ID
- * @property onPriceSearch - Callback to trigger a web price search for an item
- * @property onGetStrategy - Callback to generate an AI savings strategy for an item
- * @property onEdit - Callback to open the edit dialog for an item
- * @property priceSearchingId - ID of the item currently being price-searched (null if none)
- * @property strategyLoadingId - ID of the item currently generating strategy (null if none)
- */
 interface ItemGridProps {
   items: BucketListItem[]
   onUpdate: (id: string, data: Partial<BucketListItem>) => void
@@ -40,58 +31,78 @@ interface ItemGridProps {
   onPriceSearch: (id: string) => void
   onGetStrategy: (id: string) => void
   onEdit: (item: BucketListItem) => void
+  onQuickFund: (item: BucketListItem) => void
+  onItemClick: (item: BucketListItem) => void
   priceSearchingId?: string | null
   strategyLoadingId?: string | null
+  onAddClick?: () => void
 }
 
-/**
- * Display order for bucket list item statuses.
- * Lower values appear first in the UI.
- */
 const statusOrder: Record<string, number> = {
   saving: 0,
   wishlist: 1,
   completed: 2,
 }
 
-/**
- * Human-readable labels for each bucket list status.
- */
 const statusLabels: Record<string, string> = {
   saving: "Saving",
   wishlist: "Wishlist",
   completed: "Completed",
 }
 
-/**
- * Status-specific icon components for the section headers.
- */
 const statusIcons: Record<string, typeof IconLoader2> = {
   saving: IconLoader2,
   wishlist: IconHeart,
   completed: IconCircleCheck,
 }
 
-/**
- * Status-specific accent colors for section header styling.
- */
 const statusColors: Record<string, string> = {
   saving: "text-blue-500",
   wishlist: "text-pink-500",
   completed: "text-emerald-500",
 }
 
-/**
- * Renders grouped and animated grid of bucket list item cards.
- *
- * Items are grouped by their status field, then each group is rendered
- * as a labeled section with a responsive card grid. Groups are sorted
- * so that actively-saving items appear first, followed by wishlist, then completed.
- *
- * Uses AnimatePresence with popLayout mode to animate groups in/out smoothly.
- *
- * @param props - Component props (see ItemGridProps)
- */
+function SortableCard({
+  item,
+  ...props
+}: {
+  item: BucketListItem
+  onUpdate: (id: string, data: Partial<BucketListItem>) => void
+  onDelete: (id: string) => void
+  onPriceSearch: (id: string) => void
+  onGetStrategy: (id: string) => void
+  onEdit: (item: BucketListItem) => void
+  onQuickFund: (item: BucketListItem) => void
+  onClick: (item: BucketListItem) => void
+  isPriceSearching?: boolean
+  isStrategyLoading?: boolean
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: item.id })
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  }
+
+  return (
+    <div ref={setNodeRef} style={style} {...attributes}>
+      <BucketListItemCard
+        item={item}
+        isDragging={isDragging}
+        dragHandleProps={listeners}
+        {...props}
+      />
+    </div>
+  )
+}
+
 export function BucketListItemGrid({
   items,
   onUpdate,
@@ -99,9 +110,19 @@ export function BucketListItemGrid({
   onPriceSearch,
   onGetStrategy,
   onEdit,
+  onQuickFund,
+  onItemClick,
   priceSearchingId,
   strategyLoadingId,
+  onAddClick,
 }: ItemGridProps) {
+  const reorder = useReorderItems()
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  )
+
   const groups = items.reduce<Record<string, BucketListItem[]>>((acc, item) => {
     const key = item.status
     if (!acc[key]) acc[key] = []
@@ -113,12 +134,45 @@ export function BucketListItemGrid({
     (a, b) => (statusOrder[a] ?? 9) - (statusOrder[b] ?? 9)
   )
 
+  const handleDragEnd = useCallback(
+    (event: DragEndEvent) => {
+      const { active, over } = event
+      if (!over || active.id === over.id) return
+
+      // Find which status group both items belong to
+      const activeItem = items.find((i) => i.id === active.id)
+      const overItem = items.find((i) => i.id === over.id)
+      if (!activeItem || !overItem || activeItem.status !== overItem.status) return
+
+      const group = groups[activeItem.status]
+      if (!group) return
+
+      const oldIndex = group.findIndex((i) => i.id === active.id)
+      const newIndex = group.findIndex((i) => i.id === over.id)
+      if (oldIndex === -1 || newIndex === -1) return
+
+      // Compute new sort order
+      const reordered = [...group]
+      const [moved] = reordered.splice(oldIndex, 1)
+      reordered.splice(newIndex, 0, moved)
+
+      const reorderPayload = reordered.map((item, idx) => ({
+        id: item.id,
+        sortOrder: idx,
+      }))
+
+      reorder.mutate({ items: reorderPayload })
+    },
+    [items, groups, reorder]
+  )
+
   return (
     <div className="space-y-8">
       <AnimatePresence mode="popLayout">
         {sortedKeys.map((status) => {
           const Icon = statusIcons[status] ?? IconLoader2
           const color = statusColors[status] ?? "text-muted-foreground"
+          const groupItems = groups[status]
           return (
             <motion.div
               key={status}
@@ -127,36 +181,76 @@ export function BucketListItemGrid({
               exit={{ opacity: 0, y: -10 }}
               transition={{ duration: 0.2 }}
             >
-              <div className="flex items-center gap-2 mb-4">
-                <Icon className={`size-4 ${color}`} />
-                <h2 className="text-sm font-semibold text-foreground">
-                  {statusLabels[status] ?? status}
-                </h2>
-                <span className="text-xs text-muted-foreground/50 bg-muted/50 rounded-full px-2 py-0.5">
-                  {groups[status].length}
-                </span>
-              </div>
-              <motion.div
-                variants={stagger}
-                initial="hidden"
-                animate="show"
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+              {/* Only show group headers when there are multiple status groups */}
+              {sortedKeys.length > 1 && (
+                <div className="flex items-center gap-2 mb-4">
+                  <Icon className={`size-4 ${color}`} />
+                  <h2 className="text-sm font-semibold text-foreground">
+                    {statusLabels[status] ?? status}
+                  </h2>
+                  <span className="text-xs text-muted-foreground/50 bg-muted/50 rounded-full px-2 py-0.5">
+                    {groupItems.length}
+                  </span>
+                </div>
+              )}
+              <DndContext
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
               >
-                {groups[status].map((item) => (
-                  <motion.div key={item.id} variants={fadeUp} layout>
-                    <BucketListItemCard
-                      item={item}
-                      onUpdate={onUpdate}
-                      onDelete={onDelete}
-                      onPriceSearch={onPriceSearch}
-                      onGetStrategy={onGetStrategy}
-                      onEdit={onEdit}
-                      isPriceSearching={priceSearchingId === item.id}
-                      isStrategyLoading={strategyLoadingId === item.id}
-                    />
+                <SortableContext
+                  items={groupItems.map((i) => i.id)}
+                  strategy={rectSortingStrategy}
+                >
+                  <motion.div
+                    variants={stagger}
+                    initial="hidden"
+                    animate="show"
+                    className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"
+                  >
+                    <AnimatePresence>
+                      {groupItems.map((item) => (
+                        <motion.div key={item.id} variants={fadeUp} layout>
+                          <SortableCard
+                            item={item}
+                            onUpdate={onUpdate}
+                            onDelete={onDelete}
+                            onPriceSearch={onPriceSearch}
+                            onGetStrategy={onGetStrategy}
+                            onEdit={onEdit}
+                            onQuickFund={onQuickFund}
+                            onClick={onItemClick}
+                            isPriceSearching={priceSearchingId === item.id}
+                            isStrategyLoading={strategyLoadingId === item.id}
+                          />
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                    {/* Add card placeholder -- only when less than 1 item total */}
+                    {status === sortedKeys[0] && items.length < 1 && onAddClick && (
+                      <motion.div variants={fadeUp}>
+                        <button
+                          type="button"
+                          onClick={onAddClick}
+                          className="w-full h-full min-h-[280px] rounded-xl border-2 border-dashed border-border/50 hover:border-primary/40 hover:bg-muted/20 flex flex-col items-center justify-center gap-3 transition-all duration-200 group/add"
+                        >
+                          <div className="flex items-center justify-center size-12 rounded-xl bg-muted/50 group-hover/add:bg-primary/10 transition-colors">
+                            <IconPlus className="size-6 text-muted-foreground group-hover/add:text-primary transition-colors" />
+                          </div>
+                          <div className="text-center">
+                            <p className="text-sm font-medium text-muted-foreground group-hover/add:text-foreground transition-colors">
+                              Add another dream
+                            </p>
+                            <p className="text-[11px] text-muted-foreground/50 mt-0.5">
+                              Track something you want to save for
+                            </p>
+                          </div>
+                        </button>
+                      </motion.div>
+                    )}
                   </motion.div>
-                ))}
-              </motion.div>
+                </SortableContext>
+              </DndContext>
             </motion.div>
           )
         })}

@@ -5,10 +5,11 @@
 "use client"
 
 import * as React from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
+import Lottie from "lottie-react"
 import {
-  IconChecklist,
   IconDashboard,
   IconFileInvoice,
   IconPigMoney,
@@ -34,7 +35,7 @@ import {
   SidebarSeparator,
 } from "@/components/ui/sidebar"
 
-/** Flat list of primary sidebar navigation items (Money through Bucket List). */
+/** Flat list of primary sidebar navigation items. */
 const navItems: NavItem[] = [
   { title: "Money",        url: "/money",        icon: IconReceipt2 },
   { title: "Budget",       url: "/budget",       icon: IconPigMoney },
@@ -42,7 +43,6 @@ const navItems: NavItem[] = [
   { title: "Investments",  url: "/investments",  icon: IconTrendingUp },
   { title: "Tax & Bills",  url: "/bills",        icon: IconFileInvoice },
   { title: "AI Assistant", url: "/ai",           icon: IconSparkles },
-  { title: "Bucket List",  url: "/bucket-list",  icon: IconChecklist },
 ]
 
 /** Static user profile data shown in the sidebar footer. */
@@ -56,6 +56,14 @@ const userData = {
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const pathname = usePathname()
   const isDashboard = pathname === "/dashboard" || pathname === "/"
+  const [mascotData, setMascotData] = useState<object | null>(null)
+
+  useEffect(() => {
+    fetch("/animations/fire-mascot.json")
+      .then((r) => r.json())
+      .then(setMascotData)
+      .catch(() => {})
+  }, [])
 
   return (
     <Sidebar collapsible="offcanvas" {...props}>
@@ -67,7 +75,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
               className="data-[slot=sidebar-menu-button]:!p-1.5"
             >
               <Link href="/dashboard">
-                <IconPigMoney className="!size-5" />
+                {mascotData ? (
+                  <div className="!size-6 shrink-0">
+                    <Lottie animationData={mascotData} loop autoplay className="w-full h-full" />
+                  </div>
+                ) : (
+                  <IconPigMoney className="!size-5" />
+                )}
                 <span className="text-base font-semibold">Finova</span>
               </Link>
             </SidebarMenuButton>

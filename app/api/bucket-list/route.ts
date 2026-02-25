@@ -52,8 +52,10 @@ export async function GET(request: NextRequest) {
         sortOrder: doc.sortOrder,
         priceHistory: Array.isArray(doc.priceHistory) ? doc.priceHistory : [],
         dealAlerts: Array.isArray(doc.dealAlerts) ? doc.dealAlerts : [],
+        imageUrl: doc.imageUrl,
         aiStrategy: doc.aiStrategy,
         aiStrategyGeneratedAt: doc.aiStrategyGeneratedAt,
+        coverImageUrl: doc.coverImageUrl,
         createdAt: doc.createdAt,
         updatedAt: doc.updatedAt,
       }));
@@ -68,12 +70,17 @@ export async function GET(request: NextRequest) {
           ? Math.round((totalSavedAmount / totalTargetAmount) * 100)
           : 0;
 
+      const totalMonthlyAllocation = items
+        .filter((i) => i.status !== 'completed')
+        .reduce((sum, i) => sum + i.monthlyAllocation, 0);
+
       const summary: BucketListSummary = {
         totalItems,
         completedItems,
         totalTargetAmount,
         totalSavedAmount,
         overallProgress,
+        totalMonthlyAllocation,
       };
 
       return NextResponse.json(
@@ -107,6 +114,7 @@ export async function POST(request: NextRequest) {
         description,
         monthlyAllocation,
         targetDate,
+        coverImageUrl,
       } = body;
 
       // Validation
@@ -154,6 +162,7 @@ export async function POST(request: NextRequest) {
         sortOrder: nextSortOrder,
         priceHistory: [],
         dealAlerts: [],
+        coverImageUrl: typeof coverImageUrl === 'string' && coverImageUrl.trim() ? coverImageUrl.trim() : undefined,
         createdAt: now,
         updatedAt: now,
       };
@@ -239,6 +248,7 @@ export async function PUT(request: NextRequest) {
         'monthlyAllocation',
         'targetDate',
         'sortOrder',
+        'coverImageUrl',
       ];
 
       const setFields: Record<string, unknown> = { updatedAt: now };
@@ -310,8 +320,10 @@ export async function PUT(request: NextRequest) {
         sortOrder: result.sortOrder,
         priceHistory: Array.isArray(result.priceHistory) ? result.priceHistory : [],
         dealAlerts: Array.isArray(result.dealAlerts) ? result.dealAlerts : [],
+        imageUrl: result.imageUrl,
         aiStrategy: result.aiStrategy,
         aiStrategyGeneratedAt: result.aiStrategyGeneratedAt,
+        coverImageUrl: result.coverImageUrl,
         createdAt: result.createdAt,
         updatedAt: result.updatedAt,
       };

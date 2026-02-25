@@ -136,21 +136,43 @@ export async function POST(request: NextRequest) {
         item.description ? `- Description: ${item.description}` : '',
       ].filter(Boolean).join('\n');
 
-      const strategy = await chatCompletion(
+      const jsonSchema = JSON.stringify({
+        monthlyPlan: { amount: 'number (INR)', duration: 'string e.g. "5 months"', startDate: 'string e.g. "Mar 2026"' },
+        milestones: [
+          { percent: 25, amount: 'number (INR at 25%)', tip: 'actionable tip string' },
+          { percent: 50, amount: 'number (INR at 50%)', tip: 'actionable tip string' },
+          { percent: 75, amount: 'number (INR at 75%)', tip: 'actionable tip string' },
+          { percent: 100, amount: 'number (INR at 100%)', tip: 'actionable tip string' },
+        ],
+        savingTips: [
+          { title: 'short title', description: 'detailed description', potentialSaving: 'number (INR)' },
+        ],
+        priceOptimization: { bestTimeToBuy: 'string', bestPlatform: 'string', estimatedDiscount: 'string e.g. "10-15%"' },
+        riskLevel: '"low" | "medium" | "high"',
+        confidence: '"low" | "medium" | "high"',
+        summary: 'one-liner summary string',
+      }, null, 2);
+
+      const rawStrategy = await chatCompletion(
         [
           {
             role: 'system',
-            content: `You are a personal finance advisor for an Indian consumer. Generate a personalized, actionable savings strategy in Markdown format.
+            content: `You are a personal finance advisor for an Indian consumer. Generate a personalized, actionable savings strategy as a JSON object.
 
-Your strategy should include:
-1. **Timeline Assessment** - Realistic timeline to reach the goal based on current savings capacity
-2. **Monthly Savings Plan** - Suggested monthly allocation (considering existing finances)
-3. **Smart Saving Tips** - 3-4 specific tips to save faster for this particular item/category
-4. **Price Optimization** - Suggestions for getting the best deal (timing, alternatives, cashback, etc.)
-5. **Risk Assessment** - Any considerations about price changes or better alternatives
+IMPORTANT: Respond with ONLY valid JSON, no markdown fences, no extra text. The JSON must match this exact schema:
 
-Keep it concise (under 500 words), practical, and encouraging. All amounts in INR.
-Do not use any greetings or sign-offs.`,
+${jsonSchema}
+
+Rules:
+- monthlyPlan.amount: a realistic monthly savings amount in INR based on the user's disposable income
+- milestones: exactly 4 milestones at 25%, 50%, 75%, 100% of the REMAINING amount. Each tip should be specific and actionable for the Indian market.
+- savingTips: 2-3 practical tips with realistic potential savings in INR
+- priceOptimization: recommend best time to buy (Indian sale seasons like Diwali, Holi, Republic Day, Big Billion Days, Great Indian Festival), best platform, and estimated discount
+- riskLevel: based on price volatility and financial stretch required
+- confidence: based on feasibility given the user's income and expenses
+- summary: concise one-liner in the format "Save Rs.X/month for Y months. Best to buy during Z for N% discount."
+- All monetary amounts must be numbers (not strings)
+- Do not include any text outside the JSON object`,
           },
           {
             role: 'user',
@@ -159,6 +181,28 @@ Do not use any greetings or sign-offs.`,
         ],
         { maxTokens: 1500, temperature: 0.4 }
       );
+
+      // Parse and validate the JSON response, with fallback to raw string
+      let strategy: string;
+      try {
+        // Strip markdown code fences if the model wraps them
+        const cleaned = rawStrategy
+          .replace(/^```(?:json)?\s*\n?/i, '')
+          .replace(/\n?```\s*$/i, '')
+          .trim();
+        const parsed = JSON.parse(cleaned);
+
+        // Basic structural validation
+        if (parsed.monthlyPlan && parsed.milestones && parsed.summary) {
+          strategy = JSON.stringify(parsed);
+        } else {
+          // Structurally invalid — store as raw text for markdown fallback
+          strategy = rawStrategy;
+        }
+      } catch {
+        // JSON parse failed — store the raw response for markdown fallback rendering
+        strategy = rawStrategy;
+      }
 
       // Save strategy to the bucket list item
       const now = new Date().toISOString();

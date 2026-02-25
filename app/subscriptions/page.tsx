@@ -1622,14 +1622,80 @@ function SubscriptionTable({
 
 function SubscriptionsLoadingSkeleton() {
   return (
-    <div className="space-y-4 p-4">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Skeleton className="h-[88px] rounded-xl" />
-        <Skeleton className="h-[88px] rounded-xl" />
-        <Skeleton className="h-[88px] rounded-xl" />
+    <div className="space-y-4 p-4 md:p-6">
+      {/* Metric tiles skeleton – 4 tiles matching Active / Monthly / Yearly / Overdue */}
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="card-elevated rounded-xl bg-card p-4 flex items-center gap-4">
+            <Skeleton className="h-10 w-10 rounded-lg" />
+            <div className="space-y-2">
+              <Skeleton className="h-3 w-20" />
+              <Skeleton className="h-6 w-16" />
+              <Skeleton className="h-2.5 w-24" />
+            </div>
+          </div>
+        ))}
       </div>
-      <Skeleton className="h-[400px] w-full rounded-xl" />
-      <Skeleton className="h-[200px] w-full rounded-xl" />
+
+      {/* Upcoming renewals / overdue card skeleton */}
+      <div className="card-elevated rounded-xl bg-card p-5 space-y-3">
+        <div className="flex items-center gap-2">
+          <Skeleton className="h-4 w-4 rounded" />
+          <Skeleton className="h-4 w-40" />
+        </div>
+        <Skeleton className="h-3 w-56" />
+        <div className="flex flex-wrap gap-2">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <Skeleton key={i} className="h-10 w-44 rounded-lg" />
+          ))}
+        </div>
+      </div>
+
+      {/* Subscriptions table card skeleton */}
+      <div className="card-elevated rounded-xl bg-card overflow-hidden">
+        {/* Card header with title + search */}
+        <div className="px-5 pt-4 pb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div className="space-y-1.5">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-3 w-48" />
+          </div>
+          <Skeleton className="h-8 w-full sm:w-64 rounded-md" />
+        </div>
+        {/* Tabs skeleton */}
+        <div className="px-5 pb-3">
+          <Skeleton className="h-8 w-56 rounded-lg" />
+        </div>
+        {/* Table header */}
+        <div className="flex items-center gap-4 px-5 py-2.5 border-b border-border/40">
+          <Skeleton className="h-3 w-28" />
+          <Skeleton className="h-3 w-16 ml-auto" />
+          <Skeleton className="h-3 w-16 hidden sm:block" />
+          <Skeleton className="h-3 w-16 hidden md:block" />
+          <Skeleton className="h-3 w-20 hidden lg:block" />
+          <Skeleton className="h-3 w-20" />
+          <Skeleton className="h-3 w-[140px]" />
+        </div>
+        {/* Table rows */}
+        {Array.from({ length: 6 }).map((_, i) => (
+          <div key={i} className="flex items-center gap-4 px-5 py-3.5 border-b border-border/20">
+            <Skeleton className="h-8 w-8 rounded-lg" />
+            <div className="space-y-1.5 min-w-0">
+              <Skeleton className="h-3.5 w-24" />
+              <Skeleton className="h-2.5 w-16" />
+            </div>
+            <Skeleton className="h-4 w-16 ml-auto" />
+            <Skeleton className="h-3 w-14 hidden sm:block" />
+            <Skeleton className="h-5 w-20 rounded-md hidden md:block" />
+            <Skeleton className="h-3 w-16 hidden lg:block" />
+            <Skeleton className="h-3 w-16" />
+            <div className="flex gap-1">
+              <Skeleton className="h-7 w-7 rounded-md" />
+              <Skeleton className="h-7 w-7 rounded-md" />
+              <Skeleton className="h-7 w-7 rounded-md" />
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }

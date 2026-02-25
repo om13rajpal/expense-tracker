@@ -594,7 +594,7 @@ export function TaxView() {
                                       <img
                                         src={`https://img.logo.dev/${sub.domain}?token=pk_a1V5q9A4TiOUjCQbz9ZXhQ&size=128&format=png`}
                                         alt={sub.name}
-                                        className="h-10 w-10 rounded-xl object-contain bg-white p-0.5 shadow-sm ring-1 ring-border/20"
+                                        className="h-10 w-10 rounded-xl object-contain bg-white dark:bg-muted p-0.5 shadow-sm ring-1 ring-border/20"
                                         onError={(e) => {
                                           e.currentTarget.style.display = "none"
                                           const fallback = e.currentTarget.nextElementSibling as HTMLElement | null

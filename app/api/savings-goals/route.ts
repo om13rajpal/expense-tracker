@@ -146,6 +146,7 @@ export async function GET(request: NextRequest) {
             category: doc.category,
             linkedCategories: Array.isArray(doc.linkedCategories) ? doc.linkedCategories : [],
             linkedKeywords: Array.isArray(doc.linkedKeywords) ? doc.linkedKeywords : [],
+            linkedTransactionIds: Array.isArray(doc.linkedTransactionIds) ? doc.linkedTransactionIds : [],
             createdAt: doc.createdAt,
             updatedAt: doc.updatedAt,
           };
@@ -254,6 +255,7 @@ export async function POST(request: NextRequest) {
         linkedKeywords: Array.isArray(linkedKeywords)
           ? linkedKeywords.filter((k: unknown) => typeof k === 'string' && k.trim().length > 0)
           : [],
+        linkedTransactionIds: [],
         createdAt: now,
         updatedAt: now,
       };
@@ -323,13 +325,14 @@ export async function PUT(request: NextRequest) {
         'category',
         'linkedCategories',
         'linkedKeywords',
+        'linkedTransactionIds',
       ];
 
       const setFields: Record<string, unknown> = { updatedAt: now };
       for (const key of allowedFields) {
         if (fields[key] !== undefined) {
           // Validate array fields
-          if (key === 'linkedCategories' || key === 'linkedKeywords') {
+          if (key === 'linkedCategories' || key === 'linkedKeywords' || key === 'linkedTransactionIds') {
             if (Array.isArray(fields[key])) {
               setFields[key] = fields[key].filter((v: unknown) => typeof v === 'string');
             }
@@ -375,6 +378,7 @@ export async function PUT(request: NextRequest) {
         category: result.category,
         linkedCategories: Array.isArray(result.linkedCategories) ? result.linkedCategories : [],
         linkedKeywords: Array.isArray(result.linkedKeywords) ? result.linkedKeywords : [],
+        linkedTransactionIds: Array.isArray(result.linkedTransactionIds) ? result.linkedTransactionIds : [],
         createdAt: result.createdAt,
         updatedAt: result.updatedAt,
       };

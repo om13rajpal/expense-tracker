@@ -108,6 +108,7 @@ import { stagger, fadeUp, fadeUpSmall } from "@/lib/motion"
 import { BudgetSuggestions } from "@/components/planning/budget-suggestions"
 import { PlanAllocateView } from "@/components/budget/plan-allocate-view"
 import { WhatIfView } from "@/components/budget/what-if-view"
+import { SpendingDial } from "@/components/budget/spending-dial"
 
 interface BudgetCategoryItem {
   id: string
@@ -260,6 +261,9 @@ export default function BudgetPage() {
   const [budgetHistory, setBudgetHistory] = useState<BudgetHistoryEntry[]>([])
   const [historyLoading, setHistoryLoading] = useState(false)
   const [expandedHistoryMonth, setExpandedHistoryMonth] = useState<string | null>(null)
+
+  // Bucket list monthly allocation (for savings bucket display)
+  const [bucketListAlloc, setBucketListAlloc] = useState<number>(0)
 
   // Alert state
   const [alerts, setAlerts] = useState<BudgetAlert[]>([])
@@ -554,6 +558,22 @@ export default function BudgetPage() {
       sessionStorage.setItem("budget-alerts-shown", currentMonthKey)
     }
   }, [alerts])
+
+  // Fetch bucket list monthly allocation for savings display
+  useEffect(() => {
+    fetch("/api/bucket-list")
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.success) {
+          const total = (data.items || []).reduce(
+            (sum: number, it: Record<string, unknown>) => sum + ((it.monthlyAllocation as number) || 0),
+            0
+          )
+          setBucketListAlloc(total)
+        }
+      })
+      .catch(() => {})
+  }, [])
 
   const saveBudgets = async (newBudgets: Record<string, number>) => {
     setIsSaving(true)
@@ -1064,141 +1084,17 @@ export default function BudgetPage() {
 
               {/* ─── Spending Split (NWI) ─── */}
               {nwiConfig && (
-                <motion.div initial={fadeUp.hidden} animate={fadeUp.show}>
-                  <div className="card-elevated rounded-xl bg-card p-5">
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="flex items-center gap-1.5">
-                        <h3 className="text-sm font-semibold">Spending Split</h3>
-                        <InfoTooltip text="Divide your spending into Needs (rent, groceries, bills), Wants (dining, shopping, entertainment), Investments (SIPs, stocks), and Savings (emergency fund, goals)." />
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <span className={`text-xs font-medium tabular-nums ${nwiTotal === 100 ? "text-primary" : "text-destructive"}`}>
-                          {nwiTotal}%{nwiTotal !== 100 && " (need 100%)"}
-                        </span>
-                        <Button
-                          size="sm"
-                          className="h-7 text-xs px-3"
-                          onClick={saveNwiPercentages}
-                          disabled={nwiSaving || nwiTotal !== 100}
-                        >
-                          {nwiSaving ? "Saving..." : "Save"}
-                        </Button>
-                      </div>
-                    </div>
-
-                    {/* Proportion bar with rounded segments */}
-                    <div className="flex h-2.5 rounded-full overflow-hidden mb-5 gap-[2px] bg-muted/30 p-[1px]">
-                      {(["needs", "wants", "investments", "savings"] as const).map((key) => {
-                        const cfg = BUCKET_CONFIG[key]
-                        return (
-                          <div
-                            key={key}
-                            className={`${cfg.color} rounded-full transition-all duration-500 ease-out first:rounded-l-full last:rounded-r-full`}
-                            style={{ width: `${nwiDraft[key]}%` }}
-                          />
-                        )
-                      })}
-                    </div>
-
-                    {/* 4 bucket cards */}
-                    <div className="grid gap-3 grid-cols-2 md:grid-cols-4">
-                      {(["needs", "wants", "investments", "savings"] as const).map((key) => {
-                        const cfg = BUCKET_CONFIG[key]
-                        const BucketIcon = cfg.icon
-                        const bucket = nwiSplit?.[key]
-                        const actual = bucket?.actualAmount ?? 0
-                        const target = bucket?.targetAmount ?? 0
-                        const actualPct = bucket?.actualPercentage ?? 0
-                        const isOver = actual > target && target > 0
-                        const usagePct = target > 0 ? (actual / target) * 100 : 0
-
-                        return (
-                          <div
-                            key={key}
-                            className="rounded-xl border border-border/60 bg-card p-3.5 space-y-2.5 transition-colors"
-                          >
-                            {/* Header */}
-                            <div className="flex items-center justify-between">
-                              <div className="flex items-center gap-2">
-                                <BucketIcon className="h-3.5 w-3.5 text-muted-foreground" />
-                                <span className="text-xs font-semibold">{cfg.label}</span>
-                              </div>
-                              <span className="text-[11px] text-muted-foreground tabular-nums">
-                                {nwiConfig[key]?.categories.length ?? 0} cats
-                              </span>
-                            </div>
-
-                            {/* Actual vs Target */}
-                            {nwiSplit && (
-                              <div className="space-y-1.5">
-                                <div className="flex items-baseline justify-between">
-                                  <span className={`text-sm font-semibold tabular-nums ${isOver ? "text-destructive" : ""}`}>
-                                    {formatCurrency(actual)}
-                                  </span>
-                                  <span className="text-[11px] text-muted-foreground tabular-nums">
-                                    / {formatCurrency(target)}
-                                  </span>
-                                </div>
-                                <div className="h-1.5 rounded-full bg-muted/40 overflow-hidden">
-                                  <div
-                                    className={`h-full rounded-full transition-all duration-500 ease-out ${isOver ? "bg-destructive" : "bg-primary"}`}
-                                    style={{ width: `${Math.min(usagePct, 100)}%` }}
-                                  />
-                                </div>
-                                <p className="text-[11px] text-muted-foreground tabular-nums">
-                                  {actualPct.toFixed(1)}% of income
-                                  <span className="text-muted-foreground/60"> (target {nwiDraft[key]}%)</span>
-                                </p>
-                              </div>
-                            )}
-
-                            {/* Controls */}
-                            <div className="flex items-center gap-0.5 pt-2 border-t border-border/20">
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-6 w-6 shrink-0 rounded-md hover:bg-muted/60"
-                                onClick={() => setNwiDraft(prev => ({ ...prev, [key]: Math.max(0, prev[key] - 5) }))}
-                                disabled={nwiDraft[key] <= 0}
-                              >
-                                <IconMinus className="h-3 w-3" />
-                              </Button>
-                              <div className="flex-1 relative">
-                                <Input
-                                  type="number"
-                                  min={0}
-                                  max={100}
-                                  value={nwiDraft[key]}
-                                  onChange={(e) => {
-                                    const val = parseInt(e.target.value)
-                                    if (!isNaN(val) && val >= 0 && val <= 100) {
-                                      setNwiDraft(prev => ({ ...prev, [key]: val }))
-                                    }
-                                  }}
-                                  className="h-6 text-center text-xs font-semibold tabular-nums px-1"
-                                />
-                              </div>
-                              <Button
-                                size="icon"
-                                variant="ghost"
-                                className="h-6 w-6 shrink-0 rounded-md hover:bg-muted/60"
-                                onClick={() => setNwiDraft(prev => ({ ...prev, [key]: Math.min(100, prev[key] + 5) }))}
-                                disabled={nwiDraft[key] >= 100}
-                              >
-                                <IconPlus className="h-3 w-3" />
-                              </Button>
-                              <span className="text-[11px] font-medium text-muted-foreground ml-0.5 shrink-0 tabular-nums w-7 text-right">
-                                {nwiDraft[key]}%
-                              </span>
-                            </div>
-
-                            <p className="text-[11px] text-muted-foreground/70">{cfg.desc}</p>
-                          </div>
-                        )
-                      })}
-                    </div>
-                  </div>
-                </motion.div>
+                <SpendingDial
+                  nwiDraft={nwiDraft}
+                  setNwiDraft={setNwiDraft}
+                  nwiSplit={nwiSplit}
+                  nwiConfig={nwiConfig}
+                  nwiTotal={nwiTotal}
+                  nwiSaving={nwiSaving}
+                  saveNwiPercentages={saveNwiPercentages}
+                  bucketListAlloc={bucketListAlloc}
+                  formatCurrency={formatCurrency}
+                />
               )}
 
               {/* ─── Chart + Attention ─── */}
@@ -1794,13 +1690,49 @@ function MiniSparkline({ data, highlightIndex }: { data: number[]; highlightInde
 function BudgetLoadingSkeleton() {
   return (
     <div className="space-y-4 p-4 md:p-6">
-      <Skeleton className="h-24 w-full rounded-xl" />
-      <Skeleton className="h-16 w-full rounded-xl" />
-      <div className="grid gap-4 lg:grid-cols-5">
-        <Skeleton className="h-[380px] rounded-xl lg:col-span-3" />
-        <Skeleton className="h-[380px] rounded-xl lg:col-span-2" />
+      {/* Tab bar placeholder */}
+      <Skeleton className="h-10 w-full max-w-md rounded-lg" />
+
+      {/* Stat cards row */}
+      <div className="card-elevated rounded-xl bg-card grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-border/40">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <div key={i} className="px-3 sm:px-5 py-3 sm:py-4 flex items-start gap-2 sm:gap-3">
+            <Skeleton className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg shrink-0" />
+            <div className="space-y-1.5 flex-1">
+              <Skeleton className="h-3 w-14" />
+              <Skeleton className="h-5 w-24" />
+              <Skeleton className="h-3 w-20" />
+            </div>
+          </div>
+        ))}
       </div>
-      <Skeleton className="h-[400px] w-full rounded-xl" />
+
+      {/* Chart + Attention cards grid */}
+      <div className="grid gap-4 lg:grid-cols-5">
+        <div className="card-elevated rounded-xl bg-card p-5 lg:col-span-3 space-y-4">
+          <div className="space-y-1.5">
+            <Skeleton className="h-4 w-36" />
+            <Skeleton className="h-3 w-52" />
+          </div>
+          <Skeleton className="h-[300px] w-full rounded-lg" />
+        </div>
+        <div className="card-elevated rounded-xl bg-card p-5 lg:col-span-2 space-y-3">
+          <div className="space-y-1.5 mb-1">
+            <Skeleton className="h-4 w-32" />
+            <Skeleton className="h-3 w-44" />
+          </div>
+          {Array.from({ length: 5 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3 rounded-lg px-3 py-2.5">
+              <Skeleton className="h-5 w-5 rounded-md shrink-0" />
+              <div className="flex-1 space-y-1.5">
+                <Skeleton className="h-3.5 w-24" />
+                <Skeleton className="h-1.5 w-full rounded-full" />
+              </div>
+              <Skeleton className="h-4 w-10" />
+            </div>
+          ))}
+        </div>
+      </div>
     </div>
   )
 }

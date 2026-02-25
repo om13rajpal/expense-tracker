@@ -60,7 +60,14 @@ export type XPAction =
   | 'challenge_completed'
   | 'bucket_list_created'
   | 'bucket_list_completed'
-  | 'bucket_list_milestone';
+  | 'bucket_list_milestone'
+  | 'goal_created'
+  | 'goal_completed'
+  | 'investment_added'
+  | 'split_created'
+  | 'split_settled'
+  | 'lesson_completed'
+  | 'quiz_passed';
 
 /** XP reward amounts for each action type. */
 export const XP_ACTIONS: Record<XPAction, number> = {
@@ -74,6 +81,13 @@ export const XP_ACTIONS: Record<XPAction, number> = {
   bucket_list_created: 10,
   bucket_list_completed: 50,
   bucket_list_milestone: 25,
+  goal_created: 15,
+  goal_completed: 100,
+  investment_added: 10,
+  split_created: 5,
+  split_settled: 10,
+  lesson_completed: 10,
+  quiz_passed: 20,
 };
 
 // ─── Badges ────────────────────────────────────────────────────────────

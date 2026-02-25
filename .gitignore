@@ -48,5 +48,8 @@ next-env.d.ts
 # macOS resource forks
 ._*
 
+# user uploads
+/public/uploads/
+
 # data analysis artifacts
 /data/

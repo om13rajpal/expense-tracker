@@ -1294,6 +1294,8 @@ export interface SavingsGoalConfig {
   linkedCategories?: string[];
   /** Keywords to match in transaction descriptions for auto-tracking. */
   linkedKeywords?: string[];
+  /** IDs of transactions already confirmed/linked to this goal (to avoid re-suggesting). */
+  linkedTransactionIds?: string[];
   /** ISO timestamp when the goal was created. */
   createdAt: string;
   /** ISO timestamp of the last update. */
@@ -1441,6 +1443,8 @@ export interface BucketListItem {
   dealAlerts: DealAlert[];
   /** URL to a product image for display in the UI. */
   imageUrl?: string;
+  /** User-uploaded cover image URL (takes precedence over auto imageUrl). */
+  coverImageUrl?: string;
   /** AI-generated savings strategy text (from Claude via OpenRouter). */
   aiStrategy?: string;
   /** ISO timestamp when the AI strategy was last generated. */
@@ -1466,6 +1470,64 @@ export interface BucketListSummary {
   totalSavedAmount: number;
   /** Overall completion: `(totalSavedAmount / totalTargetAmount) * 100`. */
   overallProgress: number;
+  /** Sum of all monthly allocations across active (non-completed) items (INR). */
+  totalMonthlyAllocation: number;
+}
+
+/**
+ * Structured AI-generated savings strategy for a bucket list item.
+ *
+ * Replaces the previous markdown-based strategy format with a typed JSON
+ * structure that can be rendered as rich UI components (milestones, progress
+ * timeline, saving tips cards, price optimization highlights).
+ *
+ * The AI prompt now requests this exact schema, and the result is stored
+ * as a JSON string in `BucketListItem.aiStrategy`. The strategy-view
+ * component detects JSON vs legacy markdown and renders accordingly.
+ */
+export interface AiStrategyData {
+  /** Monthly savings plan with amount, duration, and start date. */
+  monthlyPlan: {
+    /** Recommended monthly savings amount (INR). */
+    amount: number;
+    /** Human-readable duration (e.g. "5 months"). */
+    duration: string;
+    /** Human-readable start date (e.g. "Mar 2026"). */
+    startDate: string;
+  };
+  /** Four milestone checkpoints at 25%, 50%, 75%, and 100% of the target. */
+  milestones: Array<{
+    /** Percentage of the target (25, 50, 75, or 100). */
+    percent: number;
+    /** Absolute amount at this milestone (INR). */
+    amount: number;
+    /** Actionable tip to help reach this milestone. */
+    tip: string;
+  }>;
+  /** Practical saving tips with estimated potential savings. */
+  savingTips: Array<{
+    /** Short title for the tip. */
+    title: string;
+    /** Detailed description of how to apply the tip. */
+    description: string;
+    /** Estimated amount the user could save by following this tip (INR). */
+    potentialSaving: number;
+  }>;
+  /** Recommendations for getting the best price on the target item. */
+  priceOptimization: {
+    /** Best time window to make the purchase (e.g. "End of March (Holi sales)"). */
+    bestTimeToBuy: string;
+    /** Recommended platform or retailer (e.g. "Amazon.in"). */
+    bestPlatform: string;
+    /** Expected discount range (e.g. "10-15%"). */
+    estimatedDiscount: string;
+  };
+  /** Overall risk assessment for this savings plan. */
+  riskLevel: 'low' | 'medium' | 'high';
+  /** AI's confidence in the feasibility of this plan. */
+  confidence: 'low' | 'medium' | 'high';
+  /** One-liner summary of the entire strategy. */
+  summary: string;
 }
 
 /**

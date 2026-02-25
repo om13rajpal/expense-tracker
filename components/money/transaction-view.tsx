@@ -778,33 +778,36 @@ export function TransactionView() {
           className="grid grid-cols-1 sm:grid-cols-3 gap-3"
         >
           {/* Income Card */}
-          <div className="card-elevated rounded-xl border-t-2 border-t-emerald-500/40 bg-card p-4 flex items-center gap-4">
-            <div className="shrink-0 flex items-center justify-center h-10 w-10 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/15">
+          <div className="card-elevated rounded-xl relative overflow-hidden bg-card p-4 flex items-center gap-4">
+            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent pointer-events-none" />
+            <div className="relative shrink-0 flex items-center justify-center h-10 w-10 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/15">
               <IconArrowUpRight className="size-5 text-emerald-600 dark:text-emerald-400" />
             </div>
-            <div className="min-w-0">
+            <div className="relative min-w-0">
               <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Income</p>
               <p className="text-xl font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums truncate">{formatCurrency(incomeTotal)}</p>
             </div>
           </div>
 
           {/* Expenses Card */}
-          <div className="card-elevated rounded-xl border-t-2 border-t-rose-500/40 bg-card p-4 flex items-center gap-4">
-            <div className="shrink-0 flex items-center justify-center h-10 w-10 rounded-lg bg-rose-500/10 dark:bg-rose-500/15">
+          <div className="card-elevated rounded-xl relative overflow-hidden bg-card p-4 flex items-center gap-4">
+            <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 to-transparent pointer-events-none" />
+            <div className="relative shrink-0 flex items-center justify-center h-10 w-10 rounded-lg bg-rose-500/10 dark:bg-rose-500/15">
               <IconArrowDownRight className="size-5 text-rose-600 dark:text-rose-400" />
             </div>
-            <div className="min-w-0">
+            <div className="relative min-w-0">
               <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Expenses</p>
               <p className="text-xl font-semibold text-rose-600 dark:text-rose-400 tabular-nums truncate">{formatCurrency(expenseTotal)}</p>
             </div>
           </div>
 
           {/* Net Card */}
-          <div className={`card-elevated rounded-xl border-t-2 ${netTotal >= 0 ? "border-t-emerald-500/40" : "border-t-rose-500/40"} bg-card p-4 flex items-center gap-4`}>
-            <div className={`shrink-0 flex items-center justify-center h-10 w-10 rounded-lg ${netTotal >= 0 ? "bg-emerald-500/10 dark:bg-emerald-500/15" : "bg-rose-500/10 dark:bg-rose-500/15"}`}>
+          <div className="card-elevated rounded-xl relative overflow-hidden bg-card p-4 flex items-center gap-4">
+            <div className={`absolute inset-0 bg-gradient-to-br ${netTotal >= 0 ? "from-emerald-500/5" : "from-rose-500/5"} to-transparent pointer-events-none`} />
+            <div className={`relative shrink-0 flex items-center justify-center h-10 w-10 rounded-lg ${netTotal >= 0 ? "bg-emerald-500/10 dark:bg-emerald-500/15" : "bg-rose-500/10 dark:bg-rose-500/15"}`}>
               <IconTrendingUp className={`size-5 ${netTotal >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`} />
             </div>
-            <div className="min-w-0">
+            <div className="relative min-w-0">
               <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Net</p>
               <p className={`text-xl font-semibold tabular-nums truncate ${netTotal >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
                 {netTotal >= 0 ? "+" : ""}{formatCurrency(netTotal)}

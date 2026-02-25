@@ -19,6 +19,8 @@ import {
   IconChevronLeft,
   IconCopy,
   IconLink,
+  IconLoader2,
+  IconMail,
   IconPlus,
   IconReceipt,
   IconScale,
@@ -70,6 +72,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog"
+import { Checkbox } from "@/components/ui/checkbox"
 
 /* --- Helper: Avatar initials --- */
 function PersonAvatar({
@@ -424,11 +427,13 @@ function AddExpenseDialog({
   onOpenChange,
   groupId,
   members,
+  contacts,
 }: {
   open: boolean
   onOpenChange: (v: boolean) => void
   groupId?: string | null
   members: string[]
+  contacts?: Array<{ _id: string; name: string; email: string }>
 }) {
   const { createExpense, isCreating } = useSplitExpenses(groupId)
   const [description, setDescription] = React.useState("")
@@ -438,6 +443,13 @@ function AddExpenseDialog({
   const [splitAmounts, setSplitAmounts] = React.useState<Record<string, string>>({})
   const [selectedPeople, setSelectedPeople] = React.useState<string[]>(members)
   const [date, setDate] = React.useState(new Date().toISOString().split("T")[0])
+  const [notifyEmail, setNotifyEmail] = React.useState(false)
+
+  // Check if any participant (non-Me) has an email address
+  const hasEmailContacts = React.useMemo(() => {
+    if (!contacts) return false
+    return contacts.some((c) => c.email && members.includes(c.name) && c.name !== "Me")
+  }, [contacts, members])
 
   React.useEffect(() => {
     setSelectedPeople(members)
@@ -474,7 +486,7 @@ function AddExpenseDialog({
     }
 
     try {
-      await createExpense({
+      const result = await createExpense({
         groupId: groupId || undefined,
         description: description.trim(),
         amount: amt,
@@ -484,10 +496,42 @@ function AddExpenseDialog({
         date,
       })
       toast.success("Expense added")
+
+      // Send email notifications if checked
+      if (notifyEmail && contacts && result?.expense?._id) {
+        const expenseId = result.expense._id
+        const participantsToNotify = contacts.filter(
+          (c) => c.email && selectedPeople.includes(c.name) && c.name !== "Me"
+        )
+        for (const contact of participantsToNotify) {
+          try {
+            const res = await fetch("/api/splits/notify", {
+              method: "POST",
+              credentials: "include",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                contactId: contact._id,
+                type: "split_created",
+                expenseId,
+              }),
+            })
+            const data = await res.json()
+            if (data.success) {
+              toast.success(`Notification sent to ${contact.name}`)
+            } else {
+              toast.error(`Failed to notify ${contact.name}`)
+            }
+          } catch {
+            toast.error(`Failed to send to ${contact.name}`)
+          }
+        }
+      }
+
       setDescription("")
       setAmount("")
       setPaidBy("Me")
       setSplitType("equal")
+      setNotifyEmail(false)
       onOpenChange(false)
     } catch (err) {
       toast.error(err instanceof Error ? err.message : "Failed to add expense")
@@ -637,6 +681,26 @@ function AddExpenseDialog({
                     />
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Notify via email */}
+          {hasEmailContacts && (
+            <div className="flex items-center gap-2.5 rounded-lg border border-emerald-500/15 bg-emerald-500/5 px-3 py-2.5">
+              <Checkbox
+                id="notify-email"
+                checked={notifyEmail}
+                onCheckedChange={(v) => setNotifyEmail(v === true)}
+              />
+              <div className="flex items-center gap-1.5">
+                <IconMail className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" strokeWidth={1.8} />
+                <Label
+                  htmlFor="notify-email"
+                  className="text-sm font-medium cursor-pointer text-emerald-700 dark:text-emerald-300"
+                >
+                  Notify via email
+                </Label>
               </div>
             </div>
           )}
@@ -923,11 +987,17 @@ function BalanceSummaryCard({
   netBalance,
   index,
   onSettle,
+  onRemind,
+  isReminding,
+  hasEmail,
 }: {
   person: string
   netBalance: number
   index: number
   onSettle?: () => void
+  onRemind?: () => void
+  isReminding?: boolean
+  hasEmail?: boolean
 }) {
   const isPositive = netBalance > 0
   return (
@@ -983,20 +1053,41 @@ function BalanceSummaryCard({
               {isPositive ? "incoming" : "outgoing"}
             </div>
           </div>
-          {onSettle && (
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8 text-xs gap-1.5 shrink-0"
-              onClick={(e) => {
-                e.stopPropagation()
-                onSettle()
-              }}
-            >
-              <IconCash className="h-3.5 w-3.5" />
-              Settle
-            </Button>
-          )}
+          <div className="flex flex-col gap-1.5 shrink-0">
+            {onSettle && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 text-xs gap-1.5"
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onSettle()
+                }}
+              >
+                <IconCash className="h-3.5 w-3.5" />
+                Settle
+              </Button>
+            )}
+            {isPositive && hasEmail && onRemind && (
+              <Button
+                size="sm"
+                variant="outline"
+                className="h-8 text-xs gap-1.5 border-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10"
+                disabled={isReminding}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onRemind()
+                }}
+              >
+                {isReminding ? (
+                  <IconLoader2 className="h-3.5 w-3.5 animate-spin" />
+                ) : (
+                  <IconMail className="h-3.5 w-3.5" />
+                )}
+                {isReminding ? "Sending..." : "Remind"}
+              </Button>
+            )}
+          </div>
         </div>
       </div>
     </motion.div>
@@ -1075,6 +1166,7 @@ function GroupDetailView({
   group: Group
   onBack: () => void
 }) {
+  const { contacts } = useContacts()
   const { expenses, deleteExpense } = useSplitExpenses(group._id)
   const { balances } = useBalances(group._id)
   const { activity } = useActivity(group._id)
@@ -1086,6 +1178,7 @@ function GroupDetailView({
     paidTo: string
     amount: number
   } | null>(null)
+  const [remindingContact, setRemindingContact] = React.useState<string | null>(null)
 
   // Filter out zero balances
   const activeBalances = React.useMemo(
@@ -1100,6 +1193,39 @@ function GroupDetailView({
       setSettleDefaults({ paidBy: "Me", paidTo: person, amount: Math.abs(netBalance) })
     }
     setShowSettleDialog(true)
+  }
+
+  /** Send a payment reminder email for a group member who owes money. */
+  async function handleRemind(personName: string) {
+    const contact = contacts.find((c) => c.name === personName)
+    if (!contact || !contact.email) {
+      toast.error(`${personName} has no email address`)
+      return
+    }
+    setRemindingContact(personName)
+    try {
+      const res = await fetch("/api/splits/notify", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contactId: contact._id, type: "reminder" }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        toast.success(`Reminder sent to ${personName}`)
+      } else {
+        toast.error(data.message || `Failed to send reminder to ${personName}`)
+      }
+    } catch {
+      toast.error(`Failed to send reminder to ${personName}`)
+    } finally {
+      setRemindingContact(null)
+    }
+  }
+
+  function contactHasEmail(personName: string): boolean {
+    const contact = contacts.find((c) => c.name === personName)
+    return !!contact?.email
   }
 
   return (
@@ -1189,6 +1315,9 @@ function GroupDetailView({
                 netBalance={b.netBalance}
                 index={i}
                 onSettle={() => handleSettleWith(b.person, b.netBalance)}
+                onRemind={() => handleRemind(b.person)}
+                isReminding={remindingContact === b.person}
+                hasEmail={contactHasEmail(b.person)}
               />
             ))}
           </div>
@@ -1304,6 +1433,7 @@ function GroupDetailView({
         onOpenChange={setShowExpenseDialog}
         groupId={group._id}
         members={group.members}
+        contacts={contacts}
       />
       <SettleDialog
         open={showSettleDialog}
@@ -1341,6 +1471,41 @@ function OverviewTab() {
   } | null>(null)
   const [autoSettleRan, setAutoSettleRan] = React.useState(false)
   const [showAutoSettleBanner, setShowAutoSettleBanner] = React.useState(true)
+  const [remindingContact, setRemindingContact] = React.useState<string | null>(null)
+
+  /** Send a payment reminder email for a specific contact who owes money. */
+  async function handleRemind(personName: string) {
+    const contact = contacts.find((c) => c.name === personName)
+    if (!contact || !contact.email) {
+      toast.error(`${personName} has no email address`)
+      return
+    }
+    setRemindingContact(personName)
+    try {
+      const res = await fetch("/api/splits/notify", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contactId: contact._id, type: "reminder" }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        toast.success(`Reminder sent to ${personName}`)
+      } else {
+        toast.error(data.message || `Failed to send reminder to ${personName}`)
+      }
+    } catch {
+      toast.error(`Failed to send reminder to ${personName}`)
+    } finally {
+      setRemindingContact(null)
+    }
+  }
+
+  /** Look up whether a contact has an email on file by person name. */
+  function contactHasEmail(personName: string): boolean {
+    const contact = contacts.find((c) => c.name === personName)
+    return !!contact?.email
+  }
 
   const allMembers = React.useMemo(
     () => ["Me", ...contacts.map((c) => c.name)],
@@ -1545,6 +1710,9 @@ function OverviewTab() {
                 netBalance={b.netBalance}
                 index={i}
                 onSettle={() => handleSettleWith(b.person, b.netBalance)}
+                onRemind={() => handleRemind(b.person)}
+                isReminding={remindingContact === b.person}
+                hasEmail={contactHasEmail(b.person)}
               />
             ))}
           </div>
@@ -1609,6 +1777,7 @@ function OverviewTab() {
         open={showExpenseDialog}
         onOpenChange={setShowExpenseDialog}
         members={allMembers}
+        contacts={contacts}
       />
       <SettleDialog
         open={showSettleDialog}

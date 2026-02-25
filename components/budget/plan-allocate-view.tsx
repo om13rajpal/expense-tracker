@@ -366,7 +366,7 @@ export function PlanAllocateView() {
                 )}
               </div>
               <div className="flex items-center gap-3">
-                <span className="text-base font-semibold text-muted-foreground">\u20B9</span>
+                <span className="text-base font-semibold text-muted-foreground">₹</span>
                 <Input
                   type="number"
                   value={monthlyIncome || ""}
@@ -409,7 +409,7 @@ export function PlanAllocateView() {
                     <div key={item.id} className="flex items-center gap-2">
                       <Label className="w-24 text-xs font-medium text-muted-foreground shrink-0 truncate">{item.label}</Label>
                       <div className="relative flex-1">
-                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">\u20B9</span>
+                        <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">₹</span>
                         <Input type="number" value={item.amount || ""} onChange={(e) => updateInvestment(item.id, Number(e.target.value) || 0)} placeholder="0" className="pl-6 text-sm tabular-nums h-8" />
                       </div>
                       {monthlyIncome > 0 && item.amount > 0 && (
@@ -524,7 +524,7 @@ export function PlanAllocateView() {
             </div>
             <div className="flex items-center gap-2 mb-3">
               <div className="relative flex-1">
-                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">\u20B9</span>
+                <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">₹</span>
                 <Input type="number" value={savings || ""} onChange={(e) => { setSavings(Number(e.target.value) || 0); setSaved(false) }} placeholder="0" className="pl-6 text-sm tabular-nums h-8" />
               </div>
               {monthlyIncome > 0 && savings > 0 && (
@@ -541,7 +541,7 @@ export function PlanAllocateView() {
                       <IconTarget className="h-3.5 w-3.5 text-violet-500 shrink-0" />
                       <span className="text-xs text-muted-foreground truncate flex-1 min-w-0">{goal.name}</span>
                       <div className="relative w-24 shrink-0">
-                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground">\u20B9</span>
+                        <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground">₹</span>
                         <Input
                           type="number"
                           value={alloc || ""}
@@ -768,7 +768,7 @@ function AllocationCard({ icon: Icon, iconBg, iconColor, label, hint, value, onC
       </div>
       <div className="flex items-center gap-2">
         <div className="relative flex-1">
-          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">\u20B9</span>
+          <span className="absolute left-2.5 top-1/2 -translate-y-1/2 text-xs text-muted-foreground">₹</span>
           <Input type="number" value={value || ""} onChange={(e) => onChange(Number(e.target.value) || 0)} placeholder="0" className="pl-6 text-sm tabular-nums h-8" />
         </div>
         {pctStr && <Badge className={`${badgeColor} border-0 text-[11px] tabular-nums shrink-0`}>{pctStr}</Badge>}

@@ -11,7 +11,7 @@
 "use client"
 
 import * as React from "react"
-import { useEffect, useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { motion } from "motion/react"
@@ -29,10 +29,14 @@ import {
   IconArrowDownRight,
   IconArrowUpRight,
   IconChartBar,
+  IconFlame,
   IconReceipt2,
   IconRefresh,
+  IconRepeat,
   IconSparkles,
+  IconStar,
   IconTarget,
+  IconUsers,
   IconWallet,
   IconScale,
 } from "@tabler/icons-react"
@@ -93,7 +97,7 @@ const STAT_CONFIG = [
     icon: IconScale,
     iconBg: "bg-blue-500/10 dark:bg-blue-500/15",
     iconColor: "text-blue-600 dark:text-blue-400",
-    accent: "border-t-blue-500/40",
+    accent: "from-blue-500/5",
   },
   {
     key: "income",
@@ -101,7 +105,7 @@ const STAT_CONFIG = [
     icon: IconArrowUpRight,
     iconBg: "bg-emerald-500/10 dark:bg-emerald-500/15",
     iconColor: "text-emerald-600 dark:text-emerald-400",
-    accent: "border-t-emerald-500/40",
+    accent: "from-emerald-500/5",
   },
   {
     key: "expenses",
@@ -109,7 +113,7 @@ const STAT_CONFIG = [
     icon: IconArrowDownRight,
     iconBg: "bg-rose-500/10 dark:bg-rose-500/15",
     iconColor: "text-rose-600 dark:text-rose-400",
-    accent: "border-t-rose-500/40",
+    accent: "from-rose-500/5",
   },
   {
     key: "balance",
@@ -117,7 +121,7 @@ const STAT_CONFIG = [
     icon: IconWallet,
     iconBg: "bg-amber-500/10 dark:bg-amber-500/15",
     iconColor: "text-amber-600 dark:text-amber-400",
-    accent: "border-t-amber-500/40",
+    accent: "from-amber-500/5",
   },
 ] as const
 
@@ -312,12 +316,13 @@ export default function DashboardPage() {
                       <motion.div
                         key={stat.key}
                         variants={fadeUpSmall}
-                        className={`card-elevated rounded-xl bg-card border-t-2 ${stat.accent} p-3 sm:p-4 flex items-start gap-2.5 sm:gap-3.5 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 hover:scale-[1.01]`}
+                        className={`card-elevated rounded-xl bg-card relative overflow-hidden p-3 sm:p-4 flex items-start gap-2.5 sm:gap-3.5 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 hover:scale-[1.01]`}
                       >
-                        <div className={`flex items-center justify-center h-8 w-8 sm:h-10 sm:w-10 rounded-xl ${stat.iconBg} shrink-0`}>
+                        <div className={`absolute inset-0 bg-gradient-to-br ${stat.accent} to-transparent pointer-events-none`} />
+                        <div className={`relative flex items-center justify-center h-8 w-8 sm:h-10 sm:w-10 rounded-xl ${stat.iconBg} shrink-0`}>
                           <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${stat.iconColor}`} strokeWidth={1.8} />
                         </div>
-                        <div className="min-w-0">
+                        <div className="relative min-w-0">
                           <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-0.5">
                             {stat.label}
                           </p>
@@ -528,6 +533,9 @@ export default function DashboardPage() {
                   </Link>
                 </motion.div>
 
+                {/* ─── Cross-Feature Widgets ─── */}
+                <CrossFeatureWidgets />
+
                 {/* ─── 3. Spending Breakdown + Monthly Trend (side by side) ─── */}
                 <motion.div variants={fadeUp} className="grid gap-5 lg:grid-cols-2 items-stretch [&>*]:self-stretch">
                   {/* Spending Breakdown */}
@@ -655,6 +663,201 @@ export default function DashboardPage() {
   )
 }
 
+
+/* ─── Cross-Feature Widgets ─── */
+
+interface SubData {
+  name: string
+  amount: number
+  nextExpected: string
+}
+
+interface BucketData {
+  monthlyAllocation: number
+  count: number
+}
+
+interface GamificationData {
+  levelName: string
+  streak: number
+}
+
+interface SplitBalance {
+  net: number
+}
+
+function CrossFeatureWidgets() {
+  const [subs, setSubs] = useState<{ nearest: SubData | null; dueCount: number } | null>(null)
+  const [bucket, setBucket] = useState<BucketData | null>(null)
+  const [gamification, setGamification] = useState<GamificationData | null>(null)
+  const [splits, setSplits] = useState<SplitBalance | null>(null)
+
+  useEffect(() => {
+    // Subscriptions: find renewals in next 7 days
+    fetch("/api/subscriptions")
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data?.success) return
+        const items = data.subscriptions || data.items || []
+        const now = new Date()
+        const weekOut = new Date()
+        weekOut.setDate(weekOut.getDate() + 7)
+        const nowStr = now.toISOString().split("T")[0]
+        const weekStr = weekOut.toISOString().split("T")[0]
+        const upcoming = items.filter((s: Record<string, unknown>) =>
+          s.status === "active" && s.nextExpected && (s.nextExpected as string) >= nowStr && (s.nextExpected as string) <= weekStr
+        )
+        const sorted = upcoming.sort((a: Record<string, unknown>, b: Record<string, unknown>) =>
+          ((a.nextExpected as string) || "").localeCompare((b.nextExpected as string) || "")
+        )
+        setSubs({
+          dueCount: sorted.length,
+          nearest: sorted[0] ? { name: sorted[0].name as string, amount: sorted[0].amount as number, nextExpected: sorted[0].nextExpected as string } : null,
+        })
+      })
+      .catch(() => {})
+
+    // Bucket list
+    fetch("/api/bucket-list")
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data?.success) return
+        const items = data.items || []
+        const totalAlloc = items.reduce((sum: number, it: Record<string, unknown>) =>
+          sum + ((it.monthlyAllocation as number) || 0), 0)
+        setBucket({ monthlyAllocation: totalAlloc, count: items.length })
+      })
+      .catch(() => {})
+
+    // Gamification
+    fetch("/api/gamification")
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data?.success) return
+        setGamification({
+          levelName: data.levelName || data.level?.name || "Beginner",
+          streak: data.streak?.currentStreak || data.currentStreak || 0,
+        })
+      })
+      .catch(() => {})
+
+    // Split balances
+    fetch("/api/splits/balances")
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (!data?.success) return
+        const balances = data.balances || []
+        const net = balances.reduce((sum: number, b: Record<string, unknown>) =>
+          sum + ((b.amount as number) || 0), 0)
+        setSplits({ net })
+      })
+      .catch(() => {})
+  }, [])
+
+  return (
+    <motion.div variants={fadeUp} className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      {/* Upcoming Renewals */}
+      <Link
+        href="/bills"
+        className="card-elevated rounded-xl bg-card px-4 py-3 flex items-center gap-3 transition-all duration-200 hover:shadow-md hover:shadow-primary/5 hover:border-primary/20 group"
+      >
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-violet-500/10 dark:bg-violet-500/15 transition-colors group-hover:bg-violet-500/20">
+          <IconRepeat className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-muted-foreground">Renewals</p>
+          {subs ? (
+            <>
+              <p className="text-sm font-semibold tabular-nums truncate">
+                {subs.dueCount > 0 ? `${subs.dueCount} due this week` : "None upcoming"}
+              </p>
+              {subs.nearest && (
+                <p className="text-[11px] text-muted-foreground truncate">
+                  {subs.nearest.name} &middot; {formatCurrency(subs.nearest.amount)}
+                </p>
+              )}
+            </>
+          ) : (
+            <Skeleton className="h-4 w-20 mt-0.5" />
+          )}
+        </div>
+      </Link>
+
+      {/* Bucket List */}
+      <Link
+        href="/bucket-list"
+        className="card-elevated rounded-xl bg-card px-4 py-3 flex items-center gap-3 transition-all duration-200 hover:shadow-md hover:shadow-primary/5 hover:border-primary/20 group"
+      >
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-amber-500/10 dark:bg-amber-500/15 transition-colors group-hover:bg-amber-500/20">
+          <IconStar className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-muted-foreground">Bucket List</p>
+          {bucket ? (
+            <>
+              <p className="text-sm font-semibold tabular-nums truncate">
+                {formatCurrency(bucket.monthlyAllocation)}/mo
+              </p>
+              <p className="text-[11px] text-muted-foreground truncate">
+                {bucket.count} item{bucket.count !== 1 ? "s" : ""} tracked
+              </p>
+            </>
+          ) : (
+            <Skeleton className="h-4 w-20 mt-0.5" />
+          )}
+        </div>
+      </Link>
+
+      {/* Level & Streak */}
+      <Link
+        href="/gamification"
+        className="card-elevated rounded-xl bg-card px-4 py-3 flex items-center gap-3 transition-all duration-200 hover:shadow-md hover:shadow-primary/5 hover:border-primary/20 group"
+      >
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-orange-500/10 dark:bg-orange-500/15 transition-colors group-hover:bg-orange-500/20">
+          <IconFlame className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-muted-foreground">Level & Streak</p>
+          {gamification ? (
+            <>
+              <p className="text-sm font-semibold truncate">{gamification.levelName}</p>
+              <p className="text-[11px] text-muted-foreground truncate">
+                {gamification.streak > 0 ? `${gamification.streak}-day streak` : "No active streak"}
+              </p>
+            </>
+          ) : (
+            <Skeleton className="h-4 w-20 mt-0.5" />
+          )}
+        </div>
+      </Link>
+
+      {/* Split Balances */}
+      <Link
+        href="/bills?tab=splits"
+        className="card-elevated rounded-xl bg-card px-4 py-3 flex items-center gap-3 transition-all duration-200 hover:shadow-md hover:shadow-primary/5 hover:border-primary/20 group"
+      >
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-cyan-500/10 dark:bg-cyan-500/15 transition-colors group-hover:bg-cyan-500/20">
+          <IconUsers className="h-4 w-4 text-cyan-600 dark:text-cyan-400" />
+        </div>
+        <div className="min-w-0">
+          <p className="text-xs font-medium text-muted-foreground">Splits</p>
+          {splits ? (
+            <>
+              <p className={`text-sm font-semibold tabular-nums truncate ${splits.net >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                {splits.net >= 0 ? `+${formatCurrency(splits.net)}` : formatCurrency(splits.net)}
+              </p>
+              <p className="text-[11px] text-muted-foreground truncate">
+                {splits.net >= 0 ? "Owed to you" : "You owe"}
+              </p>
+            </>
+          ) : (
+            <Skeleton className="h-4 w-20 mt-0.5" />
+          )}
+        </div>
+      </Link>
+    </motion.div>
+  )
+}
 
 /* ─── Loading Skeleton ─── */
 function DashboardLoadingSkeleton() {

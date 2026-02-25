@@ -91,7 +91,7 @@ export default function AiPage() {
               </TabsTrigger>
             </TabsList>
           </div>
-          <TabsContent value="chat" className="flex-1 overflow-hidden mt-0">
+          <TabsContent value="chat" className="flex-1 flex flex-col overflow-hidden mt-0">
             <ChatView />
           </TabsContent>
           <TabsContent value="reports" className="flex-1 overflow-auto mt-0">

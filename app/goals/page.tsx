@@ -14,6 +14,7 @@
 import * as React from "react"
 import { useEffect, useState, useCallback } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
+import Link from "next/link"
 import { motion, AnimatePresence } from "motion/react"
 import {
   Area,
@@ -31,6 +32,7 @@ import {
   IconCash,
   IconChartLine,
   IconCheck,
+  IconChecklist,
   IconChevronDown,
   IconChevronUp,
   IconClockHour4,
@@ -52,6 +54,9 @@ import {
   IconDots,
   IconHeartbeat,
   IconBuildingBank,
+  IconStar,
+  IconX,
+  IconArrowRight,
 } from "@tabler/icons-react"
 
 import { toast } from "sonner"
@@ -94,6 +99,7 @@ import { stagger, fadeUp, fadeUpSmall, scaleIn, numberPop, listItem } from "@/li
 import { IncomeGoalTracker } from "@/components/wealth/income-goal-tracker"
 import { HealthOverview } from "@/components/goals/health-overview"
 import { NetWorthView } from "@/components/goals/net-worth-view"
+import { BucketListTab } from "@/components/bucket-list/bucket-list-tab"
 
 // ─── Types ───
 
@@ -181,6 +187,16 @@ interface GoalFormData {
   monthlyContribution: string
   currentAmount: string
   category: string
+}
+
+interface AutoLinkSuggestion {
+  goalId: string
+  goalName: string
+  transactionId: string
+  transactionDesc: string
+  transactionDate: string
+  amount: number
+  matchReason: string
 }
 
 // ─── Helpers ───
@@ -399,7 +415,7 @@ export default function GoalsPage() {
 
   // Tab state from URL
   const tabParam = searchParams.get("tab")
-  const validTabs = ["overview", "savings", "fire", "networth"]
+  const validTabs = ["overview", "savings", "fire", "networth", "bucket-list"]
   const activeTab = validTabs.includes(tabParam || "") ? tabParam! : "overview"
 
   const handleTabChange = (value: string) => {
@@ -431,6 +447,12 @@ export default function GoalsPage() {
   // Expanded linked transactions per goal
   const [expandedGoals, setExpandedGoals] = useState<Set<string>>(new Set())
 
+  // Auto-link state
+  const [autoLinkSuggestions, setAutoLinkSuggestions] = useState<AutoLinkSuggestion[]>([])
+  const [showAutoLinkDialog, setShowAutoLinkDialog] = useState(false)
+  const [dismissedAutoLinks, setDismissedAutoLinks] = useState<Set<string>>(new Set())
+  const [confirmingAutoLink, setConfirmingAutoLink] = useState<string | null>(null)
+
   // ─── Data Loading ───
 
   const loadGoals = useCallback(async () => {
@@ -453,6 +475,16 @@ export default function GoalsPage() {
     }
   }, [])
 
+  const loadAutoLinkSuggestions = useCallback(async () => {
+    try {
+      const res = await fetch("/api/savings-goals/auto-link")
+      const data = await res.json()
+      if (data.success) setAutoLinkSuggestions(data.suggestions || [])
+    } catch (err) {
+      console.error("Failed to load auto-link suggestions:", err)
+    }
+  }, [])
+
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       router.push("/login")
@@ -461,10 +493,10 @@ export default function GoalsPage() {
 
   useEffect(() => {
     if (!isAuthenticated) return
-    Promise.all([loadGoals(), loadProjections()]).finally(() =>
+    Promise.all([loadGoals(), loadProjections(), loadAutoLinkSuggestions()]).finally(() =>
       setLoading(false)
     )
-  }, [isAuthenticated, loadGoals, loadProjections])
+  }, [isAuthenticated, loadGoals, loadProjections, loadAutoLinkSuggestions])
 
   // ─── CRUD Operations ───
 
@@ -634,6 +666,53 @@ export default function GoalsPage() {
       setIsSaving(false)
     }
   }
+
+  // ─── Auto-Link Operations ───
+
+  const acceptAutoLink = async (suggestion: AutoLinkSuggestion) => {
+    setConfirmingAutoLink(suggestion.transactionId)
+    try {
+      const res = await fetch("/api/savings-goals/auto-link", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          goalId: suggestion.goalId,
+          transactionId: suggestion.transactionId,
+          amount: suggestion.amount,
+        }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        // Remove from suggestions
+        setAutoLinkSuggestions((prev) =>
+          prev.filter((s) => s.transactionId !== suggestion.transactionId)
+        )
+        await loadGoals()
+        toast.success("Transaction linked", {
+          description: `${formatCurrency(suggestion.amount)} added to "${suggestion.goalName}"`,
+        })
+      } else {
+        toast.error("Failed to link transaction")
+      }
+    } catch (err) {
+      console.error("Failed to accept auto-link:", err)
+      toast.error("Network error linking transaction")
+    } finally {
+      setConfirmingAutoLink(null)
+    }
+  }
+
+  const dismissAutoLink = (suggestion: AutoLinkSuggestion) => {
+    setDismissedAutoLinks((prev) => new Set([...prev, suggestion.transactionId]))
+    setAutoLinkSuggestions((prev) =>
+      prev.filter((s) => s.transactionId !== suggestion.transactionId)
+    )
+  }
+
+  // Filter out dismissed suggestions
+  const pendingSuggestions = autoLinkSuggestions.filter(
+    (s) => !dismissedAutoLinks.has(s.transactionId)
+  )
 
   // ─── Dialog Helpers ───
 
@@ -857,12 +936,52 @@ export default function GoalsPage() {
                           <IconBuildingBank className="h-4 w-4" />
                           Net Worth & Debt
                         </TabsTrigger>
+                        <TabsTrigger
+                          value="bucket-list"
+                          className="relative gap-1.5 rounded-none border-b-2 border-transparent px-2.5 sm:px-3 py-2 text-xs sm:text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent"
+                        >
+                          <IconChecklist className="h-4 w-4" />
+                          Bucket List
+                        </TabsTrigger>
                       </TabsList>
                     </div>
 
                     {/* ─── Tab 0: Overview ─── */}
                     <TabsContent value="overview" className="space-y-5">
                       <HealthOverview />
+
+                      {/* Auto-link suggestions banner (overview) */}
+                      {pendingSuggestions.length > 0 && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="rounded-xl border border-blue-500/20 bg-gradient-to-r from-blue-500/5 via-indigo-500/5 to-violet-500/5 px-4 py-3"
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2.5">
+                              <div className="flex items-center justify-center size-8 rounded-lg bg-blue-500/10">
+                                <IconLink className="size-4 text-blue-500" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-semibold">
+                                  {pendingSuggestions.length} transaction{pendingSuggestions.length !== 1 ? "s" : ""} may be goal contributions
+                                </p>
+                                <p className="text-[11px] text-muted-foreground mt-0.5">
+                                  We found recent transactions that match your savings goal criteria
+                                </p>
+                              </div>
+                            </div>
+                            <Button
+                              size="sm"
+                              className="gap-1.5 shrink-0"
+                              onClick={() => setShowAutoLinkDialog(true)}
+                            >
+                              Review
+                              <IconArrowRight className="size-3.5" />
+                            </Button>
+                          </div>
+                        </motion.div>
+                      )}
 
                       {/* Goals summary */}
                       {goals.length > 0 ? (
@@ -956,6 +1075,9 @@ export default function GoalsPage() {
                           </div>
                         </div>
                       )}
+
+                      {/* Bucket List Targets */}
+                      <BucketListTargets />
                     </TabsContent>
 
                     {/* ─── Tab 1: Savings Goals ─── */}
@@ -976,6 +1098,39 @@ export default function GoalsPage() {
                           Add Goal
                         </Button>
                       </div>
+
+                      {/* Auto-link suggestions banner */}
+                      {pendingSuggestions.length > 0 && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="rounded-xl border border-blue-500/20 bg-gradient-to-r from-blue-500/5 via-indigo-500/5 to-violet-500/5 px-4 py-3"
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <div className="flex items-center gap-2.5">
+                              <div className="flex items-center justify-center size-8 rounded-lg bg-blue-500/10">
+                                <IconLink className="size-4 text-blue-500" />
+                              </div>
+                              <div>
+                                <p className="text-sm font-semibold">
+                                  {pendingSuggestions.length} transaction{pendingSuggestions.length !== 1 ? "s" : ""} may be goal contributions
+                                </p>
+                                <p className="text-[11px] text-muted-foreground mt-0.5">
+                                  We found recent transactions that match your savings goal criteria
+                                </p>
+                              </div>
+                            </div>
+                            <Button
+                              size="sm"
+                              className="gap-1.5 shrink-0"
+                              onClick={() => setShowAutoLinkDialog(true)}
+                            >
+                              Review
+                              <IconArrowRight className="size-3.5" />
+                            </Button>
+                          </div>
+                        </motion.div>
+                      )}
 
                       {goals.length === 0 ? (
                         <div className="card-elevated rounded-xl bg-card overflow-hidden">
@@ -1867,6 +2022,11 @@ export default function GoalsPage() {
                     <TabsContent value="networth" className="space-y-5">
                       <NetWorthView />
                     </TabsContent>
+
+                    {/* ─── Tab 4: Bucket List ─── */}
+                    <TabsContent value="bucket-list" className="space-y-5">
+                      <BucketListTab />
+                    </TabsContent>
                   </Tabs>
                 </motion.div>
               </motion.div>
@@ -2317,6 +2477,120 @@ export default function GoalsPage() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* ─── Auto-Link Review Dialog ─── */}
+      <Dialog open={showAutoLinkDialog} onOpenChange={setShowAutoLinkDialog}>
+        <DialogContent className="sm:max-w-lg">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <IconLink className="h-4 w-4 text-blue-500" />
+              Review Transaction Links
+            </DialogTitle>
+            <DialogDescription>
+              These transactions match your savings goal criteria. Accept to add
+              the amount to your goal, or dismiss to skip.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="max-h-[400px] overflow-y-auto -mx-1 px-1">
+            {pendingSuggestions.length === 0 ? (
+              <div className="flex flex-col items-center justify-center py-8 text-center">
+                <div className="rounded-2xl bg-emerald-500/10 p-3 mb-3">
+                  <IconCheck className="h-6 w-6 text-emerald-500" />
+                </div>
+                <p className="text-sm font-medium">All caught up</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  No pending transaction suggestions
+                </p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {pendingSuggestions.map((suggestion) => {
+                  const goalConfig = getCategoryConfig(
+                    goals.find((g) => g.id === suggestion.goalId)?.category
+                  )
+                  const isConfirming = confirmingAutoLink === suggestion.transactionId
+
+                  return (
+                    <div
+                      key={`${suggestion.goalId}-${suggestion.transactionId}`}
+                      className="rounded-lg border border-border/60 p-3 transition-all hover:border-border"
+                    >
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">
+                            {suggestion.transactionDesc}
+                          </p>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge
+                              variant="secondary"
+                              className={`text-[10px] px-1.5 py-0 font-medium ${goalConfig.bg} ${goalConfig.color} border-0`}
+                            >
+                              {suggestion.goalName}
+                            </Badge>
+                            <Badge
+                              variant="outline"
+                              className="text-[9px] px-1 py-0 font-normal border-blue-200/50 text-blue-600 dark:text-blue-400"
+                            >
+                              {suggestion.matchReason}
+                            </Badge>
+                          </div>
+                          <div className="flex items-center gap-3 mt-1.5 text-[11px] text-muted-foreground">
+                            <span>
+                              {new Date(suggestion.transactionDate).toLocaleDateString("en-IN", {
+                                day: "numeric",
+                                month: "short",
+                                year: "2-digit",
+                              })}
+                            </span>
+                            <span className="font-semibold text-foreground tabular-nums">
+                              {formatCurrency(suggestion.amount)}
+                            </span>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-1.5 shrink-0">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-7 text-xs gap-1 hover:bg-emerald-500/10 hover:border-emerald-500/30 hover:text-emerald-700 dark:hover:text-emerald-400"
+                            onClick={() => acceptAutoLink(suggestion)}
+                            disabled={isConfirming}
+                          >
+                            {isConfirming ? (
+                              <IconCoin className="h-3 w-3 animate-pulse" />
+                            ) : (
+                              <IconCheck className="h-3 w-3" />
+                            )}
+                            {isConfirming ? "Linking..." : "Accept"}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-7 w-7 text-muted-foreground hover:text-foreground"
+                            onClick={() => dismissAutoLink(suggestion)}
+                            disabled={isConfirming}
+                          >
+                            <IconX className="h-3.5 w-3.5" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setShowAutoLinkDialog(false)}
+            >
+              Close
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </SidebarProvider>
   )
 }
@@ -2329,28 +2603,49 @@ function GoalsLoadingSkeleton() {
       {/* Stat bar skeleton */}
       <div className="card-elevated rounded-xl grid grid-cols-2 sm:grid-cols-4 divide-x divide-border/40">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="px-5 py-4 space-y-1.5">
-            <Skeleton className="h-3 w-16" />
-            <Skeleton className="h-6 w-24" />
-            <Skeleton className="h-3 w-20" />
+          <div key={i} className="px-3 sm:px-5 py-3 sm:py-4 flex items-start gap-2 sm:gap-3">
+            <Skeleton className="mt-0.5 h-7 w-7 sm:h-8 sm:w-8 rounded-lg shrink-0" />
+            <div className="space-y-1.5 min-w-0">
+              <Skeleton className="h-3 w-16" />
+              <Skeleton className="h-5 w-24" />
+              <Skeleton className="h-3 w-20" />
+            </div>
           </div>
         ))}
       </div>
       {/* Tabs skeleton */}
       <div className="space-y-5">
-        <Skeleton className="h-10 w-80 rounded-lg" />
+        <div className="border-b border-border/40">
+          <div className="flex items-center gap-1 h-10">
+            <Skeleton className="h-5 w-20 rounded" />
+            <Skeleton className="h-5 w-24 rounded" />
+            <Skeleton className="h-5 w-22 rounded" />
+            <Skeleton className="h-5 w-28 rounded" />
+          </div>
+        </div>
         <div className="grid gap-5 md:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <div key={i} className="card-elevated rounded-xl overflow-hidden">
-              <Skeleton className="h-1 w-full" />
+            <div key={i} className="card-elevated rounded-xl overflow-hidden border border-border/60">
               <div className="p-5 space-y-4">
-                <div className="flex gap-3">
-                  <Skeleton className="h-9 w-9 rounded-lg" />
-                  <div className="space-y-2 flex-1">
-                    <Skeleton className="h-4 w-28" />
-                    <Skeleton className="h-4 w-20" />
+                {/* Header: icon + title + badges + actions */}
+                <div className="flex items-start justify-between">
+                  <div className="flex items-start gap-3">
+                    <Skeleton className="h-9 w-9 rounded-lg shrink-0" />
+                    <div className="space-y-2">
+                      <Skeleton className="h-4 w-28" />
+                      <div className="flex items-center gap-1.5">
+                        <Skeleton className="h-4 w-16 rounded-full" />
+                        <Skeleton className="h-4 w-14 rounded-full" />
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-0.5">
+                    <Skeleton className="h-7 w-7 rounded" />
+                    <Skeleton className="h-7 w-7 rounded" />
+                    <Skeleton className="h-7 w-7 rounded" />
                   </div>
                 </div>
+                {/* Progress ring + amounts */}
                 <div className="flex items-center gap-4">
                   <Skeleton className="h-[60px] w-[60px] rounded-full" />
                   <div className="space-y-1.5 flex-1">
@@ -2358,16 +2653,136 @@ function GoalsLoadingSkeleton() {
                     <Skeleton className="h-3 w-32" />
                   </div>
                 </div>
+                {/* Linear progress bar */}
+                <div>
+                  <Skeleton className="h-2 w-full rounded-full" />
+                  <div className="flex items-center justify-between mt-1.5">
+                    <Skeleton className="h-3 w-24" />
+                    <Skeleton className="h-3 w-20" />
+                  </div>
+                </div>
+                {/* Details grid */}
                 <div className="grid grid-cols-2 gap-2">
                   {Array.from({ length: 4 }).map((_, j) => (
-                    <Skeleton key={j} className="h-12 rounded-lg" />
+                    <div key={j} className="rounded-lg bg-muted/40 px-3 py-2 space-y-1.5">
+                      <Skeleton className="h-3 w-14" />
+                      <Skeleton className="h-4 w-16" />
+                    </div>
                   ))}
                 </div>
+                {/* Action button */}
                 <Skeleton className="h-9 w-full rounded-md" />
               </div>
             </div>
           ))}
         </div>
+      </div>
+    </div>
+  )
+}
+
+/* ─── Bucket List Targets (shown in Overview tab) ─── */
+
+interface BucketListItem {
+  id: string
+  name: string
+  targetAmount: number
+  savedAmount: number
+  monthlyAllocation: number
+  status: string
+}
+
+function BucketListTargets() {
+  const [items, setItems] = React.useState<BucketListItem[]>([])
+  const [loading, setLoading] = React.useState(true)
+
+  React.useEffect(() => {
+    fetch("/api/bucket-list")
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        if (data?.success) {
+          const saving = (data.items || []).filter(
+            (it: BucketListItem) => it.status === "saving"
+          )
+          setItems(saving.slice(0, 4))
+        }
+      })
+      .catch(() => {})
+      .finally(() => setLoading(false))
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="card-elevated rounded-xl bg-card p-5">
+        <Skeleton className="h-5 w-32 mb-4" />
+        <div className="space-y-3">
+          {Array.from({ length: 2 }).map((_, i) => (
+            <div key={i} className="flex items-center gap-3">
+              <Skeleton className="h-8 w-8 rounded-lg" />
+              <div className="flex-1 space-y-1.5">
+                <Skeleton className="h-4 w-24" />
+                <Skeleton className="h-1.5 w-full rounded-full" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  if (items.length === 0) return null
+
+  return (
+    <div className="card-elevated rounded-xl bg-card p-5">
+      <div className="flex items-center justify-between mb-4">
+        <div className="flex items-center gap-1.5">
+          <IconStar className="h-4 w-4 text-muted-foreground" />
+          <h3 className="text-sm font-semibold">Bucket List Targets</h3>
+        </div>
+        <Link href="/goals?tab=bucket-list" className="text-xs text-primary hover:underline">
+          View all
+        </Link>
+      </div>
+      <div className="space-y-3">
+        {items.map((item) => {
+          const pct = item.targetAmount > 0
+            ? Math.min((item.savedAmount / item.targetAmount) * 100, 100)
+            : 0
+          return (
+            <div key={item.id} className="flex items-center gap-3">
+              <div className="rounded-lg p-1.5 bg-amber-500/10 border border-amber-500/20">
+                <IconStar className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center justify-between mb-1">
+                  <span className="text-sm font-medium truncate">{item.name}</span>
+                  <span className="text-xs tabular-nums text-muted-foreground ml-2 shrink-0">
+                    {Math.round(pct)}%
+                  </span>
+                </div>
+                <div className="h-1.5 w-full rounded-full bg-muted/50 overflow-hidden">
+                  <div
+                    className="h-1.5 rounded-full transition-all"
+                    style={{
+                      width: `${Math.max(pct, 1)}%`,
+                      background: pct >= 100 ? '#10b981' : pct >= 50 ? '#f59e0b' : '#3b82f6',
+                    }}
+                  />
+                </div>
+                <div className="flex items-center justify-between mt-1">
+                  <span className="text-[11px] text-muted-foreground">
+                    {formatCurrency(item.savedAmount)} of {formatCurrency(item.targetAmount)}
+                  </span>
+                  {item.monthlyAllocation > 0 && (
+                    <span className="text-[11px] text-muted-foreground">
+                      {formatCurrency(item.monthlyAllocation)}/mo
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          )
+        })}
       </div>
     </div>
   )

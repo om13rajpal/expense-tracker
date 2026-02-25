@@ -33,7 +33,9 @@ export type NotificationType =
   | 'goal_milestone'
   | 'weekly_digest'
   | 'renewal_alert'
-  | 'insight';
+  | 'insight'
+  | 'badge_unlock'
+  | 'bucket_complete';
 
 /** Severity levels controlling visual styling and sort priority. */
 export type NotificationSeverity = 'critical' | 'warning' | 'info' | 'success';
@@ -218,8 +220,8 @@ export async function checkBudgetBreaches(db: Db): Promise<void> {
         : `${doc.name} budget nearing limit`;
     const message =
       ratio >= 1
-        ? `You've spent \u20B9${formatINR(spent)} on ${doc.name} vs \u20B9${formatINR(budget)} budget (${Math.round(ratio * 100)}%)`
-        : `You've used ${Math.round(ratio * 100)}% of your ${doc.name} budget (\u20B9${formatINR(spent)} / \u20B9${formatINR(budget)})`;
+        ? `You've spent ₹${formatINR(spent)} on ${doc.name} vs ₹${formatINR(budget)} budget (${Math.round(ratio * 100)}%)`
+        : `You've used ${Math.round(ratio * 100)}% of your ${doc.name} budget (₹${formatINR(spent)} / ₹${formatINR(budget)})`;
 
     await db.collection(COLLECTION).insertOne({
       userId,
@@ -275,7 +277,7 @@ export async function checkSubscriptionRenewals(db: Db): Promise<void> {
       userId,
       type: 'renewal_alert',
       title: `${name} renewing ${dayLabel}`,
-      message: `Your ${name} subscription (\u20B9${formatINR(amount)}/${sub.frequency}) renews ${dayLabel}`,
+      message: `Your ${name} subscription (₹${formatINR(amount)}/${sub.frequency}) renews ${dayLabel}`,
       severity: 'info',
       read: false,
       actionUrl: '/subscriptions',
@@ -325,7 +327,7 @@ export async function generateWeeklyDigest(db: Db): Promise<void> {
   const topCategories = Object.entries(categorySpend)
     .sort((a, b) => b[1] - a[1])
     .slice(0, 3)
-    .map(([name, amount]) => `${name} (\u20B9${formatINR(amount)})`)
+    .map(([name, amount]) => `${name} (₹${formatINR(amount)})`)
     .join(', ');
 
   const savingsRate =
@@ -357,12 +359,12 @@ export async function generateWeeklyDigest(db: Db): Promise<void> {
 
   // -- Build message --
   const lines: string[] = [];
-  lines.push(`Total spent this week: \u20B9${formatINR(totalSpent)}`);
+  lines.push(`Total spent this week: ₹${formatINR(totalSpent)}`);
   if (topCategories) lines.push(`Top categories: ${topCategories}`);
   if (totalIncome > 0) lines.push(`Savings rate: ${savingsRate}%`);
   if (portfolioValue > 0) {
     const sign = portfolioChange >= 0 ? '+' : '';
-    lines.push(`Portfolio: \u20B9${formatINR(portfolioValue)} (${sign}${portfolioChange.toFixed(1)}%)`);
+    lines.push(`Portfolio: ₹${formatINR(portfolioValue)} (${sign}${portfolioChange.toFixed(1)}%)`);
   }
 
   await db.collection(COLLECTION).insertOne({
@@ -376,4 +378,141 @@ export async function generateWeeklyDigest(db: Db): Promise<void> {
     dedupKey: 'weekly',
     createdAt: now,
   } satisfies NotificationDoc);
+}
+
+// ─── Goal Milestone Check ─────────────────────────────────────────
+
+/**
+ * Check savings goals for milestone crossings (25%, 50%, 75%, 100%).
+ * Creates a 'success' notification for each newly crossed milestone.
+ * Deduplicates by goal ID + milestone percentage.
+ */
+export async function checkGoalMilestones(db: Db): Promise<void> {
+  const userId = 'default';
+  const now = new Date().toISOString();
+
+  const goals = await db.collection('goals').find({ userId }).toArray();
+
+  const milestones = [0.25, 0.5, 0.75, 1.0];
+
+  for (const goal of goals) {
+    const target = (goal.targetAmount as number) || 0;
+    const current = (goal.currentAmount as number) || 0;
+    if (target <= 0) continue;
+
+    const ratio = current / target;
+
+    for (const milestone of milestones) {
+      if (ratio < milestone) continue;
+
+      const pctLabel = Math.round(milestone * 100);
+      const dedupKey = `goal:${(goal._id).toString()}:${pctLabel}%`;
+      if (await isDuplicate(db, userId, 'goal_milestone', dedupKey, 24 * 365)) continue;
+
+      const title = milestone >= 1.0
+        ? `${goal.name} goal reached!`
+        : `${goal.name} is ${pctLabel}% complete`;
+      const message = milestone >= 1.0
+        ? `Congratulations! You've fully funded your "${goal.name}" goal (${formatINR(current)} / ${formatINR(target)}).`
+        : `Your "${goal.name}" goal has crossed the ${pctLabel}% mark (${formatINR(current)} / ${formatINR(target)}).`;
+
+      await db.collection(COLLECTION).insertOne({
+        userId,
+        type: 'goal_milestone',
+        title,
+        message,
+        severity: 'success',
+        read: false,
+        actionUrl: '/goals',
+        dedupKey,
+        createdAt: now,
+      } satisfies NotificationDoc);
+    }
+  }
+}
+
+// ─── Bucket List Progress Check ──────────────────────────────────
+
+/**
+ * Check bucket list items for full funding.
+ * Creates a 'success' notification when savedAmount >= targetPrice.
+ * Deduplicates by item ID.
+ */
+export async function checkBucketListProgress(db: Db): Promise<void> {
+  const userId = 'default';
+  const now = new Date().toISOString();
+
+  const items = await db.collection('bucket_list').find({
+    userId,
+    status: { $ne: 'completed' },
+  }).toArray();
+
+  for (const item of items) {
+    const saved = (item.savedAmount as number) || 0;
+    const target = (item.targetPrice as number) || 0;
+    if (target <= 0 || saved < target) continue;
+
+    const dedupKey = `bucket:${(item._id).toString()}:complete`;
+    if (await isDuplicate(db, userId, 'bucket_complete', dedupKey, 24 * 365)) continue;
+
+    await db.collection(COLLECTION).insertOne({
+      userId,
+      type: 'bucket_complete',
+      title: `${item.name} fully funded!`,
+      message: `Your bucket list item "${item.name}" is fully funded at ${formatINR(saved)}. Time to make it happen!`,
+      severity: 'success',
+      read: false,
+      actionUrl: '/bucket-list',
+      dedupKey,
+      createdAt: now,
+    } satisfies NotificationDoc);
+  }
+}
+
+// ─── Badge Notification Check ────────────────────────────────────
+
+/**
+ * Check for newly unlocked badges that haven't been notified yet.
+ * Creates an 'info' notification for each and marks them as notified.
+ * Deduplicates by badge ID.
+ */
+export async function checkBadgeNotifications(db: Db): Promise<void> {
+  const userId = 'default';
+  const now = new Date().toISOString();
+
+  const unnotifiedBadges = await db.collection('user_badges').find({
+    userId,
+    notified: false,
+  }).toArray();
+
+  for (const badge of unnotifiedBadges) {
+    const dedupKey = `badge:${(badge._id).toString()}`;
+    if (await isDuplicate(db, userId, 'badge_unlock', dedupKey, 24 * 365)) {
+      // Still mark as notified to prevent re-checking
+      await db.collection('user_badges').updateOne(
+        { _id: badge._id },
+        { $set: { notified: true } },
+      );
+      continue;
+    }
+
+    const badgeName = (badge.badgeName as string) || (badge.badgeId as string) || 'Unknown';
+
+    await db.collection(COLLECTION).insertOne({
+      userId,
+      type: 'badge_unlock',
+      title: `Badge unlocked: ${badgeName}`,
+      message: `You've earned the "${badgeName}" badge! Check your achievements to see all your badges.`,
+      severity: 'info',
+      read: false,
+      actionUrl: '/gamification',
+      dedupKey,
+      createdAt: now,
+    } satisfies NotificationDoc);
+
+    await db.collection('user_badges').updateOne(
+      { _id: badge._id },
+      { $set: { notified: true } },
+    );
+  }
 }

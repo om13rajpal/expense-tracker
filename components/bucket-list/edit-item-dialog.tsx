@@ -1,18 +1,3 @@
-/**
- * Edit bucket list item dialog component.
- *
- * Renders a modal dialog for editing existing bucket list items. Includes all fields
- * from the add dialog plus an "Add Funds" field that increments the saved amount
- * rather than replacing it.
- *
- * When the dialog opens, all fields are pre-populated from the provided item.
- * The Add Funds field defaults to empty and shows the current saved amount as helper text.
- *
- * Like the add dialog, includes "Look up" price search integration for updating
- * the target amount based on current web prices.
- *
- * @module components/bucket-list/edit-item-dialog
- */
 "use client"
 
 import { useState, useEffect } from "react"
@@ -33,23 +18,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import { IconSearch, IconLoader2 } from "@tabler/icons-react"
+import { IconSearch, IconLoader2, IconX } from "@tabler/icons-react"
 import type {
   BucketListItem,
   BucketListCategory,
   BucketListPriority,
 } from "@/lib/types"
 
-/**
- * Props for the EditItemDialog component.
- *
- * @property open - Whether the dialog is currently visible
- * @property onOpenChange - Callback to toggle dialog visibility
- * @property item - The bucket list item to edit (null if no item selected)
- * @property onSubmit - Callback with the item ID and updated fields when submitted
- * @property onPriceLookup - Optional async callback to fetch the current price for a product name
- * @property isPriceLooking - Whether a price lookup request is in progress
- */
 interface EditItemDialogProps {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -62,9 +37,6 @@ interface EditItemDialogProps {
   isPriceLooking?: boolean
 }
 
-/**
- * Available category options for the category dropdown.
- */
 const categories: { value: BucketListCategory; label: string }[] = [
   { value: "electronics", label: "Electronics" },
   { value: "travel", label: "Travel" },
@@ -77,26 +49,12 @@ const categories: { value: BucketListCategory; label: string }[] = [
   { value: "other", label: "Other" },
 ]
 
-/**
- * Available priority options for the priority dropdown.
- */
 const priorities: { value: BucketListPriority; label: string }[] = [
   { value: "high", label: "High" },
   { value: "medium", label: "Medium" },
   { value: "low", label: "Low" },
 ]
 
-/**
- * Renders a modal dialog form for editing existing bucket list items.
- *
- * Pre-populates all form fields from the provided item on open.
- * The "Add Funds" field uses addAmount to increment savedAmount server-side
- * rather than replacing it, preventing race conditions with concurrent updates.
- *
- * Returns null if no item is provided (dialog should not render without an item).
- *
- * @param props - Component props (see EditItemDialogProps)
- */
 export function EditItemDialog({
   open,
   onOpenChange,
@@ -113,11 +71,8 @@ export function EditItemDialog({
   const [monthlyAllocation, setMonthlyAllocation] = useState("")
   const [description, setDescription] = useState("")
   const [addFunds, setAddFunds] = useState("")
+  const [imageUrl, setImageUrl] = useState("")
 
-  /**
-   * Syncs form state with the provided item whenever it changes.
-   * This ensures the form reflects the latest item data when the dialog opens.
-   */
   useEffect(() => {
     if (item) {
       setName(item.name)
@@ -128,13 +83,10 @@ export function EditItemDialog({
       setMonthlyAllocation(String(item.monthlyAllocation))
       setDescription(item.description ?? "")
       setAddFunds("")
+      setImageUrl(item.coverImageUrl ?? item.imageUrl ?? "")
     }
   }, [item])
 
-  /**
-   * Handles form submission, validates required fields, calls onSubmit
-   * with the item ID and updated fields, then closes the dialog.
-   */
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!item || !name.trim() || !targetAmount) return
@@ -147,14 +99,11 @@ export function EditItemDialog({
       monthlyAllocation: Number(monthlyAllocation) || 0,
       description: description.trim() || undefined,
       addAmount: Number(addFunds) || undefined,
+      coverImageUrl: imageUrl.trim() || undefined,
     } as Partial<BucketListItem> & { addAmount?: number })
     onOpenChange(false)
   }
 
-  /**
-   * Triggers a price lookup for the current item name and auto-fills
-   * the target amount if a price is found.
-   */
   async function handlePriceLookup() {
     if (!onPriceLookup || !name.trim()) return
     const price = await onPriceLookup(name.trim())
@@ -165,7 +114,7 @@ export function EditItemDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto mx-4 sm:mx-auto rounded-xl">
         <DialogHeader>
           <DialogTitle>Edit Item</DialogTitle>
         </DialogHeader>
@@ -229,6 +178,35 @@ export function EditItemDialog({
                 maximumFractionDigits: 0,
               }).format(item.savedAmount)}
             </p>
+          </div>
+
+          {/* Cover Image */}
+          <div className="space-y-2">
+            <Label>Cover Image</Label>
+            {imageUrl.trim() ? (
+              <div className="relative rounded-lg overflow-hidden border border-border/50 h-28 bg-muted/30">
+                <img
+                  src={imageUrl}
+                  alt="Cover preview"
+                  className="w-full h-full object-cover"
+                  onError={(e) => { (e.target as HTMLImageElement).style.display = 'none' }}
+                />
+                <button
+                  type="button"
+                  onClick={() => setImageUrl("")}
+                  className="absolute top-2 right-2 rounded-full bg-black/60 p-1 text-white hover:bg-black/80 transition-colors"
+                >
+                  <IconX className="size-3.5" />
+                </button>
+              </div>
+            ) : null}
+            <Input
+              type="url"
+              value={imageUrl}
+              onChange={(e) => setImageUrl(e.target.value)}
+              placeholder="Paste image URL or leave blank"
+              className="text-xs"
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-3">

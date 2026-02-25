@@ -825,9 +825,9 @@ export function ChatView() {
       <div className="flex flex-1 flex-col overflow-hidden min-h-0">
         {!chatStarted ? (
           /* LANDING STATE */
-          <div className="flex flex-1 flex-col items-center overflow-y-auto px-3 pb-6 pt-14 sm:px-4 sm:justify-center sm:pt-0 sm:pb-10 md:px-6 relative">
+          <div className="flex flex-1 flex-col min-h-0 relative">
             {/* Thread panel toggle buttons */}
-            <div className="absolute top-3 left-3 flex items-center gap-1.5">
+            <div className="absolute top-3 left-3 z-10 flex items-center gap-1.5">
               {/* Mobile: Sheet trigger */}
               <Sheet open={threadPanelOpen} onOpenChange={setThreadPanelOpen}>
                 <SheetTrigger asChild>
@@ -861,131 +861,134 @@ export function ChatView() {
               )}
             </div>
 
-            <motion.div
-              className="flex flex-col items-center w-full max-w-xl shrink-0"
-              initial={{ opacity: 0, y: 16 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
-            >
-              {/* Hero animation */}
-              {lottieData ? (
-                <motion.div
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5 }}
-                  className="h-24 w-24 sm:h-36 sm:w-36 drop-shadow-lg"
-                >
-                  <Lottie
-                    animationData={lottieData}
-                    loop
-                    autoplay
-                    className="h-full w-full"
-                  />
-                </motion.div>
-              ) : (
-                <HeroOrb />
-              )}
-
-              {/* Title */}
-              <h1 className="mt-4 sm:mt-6 text-xl sm:text-2xl font-bold tracking-tight text-foreground">
-                Finance Agent
-              </h1>
-              <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-muted-foreground text-center max-w-sm leading-relaxed">
-                I have access to all your transactions, investments, budgets,
-                and goals. Ask me anything about your finances.
-              </p>
-
-              {/* Capability pills */}
-              <div className="mt-4 flex flex-wrap items-center justify-center gap-1.5">
-                {[
-                  "Transactions",
-                  "Investments",
-                  "Budgets",
-                  "Goals",
-                  "FIRE",
-                ].map((tag) => (
-                  <span
-                    key={tag}
-                    className="inline-flex items-center rounded-full bg-primary/6 px-2.5 py-1 text-[11px] font-medium text-primary/80"
+            {/* Scrollable hero content */}
+            <div className="flex-1 overflow-y-auto flex flex-col items-center px-3 pt-14 sm:px-4 sm:justify-center sm:pt-0 md:px-6">
+              <motion.div
+                className="flex flex-col items-center w-full max-w-xl shrink-0"
+                initial={{ opacity: 0, y: 16 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
+              >
+                {/* Hero animation */}
+                {lottieData ? (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.9 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5 }}
+                    className="h-24 w-24 sm:h-36 sm:w-36 drop-shadow-lg"
                   >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-
-              {/* Suggested prompts */}
-              <div className="mt-4 sm:mt-5 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 w-full">
-                {[
-                  "What are my top spending categories this month?",
-                  "Am I on track with my savings goals?",
-                  "How can I reduce my food spending?",
-                  "Give me a monthly financial summary",
-                  "What subscriptions should I review?",
-                  "How is my investment portfolio performing?",
-                ].map((prompt, idx) => (
-                  <button
-                    key={prompt}
-                    onClick={() => sendMessage(prompt)}
-                    className={`rounded-full border border-border/50 bg-card/60 px-2.5 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-[11px] text-muted-foreground transition-all hover:border-primary/30 hover:bg-primary/5 hover:text-foreground ${idx >= 4 ? "hidden sm:inline-flex" : ""}`}
-                  >
-                    {prompt}
-                  </button>
-                ))}
-              </div>
-
-              {/* Input card */}
-              <div className="w-full mt-5 sm:mt-8">
-                <form onSubmit={handleSubmit}>
-                  <div className="relative rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm shadow-sm transition-all focus-within:border-primary/40 focus-within:shadow-md focus-within:shadow-primary/5">
-                    <textarea
-                      ref={textareaRef}
-                      value={input}
-                      onChange={(e) => {
-                        setInput(e.target.value)
-                        adjustTextareaHeight()
-                      }}
-                      onKeyDown={handleKeyDown}
-                      placeholder="Ask about your finances..."
-                      rows={2}
-                      className="w-full resize-none bg-transparent px-4 pt-4 pb-14 text-sm outline-none placeholder:text-muted-foreground/50"
-                      style={{ minHeight: 80, maxHeight: 160 }}
+                    <Lottie
+                      animationData={lottieData}
+                      loop
+                      autoplay
+                      className="h-full w-full"
                     />
-                    <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
-                      <span className="text-[11px] text-muted-foreground/40">
-                        Shift+Enter for new line
-                      </span>
-                      <button
-                        type="submit"
-                        disabled={!input.trim()}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-all hover:bg-primary/90 disabled:opacity-30 disabled:cursor-not-allowed"
-                      >
-                        <IconSend2 className="h-4 w-4" />
-                      </button>
-                    </div>
-                  </div>
-                </form>
-              </div>
+                  </motion.div>
+                ) : (
+                  <HeroOrb />
+                )}
 
-              {/* Quick actions */}
-              <div className="mt-4 sm:mt-5 grid grid-cols-2 xs:grid-cols-2 sm:grid-cols-3 gap-1.5 sm:gap-2 w-full">
-                {quickActions.map((action) => (
-                  <button
-                    key={action.label}
-                    onClick={() => sendMessage(action.prompt)}
-                    className="group flex items-center gap-2 sm:gap-2.5 rounded-xl border border-border/40 bg-card/50 px-2.5 sm:px-3 py-2 sm:py-2.5 text-left transition-all hover:border-primary/20 hover:bg-card hover:shadow-sm"
-                  >
-                    <div
-                      className={`flex h-6 w-6 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-lg ${action.bg} ${action.color} transition-colors`}
+                {/* Title */}
+                <h1 className="mt-4 sm:mt-6 text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+                  Finance Agent
+                </h1>
+                <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-muted-foreground text-center max-w-sm leading-relaxed">
+                  I have access to all your transactions, investments, budgets,
+                  and goals. Ask me anything about your finances.
+                </p>
+
+                {/* Capability pills */}
+                <div className="mt-4 flex flex-wrap items-center justify-center gap-1.5">
+                  {[
+                    "Transactions",
+                    "Investments",
+                    "Budgets",
+                    "Goals",
+                    "FIRE",
+                  ].map((tag) => (
+                    <span
+                      key={tag}
+                      className="inline-flex items-center rounded-full bg-primary/6 px-2.5 py-1 text-[11px] font-medium text-primary/80"
                     >
-                      <action.icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
-                    </div>
-                    <span className="text-[10px] sm:text-[11px] font-medium text-muted-foreground group-hover:text-foreground transition-colors leading-tight">
-                      {action.label}
+                      {tag}
                     </span>
-                  </button>
-                ))}
-              </div>
-            </motion.div>
+                  ))}
+                </div>
+
+                {/* Suggested prompts */}
+                <div className="mt-4 sm:mt-5 flex flex-wrap items-center justify-center gap-1.5 sm:gap-2 w-full">
+                  {[
+                    "What are my top spending categories this month?",
+                    "Am I on track with my savings goals?",
+                    "How can I reduce my food spending?",
+                    "Give me a monthly financial summary",
+                    "What subscriptions should I review?",
+                    "How is my investment portfolio performing?",
+                  ].map((prompt, idx) => (
+                    <button
+                      key={prompt}
+                      onClick={() => sendMessage(prompt)}
+                      className={`rounded-full border border-border/50 bg-card/60 px-2.5 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-[11px] text-muted-foreground transition-all hover:border-primary/30 hover:bg-primary/5 hover:text-foreground ${idx >= 4 ? "hidden sm:inline-flex" : ""}`}
+                    >
+                      {prompt}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Quick actions */}
+                <div className="mt-4 sm:mt-5 grid grid-cols-2 xs:grid-cols-2 sm:grid-cols-3 gap-1.5 sm:gap-2 w-full pb-4">
+                  {quickActions.map((action) => (
+                    <button
+                      key={action.label}
+                      onClick={() => sendMessage(action.prompt)}
+                      className="group flex items-center gap-2 sm:gap-2.5 rounded-xl border border-border/40 bg-card/50 px-2.5 sm:px-3 py-2 sm:py-2.5 text-left transition-all hover:border-primary/20 hover:bg-card hover:shadow-sm"
+                    >
+                      <div
+                        className={`flex h-6 w-6 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-lg ${action.bg} ${action.color} transition-colors`}
+                      >
+                        <action.icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
+                      </div>
+                      <span className="text-[10px] sm:text-[11px] font-medium text-muted-foreground group-hover:text-foreground transition-colors leading-tight">
+                        {action.label}
+                      </span>
+                    </button>
+                  ))}
+                </div>
+              </motion.div>
+            </div>
+
+            {/* Input area - pinned to bottom */}
+            <div className="shrink-0 px-3 pb-3 pt-2 sm:px-4 sm:pb-4 md:px-6">
+              <form onSubmit={handleSubmit} className="mx-auto max-w-xl">
+                <div className="relative rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm shadow-sm transition-all focus-within:border-primary/40 focus-within:shadow-md focus-within:shadow-primary/5">
+                  <textarea
+                    ref={textareaRef}
+                    value={input}
+                    onChange={(e) => {
+                      setInput(e.target.value)
+                      adjustTextareaHeight()
+                    }}
+                    onKeyDown={handleKeyDown}
+                    placeholder="Ask about your finances..."
+                    rows={2}
+                    className="w-full resize-none bg-transparent px-4 pt-4 pb-14 text-sm outline-none placeholder:text-muted-foreground/50"
+                    style={{ minHeight: 80, maxHeight: 160 }}
+                  />
+                  <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
+                    <span className="text-[11px] text-muted-foreground/40">
+                      Shift+Enter for new line
+                    </span>
+                    <button
+                      type="submit"
+                      disabled={!input.trim()}
+                      className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-all hover:bg-primary/90 disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      <IconSend2 className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              </form>
+            </div>
           </div>
         ) : (
           /* CHAT STATE */
@@ -1065,88 +1068,86 @@ export function ChatView() {
               </div>
             </div>
 
-            {/* Messages */}
-            <div
-              ref={scrollContainerRef}
-              className="flex-1 overflow-y-auto min-h-0 px-3 py-3 space-y-3 sm:px-4 sm:py-4 sm:space-y-4 md:px-6"
-            >
-              {messages.map((msg, idx) => (
-                <motion.div
-                  key={idx}
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{
-                    duration: 0.2,
-                    ease: [0.25, 0.1, 0.25, 1],
-                  }}
-                >
-                  <ChatBubble role={msg.role} content={msg.content} />
-                </motion.div>
-              ))}
-
-              {/* Error */}
-              {error && (
-                <motion.div
-                  initial={{ opacity: 0, y: 8 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="mx-auto max-w-lg rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive"
-                >
-                  {error}
-                </motion.div>
-              )}
-
-              <div ref={messagesEndRef} />
-            </div>
-
-            {/* Input area - pinned to bottom via flex layout */}
-            <div className="shrink-0 px-2.5 pb-1.5 pt-2 sm:px-4 sm:pb-2 md:px-6 border-t border-border/20 bg-background">
-              <form
-                onSubmit={handleSubmit}
-                className="mx-auto flex max-w-3xl items-end gap-1.5 sm:gap-2"
+            {/* Messages + floating input */}
+            <div className="relative flex-1 min-h-0">
+              <div
+                ref={scrollContainerRef}
+                className="absolute inset-0 overflow-y-auto px-3 py-3 space-y-3 sm:px-4 sm:py-4 sm:space-y-4 md:px-6 pb-20"
               >
-                <div className="flex-1 relative rounded-full border border-border/40 bg-background/80 backdrop-blur-xl shadow-lg ring-1 ring-white/5 transition-all focus-within:border-primary/50 focus-within:shadow-primary/10 focus-within:ring-primary/10">
-                  <textarea
-                    ref={textareaRef}
-                    value={input}
-                    onChange={(e) => {
-                      setInput(e.target.value)
-                      adjustTextareaHeight()
+                {messages.map((msg, idx) => (
+                  <motion.div
+                    key={idx}
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{
+                      duration: 0.2,
+                      ease: [0.25, 0.1, 0.25, 1],
                     }}
-                    onKeyDown={handleKeyDown}
-                    placeholder={
-                      isStreaming
-                        ? "Generating response..."
-                        : "Ask about your finances..."
-                    }
-                    disabled={isStreaming}
-                    rows={1}
-                    className="w-full resize-none rounded-full bg-transparent px-4 py-3 sm:px-5 text-sm outline-none placeholder:text-muted-foreground/50 disabled:opacity-50"
-                    style={{ minHeight: 44, maxHeight: 160 }}
-                  />
-                </div>
+                  >
+                    <ChatBubble role={msg.role} content={msg.content} />
+                  </motion.div>
+                ))}
 
-                {isStreaming ? (
-                  <button
-                    type="button"
-                    onClick={stopStreaming}
-                    className="flex h-[40px] w-[40px] sm:h-[44px] sm:w-[44px] shrink-0 self-end items-center justify-center rounded-full bg-destructive/90 text-destructive-foreground shadow-lg transition-all hover:bg-destructive"
+                {/* Error */}
+                {error && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="mx-auto max-w-lg rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive"
                   >
-                    <IconPlayerStop className="h-4 w-4" />
-                  </button>
-                ) : (
-                  <button
-                    type="submit"
-                    disabled={!input.trim()}
-                    className="flex h-[40px] w-[40px] sm:h-[44px] sm:w-[44px] shrink-0 self-end items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-all hover:bg-primary/90 disabled:opacity-30 disabled:cursor-not-allowed"
-                  >
-                    <IconSend2 className="h-4 w-4" />
-                  </button>
+                    {error}
+                  </motion.div>
                 )}
-              </form>
-              <p className="text-center text-[10px] sm:text-[11px] text-muted-foreground/40 mt-1 sm:mt-1.5 hidden sm:block">
-                Responses are based on your financial data. Always verify
-                important decisions.
-              </p>
+
+                <div ref={messagesEndRef} />
+              </div>
+
+              {/* Floating input */}
+              <div className="absolute bottom-3 left-3 right-3 sm:left-4 sm:right-4 sm:bottom-4 md:left-6 md:right-6">
+                <form
+                  onSubmit={handleSubmit}
+                  className="mx-auto flex max-w-3xl items-end gap-1.5 sm:gap-2"
+                >
+                  <div className="flex-1 relative rounded-full border border-border/40 bg-background/80 backdrop-blur-xl shadow-lg ring-1 ring-white/5 transition-all focus-within:border-primary/50 focus-within:shadow-primary/10 focus-within:ring-primary/10">
+                    <textarea
+                      ref={textareaRef}
+                      value={input}
+                      onChange={(e) => {
+                        setInput(e.target.value)
+                        adjustTextareaHeight()
+                      }}
+                      onKeyDown={handleKeyDown}
+                      placeholder={
+                        isStreaming
+                          ? "Generating response..."
+                          : "Ask about your finances..."
+                      }
+                      disabled={isStreaming}
+                      rows={1}
+                      className="w-full resize-none rounded-full bg-transparent px-4 py-3 sm:px-5 text-sm outline-none placeholder:text-muted-foreground/50 disabled:opacity-50"
+                      style={{ minHeight: 44, maxHeight: 160 }}
+                    />
+                  </div>
+
+                  {isStreaming ? (
+                    <button
+                      type="button"
+                      onClick={stopStreaming}
+                      className="flex h-[40px] w-[40px] sm:h-[44px] sm:w-[44px] shrink-0 self-end items-center justify-center rounded-full bg-destructive/90 text-destructive-foreground shadow-lg transition-all hover:bg-destructive"
+                    >
+                      <IconPlayerStop className="h-4 w-4" />
+                    </button>
+                  ) : (
+                    <button
+                      type="submit"
+                      disabled={!input.trim()}
+                      className="flex h-[40px] w-[40px] sm:h-[44px] sm:w-[44px] shrink-0 self-end items-center justify-center rounded-full bg-primary text-primary-foreground shadow-lg transition-all hover:bg-primary/90 disabled:opacity-30 disabled:cursor-not-allowed"
+                    >
+                      <IconSend2 className="h-4 w-4" />
+                    </button>
+                  )}
+                </form>
+              </div>
             </div>
           </div>
         )}

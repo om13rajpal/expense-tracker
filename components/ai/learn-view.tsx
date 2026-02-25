@@ -255,6 +255,7 @@ interface FinancialHealthData {
   metrics?: {
     emergencyFundMonths: number
     financialFreedomScore: number
+    savingsRate?: number
   }
 }
 
@@ -336,6 +337,30 @@ function buildRecommendations(
     recommendations.push({
       topicId: "emergency-fund",
       reason: `Your emergency fund covers ${monthsText} of expenses. Experts recommend at least 3-6 months.`,
+    })
+  }
+
+  // Overspending: negative savings rate means expenses > income
+  if (healthData?.metrics?.savingsRate !== undefined && healthData.metrics.savingsRate < 0 && isNotMastered("budgeting-methods")) {
+    recommendations.push({
+      topicId: "budgeting-methods",
+      reason: "You're spending more than you earn this month. Learning budget techniques can help you regain control.",
+    })
+  }
+
+  // Has investments but hasn't learned about FIRE
+  if (hasAnyInvestments && isNotMastered("fire")) {
+    recommendations.push({
+      topicId: "fire",
+      reason: "You're already investing — learn about Financial Independence to set a long-term target.",
+    })
+  }
+
+  // Has mutual funds but hasn't deepened MF knowledge
+  if (investmentData?.hasMutualFunds && isNotMastered("mutual-funds")) {
+    recommendations.push({
+      topicId: "mutual-funds",
+      reason: "You hold mutual funds. Deepen your knowledge to optimise your portfolio allocation.",
     })
   }
 
@@ -1433,49 +1458,57 @@ export function LearnView() {
               )}
 
               {/* Continue where you left off */}
-              {!searchQuery && difficultyFilter === "all" && continueTopicId && (() => {
-                const continueTopic = TOPICS_MAP.get(continueTopicId)
-                if (!continueTopic) return null
-                const ContinueIcon = getIcon(continueTopic.icon)
-                const continueProgress = progressMap.get(continueTopicId)
-                const continueHasQuiz = !!TOPIC_QUIZZES[continueTopicId]
-                return (
-                  <motion.div variants={fadeUp}>
-                    <button
-                      onClick={() => setSelectedTopic(continueTopicId)}
-                      className="group w-full text-left rounded-xl border border-primary/20 bg-gradient-to-r from-primary/[0.06] via-primary/[0.03] to-transparent hover:from-primary/[0.10] hover:border-primary/30 transition-all duration-200 overflow-hidden"
+              <AnimatePresence>
+                {!searchQuery && difficultyFilter === "all" && continueTopicId && (() => {
+                  const continueTopic = TOPICS_MAP.get(continueTopicId)
+                  if (!continueTopic) return null
+                  const ContinueIcon = getIcon(continueTopic.icon)
+                  const continueProgress = progressMap.get(continueTopicId)
+                  const continueHasQuiz = !!TOPIC_QUIZZES[continueTopicId]
+                  return (
+                    <motion.div
+                      key="continue-learning"
+                      initial={{ opacity: 0, y: 12 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
                     >
-                      <div className="p-4 flex items-center gap-4">
-                        <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${difficultyGradient(continueTopic.difficulty)} shadow-sm`}>
-                          <ContinueIcon className="h-5 w-5 text-white" />
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-[10px] font-bold uppercase tracking-wider text-primary mb-0.5">
-                            Continue where you left off
-                          </p>
-                          <h3 className="text-sm font-semibold text-foreground truncate">
-                            {continueTopic.title}
-                          </h3>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider ${difficultyColor(continueTopic.difficulty)}`}>
-                              {difficultyLabel(continueTopic.difficulty)}
-                            </span>
-                            {continueProgress?.status === "read" && continueHasQuiz && (
-                              <span className="text-[10px] text-primary/70 font-medium">
-                                Take the quiz to master this topic
+                      <button
+                        onClick={() => setSelectedTopic(continueTopicId)}
+                        className="group w-full text-left rounded-xl border border-primary/20 bg-gradient-to-r from-primary/[0.06] via-primary/[0.03] to-transparent hover:from-primary/[0.10] hover:border-primary/30 transition-all duration-200 overflow-hidden"
+                      >
+                        <div className="p-4 flex items-center gap-4">
+                          <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br ${difficultyGradient(continueTopic.difficulty)} shadow-sm`}>
+                            <ContinueIcon className="h-5 w-5 text-white" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-primary mb-0.5">
+                              Continue where you left off
+                            </p>
+                            <h3 className="text-sm font-semibold text-foreground truncate">
+                              {continueTopic.title}
+                            </h3>
+                            <div className="flex items-center gap-2 mt-0.5">
+                              <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider ${difficultyColor(continueTopic.difficulty)}`}>
+                                {difficultyLabel(continueTopic.difficulty)}
                               </span>
-                            )}
+                              {continueProgress?.status === "read" && continueHasQuiz && (
+                                <span className="text-[10px] text-primary/70 font-medium">
+                                  Take the quiz to master this topic
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                          <div className="shrink-0 flex items-center gap-1 text-sm font-medium text-primary opacity-60 group-hover:opacity-100 transition-opacity">
+                            <span>Resume</span>
+                            <IconArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
                           </div>
                         </div>
-                        <div className="shrink-0 flex items-center gap-1 text-sm font-medium text-primary opacity-60 group-hover:opacity-100 transition-opacity">
-                          <span>Resume</span>
-                          <IconArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                        </div>
-                      </div>
-                    </button>
-                  </motion.div>
-                )
-              })()}
+                      </button>
+                    </motion.div>
+                  )
+                })()}
+              </AnimatePresence>
 
               {/* Search + filter */}
               <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-3">

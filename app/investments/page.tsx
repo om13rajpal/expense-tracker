@@ -1090,8 +1090,9 @@ export default function InvestmentsPage() {
               {/* Quick metric tiles */}
               <motion.div variants={stagger} className="@[1200px]/main:col-span-8 grid grid-cols-2 @[640px]/main:grid-cols-4 gap-3">
                 <motion.div variants={fadeUpSmall}>
-                  <Card className="card-elevated h-full border-t-2 border-t-indigo-500/40">
-                    <CardContent className="flex items-start gap-3 p-4">
+                  <Card className="card-elevated h-full relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent pointer-events-none" />
+                    <CardContent className="relative flex items-start gap-3 p-4">
                       <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-500/10 dark:bg-indigo-500/15">
                         <IconChartLine className="size-4 text-indigo-600 dark:text-indigo-400" />
                       </div>
@@ -1107,8 +1108,9 @@ export default function InvestmentsPage() {
                   </Card>
                 </motion.div>
                 <motion.div variants={fadeUpSmall}>
-                  <Card className="card-elevated h-full border-t-2 border-t-amber-500/40">
-                    <CardContent className="flex items-start gap-3 p-4">
+                  <Card className="card-elevated h-full relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent pointer-events-none" />
+                    <CardContent className="relative flex items-start gap-3 p-4">
                       <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 dark:bg-amber-500/15">
                         <IconChartBar className="size-4 text-amber-600 dark:text-amber-400" />
                       </div>
@@ -1124,8 +1126,9 @@ export default function InvestmentsPage() {
                   </Card>
                 </motion.div>
                 <motion.div variants={fadeUpSmall}>
-                  <Card className="card-elevated h-full border-t-2 border-t-emerald-500/40">
-                    <CardContent className="flex items-start gap-3 p-4">
+                  <Card className="card-elevated h-full relative overflow-hidden">
+                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent pointer-events-none" />
+                    <CardContent className="relative flex items-start gap-3 p-4">
                       <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15">
                         <IconCoin className="size-4 text-emerald-600 dark:text-emerald-400" />
                       </div>
@@ -1138,8 +1141,9 @@ export default function InvestmentsPage() {
                   </Card>
                 </motion.div>
                 <motion.div variants={fadeUpSmall}>
-                  <Card className={`card-elevated h-full border-t-2 ${realizedPL >= 0 ? "border-t-emerald-500/40" : "border-t-rose-500/40"}`}>
-                    <CardContent className="flex items-start gap-3 p-4">
+                  <Card className="card-elevated h-full relative overflow-hidden">
+                    <div className={`absolute inset-0 bg-gradient-to-br ${realizedPL >= 0 ? "from-emerald-500/5" : "from-rose-500/5"} to-transparent pointer-events-none`} />
+                    <CardContent className="relative flex items-start gap-3 p-4">
                       <div className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${realizedPL >= 0 ? "bg-emerald-500/10 dark:bg-emerald-500/15" : "bg-rose-500/10 dark:bg-rose-500/15"}`}>
                         <IconTrendingUp className={`size-4 ${realizedPL >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`} />
                       </div>
