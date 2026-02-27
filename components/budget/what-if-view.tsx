@@ -157,17 +157,18 @@ export function WhatIfView() {
   if (loading) {
     return (
       <div className="space-y-4">
-        <Skeleton className="h-20 w-full rounded-xl" />
-        <Skeleton className="h-64 w-full rounded-xl" />
+        <Skeleton className="h-20 w-full rounded-2xl border border-border" />
+        <Skeleton className="h-64 w-full rounded-2xl border border-border" />
       </div>
     )
   }
 
   if (monthlyIncome <= 0 || whatIfCategories.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-xl border border-border/60 bg-card py-16 text-center">
-        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-violet-500/10">
-          <IconAdjustments className="h-5 w-5 text-violet-600 dark:text-violet-400" />
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-border bg-card relative overflow-hidden py-16 text-center">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+        <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-muted/80 dark:bg-muted">
+          <IconAdjustments className="h-5 w-5 text-foreground/70" />
         </div>
         <p className="text-sm font-medium">No plan data yet</p>
         <p className="mt-1 text-xs text-muted-foreground">Set up your income and allocations in the Plan & Allocate tab first.</p>
@@ -177,10 +178,11 @@ export function WhatIfView() {
 
   return (
     <div className="space-y-5">
-      <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="rounded-xl border border-border/60 bg-card p-5">
+      <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-5">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
         <div className="flex items-center gap-2.5 mb-5">
-          <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-violet-500/10">
-            <IconAdjustments className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+          <div className="flex items-center justify-center size-8 rounded-xl bg-muted/80 dark:bg-muted">
+            <IconAdjustments className="h-4 w-4 text-foreground/70" />
           </div>
           <h3 className="text-sm font-semibold">What-If Simulator</h3>
           <Badge variant="outline" className="ml-auto text-xs">Interactive</Badge>
@@ -197,7 +199,7 @@ export function WhatIfView() {
                 </div>
                 <div className="flex items-center gap-2">
                   <span className="text-xs text-muted-foreground">Current: {formatINR(cat.actual)}</span>
-                  <span className="text-sm font-bold tabular-nums">{formatINR(cat.adjusted)}</span>
+                  <span className="text-sm font-black tracking-tight tabular-nums">{formatINR(cat.adjusted)}</span>
                 </div>
               </div>
               <div className="flex items-center gap-3">
@@ -222,8 +224,8 @@ export function WhatIfView() {
               {cat.adjusted !== cat.actual && (
                 <p className={`text-xs ${
                   (cat.name === "Savings" || cat.name === "Investments")
-                    ? (cat.adjusted > cat.actual ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600")
-                    : (cat.adjusted < cat.actual ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600")
+                    ? (cat.adjusted > cat.actual ? "text-lime-600 dark:text-lime-400" : "text-destructive")
+                    : (cat.adjusted < cat.actual ? "text-lime-600 dark:text-lime-400" : "text-destructive")
                 }`}>
                   {cat.adjusted < cat.actual ? "\u2193" : "\u2191"} {formatINR(Math.abs(cat.adjusted - cat.actual))}{" "}
                   ({cat.adjusted < cat.actual ? "saving" : "spending"}{" "}
@@ -288,11 +290,11 @@ function ImpactCard({ label, value, isPositive, subtitle }: {
     ? `${value >= 0 ? "+" : ""}${formatINR(value)}`
     : value
   return (
-    <div className="rounded-lg bg-muted/30 p-3">
-      <p className="text-[11px] text-muted-foreground uppercase tracking-wider">{label}</p>
-      <p className={`text-lg font-bold tabular-nums ${
-        isPositive === true ? "text-emerald-600 dark:text-emerald-400" :
-        isPositive === false ? "text-rose-600" : ""
+    <div className="rounded-xl border border-border bg-card p-3">
+      <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">{label}</p>
+      <p className={`text-lg font-black tracking-tight tabular-nums ${
+        isPositive === true ? "text-lime-600 dark:text-lime-400" :
+        isPositive === false ? "text-destructive" : ""
       }`}>{displayValue}</p>
       {subtitle && <p className="text-[11px] text-muted-foreground">{subtitle}</p>}
     </div>

@@ -104,7 +104,7 @@ import {
 } from "@/lib/budget-utils"
 import { DEFAULT_BUDGETS } from "@/lib/budget-mapping"
 import { generateBudgetAlerts, type BudgetAlert } from "@/lib/budget-alerts"
-import { stagger, fadeUp, fadeUpSmall } from "@/lib/motion"
+import { stagger, fadeUp, fadeUpSmall, numberPop } from "@/lib/motion"
 import { BudgetSuggestions } from "@/components/planning/budget-suggestions"
 import { PlanAllocateView } from "@/components/budget/plan-allocate-view"
 import { WhatIfView } from "@/components/budget/what-if-view"
@@ -192,7 +192,7 @@ function ChartTooltip({ active, payload, label }: { active?: boolean; payload?: 
   const item = payload[0]
   const fullName = (item as unknown as { payload: { fullName: string } })?.payload?.fullName || label
   return (
-    <div className="rounded-lg border border-border/60 bg-card/95 backdrop-blur-sm px-3.5 py-2.5 shadow-lg">
+    <div className="rounded-xl border border-border bg-card/95 backdrop-blur-xl px-3.5 py-2.5 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
       <p className="text-xs font-semibold mb-1.5">{fullName}</p>
       {payload.map((entry) => (
         <div key={entry.dataKey} className="flex items-center justify-between gap-4 text-xs">
@@ -857,7 +857,14 @@ export default function BudgetPage() {
             </>
           }
         />
-        {children}
+        {/* Ambient glow orbs (dark mode only) */}
+        <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden hidden dark:block">
+          <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-lime-500/[0.05] blur-[200px]" />
+          <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] rounded-full bg-cyan-500/[0.04] blur-[180px]" />
+        </div>
+        <div className="relative z-[1]">
+          {children}
+        </div>
       </SidebarInset>
       {budgetDialogs}
     </SidebarProvider>
@@ -929,7 +936,7 @@ export default function BudgetPage() {
 
   return shell(
     <>
-      <div className="flex flex-1 flex-col">
+      <div className="flex flex-1 flex-col overflow-y-auto min-h-0">
         {isLoading ? (
           <BudgetLoadingSkeleton />
         ) : (
@@ -941,32 +948,20 @@ export default function BudgetPage() {
           >
             {/* ─── Tabs: Current / History ─── */}
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <motion.div variants={fadeUpSmall} className="border-b border-border/40 -mx-4 px-4 overflow-x-auto">
-                <TabsList variant="line" className="inline-flex h-10 items-center gap-1 bg-transparent p-0 min-w-max">
-                  <TabsTrigger
-                    value="current"
-                    className="relative gap-1.5 rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent"
-                  >
+              <motion.div variants={fadeUpSmall} className="border-b border-border -mx-4 px-4">
+                <TabsList variant="line" className="h-10">
+                  <TabsTrigger value="current">
                     Current Month
                   </TabsTrigger>
-                  <TabsTrigger
-                    value="plan"
-                    className="relative gap-1.5 rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent"
-                  >
+                  <TabsTrigger value="plan">
                     <IconCalculator className="h-3.5 w-3.5" />
                     Plan & Allocate
                   </TabsTrigger>
-                  <TabsTrigger
-                    value="whatif"
-                    className="relative gap-1.5 rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent"
-                  >
+                  <TabsTrigger value="whatif">
                     <IconAdjustments className="h-3.5 w-3.5" />
                     What-If
                   </TabsTrigger>
-                  <TabsTrigger
-                    value="history"
-                    className="relative gap-1.5 rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent"
-                  >
+                  <TabsTrigger value="history">
                     <IconHistory className="h-3.5 w-3.5" />
                     History
                   </TabsTrigger>
@@ -978,9 +973,10 @@ export default function BudgetPage() {
               {/* ─── Alert Banner ─── */}
               {alerts.length > 0 && (
                 <motion.div initial={fadeUpSmall.hidden} animate={fadeUpSmall.show}>
-                  <div className="rounded-xl border border-destructive/20 bg-destructive/[0.04] dark:bg-destructive/[0.06] p-4">
+                  <div className="rounded-2xl border border-destructive/20 bg-destructive/[0.04] dark:bg-destructive/[0.06] relative overflow-hidden p-4">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-destructive/20 to-transparent" />
                     <div className="flex items-start gap-3">
-                      <div className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-destructive/10">
+                      <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl bg-destructive/10">
                         <IconBell className="h-4 w-4 text-destructive" />
                       </div>
                       <div className="min-w-0 flex-1">
@@ -1007,7 +1003,9 @@ export default function BudgetPage() {
 
               {/* ─── Stat Bar ─── */}
               <motion.div initial={fadeUp.hidden} animate={fadeUp.show}>
-                <div className="card-elevated rounded-xl bg-card grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-border/40">
+                <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-border">
+                  {/* Top edge light line */}
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   {[
                     {
                       label: "Total Spent",
@@ -1015,26 +1013,26 @@ export default function BudgetPage() {
                       sub: `of ${formatCurrency(totalMonthlyBudget)} budget`,
                       icon: IconWallet,
                       color: "",
-                      iconBg: "bg-blue-500/10 dark:bg-blue-500/15",
-                      iconColor: "text-blue-600 dark:text-blue-400",
+                      iconBg: "bg-muted/80 dark:bg-muted",
+                      iconColor: "text-muted-foreground",
                     },
                     {
                       label: "Budget Left",
                       value: `${totalRemaining < 0 ? "-" : ""}${formatCurrency(Math.abs(totalRemaining))}`,
                       sub: "Remaining this period",
                       icon: IconArrowDown,
-                      color: totalRemaining >= 0 ? "text-primary" : "text-destructive",
-                      iconBg: totalRemaining >= 0 ? "bg-emerald-500/10 dark:bg-emerald-500/15" : "bg-rose-500/10 dark:bg-rose-500/15",
-                      iconColor: totalRemaining >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400",
+                      color: totalRemaining >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive",
+                      iconBg: totalRemaining >= 0 ? "bg-lime-500/10 shadow-[0_0_12px_rgba(132,204,22,0.15)]" : "bg-destructive/10",
+                      iconColor: totalRemaining >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive",
                     },
                     {
                       label: "Projected",
                       value: formatCurrency(totalProjected),
                       sub: "On track to spend",
                       icon: IconTrendingUp,
-                      color: totalProjected <= totalMonthlyBudget ? "text-primary" : "text-destructive",
-                      iconBg: "bg-violet-500/10 dark:bg-violet-500/15",
-                      iconColor: "text-violet-600 dark:text-violet-400",
+                      color: totalProjected <= totalMonthlyBudget ? "text-lime-600 dark:text-lime-400" : "text-destructive",
+                      iconBg: "bg-muted/80 dark:bg-muted",
+                      iconColor: "text-muted-foreground",
                     },
                     {
                       label: "Usage",
@@ -1042,21 +1040,25 @@ export default function BudgetPage() {
                       sub: null,
                       icon: IconGauge,
                       color: getUsageColor(totalPercentage),
-                      iconBg: "bg-amber-500/10 dark:bg-amber-500/15",
-                      iconColor: "text-amber-600 dark:text-amber-400",
+                      iconBg: "bg-muted/80 dark:bg-muted",
+                      iconColor: "text-muted-foreground",
                     },
                   ].map((stat) => (
                     <div key={stat.label} className="px-3 sm:px-5 py-3 sm:py-4 flex items-start gap-2 sm:gap-3">
-                      <div className={`mt-0.5 flex h-7 w-7 sm:h-8 sm:w-8 shrink-0 items-center justify-center rounded-lg ${stat.iconBg}`}>
+                      <div className={`mt-0.5 flex size-7 sm:size-9 shrink-0 items-center justify-center rounded-xl ${stat.iconBg}`}>
                         <stat.icon className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${stat.iconColor}`} />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-[10px] sm:text-[11px] font-medium text-muted-foreground uppercase tracking-wider leading-none mb-1.5">
+                        <p className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
                           {stat.label}
                         </p>
-                        <p className={`text-base sm:text-lg font-semibold tabular-nums leading-tight truncate ${stat.color}`}>
+                        <motion.p
+                          initial={numberPop.hidden}
+                          animate={numberPop.show}
+                          className={`text-base sm:text-lg font-black tracking-tight tabular-nums leading-tight truncate ${stat.color}`}
+                        >
                           {stat.value}
-                        </p>
+                        </motion.p>
                         {stat.sub ? (
                           <p className="text-[11px] text-muted-foreground mt-0.5">{stat.sub}</p>
                         ) : (
@@ -1101,13 +1103,14 @@ export default function BudgetPage() {
               <motion.div initial={fadeUp.hidden} animate={fadeUp.show}>
                 <div className="grid gap-4 lg:grid-cols-5">
                   {/* Budget vs Spending chart */}
-                  <div className="card-elevated rounded-xl bg-card p-5 lg:col-span-3">
+                  <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-5 lg:col-span-3">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <div className="mb-4">
                       <div className="flex items-center gap-1.5">
                         <h3 className="text-sm font-semibold">Budget vs Spending</h3>
                         <InfoTooltip text="Gray bars show your full monthly budget. Dark olive bars show actual spending. If olive exceeds gray, you are over budget." />
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">Monthly budget compared to actual spend</p>
+                      <p className="text-xs text-muted-foreground/70 mt-0.5">Monthly budget compared to actual spend</p>
                     </div>
                     {chartData.length > 0 ? (
                       <>
@@ -1136,13 +1139,13 @@ export default function BudgetPage() {
                             <Bar dataKey="spent" fill={CHART_SPENT} radius={[5, 5, 0, 0]} isAnimationActive={false} />
                           </BarChart>
                         </ResponsiveContainer>
-                        <div className="flex items-center justify-center gap-6 mt-3 pt-3 border-t border-border/30 text-xs text-muted-foreground">
+                        <div className="flex items-center justify-center gap-6 mt-3 pt-3 border-t border-border text-xs text-muted-foreground">
                           <div className="flex items-center gap-1.5">
-                            <div className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: CHART_BUDGET }} />
+                            <div className="size-2.5 rounded-full" style={{ backgroundColor: CHART_BUDGET }} />
                             Budget
                           </div>
                           <div className="flex items-center gap-1.5">
-                            <div className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: CHART_SPENT }} />
+                            <div className="size-2.5 rounded-full" style={{ backgroundColor: CHART_SPENT }} />
                             Spent
                           </div>
                         </div>
@@ -1155,13 +1158,14 @@ export default function BudgetPage() {
                   </div>
 
                   {/* Attention Needed */}
-                  <div className="card-elevated rounded-xl bg-card p-5 lg:col-span-2">
+                  <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-5 lg:col-span-2">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <div className="mb-4">
                       <div className="flex items-center gap-1.5">
                         <h3 className="text-sm font-semibold">Attention Needed</h3>
                         <InfoTooltip text="Top 5 categories by usage. Categories at 90%+ need immediate attention." />
                       </div>
-                      <p className="text-xs text-muted-foreground mt-0.5">Categories closest to or over limit</p>
+                      <p className="text-xs text-muted-foreground/70 mt-0.5">Categories closest to or over limit</p>
                     </div>
                     <div className="space-y-1">
                       {attentionItems.map((item) => {
@@ -1216,7 +1220,8 @@ export default function BudgetPage() {
               {/* ─── Needs vs Wants Usage ─── */}
               {nwiUsageSummary && (
                 <motion.div initial={fadeUp.hidden} animate={fadeUp.show}>
-                  <div className="card-elevated rounded-xl bg-card p-5">
+                  <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-5">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <div className="flex items-center gap-1.5 mb-4">
                       <h3 className="text-sm font-semibold">Needs vs Wants Usage</h3>
                       <InfoTooltip text="Shows how much of your Needs and Wants budget has been spent this month. Based on category classifications in the table below." />
@@ -1264,11 +1269,12 @@ export default function BudgetPage() {
 
               {/* ─── Category Breakdown Table ─── */}
               <motion.div initial={fadeUp.hidden} animate={fadeUp.show}>
-                <div className="card-elevated rounded-xl bg-card overflow-x-auto">
+                <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden overflow-x-auto">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <div className="flex items-center justify-between px-5 py-4">
                     <div>
                       <h3 className="text-sm font-semibold">Category Breakdown</h3>
-                      <p className="text-xs text-muted-foreground mt-0.5">Click edit to adjust a budget. Use + to add new categories.</p>
+                      <p className="text-xs text-muted-foreground/70 mt-0.5">Click edit to adjust a budget. Use + to add new categories.</p>
                     </div>
                     <div className="flex items-center gap-2">
                       <BudgetSuggestions
@@ -1288,7 +1294,7 @@ export default function BudgetPage() {
                   </div>
                   <Table>
                     <TableHeader>
-                      <TableRow className="border-border/40 hover:bg-transparent">
+                      <TableRow className="border-border hover:bg-transparent">
                         <TableHead className="text-[11px] uppercase tracking-wider font-medium">Category</TableHead>
                         <TableHead className="text-[11px] uppercase tracking-wider font-medium w-[100px] hidden lg:table-cell">Type</TableHead>
                         <TableHead className="text-right text-[11px] uppercase tracking-wider font-medium">Budget</TableHead>
@@ -1312,7 +1318,7 @@ export default function BudgetPage() {
                         return (
                           <TableRow
                             key={item.budgetCategory}
-                            className={`border-border/30 group transition-colors hover:bg-muted/30 ${
+                            className={`border-border group transition-colors hover:bg-muted/30 ${
                               catAlert?.level === "exceeded"
                                 ? "bg-destructive/[0.03]"
                                 : catAlert?.level === "critical"
@@ -1462,7 +1468,7 @@ export default function BudgetPage() {
                           </TableRow>
                         )
                       })}
-                      <TableRow className="border-t-2 border-border/60 font-semibold hover:bg-transparent">
+                      <TableRow className="border-t-2 border-border font-semibold hover:bg-transparent">
                         <TableCell className="text-sm">Total</TableCell>
                         <TableCell className="hidden lg:table-cell" />
                         <TableCell className="text-right tabular-nums text-sm">{formatCurrency(totalMonthlyBudget)}</TableCell>
@@ -1510,11 +1516,12 @@ export default function BudgetPage() {
                 {/* ─── History Tab ─── */}
                 <TabsContent value="history" className="space-y-4 mt-0">
                   <motion.div initial={fadeUp.hidden} animate={fadeUp.show}>
-                    <div className="card-elevated rounded-xl bg-card overflow-hidden">
+                    <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
+                      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                       <div className="flex items-center justify-between px-5 py-4">
                         <div>
                           <h3 className="text-sm font-semibold">Budget History</h3>
-                          <p className="text-xs text-muted-foreground mt-0.5">Monthly budget snapshots with spending comparison</p>
+                          <p className="text-xs text-muted-foreground/70 mt-0.5">Monthly budget snapshots with spending comparison</p>
                         </div>
                         <Button
                           size="sm"
@@ -1537,7 +1544,7 @@ export default function BudgetPage() {
                       {historyLoading ? (
                         <div className="px-5 pb-5 space-y-3">
                           {[1, 2, 3].map(i => (
-                            <Skeleton key={i} className="h-16 w-full rounded-lg" />
+                            <Skeleton key={i} className="h-16 w-full rounded-xl" />
                           ))}
                         </div>
                       ) : budgetHistory.length === 0 ? (
@@ -1551,7 +1558,7 @@ export default function BudgetPage() {
                             const isExpanded = expandedHistoryMonth === monthKey
                             const adherencePct = entry.totals.overallPercentage
                             return (
-                              <div key={monthKey} className="rounded-lg border border-border/40 overflow-hidden">
+                              <div key={monthKey} className="rounded-xl border border-border overflow-hidden">
                                 <button
                                   className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/30 ${getAdherenceBg(adherencePct)}`}
                                   onClick={() => setExpandedHistoryMonth(isExpanded ? null : monthKey)}
@@ -1589,10 +1596,10 @@ export default function BudgetPage() {
                                   </div>
                                 </button>
                                 {isExpanded && (
-                                  <div className="border-t border-border/30">
+                                  <div className="border-t border-border">
                                     <Table>
                                       <TableHeader>
-                                        <TableRow className="border-border/30 hover:bg-transparent">
+                                        <TableRow className="border-border hover:bg-transparent">
                                           <TableHead className="text-[11px] uppercase tracking-wider font-medium">Category</TableHead>
                                           <TableHead className="text-right text-[11px] uppercase tracking-wider font-medium">Budget</TableHead>
                                           <TableHead className="text-right text-[11px] uppercase tracking-wider font-medium">Spent</TableHead>
@@ -1601,7 +1608,7 @@ export default function BudgetPage() {
                                       </TableHeader>
                                       <TableBody>
                                         {entry.categories.map((cat) => (
-                                          <TableRow key={cat.name} className="border-border/20 hover:bg-muted/20">
+                                          <TableRow key={cat.name} className="border-border hover:bg-muted/20">
                                             <TableCell className="text-xs font-medium">{cat.name}</TableCell>
                                             <TableCell className="text-right text-xs tabular-nums text-muted-foreground">
                                               {formatCurrency(cat.budget)}
@@ -1694,10 +1701,10 @@ function BudgetLoadingSkeleton() {
       <Skeleton className="h-10 w-full max-w-md rounded-lg" />
 
       {/* Stat cards row */}
-      <div className="card-elevated rounded-xl bg-card grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-border/40">
+      <div className="card-elevated rounded-2xl border border-border bg-card grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-border">
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="px-3 sm:px-5 py-3 sm:py-4 flex items-start gap-2 sm:gap-3">
-            <Skeleton className="h-7 w-7 sm:h-8 sm:w-8 rounded-lg shrink-0" />
+            <Skeleton className="size-7 sm:size-9 rounded-xl shrink-0" />
             <div className="space-y-1.5 flex-1">
               <Skeleton className="h-3 w-14" />
               <Skeleton className="h-5 w-24" />
@@ -1709,14 +1716,14 @@ function BudgetLoadingSkeleton() {
 
       {/* Chart + Attention cards grid */}
       <div className="grid gap-4 lg:grid-cols-5">
-        <div className="card-elevated rounded-xl bg-card p-5 lg:col-span-3 space-y-4">
+        <div className="card-elevated rounded-2xl border border-border bg-card p-5 lg:col-span-3 space-y-4">
           <div className="space-y-1.5">
             <Skeleton className="h-4 w-36" />
             <Skeleton className="h-3 w-52" />
           </div>
           <Skeleton className="h-[300px] w-full rounded-lg" />
         </div>
-        <div className="card-elevated rounded-xl bg-card p-5 lg:col-span-2 space-y-3">
+        <div className="card-elevated rounded-2xl border border-border bg-card p-5 lg:col-span-2 space-y-3">
           <div className="space-y-1.5 mb-1">
             <Skeleton className="h-4 w-32" />
             <Skeleton className="h-3 w-44" />

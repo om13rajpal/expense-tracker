@@ -187,7 +187,9 @@ export function SpendingDial({
 
   return (
     <motion.div initial={fadeUp.hidden} animate={fadeUp.show}>
-      <div className="card-elevated rounded-xl bg-card p-5">
+      <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-5">
+        {/* Top edge light line */}
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-1.5">
@@ -268,7 +270,7 @@ export function SpendingDial({
             {/* Center label */}
             <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
               <span
-                className={`text-2xl font-bold tabular-nums ${nwiTotal === 100 ? "text-foreground" : "text-destructive"}`}
+                className={`text-2xl font-black tracking-tight tabular-nums ${nwiTotal === 100 ? "text-foreground" : "text-destructive"}`}
               >
                 {nwiTotal}%
               </span>
@@ -288,7 +290,7 @@ export function SpendingDial({
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0, scale: 0.92 }}
                   transition={{ duration: 0.15 }}
-                  className="absolute z-20 pointer-events-none rounded-lg border border-border/60 bg-card/95 dark:bg-card/98 backdrop-blur-sm px-3.5 py-2.5 shadow-lg"
+                  className="absolute z-20 pointer-events-none rounded-xl border border-border bg-card/95 backdrop-blur-xl px-3.5 py-2.5 shadow-[0_8px_32px_rgba(0,0,0,0.12)]"
                   style={{
                     left: tooltipPos.x,
                     top: tooltipPos.y,
@@ -347,8 +349,8 @@ export function SpendingDial({
               return (
                 <div
                   key={key}
-                  className={`rounded-lg border border-border/50 bg-muted/20 dark:bg-muted/10 p-3 space-y-2 transition-all duration-200 ${
-                    hoveredBucket === key ? "ring-1 ring-offset-1 ring-offset-background ring-border/80 scale-[1.02]" : ""
+                  className={`rounded-xl border border-border bg-card p-3 space-y-2 transition-all duration-200 ${
+                    hoveredBucket === key ? "border-primary/20 -translate-y-0.5 shadow-sm" : ""
                   }`}
                   onMouseEnter={() => setHoveredBucket(key)}
                   onMouseLeave={() => setHoveredBucket(null)}
@@ -364,7 +366,7 @@ export function SpendingDial({
                   {nwiSplit && (
                     <div className="flex items-baseline justify-between gap-1">
                       <span
-                        className={`text-sm font-semibold tabular-nums truncate ${isOver ? "text-destructive" : ""}`}
+                        className={`text-sm font-black tracking-tight tabular-nums truncate ${isOver ? "text-destructive" : ""}`}
                       >
                         {formatCurrency(actual)}
                       </span>
@@ -375,7 +377,7 @@ export function SpendingDial({
                   )}
 
                   {/* +/- stepper */}
-                  <div className="flex items-center gap-1 pt-1 border-t border-border/20">
+                  <div className="flex items-center gap-1 pt-1 border-t border-border">
                     <Button
                       size="icon"
                       variant="ghost"

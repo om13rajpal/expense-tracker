@@ -284,12 +284,12 @@ export function PlanAllocateView() {
     if (!active || !payload?.length) return null
     const d = payload[0]
     return (
-      <div className="rounded-lg border border-border/60 bg-popover px-3 py-2 shadow-lg">
+      <div className="rounded-xl border border-border bg-card/95 backdrop-blur-xl px-3 py-2 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
         <div className="flex items-center gap-2">
           <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: d.payload.color }} />
           <span className="text-sm font-medium">{d.name}</span>
         </div>
-        <p className="text-sm text-muted-foreground">{formatINR(d.value)} ({formatPct(d.value, monthlyIncome)})</p>
+        <p className="text-sm text-muted-foreground/70">{formatINR(d.value)} ({formatPct(d.value, monthlyIncome)})</p>
       </div>
     )
   }
@@ -297,8 +297,8 @@ export function PlanAllocateView() {
   const CustomBarTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ dataKey: string; value: number }>; label?: string }) => {
     if (!active || !payload?.length) return null
     return (
-      <div className="rounded-lg border border-border/60 bg-popover px-3 py-2 shadow-lg">
-        <p className="mb-1 text-xs font-medium text-muted-foreground">{label}</p>
+      <div className="rounded-xl border border-border bg-card/95 backdrop-blur-xl px-3 py-2 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
+        <p className="mb-1 text-xs font-medium text-muted-foreground/70">{label}</p>
         {payload.map((p) => (
           <div key={p.dataKey} className="flex items-center justify-between gap-4 text-sm">
             <span className="capitalize">{p.dataKey}</span>
@@ -339,10 +339,10 @@ export function PlanAllocateView() {
 
         {/* Quick Stats */}
         <motion.div variants={fadeUp} className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-          <StatCard icon={IconCash} iconBg="bg-emerald-500/10" iconColor="text-emerald-500" label="Monthly Income" value={monthlyIncome > 0 ? formatINR(monthlyIncome) : "\u2014"} sub={monthlyIncome > 0 ? `${formatCompact(monthlyIncome * 12)}/yr` : "Set below"} />
-          <StatCard icon={IconTrendingUp} iconBg="bg-indigo-500/10" iconColor="text-indigo-500" label="Planned Investments" value={totalInvestments > 0 ? formatINR(totalInvestments) : "\u2014"} sub={monthlyIncome > 0 && totalInvestments > 0 ? `${formatPct(totalInvestments, monthlyIncome)} of income` : linked.sips ? `${linked.sips.count} SIPs active` : "\u2014"} />
-          <StatCard icon={IconPigMoney} iconBg="bg-emerald-500/10" iconColor="text-emerald-500" label="Planned Savings" value={savings > 0 ? formatINR(savings) : "\u2014"} sub={linked.actualSpending ? `Actual: ${linked.actualSpending.savingsRate.toFixed(0)}% rate` : "\u2014"} />
-          <StatCard icon={IconTarget} iconBg="bg-violet-500/10" iconColor="text-violet-500" label="Active Goals" value={linked.goals ? `${linked.goals.length}` : "\u2014"} sub={linked.goals && linked.goals.length > 0 ? `${formatINR(linked.goals.reduce((s, g) => s + g.targetAmount, 0))} target` : "No goals set"} />
+          <StatCard icon={IconCash} iconBg="bg-lime-500/10 shadow-[0_0_12px_rgba(132,204,22,0.15)]" iconColor="text-lime-600 dark:text-lime-400" label="Monthly Income" value={monthlyIncome > 0 ? formatINR(monthlyIncome) : "\u2014"} sub={monthlyIncome > 0 ? `${formatCompact(monthlyIncome * 12)}/yr` : "Set below"} />
+          <StatCard icon={IconTrendingUp} iconBg="bg-muted/80 dark:bg-muted" iconColor="text-foreground/70" label="Planned Investments" value={totalInvestments > 0 ? formatINR(totalInvestments) : "\u2014"} sub={monthlyIncome > 0 && totalInvestments > 0 ? `${formatPct(totalInvestments, monthlyIncome)} of income` : linked.sips ? `${linked.sips.count} SIPs active` : "\u2014"} />
+          <StatCard icon={IconPigMoney} iconBg="bg-lime-500/10" iconColor="text-lime-600 dark:text-lime-400" label="Planned Savings" value={savings > 0 ? formatINR(savings) : "\u2014"} sub={linked.actualSpending ? `Actual: ${linked.actualSpending.savingsRate.toFixed(0)}% rate` : "\u2014"} />
+          <StatCard icon={IconTarget} iconBg="bg-muted/80 dark:bg-muted" iconColor="text-muted-foreground" label="Active Goals" value={linked.goals ? `${linked.goals.length}` : "\u2014"} sub={linked.goals && linked.goals.length > 0 ? `${formatINR(linked.goals.reduce((s, g) => s + g.targetAmount, 0))} target` : "No goals set"} />
         </motion.div>
 
         {/* Income + Investments | Pie Chart */}
@@ -350,10 +350,11 @@ export function PlanAllocateView() {
           {/* Left: Income + Investments */}
           <motion.div variants={fadeUpSmall} className="flex flex-col gap-4">
             {/* Income */}
-            <div className="rounded-xl border border-border/60 bg-card p-4">
+            <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-4">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
               <div className="flex items-center gap-3 mb-3">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10">
-                  <IconCash className="h-4 w-4 text-emerald-500" />
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-lime-500/10 shadow-[0_0_12px_rgba(132,204,22,0.15)]">
+                  <IconCash className="h-4 w-4 text-lime-600 dark:text-lime-400" />
                 </div>
                 <div className="flex-1">
                   <h2 className="text-sm font-semibold">Monthly Income</h2>
@@ -381,11 +382,12 @@ export function PlanAllocateView() {
             </div>
 
             {/* Investments */}
-            <div className="rounded-xl border border-border/60 bg-card p-4 flex-1 flex flex-col">
+            <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-4 flex-1 flex flex-col">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10">
-                    <IconTrendingUp className="h-4 w-4 text-indigo-500" />
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+                    <IconTrendingUp className="h-4 w-4 text-foreground/70" />
                   </div>
                   <h2 className="text-sm font-semibold">Investments</h2>
                 </div>
@@ -396,7 +398,7 @@ export function PlanAllocateView() {
                     </Badge>
                   )}
                   {totalInvestments > 0 && (
-                    <Badge className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-0 text-xs tabular-nums">
+                    <Badge className="bg-muted/80 text-foreground/70 border-0 text-xs tabular-nums">
                       {formatINR(totalInvestments)}
                     </Badge>
                   )}
@@ -423,7 +425,7 @@ export function PlanAllocateView() {
                     </div>
                   )
                 })}
-                <div className="flex items-center gap-2 pt-2 border-t border-border/40">
+                <div className="flex items-center gap-2 pt-2 border-t border-border">
                   <Input value={customLabel} onChange={(e) => setCustomLabel(e.target.value)} placeholder="Custom (e.g. Gold, Crypto)" className="text-sm h-8" onKeyDown={(e) => e.key === "Enter" && addCustomInvestment()} />
                   <Button variant="outline" size="sm" className="h-8 gap-1 text-xs shrink-0" onClick={addCustomInvestment} disabled={!customLabel.trim()}>
                     <IconPlus className="h-3.5 w-3.5" />Add
@@ -436,10 +438,11 @@ export function PlanAllocateView() {
           {/* Right: Pie charts */}
           <motion.div variants={fadeUpSmall} className="flex flex-col gap-4">
             {/* Income Breakdown Pie */}
-            <div className="rounded-xl border border-border/60 bg-card p-4 flex-1 flex flex-col">
+            <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-4 flex-1 flex flex-col">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
               <div className="flex items-center gap-3 mb-2">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-500/10">
-                  <IconChartPie className="h-4 w-4 text-violet-500" />
+                <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+                  <IconChartPie className="h-4 w-4 text-foreground/70" />
                 </div>
                 <h2 className="text-sm font-semibold">Income Breakdown</h2>
               </div>
@@ -460,7 +463,7 @@ export function PlanAllocateView() {
               {monthlyIncome > 0 && (
                 <div className="grid grid-cols-2 gap-1.5 mt-1">
                   {pieData.map((d) => (
-                    <div key={d.name} className="flex items-center gap-2 rounded-lg bg-muted/30 px-2.5 py-1.5">
+                    <div key={d.name} className="flex items-center gap-2 rounded-xl border border-border bg-card px-2.5 py-1.5">
                       <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
                       <div className="min-w-0 flex-1">
                         <p className="text-[11px] text-muted-foreground truncate">{d.name}</p>
@@ -475,10 +478,11 @@ export function PlanAllocateView() {
 
             {/* Investment Split Pie */}
             {investmentPieData.length > 1 && (
-              <div className="rounded-xl border border-border/60 bg-card p-4">
+              <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-4">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                 <div className="flex items-center gap-3 mb-2">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10">
-                    <IconBuildingBank className="h-4 w-4 text-indigo-500" />
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+                    <IconBuildingBank className="h-4 w-4 text-foreground/70" />
                   </div>
                   <h2 className="text-sm font-semibold">Investment Split</h2>
                 </div>
@@ -509,10 +513,11 @@ export function PlanAllocateView() {
         {/* Savings / Needs / Wants */}
         <motion.div variants={fadeUpSmall} className="grid gap-4 lg:grid-cols-3">
           {/* Savings */}
-          <div className="rounded-xl border border-border/60 bg-card p-4 lg:col-span-1">
+          <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-4 lg:col-span-1">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
             <div className="flex items-center gap-2.5 mb-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10">
-                <IconPigMoney className="h-4 w-4 text-emerald-500" />
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-lime-500/10">
+                <IconPigMoney className="h-4 w-4 text-lime-600 dark:text-lime-400" />
               </div>
               <div className="min-w-0 flex-1">
                 <h3 className="text-sm font-semibold leading-tight">Savings</h3>
@@ -528,11 +533,11 @@ export function PlanAllocateView() {
                 <Input type="number" value={savings || ""} onChange={(e) => { setSavings(Number(e.target.value) || 0); setSaved(false) }} placeholder="0" className="pl-6 text-sm tabular-nums h-8" />
               </div>
               {monthlyIncome > 0 && savings > 0 && (
-                <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-0 text-[11px] tabular-nums shrink-0">{formatPct(savings, monthlyIncome)}</Badge>
+                <Badge className="bg-lime-500/10 text-lime-600 dark:text-lime-400 border-0 text-[11px] tabular-nums shrink-0">{formatPct(savings, monthlyIncome)}</Badge>
               )}
             </div>
             {linked.goals && linked.goals.length > 0 && (
-              <div className="border-t border-border/40 pt-2.5 space-y-2">
+              <div className="border-t border-border pt-2.5 space-y-2">
                 <p className="text-[11px] font-medium text-muted-foreground">Allocate to goals</p>
                 {linked.goals.map((goal) => {
                   const alloc = goalAllocations[goal.name] || 0
@@ -561,11 +566,12 @@ export function PlanAllocateView() {
                   const totalGoalAlloc = Object.values(goalAllocations).reduce((s, v) => s + v, 0)
                   const remaining = savings - totalGoalAlloc
                   return totalGoalAlloc > 0 ? (
-                    <div className="flex items-center justify-between text-[11px] pt-1 border-t border-border/30">
+                    <div className="flex items-center justify-between text-[11px] pt-1 border-t border-border">
                       <span className="text-muted-foreground">Unassigned savings</span>
-                      <span className={`font-medium tabular-nums ${remaining < 0 ? "text-destructive" : "text-emerald-500"}`}>
+                      <span className={`font-medium tabular-nums ${remaining < 0 ? "text-destructive" : "text-lime-600 dark:text-lime-400"}`}>
                         {formatINR(Math.abs(remaining))}{remaining < 0 ? " over" : ""}
                       </span>
+
                     </div>
                   ) : null
                 })()}
@@ -573,26 +579,27 @@ export function PlanAllocateView() {
             )}
           </div>
           <AllocationCard
-            icon={IconHome} iconBg="bg-amber-500/10" iconColor="text-amber-500"
+            icon={IconHome} iconBg="bg-muted/80 dark:bg-muted" iconColor="text-foreground/70"
             label="Needs" hint="Rent, bills, groceries, EMIs" value={needs}
             onChange={(v) => { setNeeds(v); setSaved(false) }}
             pctStr={monthlyIncome > 0 ? formatPct(needs, monthlyIncome) : undefined}
-            badgeColor="bg-amber-500/10 text-amber-600 dark:text-amber-400"
+            badgeColor="bg-muted/80 text-foreground/70"
             budgetPct={linked.budgetConfig?.needs}
           />
           <AllocationCard
-            icon={IconShoppingCart} iconBg="bg-pink-500/10" iconColor="text-pink-500"
+            icon={IconShoppingCart} iconBg="bg-muted/80 dark:bg-muted" iconColor="text-foreground/70"
             label="Wants" hint="Entertainment, dining, shopping" value={wants}
             onChange={(v) => { setWants(v); setSaved(false) }}
             pctStr={monthlyIncome > 0 ? formatPct(wants, monthlyIncome) : undefined}
-            badgeColor="bg-pink-500/10 text-pink-600 dark:text-pink-400"
+            badgeColor="bg-muted/80 text-foreground/70"
             budgetPct={linked.budgetConfig?.wants}
           />
         </motion.div>
 
         {/* Allocation Summary */}
         {monthlyIncome > 0 && (
-          <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="rounded-xl border border-border/60 bg-card p-4">
+          <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-4">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold">Allocation Summary</h3>
               {overAllocated > 0 ? (
@@ -600,7 +607,7 @@ export function PlanAllocateView() {
               ) : unallocated > 0 ? (
                 <Badge variant="secondary" className="text-xs tabular-nums">{formatINR(unallocated)} unallocated</Badge>
               ) : (
-                <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-0 text-xs">Fully allocated</Badge>
+                <Badge className="bg-lime-500/10 text-lime-600 dark:text-lime-400 border-0 text-xs">Fully allocated</Badge>
               )}
             </div>
             <div className="h-3 w-full rounded-full bg-muted/50 overflow-hidden flex">
@@ -629,14 +636,15 @@ export function PlanAllocateView() {
 
         {/* Plan vs Actual */}
         {planVsActual.length > 0 && (
-          <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="rounded-xl border border-border/60 bg-card p-4">
+          <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-4">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
             <div className="flex items-center gap-3 mb-3">
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-500/10">
-                <IconBulb className="h-4 w-4 text-sky-500" />
+              <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-lime-500/10">
+                <IconBulb className="h-4 w-4 text-lime-600 dark:text-lime-400" />
               </div>
               <div>
                 <h2 className="text-sm font-semibold">Plan vs Actual</h2>
-                <p className="text-[11px] text-muted-foreground">This month&apos;s reality check</p>
+                <p className="text-[11px] text-muted-foreground/70">This month&apos;s reality check</p>
               </div>
             </div>
             <div className="h-44">
@@ -661,11 +669,12 @@ export function PlanAllocateView() {
         {/* Portfolio Summary + Tips */}
         <div className={`grid gap-5 ${(linked.sips || linked.stocks) ? "lg:grid-cols-2" : ""}`}>
           {(linked.sips || linked.stocks) && (
-            <motion.div variants={fadeUpSmall} className="rounded-xl border border-border/60 bg-card p-4">
+            <motion.div variants={fadeUpSmall} className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-4">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-500/10">
-                    <IconBuildingBank className="h-4 w-4 text-teal-500" />
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-lime-500/10">
+                    <IconBuildingBank className="h-4 w-4 text-lime-600 dark:text-lime-400" />
                   </div>
                   <h2 className="text-sm font-semibold">Current Portfolio</h2>
                 </div>
@@ -675,16 +684,16 @@ export function PlanAllocateView() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 {linked.sips && (
-                  <div className="rounded-lg bg-muted/30 p-3">
-                    <p className="text-[11px] text-muted-foreground">Active SIPs</p>
-                    <p className="text-lg font-bold tabular-nums">{linked.sips.count}</p>
+                  <div className="rounded-xl border border-border bg-card p-3">
+                    <p className="text-[11px] text-muted-foreground/70">Active SIPs</p>
+                    <p className="text-lg font-black tracking-tight tabular-nums">{linked.sips.count}</p>
                     <p className="text-xs text-muted-foreground tabular-nums">{formatINR(linked.sips.totalMonthly)}/mo</p>
                   </div>
                 )}
                 {linked.stocks && (
-                  <div className="rounded-lg bg-muted/30 p-3">
-                    <p className="text-[11px] text-muted-foreground">Stocks Held</p>
-                    <p className="text-lg font-bold tabular-nums">{linked.stocks.count}</p>
+                  <div className="rounded-xl border border-border bg-card p-3">
+                    <p className="text-[11px] text-muted-foreground/70">Stocks Held</p>
+                    <p className="text-lg font-black tracking-tight tabular-nums">{linked.stocks.count}</p>
                     <p className="text-xs text-muted-foreground tabular-nums">{formatINR(linked.stocks.totalInvested)} invested</p>
                   </div>
                 )}
@@ -693,9 +702,10 @@ export function PlanAllocateView() {
           )}
 
           {/* Quick Tips */}
-          <motion.div variants={fadeUpSmall} className="rounded-xl border border-border/60 bg-card p-4">
+          <motion.div variants={fadeUpSmall} className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-4">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
             <div className="flex items-start gap-2.5">
-              <IconInfoCircle className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
+              <IconInfoCircle className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
               <div className="space-y-1.5 text-xs text-muted-foreground">
                 {linked.budgetConfig ? (
                   <p>
@@ -730,14 +740,15 @@ function StatCard({ icon: Icon, iconBg, iconColor, label, value, sub }: {
   icon: React.ElementType; iconBg: string; iconColor: string; label: string; value: string; sub: string
 }) {
   return (
-    <div className="rounded-xl border border-border/60 bg-card p-3">
+    <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-3">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
       <div className="flex items-center gap-2.5">
-        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${iconBg}`}>
+        <div className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${iconBg}`}>
           <Icon className={`h-4 w-4 ${iconColor}`} />
         </div>
         <div className="min-w-0">
-          <p className="text-[11px] text-muted-foreground truncate">{label}</p>
-          <p className="text-sm font-bold tabular-nums truncate">{value}</p>
+          <p className="text-[11px] text-muted-foreground/70 truncate">{label}</p>
+          <p className="text-sm font-black tracking-tight tabular-nums truncate">{value}</p>
           <p className="text-[11px] text-muted-foreground tabular-nums truncate">{sub}</p>
         </div>
       </div>
@@ -753,9 +764,10 @@ interface AllocationCardProps {
 
 function AllocationCard({ icon: Icon, iconBg, iconColor, label, hint, value, onChange, pctStr, badgeColor, budgetPct }: AllocationCardProps) {
   return (
-    <div className="rounded-xl border border-border/60 bg-card p-4">
+    <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-4">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
       <div className="flex items-center gap-2.5 mb-3">
-        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${iconBg}`}>
+        <div className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${iconBg}`}>
           <Icon className={`h-4 w-4 ${iconColor}`} />
         </div>
         <div className="min-w-0 flex-1">
