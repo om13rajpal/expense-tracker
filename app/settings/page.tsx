@@ -12,11 +12,12 @@
 
 import * as React from "react"
 import { useState, useEffect, useRef } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import { motion, AnimatePresence } from "motion/react"
 import { toast } from "sonner"
 import {
   IconBrandTelegram,
+  IconBrandOpenai,
   IconClock,
   IconCopy,
   IconDeviceFloppy,
@@ -33,6 +34,7 @@ import {
   IconDeviceDesktop,
   IconSettings,
   IconChevronRight,
+  IconBrain,
 } from "@tabler/icons-react"
 
 import { useAuth } from "@/hooks/use-auth"
@@ -78,6 +80,153 @@ const NAV_SECTIONS = [
 ] as const
 
 type SectionId = (typeof NAV_SECTIONS)[number]["id"]
+
+// ─── ChatGPT integration section ─────────────────────────────────────
+
+function ChatGPTCard() {
+  const searchParams = useSearchParams()
+  const [connected, setConnected] = useState(false)
+  const [email, setEmail] = useState<string | null>(null)
+  const [connectedAt, setConnectedAt] = useState<string | null>(null)
+  const [statusLoading, setStatusLoading] = useState(true)
+  const [disconnecting, setDisconnecting] = useState(false)
+
+  useEffect(() => {
+    fetch("/api/auth/openai/status", { credentials: "include" })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success && data.connected) {
+          setConnected(true)
+          setEmail(data.email || null)
+          setConnectedAt(data.connectedAt || null)
+        }
+      })
+      .catch(() => {})
+      .finally(() => setStatusLoading(false))
+  }, [])
+
+  useEffect(() => {
+    const openaiParam = searchParams.get("openai")
+    if (openaiParam === "connected") {
+      toast.success("ChatGPT connected successfully!")
+      setConnected(true)
+      fetch("/api/auth/openai/status", { credentials: "include" })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.connected) {
+            setEmail(data.email || null)
+            setConnectedAt(data.connectedAt || null)
+          }
+        })
+        .catch(() => {})
+    } else if (openaiParam === "error") {
+      const reason = searchParams.get("reason") || "Connection failed"
+      toast.error("ChatGPT: " + reason)
+    }
+  }, [searchParams])
+
+  function handleConnect() {
+    window.location.href = "/api/auth/openai"
+  }
+
+  async function handleDisconnect() {
+    setDisconnecting(true)
+    try {
+      const res = await fetch("/api/auth/openai/disconnect", { method: "POST", credentials: "include" })
+      const data = await res.json()
+      if (data.success) {
+        setConnected(false)
+        setEmail(null)
+        setConnectedAt(null)
+        toast.success("ChatGPT disconnected")
+      } else {
+        toast.error("Failed to disconnect ChatGPT")
+      }
+    } catch {
+      toast.error("Failed to disconnect ChatGPT")
+    } finally {
+      setDisconnecting(false)
+    }
+  }
+
+  if (statusLoading) {
+    return <Skeleton className="h-48 w-full rounded-2xl border border-border" />
+  }
+
+  return (
+    <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+      <div className="relative bg-gradient-to-r from-primary/8 via-primary/5 to-transparent px-5 py-4">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center size-10 rounded-xl bg-muted/80 dark:bg-muted border border-border">
+            <IconBrandOpenai className="h-5 w-5 text-foreground/70" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <h4 className="text-sm font-semibold">ChatGPT</h4>
+            <p className="text-xs text-muted-foreground mt-0.5">Use your ChatGPT account for AI-powered insights</p>
+          </div>
+          {connected ? (
+            <span className="flex items-center gap-1.5 rounded-full bg-lime-500/10 border border-lime-500/15 px-3 py-1 text-xs font-medium text-lime-600 dark:text-lime-400">
+              <span className="h-2 w-2 rounded-full bg-lime-500 animate-pulse" />
+              Connected
+            </span>
+          ) : (
+            <span className="flex items-center gap-1.5 rounded-full bg-muted/60 border border-border/40 px-3 py-1 text-xs font-medium text-muted-foreground">
+              <span className="h-2 w-2 rounded-full bg-muted-foreground/40" />
+              Not connected
+            </span>
+          )}
+        </div>
+      </div>
+      <div className="px-5 py-4">
+        {!connected ? (
+          <div className="space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              {[
+                { text: "Route AI through your own ChatGPT", step: "Connect" },
+                { text: "Uses GPT-4o for financial analysis", step: "Analyze" },
+                { text: "Falls back to Claude if disconnected", step: "Flexible" },
+              ].map(({ text, step }) => (
+                <div key={step} className="rounded-xl border border-border bg-card p-3 text-center">
+                  <p className="text-[11px] font-semibold uppercase tracking-widest text-primary mb-1">{step}</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed">{text}</p>
+                </div>
+              ))}
+            </div>
+            <Button onClick={handleConnect} className="w-full bg-[#10a37f] hover:bg-[#0d8c6c] text-white" size="lg">
+              <IconBrandOpenai className="h-4 w-4 mr-2" />
+              Connect ChatGPT
+              <IconArrowRight className="h-4 w-4 ml-auto" />
+            </Button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div className="flex items-center justify-between rounded-xl border border-border bg-card p-4">
+              <div>
+                <p className="text-sm font-medium text-foreground">{email ? "Connected as " + email : "Connected"}</p>
+                {connectedAt && (
+                  <p className="text-xs text-muted-foreground mt-0.5">Connected since {new Date(connectedAt).toLocaleDateString()}</p>
+                )}
+              </div>
+              <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={handleDisconnect} disabled={disconnecting}>
+                <IconLinkOff className="h-4 w-4 mr-1.5" />
+                {disconnecting ? "Disconnecting..." : "Disconnect"}
+              </Button>
+            </div>
+            <div className="rounded-xl border border-border bg-card p-4">
+              <div className="flex items-center gap-2 mb-1">
+                <IconBrain className="h-4 w-4 text-lime-600 dark:text-lime-400" />
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">Active AI Model</p>
+              </div>
+              <p className="text-sm font-medium text-foreground">Using GPT-4o (ChatGPT)</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Your AI insights, chat, and reports are powered by your ChatGPT account</p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
 
 // ─── Telegram integration section ────────────────────────────────────
 
@@ -132,7 +281,7 @@ function TelegramCard() {
   }
 
   if (settingsLoading) {
-    return <Skeleton className="h-48 w-full rounded-xl" />
+    return <Skeleton className="h-48 w-full rounded-2xl border border-border" />
   }
 
   const linked = settings?.linked ?? false
@@ -145,12 +294,13 @@ function TelegramCard() {
   }
 
   return (
-    <div className="card-elevated rounded-xl border border-sky-500/10 bg-card overflow-hidden">
+    <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
       {/* Telegram header */}
-      <div className="relative bg-gradient-to-r from-sky-500/8 via-blue-500/6 to-cyan-500/4 px-5 py-4">
+      <div className="relative bg-gradient-to-r from-primary/8 via-primary/5 to-transparent px-5 py-4">
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br from-sky-500/20 to-blue-500/20 border border-sky-500/10">
-            <IconBrandTelegram className="h-5 w-5 text-sky-500" />
+          <div className="flex items-center justify-center size-10 rounded-xl bg-muted/80 dark:bg-muted border border-border">
+            <IconBrandTelegram className="h-5 w-5 text-foreground/70" />
           </div>
           <div className="flex-1 min-w-0">
             <h4 className="text-sm font-semibold">Telegram Bot</h4>
@@ -159,8 +309,8 @@ function TelegramCard() {
             </p>
           </div>
           {linked ? (
-            <span className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/15 px-3 py-1 text-xs font-medium text-emerald-600 dark:text-emerald-400">
-              <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="flex items-center gap-1.5 rounded-full bg-lime-500/10 border border-lime-500/15 px-3 py-1 text-xs font-medium text-lime-600 dark:text-lime-400">
+              <span className="h-2 w-2 rounded-full bg-lime-500 animate-pulse" />
               Connected
             </span>
           ) : (
@@ -185,9 +335,9 @@ function TelegramCard() {
                   ].map(({ text, step }) => (
                     <div
                       key={step}
-                      className="rounded-xl bg-muted/30 border border-border/30 p-3 text-center"
+                      className="rounded-xl border border-border bg-card p-3 text-center"
                     >
-                      <p className="text-[11px] font-semibold uppercase tracking-wider text-sky-500 mb-1">{step}</p>
+                      <p className="text-[11px] font-semibold uppercase tracking-widest text-primary mb-1">{step}</p>
                       <p className="text-xs text-muted-foreground leading-relaxed">{text}</p>
                     </div>
                   ))}
@@ -195,7 +345,7 @@ function TelegramCard() {
                 <Button
                   onClick={handleGenerateCode}
                   disabled={linkMutation.isPending}
-                  className="w-full bg-sky-600 hover:bg-sky-700 text-white"
+                  className="w-full"
                   size="lg"
                 >
                   <IconBrandTelegram className="h-4 w-4 mr-2" />
@@ -205,7 +355,7 @@ function TelegramCard() {
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="rounded-xl bg-sky-500/5 border border-sky-500/15 p-4">
+                <div className="rounded-xl border border-border bg-card p-4">
                   <p className="text-xs font-medium text-muted-foreground mb-2">
                     Send this command to <span className="font-semibold text-foreground">@capybara13bot</span> on Telegram:
                   </p>
@@ -223,7 +373,7 @@ function TelegramCard() {
                     </p>
                   )}
                 </div>
-                <div className="rounded-xl bg-muted/30 border border-border/30 p-4">
+                <div className="rounded-xl border border-border bg-card p-4">
                   <p className="text-xs font-medium text-muted-foreground mb-2.5">Quick steps:</p>
                   <ol className="text-sm text-foreground/80 space-y-2.5 pl-0">
                     {[
@@ -232,7 +382,7 @@ function TelegramCard() {
                       <>Done! Start sending expenses like <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono">Coffee 250</code></>,
                     ].map((content, i) => (
                       <li key={i} className="flex items-start gap-2.5">
-                        <span className="flex items-center justify-center h-5 w-5 shrink-0 rounded-full bg-sky-500/10 text-[11px] font-bold text-sky-600 dark:text-sky-400 mt-0.5">
+                        <span className="flex items-center justify-center size-5 shrink-0 rounded-full bg-primary/10 text-[11px] font-bold text-primary mt-0.5">
                           {i + 1}
                         </span>
                         <span className="text-sm leading-relaxed">{content}</span>
@@ -246,7 +396,7 @@ function TelegramCard() {
         ) : (
           <div className="space-y-5">
             {/* Connected status */}
-            <div className="flex items-center justify-between rounded-xl bg-muted/30 border border-border/30 p-4">
+            <div className="flex items-center justify-between rounded-xl border border-border bg-card p-4">
               <div>
                 <p className="text-sm font-medium text-foreground">
                   Linked {settings?.username ? `as @${settings.username}` : ""}
@@ -272,10 +422,10 @@ function TelegramCard() {
             {/* Notification Preferences */}
             <div className="space-y-3">
               <div className="flex items-center gap-2 mb-1">
-                <div className="flex items-center justify-center h-6 w-6 rounded-md bg-gradient-to-br from-amber-500/15 to-orange-500/15">
-                  <IconBell className="h-3.5 w-3.5 text-amber-500" />
+                <div className="flex items-center justify-center size-6 rounded-lg bg-muted/80 dark:bg-muted">
+                  <IconBell className="h-3.5 w-3.5 text-foreground/70" />
                 </div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
                   Notification Preferences
                 </p>
               </div>
@@ -464,17 +614,22 @@ export default function SettingsPage() {
       <AppSidebar variant="inset" />
       <SidebarInset>
         <SiteHeader title="Settings" subtitle="Preferences" />
-        <div className="flex flex-1 flex-col">
-          <div className="@container/main flex flex-1 flex-col gap-2 p-4 md:p-6">
+        <div className="flex flex-1 flex-col overflow-y-auto min-h-0">
+          {/* Ambient glow orbs */}
+          <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden hidden dark:block">
+            <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-lime-500/[0.05] blur-[200px]" />
+            <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] rounded-full bg-cyan-500/[0.04] blur-[180px]" />
+          </div>
+          <div className="@container/main flex flex-1 flex-col gap-2 p-4 md:p-6 relative z-[1]">
             {loading ? (
               <div className="mx-auto w-full max-w-4xl space-y-5">
-                <Skeleton className="h-28 w-full rounded-xl" />
+                <Skeleton className="h-28 w-full rounded-2xl border border-border" />
                 <div className="flex gap-6">
-                  <Skeleton className="hidden lg:block h-48 w-52 rounded-xl" />
+                  <Skeleton className="hidden lg:block h-48 w-52 rounded-2xl border border-border" />
                   <div className="flex-1 space-y-4">
-                    <Skeleton className="h-56 w-full rounded-xl" />
-                    <Skeleton className="h-40 w-full rounded-xl" />
-                    <Skeleton className="h-32 w-full rounded-xl" />
+                    <Skeleton className="h-56 w-full rounded-2xl border border-border" />
+                    <Skeleton className="h-40 w-full rounded-2xl border border-border" />
+                    <Skeleton className="h-32 w-full rounded-2xl border border-border" />
                   </div>
                 </div>
               </div>
@@ -486,8 +641,9 @@ export default function SettingsPage() {
                   variants={fadeUp}
                   id="profile"
                   ref={(el) => { sectionRefs.current.profile = el }}
-                  className="card-elevated rounded-xl bg-card overflow-hidden"
+                  className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden"
                 >
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <div className="relative bg-gradient-to-r from-primary/8 via-primary/5 to-transparent px-6 py-6">
                     {/* Subtle dots pattern */}
                     <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)", backgroundSize: "20px 20px" }} />
@@ -546,14 +702,17 @@ export default function SettingsPage() {
                       ref={(el) => { sectionRefs.current.integrations = el }}
                     >
                       <div className="flex items-center gap-2 mb-3">
-                        <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-gradient-to-br from-sky-500/15 to-blue-500/15">
-                          <IconBrandTelegram className="h-4 w-4 text-sky-500" />
+                        <div className="flex items-center justify-center size-8 rounded-xl bg-muted/80 dark:bg-muted">
+                          <IconBrandTelegram className="h-4 w-4 text-foreground/70" />
                         </div>
-                        <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                        <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground/70">
                           Integrations
                         </h3>
                       </div>
-                      <TelegramCard />
+                      <div className="flex flex-col gap-3">
+                        <ChatGPTCard />
+                        <TelegramCard />
+                      </div>
                     </motion.div>
 
                     {/* ═══ Features ═══ */}
@@ -563,21 +722,22 @@ export default function SettingsPage() {
                       ref={(el) => { sectionRefs.current.features = el }}
                     >
                       <div className="flex items-center gap-2 mb-3">
-                        <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-gradient-to-br from-violet-500/15 to-purple-500/15">
-                          <IconPuzzle className="h-4 w-4 text-violet-500" />
+                        <div className="flex items-center justify-center size-8 rounded-xl bg-muted/80 dark:bg-muted">
+                          <IconPuzzle className="h-4 w-4 text-foreground/70" />
                         </div>
-                        <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                        <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground/70">
                           Features
                         </h3>
                       </div>
 
                       <div className="flex flex-col gap-3">
                         {/* Money in Hours */}
-                        <div className="card-elevated rounded-xl bg-card overflow-hidden">
+                        <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
+                          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                           <div className="flex items-center justify-between px-5 py-4">
                             <div className="flex items-center gap-3">
-                              <div className="flex items-center justify-center h-9 w-9 rounded-xl bg-gradient-to-br from-blue-500/15 to-cyan-500/15 border border-blue-500/10">
-                                <IconClock className="h-4.5 w-4.5 text-blue-500" />
+                              <div className="flex items-center justify-center size-9 rounded-xl bg-muted/80 dark:bg-muted">
+                                <IconClock className="h-4.5 w-4.5 text-foreground/70" />
                               </div>
                               <div>
                                 <h4 className="text-sm font-semibold">Money in Hours</h4>
@@ -626,14 +786,14 @@ export default function SettingsPage() {
                                   </div>
 
                                   {computedRate > 0 && (
-                                    <div className="rounded-lg bg-blue-500/5 border border-blue-500/10 p-3 flex items-center justify-between">
+                                    <div className="rounded-xl border border-border bg-card p-3 flex items-center justify-between">
                                       <div>
                                         <p className="text-xs text-muted-foreground">Your hourly rate</p>
-                                        <p className="text-lg font-bold tabular-nums">{formatINR(Math.round(computedRate))}<span className="text-xs font-normal text-muted-foreground">/hr</span></p>
+                                        <p className="text-lg font-black tracking-tight tabular-nums">{formatINR(Math.round(computedRate))}<span className="text-xs font-normal text-muted-foreground">/hr</span></p>
                                       </div>
                                       <div className="text-right">
                                         <p className="text-[11px] text-muted-foreground">A {formatINR(500)} expense</p>
-                                        <p className="text-xs font-semibold text-blue-600 dark:text-blue-400">
+                                        <p className="text-xs font-semibold text-lime-600 dark:text-lime-400">
                                           = {(500 / computedRate).toFixed(1)} hrs work
                                         </p>
                                       </div>
@@ -646,11 +806,12 @@ export default function SettingsPage() {
                         </div>
 
                         {/* Ghost Budget */}
-                        <div className="card-elevated rounded-xl bg-card overflow-hidden">
+                        <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
+                          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                           <div className="flex items-center justify-between px-5 py-4">
                             <div className="flex items-center gap-3">
-                              <div className="flex items-center justify-center h-9 w-9 rounded-xl bg-gradient-to-br from-purple-500/15 to-violet-500/15 border border-purple-500/10">
-                                <IconGhost className="h-4.5 w-4.5 text-purple-500" />
+                              <div className="flex items-center justify-center size-9 rounded-xl bg-muted/80 dark:bg-muted">
+                                <IconGhost className="h-4.5 w-4.5 text-foreground/70" />
                               </div>
                               <div>
                                 <h4 className="text-sm font-semibold">Ghost Budget</h4>
@@ -695,15 +856,16 @@ export default function SettingsPage() {
                       ref={(el) => { sectionRefs.current.appearance = el }}
                     >
                       <div className="flex items-center gap-2 mb-3">
-                        <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-gradient-to-br from-amber-500/15 to-orange-500/15">
-                          <IconPalette className="h-4 w-4 text-amber-500" />
+                        <div className="flex items-center justify-center size-8 rounded-xl bg-muted/80 dark:bg-muted">
+                          <IconPalette className="h-4 w-4 text-foreground/70" />
                         </div>
-                        <h3 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground">
+                        <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground/70">
                           Appearance
                         </h3>
                       </div>
 
-                      <div className="card-elevated rounded-xl bg-card px-5 py-4">
+                      <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden px-5 py-4">
+                        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                         <p className="text-sm font-medium mb-3">Theme</p>
                         <div className="grid grid-cols-3 gap-2">
                           {([

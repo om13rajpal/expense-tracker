@@ -200,7 +200,7 @@ export function ChartAreaInteractive() {
               cursor={false}
               content={
                 <ChartTooltipContent
-                  className="backdrop-blur-xl bg-background/95 shadow-lg border-2"
+                  className="bg-popover shadow-lg border"
                   labelFormatter={(label) => {
                     if (typeof label !== "string" && typeof label !== "number") {
                       return ""

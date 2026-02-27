@@ -357,7 +357,7 @@ function ScoreRing({ score, size = 160 }: { score: number; size?: number }) {
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <motion.span
           variants={numberPop}
-          className={`text-4xl font-extrabold tracking-tight tabular-nums ${getScoreColor(score)}`}
+          className={`text-4xl font-black tracking-tight tabular-nums ${getScoreColor(score)}`}
         >
           {Math.round(score)}
         </motion.span>
@@ -401,14 +401,14 @@ function StatItem({
       transition={anim.transition}
       className="flex items-center gap-2.5 sm:gap-3 px-3 sm:px-5 py-4 min-w-0"
     >
-      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-muted/60">
-        <Icon className="h-4 w-4 text-muted-foreground" />
+      <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+        <Icon className="h-4 w-4 text-foreground/70" />
       </div>
       <div className="min-w-0">
-        <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-0.5 truncate">
+        <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest mb-0.5 truncate">
           {label}
         </p>
-        <p className={`text-base sm:text-lg font-bold tabular-nums leading-tight truncate ${colorClass || ""}`}>
+        <p className={`text-base sm:text-lg font-black tracking-tight tabular-nums leading-tight truncate ${colorClass || ""}`}>
           {value}
           {suffix && (
             <span className="text-xs sm:text-sm font-normal text-muted-foreground"> {suffix}</span>
@@ -463,7 +463,7 @@ function BreakdownBar({
           {tooltip && <InfoTooltip text={tooltip} iconClassName="h-3 w-3" />}
         </span>
         <div className="flex items-center gap-3">
-          <span className="text-sm font-bold tabular-nums">
+          <span className="text-sm font-black tracking-tight tabular-nums">
             {score.toFixed(1)}
           </span>
           <span className="text-[11px] text-muted-foreground tabular-nums w-9 text-right">
@@ -523,7 +523,7 @@ function NetWorthTooltip({ active, payload, label }: {
 }) {
   if (!active || !payload) return null
   return (
-    <div className="rounded-xl border border-border/60 bg-card/95 backdrop-blur-sm px-4 py-3 shadow-lg">
+    <div className="rounded-xl bg-card/95 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-border/60 px-4 py-3">
       <p className="text-xs font-semibold text-foreground mb-2">{label}</p>
       {payload.map((entry) => (
         <div key={entry.dataKey} className="flex items-center gap-2.5 text-sm py-0.5">
@@ -534,7 +534,7 @@ function NetWorthTooltip({ active, payload, label }: {
           <span className="text-muted-foreground">
             {entry.dataKey === "bankBalance" ? "Bank" : "Investments"}
           </span>
-          <span className="font-bold tabular-nums ml-auto">
+          <span className="font-black tracking-tight tabular-nums ml-auto">
             {formatCurrency(entry.value)}
           </span>
         </div>
@@ -559,14 +559,14 @@ function AssetPieTooltip({ active, payload }: {
   if (!active || !payload || !payload[0]) return null
   const entry = payload[0]
   return (
-    <div className="rounded-lg border border-border/60 bg-card/95 backdrop-blur-sm px-3 py-2 shadow-lg">
+    <div className="rounded-xl bg-card/95 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-border/60 px-3 py-2">
       <div className="flex items-center gap-2 text-sm">
         <div
           className="h-2.5 w-2.5 rounded-full"
           style={{ backgroundColor: entry.payload.color }}
         />
         <span className="text-muted-foreground">{entry.name}</span>
-        <span className="font-bold tabular-nums ml-auto">{formatCurrency(entry.value)}</span>
+        <span className="font-black tracking-tight tabular-nums ml-auto">{formatCurrency(entry.value)}</span>
       </div>
     </div>
   )
@@ -619,10 +619,11 @@ function NetWorthHero({
 
   return (
     <motion.div variants={fadeUp}>
-      <div className="card-elevated rounded-xl p-5 md:p-6">
+      <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5 md:p-6">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
         <div className="flex items-center gap-2 mb-5">
-          <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-primary/10">
-            <IconBuildingBank className="h-4 w-4 text-primary" />
+          <div className="flex items-center justify-center size-8 rounded-xl bg-muted/80 dark:bg-muted">
+            <IconBuildingBank className="h-4 w-4 text-foreground/70" />
           </div>
           <h3 className="text-sm font-semibold">Net Worth</h3>
           <InfoTooltip text="Total net worth = Bank Balance + Investment Value - Outstanding Debts. Asset allocation shows the breakdown of your holdings." />
@@ -633,12 +634,12 @@ function NetWorthHero({
           <div className="space-y-4">
             {/* Main number */}
             <div>
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
+              <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest mb-1">
                 Total Net Worth
               </p>
               <motion.p
                 variants={numberPop}
-                className="text-3xl md:text-4xl font-extrabold tabular-nums tracking-tight"
+                className="text-3xl md:text-4xl font-black tabular-nums tracking-tight"
               >
                 {formatCurrency(totalNetWorth)}
               </motion.p>
@@ -647,8 +648,8 @@ function NetWorthHero({
                   <span
                     className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md ${
                       isPositiveChange
-                        ? "bg-emerald-500/10 text-emerald-600"
-                        : "bg-rose-500/10 text-rose-600"
+                        ? "bg-lime-500/10 text-lime-600 dark:text-lime-400"
+                        : "bg-destructive/10 text-destructive"
                     }`}
                   >
                     {isPositiveChange ? (
@@ -660,7 +661,7 @@ function NetWorthHero({
                     {formatCompact(netWorthChange)}
                   </span>
                   <span className={`text-xs font-medium tabular-nums ${
-                    isPositiveChange ? "text-emerald-600" : "text-rose-600"
+                    isPositiveChange ? "text-lime-600 dark:text-lime-400" : "text-destructive"
                   }`}>
                     {isPositiveChange ? "+" : ""}{netWorthChangePct.toFixed(1)}% vs last month
                   </span>
@@ -670,18 +671,18 @@ function NetWorthHero({
 
             {/* Breakdown tiles */}
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              <div className="rounded-lg bg-muted/30 p-3">
-                <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-0.5">Bank</p>
-                <p className="text-sm font-bold tabular-nums">{formatCurrency(bankBalance)}</p>
+              <div className="rounded-xl border border-border bg-card p-3">
+                <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest mb-0.5">Bank</p>
+                <p className="text-sm font-black tracking-tight tabular-nums">{formatCurrency(bankBalance)}</p>
                 {totalAssets > 0 && (
                   <p className="text-[11px] text-muted-foreground tabular-nums">
                     {((bankBalance / totalAssets) * 100).toFixed(0)}% of assets
                   </p>
                 )}
               </div>
-              <div className="rounded-lg bg-muted/30 p-3">
-                <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-0.5">Investments</p>
-                <p className="text-sm font-bold tabular-nums text-emerald-600">{formatCurrency(investmentValue)}</p>
+              <div className="rounded-xl border border-border bg-card p-3">
+                <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest mb-0.5">Investments</p>
+                <p className="text-sm font-black tracking-tight tabular-nums text-lime-600 dark:text-lime-400">{formatCurrency(investmentValue)}</p>
                 {totalAssets > 0 && (
                   <p className="text-[11px] text-muted-foreground tabular-nums">
                     {((investmentValue / totalAssets) * 100).toFixed(0)}% of assets
@@ -689,9 +690,9 @@ function NetWorthHero({
                 )}
               </div>
               {totalDebts > 0 && (
-                <div className="rounded-lg bg-muted/30 p-3">
-                  <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-0.5">Debts</p>
-                  <p className="text-sm font-bold tabular-nums text-rose-600">-{formatCurrency(totalDebts)}</p>
+                <div className="rounded-xl border border-border bg-card p-3">
+                  <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest mb-0.5">Debts</p>
+                  <p className="text-sm font-black tracking-tight tabular-nums text-destructive">-{formatCurrency(totalDebts)}</p>
                   <p className="text-[11px] text-muted-foreground tabular-nums">
                     {totalAssets > 0 ? ((totalDebts / totalAssets) * 100).toFixed(0) : 0}% of assets
                   </p>
@@ -1039,19 +1040,20 @@ function DebtTrackerSection() {
   if (debtsLoading) {
     return (
       <motion.div variants={fadeUp}>
-        <div className="card-elevated rounded-xl p-5">
+        <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
           <div className="flex items-center gap-2.5 mb-5">
-            <Skeleton className="h-7 w-7 rounded-lg" />
+            <Skeleton className="size-8 rounded-xl" />
             <Skeleton className="h-4 w-24" />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
             {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-16 rounded-lg" />
+              <Skeleton key={i} className="h-16 rounded-xl border border-border" />
             ))}
           </div>
           <div className="space-y-3">
             {Array.from({ length: 2 }).map((_, i) => (
-              <Skeleton key={i} className="h-24 rounded-xl" />
+              <Skeleton key={i} className="h-24 rounded-2xl border border-border" />
             ))}
           </div>
         </div>
@@ -1062,11 +1064,12 @@ function DebtTrackerSection() {
   return (
     <>
       <motion.div variants={fadeUp}>
-        <div className="card-elevated rounded-xl bg-card p-5">
+        <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2.5">
-              <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-rose-500/10">
-                <IconCreditCard className="h-4 w-4 text-rose-600 dark:text-rose-400" />
+              <div className="flex items-center justify-center size-8 rounded-xl bg-muted/80 dark:bg-muted">
+                <IconCreditCard className="h-4 w-4 text-foreground/70" />
               </div>
               <h3 className="text-sm font-semibold">Debt Tracker</h3>
               <InfoTooltip text="Track all your loans and credit card debts. Monitor EMI payments and remaining balances." />
@@ -1078,27 +1081,27 @@ function DebtTrackerSection() {
 
           {/* Summary tiles */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
-            <div className="rounded-lg bg-muted/30 p-3">
-              <p className="text-[11px] text-muted-foreground uppercase tracking-wider">
+            <div className="rounded-xl border border-border bg-card p-3">
+              <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest">
                 Total Outstanding
               </p>
-              <p className="text-lg font-bold tabular-nums text-rose-600">
+              <p className="text-lg font-black tracking-tight tabular-nums text-destructive">
                 {formatCurrency(totalOutstanding)}
               </p>
             </div>
-            <div className="rounded-lg bg-muted/30 p-3">
-              <p className="text-[11px] text-muted-foreground uppercase tracking-wider">
+            <div className="rounded-xl border border-border bg-card p-3">
+              <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest">
                 Active Debts
               </p>
-              <p className="text-lg font-bold tabular-nums">
+              <p className="text-lg font-black tracking-tight tabular-nums">
                 {activeDebts.length}
               </p>
             </div>
-            <div className="rounded-lg bg-muted/30 p-3">
-              <p className="text-[11px] text-muted-foreground uppercase tracking-wider">
+            <div className="rounded-xl border border-border bg-card p-3">
+              <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest">
                 Monthly EMI
               </p>
-              <p className="text-lg font-bold tabular-nums">
+              <p className="text-lg font-black tracking-tight tabular-nums">
                 {formatCurrency(monthlyEMITotal)}
               </p>
             </div>
@@ -1107,8 +1110,8 @@ function DebtTrackerSection() {
           {/* Debt list */}
           {debts.length === 0 ? (
             <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/50 py-12 px-6 bg-gradient-to-br from-muted/20 via-transparent to-muted/10">
-              <div className="flex items-center justify-center h-14 w-14 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 mb-4">
-                <IconShieldCheck className="h-7 w-7 text-emerald-500" />
+              <div className="flex items-center justify-center h-14 w-14 rounded-2xl bg-lime-500/10 mb-4">
+                <IconShieldCheck className="h-7 w-7 text-lime-600 dark:text-lime-400" />
               </div>
               <h4 className="text-sm font-semibold text-foreground mb-1">Debt Free!</h4>
               <p className="text-xs text-muted-foreground text-center max-w-xs mb-4">
@@ -1296,7 +1299,8 @@ function ScoreCtaSection({ score }: { score: number }) {
 
   return (
     <motion.div variants={fadeUp}>
-      <div className="card-elevated rounded-xl p-5 md:p-6">
+      <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5 md:p-6">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
         <div className="flex items-center gap-2 mb-3">
           <IconTargetArrow className="h-4 w-4 text-muted-foreground" />
           <h3 className="text-sm font-semibold">Recommended Actions</h3>
@@ -1336,9 +1340,10 @@ function HealthLoadingSkeleton() {
   return (
     <div className="space-y-5">
       {/* Net Worth Hero skeleton */}
-      <div className="card-elevated rounded-xl p-6">
+      <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-6">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
         <div className="flex items-center gap-2 mb-5">
-          <Skeleton className="h-7 w-7 rounded-lg" />
+          <Skeleton className="size-8 rounded-xl" />
           <Skeleton className="h-4 w-24" />
         </div>
         <div className="grid gap-5 md:grid-cols-[1fr_auto]">
@@ -1350,7 +1355,7 @@ function HealthLoadingSkeleton() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} className="h-16 rounded-lg" />
+                <Skeleton key={i} className="h-16 rounded-xl border border-border" />
               ))}
             </div>
           </div>
@@ -1359,10 +1364,11 @@ function HealthLoadingSkeleton() {
       </div>
 
       {/* Stat bar skeleton */}
-      <div className="card-elevated rounded-xl grid grid-cols-2 sm:grid-cols-4 divide-x divide-border/40 overflow-hidden">
+      <div className="rounded-2xl border border-border bg-card relative overflow-hidden grid grid-cols-2 sm:grid-cols-4 divide-x divide-border">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="px-5 py-4 flex items-center gap-3">
-            <Skeleton className="h-9 w-9 rounded-lg" />
+            <Skeleton className="size-9 rounded-xl" />
             <div className="space-y-1.5">
               <Skeleton className="h-3 w-16" />
               <Skeleton className="h-5 w-20" />
@@ -1372,12 +1378,14 @@ function HealthLoadingSkeleton() {
       </div>
       {/* Score + Breakdown skeleton */}
       <div className="grid gap-5 lg:grid-cols-5">
-        <div className="lg:col-span-2 card-elevated rounded-xl p-6 flex flex-col items-center space-y-4">
+        <div className="lg:col-span-2 rounded-2xl border border-border bg-card relative overflow-hidden p-6 flex flex-col items-center space-y-4">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
           <Skeleton className="h-5 w-36" />
           <Skeleton className="h-[140px] w-[140px] rounded-full" />
           <Skeleton className="h-6 w-24 rounded-full" />
         </div>
-        <div className="lg:col-span-3 card-elevated rounded-xl p-6 space-y-4">
+        <div className="lg:col-span-3 rounded-2xl border border-border bg-card relative overflow-hidden p-6 space-y-4">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
           <Skeleton className="h-5 w-36" />
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="space-y-2">
@@ -1393,29 +1401,32 @@ function HealthLoadingSkeleton() {
       {/* Detail cards skeleton */}
       <div className="grid gap-5 lg:grid-cols-2">
         {Array.from({ length: 2 }).map((_, i) => (
-          <div key={i} className="card-elevated rounded-xl p-6 space-y-3">
+          <div key={i} className="rounded-2xl border border-border bg-card relative overflow-hidden p-6 space-y-3">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
             <Skeleton className="h-5 w-28" />
-            <Skeleton className="h-16 w-full rounded-lg" />
+            <Skeleton className="h-16 w-full rounded-xl border border-border" />
             <Skeleton className="h-4 w-32" />
           </div>
         ))}
       </div>
       {/* Debt tracker skeleton */}
-      <div className="card-elevated rounded-xl p-5">
+      <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
         <div className="flex items-center gap-2.5 mb-5">
-          <Skeleton className="h-7 w-7 rounded-lg" />
+          <Skeleton className="size-8 rounded-xl" />
           <Skeleton className="h-4 w-24" />
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-16 rounded-lg" />
+            <Skeleton key={i} className="h-16 rounded-xl border border-border" />
           ))}
         </div>
       </div>
       {/* Chart skeleton */}
-      <div className="card-elevated rounded-xl p-6">
+      <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-6">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
         <Skeleton className="h-5 w-36 mb-3" />
-        <Skeleton className="h-[260px] w-full rounded-lg" />
+        <Skeleton className="h-[260px] w-full rounded-xl border border-border" />
       </div>
     </div>
   )
@@ -1490,12 +1501,16 @@ export default function FinancialHealthPage() {
         <SiteHeader
           title="Financial Health"
         />
-        <div className="flex flex-1 flex-col overflow-x-hidden">
-          <div className="@container/main flex flex-1 flex-col gap-5 p-4 md:p-6">
+        <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto min-h-0">
+          <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden hidden dark:block">
+            <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-lime-500/[0.05] blur-[200px]" />
+            <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] rounded-full bg-cyan-500/[0.04] blur-[180px]" />
+          </div>
+          <div className="relative z-[1] @container/main flex flex-1 flex-col gap-5 p-4 md:p-6">
             {isLoading ? (
               <HealthLoadingSkeleton />
             ) : error ? (
-              <div className="card-elevated rounded-xl flex h-64 items-center justify-center">
+              <div className="rounded-2xl border border-border bg-card flex h-64 items-center justify-center">
                 <p className="text-sm text-muted-foreground">{error}</p>
               </div>
             ) : metrics ? (
@@ -1511,8 +1526,9 @@ export default function FinancialHealthPage() {
                 {/* --------------------------------------------------------- */}
                 <motion.div
                   variants={fadeUp}
-                  className="card-elevated rounded-xl grid grid-cols-2 sm:grid-cols-4 divide-x divide-border/40 overflow-hidden"
+                  className="rounded-2xl border border-border bg-card relative overflow-hidden grid grid-cols-2 sm:grid-cols-4 divide-x divide-border"
                 >
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <StatItem
                     icon={IconChartDonut}
                     label="Score"
@@ -1528,7 +1544,7 @@ export default function FinancialHealthPage() {
                     suffix="mo"
                     index={1}
                   />
-                  <div className="max-sm:border-t max-sm:border-border/40">
+                  <div className="max-sm:border-t max-sm:border-border">
                     <StatItem
                       icon={
                         metrics.expenseVelocity.trend === "decreasing"
@@ -1539,15 +1555,15 @@ export default function FinancialHealthPage() {
                       value={`${metrics.expenseVelocity.changePercent >= 0 ? "+" : ""}${metrics.expenseVelocity.changePercent.toFixed(1)}%`}
                       colorClass={
                         metrics.expenseVelocity.trend === "decreasing"
-                          ? "text-emerald-600"
+                          ? "text-lime-600 dark:text-lime-400"
                           : metrics.expenseVelocity.trend === "increasing"
-                            ? "text-rose-600"
+                            ? "text-destructive"
                             : ""
                       }
                       index={2}
                     />
                   </div>
-                  <div className="max-sm:border-t max-sm:border-border/40">
+                  <div className="max-sm:border-t max-sm:border-border">
                     <StatItem
                       icon={IconActivity}
                       label="Income Consistency"
@@ -1563,7 +1579,8 @@ export default function FinancialHealthPage() {
                 {/* --------------------------------------------------------- */}
                 <motion.div variants={fadeUp} className="grid gap-5 lg:grid-cols-5">
                   {/* Score Ring */}
-                  <div className="lg:col-span-2 card-elevated rounded-xl p-6 flex flex-col items-center">
+                  <div className="lg:col-span-2 rounded-2xl border border-border bg-card relative overflow-hidden p-6 flex flex-col items-center">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <div className="flex items-center gap-2 self-start mb-6">
                       <IconHeartbeat className="h-4 w-4 text-muted-foreground" />
                       <h3 className="text-sm font-semibold">Health Score</h3>
@@ -1582,13 +1599,14 @@ export default function FinancialHealthPage() {
                   </div>
 
                   {/* Score Breakdown */}
-                  <div className="lg:col-span-3 card-elevated rounded-xl p-6">
+                  <div className="lg:col-span-3 rounded-2xl border border-border bg-card relative overflow-hidden p-6">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <div className="flex items-center justify-between mb-5">
                       <div className="flex items-center gap-2">
                         <IconChartLine className="h-4 w-4 text-muted-foreground" />
                         <h3 className="text-sm font-semibold">Score Breakdown</h3>
                       </div>
-                      <span className="text-[11px] text-muted-foreground bg-muted/50 rounded-md px-2 py-0.5">
+                      <span className="text-[11px] text-muted-foreground bg-muted/80 dark:bg-muted rounded-md px-2 py-0.5">
                         25 pts each
                       </span>
                     </div>
@@ -1632,7 +1650,7 @@ export default function FinancialHealthPage() {
                       <summary className="text-xs font-medium text-muted-foreground cursor-pointer hover:text-foreground transition-colors">
                         How is this calculated?
                       </summary>
-                      <div className="mt-2 space-y-1.5 text-xs text-muted-foreground bg-muted/30 rounded-lg p-3">
+                      <div className="mt-2 space-y-1.5 text-xs text-muted-foreground rounded-xl border border-border bg-card p-3">
                         <p><strong>Balance Growth ({metrics.scoreBreakdown.savingsRate.toFixed(1)}/25):</strong> Based on monthly balance change.</p>
                         <p><strong>Safety Net ({metrics.scoreBreakdown.emergencyFund.toFixed(1)}/25):</strong> Months of expenses covered (target: 6).</p>
                         <p><strong>Spending Balance ({metrics.scoreBreakdown.nwiAdherence.toFixed(1)}/25):</strong> NWI split adherence.</p>
@@ -1652,7 +1670,8 @@ export default function FinancialHealthPage() {
                 {/* --------------------------------------------------------- */}
                 <motion.div variants={fadeUp} className="grid gap-5 lg:grid-cols-2">
                   {/* Spending Trend */}
-                  <div className="card-elevated rounded-xl p-6">
+                  <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-6">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <div className="flex items-center gap-2 mb-5">
                       {metrics.expenseVelocity.trend === "decreasing" ? (
                         <IconTrendingDown className="h-4 w-4 text-muted-foreground" />
@@ -1665,11 +1684,11 @@ export default function FinancialHealthPage() {
 
                     <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
                       {/* Current */}
-                      <div className="rounded-lg bg-muted/30 p-3">
-                        <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
+                      <div className="rounded-xl border border-border bg-card p-3">
+                        <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest mb-1">
                           Current Avg
                         </p>
-                        <p className="text-lg font-bold tabular-nums">
+                        <p className="text-lg font-black tracking-tight tabular-nums">
                           {formatCurrency(metrics.expenseVelocity.currentMonthlyAvg)}
                         </p>
                       </div>
@@ -1677,23 +1696,23 @@ export default function FinancialHealthPage() {
                       {/* Trend indicator */}
                       <div className={`flex flex-col items-center gap-1 rounded-xl px-3 py-2.5 ${
                         metrics.expenseVelocity.trend === "increasing"
-                          ? "bg-rose-500/8"
+                          ? "bg-destructive/10"
                           : metrics.expenseVelocity.trend === "decreasing"
-                            ? "bg-emerald-500/8"
-                            : "bg-muted/30"
+                            ? "bg-lime-500/10"
+                            : "bg-muted/80 dark:bg-muted"
                       }`}>
                         {metrics.expenseVelocity.trend === "increasing" ? (
-                          <IconArrowUpRight className="h-5 w-5 text-rose-500" />
+                          <IconArrowUpRight className="h-5 w-5 text-destructive" />
                         ) : metrics.expenseVelocity.trend === "decreasing" ? (
-                          <IconArrowDownRight className="h-5 w-5 text-emerald-500" />
+                          <IconArrowDownRight className="h-5 w-5 text-lime-600 dark:text-lime-400" />
                         ) : (
                           <IconMinus className="h-5 w-5 text-muted-foreground" />
                         )}
-                        <span className={`text-xs font-bold tabular-nums ${
+                        <span className={`text-xs font-black tracking-tight tabular-nums ${
                           metrics.expenseVelocity.trend === "increasing"
-                            ? "text-rose-600"
+                            ? "text-destructive"
                             : metrics.expenseVelocity.trend === "decreasing"
-                              ? "text-emerald-600"
+                              ? "text-lime-600 dark:text-lime-400"
                               : "text-muted-foreground"
                         }`}>
                           {metrics.expenseVelocity.changePercent >= 0 ? "+" : ""}
@@ -1702,32 +1721,32 @@ export default function FinancialHealthPage() {
                       </div>
 
                       {/* Previous */}
-                      <div className="rounded-lg bg-muted/30 p-3 text-right">
-                        <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
+                      <div className="rounded-xl border border-border bg-card p-3 text-right">
+                        <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest mb-1">
                           Previous Avg
                         </p>
-                        <p className="text-lg font-bold tabular-nums">
+                        <p className="text-lg font-black tracking-tight tabular-nums">
                           {formatCurrency(metrics.expenseVelocity.previousMonthlyAvg)}
                         </p>
                       </div>
                     </div>
 
-                    <div className="mt-4 pt-3 border-t border-border/40">
+                    <div className="mt-4 pt-3 border-t border-border">
                       <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${
                         metrics.expenseVelocity.trend === "increasing"
-                          ? "text-rose-600"
+                          ? "text-destructive"
                           : metrics.expenseVelocity.trend === "decreasing"
-                            ? "text-emerald-600"
+                            ? "text-lime-600 dark:text-lime-400"
                             : "text-muted-foreground"
                       }`}>
                         {metrics.expenseVelocity.trend === "increasing" ? (
                           <>
-                            <span className="inline-block h-1.5 w-1.5 rounded-full bg-rose-500" />
+                            <span className="inline-block h-1.5 w-1.5 rounded-full bg-destructive" />
                             Expenses Rising — check top categories for savings opportunities
                           </>
                         ) : metrics.expenseVelocity.trend === "decreasing" ? (
                           <>
-                            <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                            <span className="inline-block h-1.5 w-1.5 rounded-full bg-lime-500" />
                             Expenses Falling — great progress
                           </>
                         ) : (
@@ -1741,7 +1760,8 @@ export default function FinancialHealthPage() {
                   </div>
 
                   {/* Income Profile */}
-                  <div className="card-elevated rounded-xl p-6">
+                  <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-6">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <div className="flex items-center gap-2 mb-5">
                       <IconCash className="h-4 w-4 text-muted-foreground" />
                       <h3 className="text-sm font-semibold">Income Profile</h3>
@@ -1749,13 +1769,13 @@ export default function FinancialHealthPage() {
                     </div>
 
                     {/* Avg Income - Prominent */}
-                    <div className="rounded-xl border border-border/40 bg-gradient-to-br from-primary/5 via-transparent to-transparent px-5 py-4 mb-5">
-                      <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
+                    <div className="rounded-xl border border-border bg-card px-5 py-4 mb-5">
+                      <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest mb-1">
                         Avg Monthly Income
                       </p>
                       <motion.p
                         variants={numberPop}
-                        className="text-2xl font-extrabold tabular-nums tracking-tight"
+                        className="text-2xl font-black tabular-nums tracking-tight"
                       >
                         {formatCurrency(metrics.incomeProfile.avgMonthlyIncome)}
                       </motion.p>
@@ -1765,7 +1785,7 @@ export default function FinancialHealthPage() {
                     <div className="space-y-2 mb-4">
                       <div className="flex items-center justify-between text-sm">
                         <span className="font-medium text-foreground/90">Consistency</span>
-                        <span className={`text-sm font-bold tabular-nums ${
+                        <span className={`text-sm font-black tracking-tight tabular-nums ${
                           stabilityPercent >= 70
                             ? "text-emerald-600"
                             : stabilityPercent >= 40
@@ -1817,16 +1837,16 @@ export default function FinancialHealthPage() {
                     </div>
 
                     {/* Income type + Last income */}
-                    <div className="space-y-2 pt-3 border-t border-border/40">
+                    <div className="space-y-2 pt-3 border-t border-border">
                       <div className="flex items-center justify-between text-sm">
                         <span className="text-muted-foreground">Income Type</span>
                         <span className={`inline-flex items-center gap-1.5 text-xs font-semibold px-2 py-0.5 rounded-md ${
                           metrics.incomeProfile.isVariable
                             ? "bg-amber-500/10 text-amber-600"
-                            : "bg-emerald-500/10 text-emerald-600"
+                            : "bg-lime-500/10 text-lime-600 dark:text-lime-400"
                         }`}>
                           <span className={`h-1.5 w-1.5 rounded-full ${
-                            metrics.incomeProfile.isVariable ? "bg-amber-500" : "bg-emerald-500"
+                            metrics.incomeProfile.isVariable ? "bg-amber-500" : "bg-lime-500"
                           }`} />
                           {metrics.incomeProfile.isVariable ? "Variable" : "Stable"}
                         </span>
@@ -1865,7 +1885,8 @@ export default function FinancialHealthPage() {
                 {/* --------------------------------------------------------- */}
                 {/* 5. Net Worth Timeline (Area Chart with Gradients)         */}
                 {/* --------------------------------------------------------- */}
-                <motion.div variants={fadeUp} className="card-elevated rounded-xl p-6">
+                <motion.div variants={fadeUp} className="rounded-2xl border border-border bg-card relative overflow-hidden p-6">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <div className="flex items-center justify-between mb-1">
                     <div className="flex items-center gap-2">
                       <IconWallet className="h-4 w-4 text-muted-foreground" />
@@ -1953,7 +1974,8 @@ export default function FinancialHealthPage() {
                 {/* --------------------------------------------------------- */}
                 {/* 6. Emergency Fund Detail                                  */}
                 {/* --------------------------------------------------------- */}
-                <motion.div variants={fadeUp} className="card-elevated rounded-xl p-6">
+                <motion.div variants={fadeUp} className="rounded-2xl border border-border bg-card relative overflow-hidden p-6">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <div className="flex items-center gap-2 mb-5">
                     <IconShieldCheck className="h-4 w-4 text-muted-foreground" />
                     <h3 className="text-sm font-semibold">Emergency Fund</h3>
@@ -1961,23 +1983,23 @@ export default function FinancialHealthPage() {
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 mb-5">
-                    <div className="rounded-xl border border-border/40 bg-muted/20 p-4">
-                      <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
+                    <div className="rounded-xl border border-border bg-card p-4">
+                      <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest mb-1">
                         Current Coverage
                       </p>
                       <motion.p
                         variants={numberPop}
-                        className="text-3xl font-extrabold tabular-nums tracking-tight"
+                        className="text-3xl font-black tabular-nums tracking-tight"
                       >
                         {metrics.emergencyFundMonths.toFixed(1)}
                         <span className="text-sm font-normal text-muted-foreground ml-1">months</span>
                       </motion.p>
                     </div>
-                    <div className="rounded-xl border border-border/40 bg-muted/20 p-4">
-                      <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
+                    <div className="rounded-xl border border-border bg-card p-4">
+                      <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest mb-1">
                         Target
                       </p>
-                      <p className="text-3xl font-extrabold tabular-nums tracking-tight text-muted-foreground/60">
+                      <p className="text-3xl font-black tabular-nums tracking-tight text-muted-foreground/60">
                         {metrics.emergencyFundTarget}
                         <span className="text-sm font-normal ml-1">months</span>
                       </p>
@@ -1988,7 +2010,7 @@ export default function FinancialHealthPage() {
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <span className="text-xs font-medium text-muted-foreground">Progress</span>
-                      <span className={`text-xs font-bold tabular-nums ${
+                      <span className={`text-xs font-black tracking-tight tabular-nums ${
                         metrics.emergencyFundMonths >= metrics.emergencyFundTarget
                           ? "text-emerald-600"
                           : metrics.emergencyFundMonths >= 3
@@ -2049,7 +2071,7 @@ export default function FinancialHealthPage() {
                     <p className="text-xs text-muted-foreground mt-2.5">
                       {metrics.emergencyFundMonths >= metrics.emergencyFundTarget ? (
                         <span className="inline-flex items-center gap-1.5">
-                          <span className="inline-block h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                          <span className="inline-block h-1.5 w-1.5 rounded-full bg-lime-500" />
                           You have met your emergency fund target.
                         </span>
                       ) : (
@@ -2059,7 +2081,7 @@ export default function FinancialHealthPage() {
                         </span>
                       )}
                     </p>
-                    <div className="mt-4 pt-3 border-t border-border/40">
+                    <div className="mt-4 pt-3 border-t border-border">
                       <Link
                         href="/goals"
                         className="inline-flex items-center gap-1.5 text-xs font-medium text-primary hover:underline underline-offset-2 transition-colors"

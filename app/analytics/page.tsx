@@ -96,7 +96,7 @@ const TREND_COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var
 function ChartTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null
   return (
-    <div className="rounded-xl border border-border/60 bg-card/95 backdrop-blur-sm px-4 py-3 shadow-lg">
+    <div className="rounded-xl border border-border/60 bg-card/95 backdrop-blur-xl px-4 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
       <p className="text-xs font-medium text-muted-foreground mb-1.5">{label}</p>
       {payload.map((entry: any, i: number) => (
         <div key={i} className="flex items-center gap-2">
@@ -105,7 +105,7 @@ function ChartTooltip({ active, payload, label }: any) {
             style={{ backgroundColor: entry.color }}
           />
           <span className="text-xs text-muted-foreground capitalize">{entry.dataKey}:</span>
-          <span className="text-sm font-semibold tabular-nums">{formatCurrency(entry.value)}</span>
+          <span className="text-sm font-black tracking-tight tabular-nums">{formatCurrency(entry.value)}</span>
         </div>
       ))}
     </div>
@@ -116,7 +116,7 @@ function ChartTooltip({ active, payload, label }: any) {
 function ComparisonTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null
   return (
-    <div className="rounded-xl border border-border/60 bg-card/95 backdrop-blur-sm px-4 py-3 shadow-lg">
+    <div className="rounded-xl border border-border/60 bg-card/95 backdrop-blur-xl px-4 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
       <p className="text-xs font-medium text-muted-foreground mb-1.5">{label}</p>
       {payload.map((entry: any, i: number) => (
         <div key={i} className="flex items-center gap-2">
@@ -125,7 +125,7 @@ function ComparisonTooltip({ active, payload, label }: any) {
             style={{ backgroundColor: entry.color }}
           />
           <span className="text-xs text-muted-foreground">{entry.name}:</span>
-          <span className="text-sm font-semibold tabular-nums">{formatCurrency(entry.value)}</span>
+          <span className="text-sm font-black tracking-tight tabular-nums">{formatCurrency(entry.value)}</span>
         </div>
       ))}
     </div>
@@ -493,7 +493,11 @@ export default function AnalyticsPage() {
             ) : null
           }
         />
-        <div className="flex flex-1 flex-col overflow-x-hidden">
+        <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden hidden dark:block">
+          <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-lime-500/[0.05] blur-[200px]" />
+          <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] rounded-full bg-cyan-500/[0.04] blur-[180px]" />
+        </div>
+        <div className="relative z-[1] flex flex-1 flex-col overflow-x-hidden overflow-y-auto min-h-0">
           <div className="@container/main flex flex-1 flex-col gap-4 p-4 md:p-6">
             {isLoading ? (
               <AnalyticsLoadingSkeleton />
@@ -502,18 +506,19 @@ export default function AnalyticsPage() {
                 {/* ── Stat Bar ── */}
                 <motion.div
                   variants={fadeUp}
-                  className="card-elevated rounded-2xl bg-card grid grid-cols-2 @xl/main:grid-cols-4 divide-y @xl/main:divide-y-0 @xl/main:divide-x divide-border/40 overflow-hidden"
+                  className="rounded-2xl border border-border bg-card relative overflow-hidden grid grid-cols-2 @xl/main:grid-cols-4 divide-y @xl/main:divide-y-0 @xl/main:divide-x divide-border/40"
                 >
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   {/* Opening Balance */}
                   <div className="px-3 sm:px-5 py-4 flex items-start gap-2.5 sm:gap-3.5 min-w-0">
-                    <div className="mt-0.5 flex size-9 items-center justify-center rounded-xl bg-muted">
-                      <IconScale className="size-4 text-muted-foreground" />
+                    <div className="mt-0.5 flex size-9 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+                      <IconScale className="size-4 text-foreground/70" />
                     </div>
                     <div className="min-w-0">
                       <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
                         Opening Balance
                       </p>
-                      <motion.p variants={numberPop} className="text-lg font-bold tabular-nums leading-tight truncate">
+                      <motion.p variants={numberPop} className="text-lg font-black tracking-tight tabular-nums leading-tight truncate">
                         {formatCurrency(openingBalance)}
                       </motion.p>
                     </div>
@@ -521,14 +526,14 @@ export default function AnalyticsPage() {
 
                   {/* Income */}
                   <div className="px-3 sm:px-5 py-4 flex items-start gap-2.5 sm:gap-3.5 min-w-0">
-                    <div className="mt-0.5 flex size-9 items-center justify-center rounded-xl bg-primary/10">
-                      <IconArrowUpRight className="size-4 text-primary" />
+                    <div className="mt-0.5 flex size-9 items-center justify-center rounded-xl bg-lime-500/10">
+                      <IconArrowUpRight className="size-4 text-lime-600 dark:text-lime-400" />
                     </div>
                     <div className="min-w-0">
                       <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
                         Income
                       </p>
-                      <motion.p variants={numberPop} className="text-lg font-bold text-primary tabular-nums leading-tight truncate">
+                      <motion.p variants={numberPop} className="text-lg font-black tracking-tight text-lime-600 dark:text-lime-400 tabular-nums leading-tight truncate">
                         {totalIncome === 0 ? "No income" : formatCurrency(totalIncome)}
                       </motion.p>
                     </div>
@@ -536,14 +541,14 @@ export default function AnalyticsPage() {
 
                   {/* Expenses */}
                   <div className="px-3 sm:px-5 py-4 flex items-start gap-2.5 sm:gap-3.5 min-w-0">
-                    <div className="mt-0.5 flex size-9 items-center justify-center rounded-xl bg-muted">
-                      <IconArrowDownRight className="size-4 text-muted-foreground" />
+                    <div className="mt-0.5 flex size-9 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+                      <IconArrowDownRight className="size-4 text-foreground/70" />
                     </div>
                     <div className="min-w-0">
                       <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
                         Expenses
                       </p>
-                      <motion.p variants={numberPop} className="text-lg font-bold tabular-nums leading-tight truncate">
+                      <motion.p variants={numberPop} className="text-lg font-black tracking-tight tabular-nums leading-tight truncate">
                         {formatCurrency(totalExpenses)}
                       </motion.p>
                     </div>
@@ -551,14 +556,14 @@ export default function AnalyticsPage() {
 
                   {/* Current Balance */}
                   <div className="px-3 sm:px-5 py-4 flex items-start gap-2.5 sm:gap-3.5 min-w-0">
-                    <div className={`mt-0.5 flex size-9 items-center justify-center rounded-xl ${netChange >= 0 ? "bg-primary/10" : "bg-destructive/10"}`}>
-                      <IconWallet className={`size-4 ${netChange >= 0 ? "text-primary" : "text-destructive"}`} />
+                    <div className={`mt-0.5 flex size-9 items-center justify-center rounded-xl ${netChange >= 0 ? "bg-lime-500/10" : "bg-destructive/10"}`}>
+                      <IconWallet className={`size-4 ${netChange >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`} />
                     </div>
                     <div className="min-w-0">
                       <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
                         Current Balance
                       </p>
-                      <motion.p variants={numberPop} className={`text-lg font-bold tabular-nums leading-tight truncate ${netChange >= 0 ? "text-primary" : "text-destructive"}`}>
+                      <motion.p variants={numberPop} className={`text-lg font-black tracking-tight tabular-nums leading-tight truncate ${netChange >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
                         {formatCurrency(closingBalance)}
                       </motion.p>
                       <p className="text-[11px] text-muted-foreground/60 font-medium mt-0.5 leading-none">
@@ -572,10 +577,11 @@ export default function AnalyticsPage() {
                 {hasOneTimeExpenses && (
                   <motion.div
                     variants={fadeUpSmall}
-                    className="card-elevated rounded-2xl bg-card flex items-center justify-between px-5 py-3.5 gap-4"
+                    className="rounded-2xl border border-border bg-card relative overflow-hidden flex items-center justify-between px-5 py-3.5 gap-4"
                   >
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <div className="flex items-center gap-3">
-                      <div className="flex size-8 items-center justify-center rounded-lg bg-amber-500/10">
+                      <div className="flex size-9 items-center justify-center rounded-xl bg-amber-500/10">
                         <IconAlertTriangle className="size-4 text-amber-600 dark:text-amber-400" />
                       </div>
                       <div>
@@ -614,7 +620,8 @@ export default function AnalyticsPage() {
 
                     {/* ── Daily Tab ── */}
                     <TabsContent value="daily" className="space-y-4">
-                      <div className="card-elevated rounded-2xl bg-card p-5">
+                      <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5">
+                        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                         <div className="mb-5">
                           <h3 className="text-sm font-semibold">Daily Cashflow</h3>
                           <p className="text-xs text-muted-foreground/70 mt-0.5">Income and expenses by day</p>
@@ -640,42 +647,43 @@ export default function AnalyticsPage() {
                       </div>
 
                       {/* Daily Highlights */}
-                      <div className="card-elevated rounded-2xl bg-card grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border/40">
+                      <div className="rounded-2xl border border-border bg-card relative overflow-hidden grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border/40">
+                        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                         <div className="px-5 py-4 flex items-start gap-3">
-                          <div className="mt-0.5 flex size-8 items-center justify-center rounded-lg bg-muted">
-                            <IconCalendarStats className="size-3.5 text-muted-foreground" />
+                          <div className="mt-0.5 flex size-9 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+                            <IconCalendarStats className="size-3.5 text-foreground/70" />
                           </div>
                           <div>
                             <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
                               Avg Daily Spend
                             </p>
-                            <p className="text-lg font-bold tabular-nums leading-tight">
+                            <p className="text-lg font-black tracking-tight tabular-nums leading-tight">
                               {formatCurrency(analytics?.dailyAverageSpend || 0)}
                             </p>
                           </div>
                         </div>
                         <div className="px-5 py-4 flex items-start gap-3">
-                          <div className="mt-0.5 flex size-8 items-center justify-center rounded-lg bg-muted">
-                            <IconReceipt2 className="size-3.5 text-muted-foreground" />
+                          <div className="mt-0.5 flex size-9 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+                            <IconReceipt2 className="size-3.5 text-foreground/70" />
                           </div>
                           <div>
                             <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
                               Transactions
                             </p>
-                            <p className="text-lg font-bold tabular-nums leading-tight">
+                            <p className="text-lg font-black tracking-tight tabular-nums leading-tight">
                               {monthTransactions.length}
                             </p>
                           </div>
                         </div>
                         <div className="px-5 py-4 flex items-start gap-3">
-                          <div className="mt-0.5 flex size-8 items-center justify-center rounded-lg bg-muted">
-                            <IconCalendar className="size-3.5 text-muted-foreground" />
+                          <div className="mt-0.5 flex size-9 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+                            <IconCalendar className="size-3.5 text-foreground/70" />
                           </div>
                           <div>
                             <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
                               Period
                             </p>
-                            <p className="text-lg font-bold leading-tight">
+                            <p className="text-lg font-black tracking-tight leading-tight">
                               {selectedMonth.label}
                             </p>
                           </div>
@@ -702,7 +710,8 @@ export default function AnalyticsPage() {
                     <TabsContent value="monthly" className="space-y-4">
                       <MonthlySummaryCard metrics={monthlyMetrics} />
 
-                      <div className="card-elevated rounded-2xl bg-card p-5">
+                      <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5">
+                        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                         <div className="mb-5">
                           <h3 className="text-sm font-semibold">Balance Trend</h3>
                           <p className="text-xs text-muted-foreground/70 mt-0.5">Selected month balance trend</p>
@@ -744,7 +753,8 @@ export default function AnalyticsPage() {
                       </div>
 
                       <div className="grid gap-4 md:grid-cols-2">
-                        <div className="card-elevated rounded-2xl bg-card p-5">
+                        <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5">
+                          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                           <div className="mb-5">
                             <h3 className="text-sm font-semibold">Monthly Trends</h3>
                             <p className="text-xs text-muted-foreground/70 mt-0.5">Income and expenses across months</p>
@@ -801,12 +811,13 @@ export default function AnalyticsPage() {
                     {/* ── Comparison Tab (Month-over-Month) ── */}
                     <TabsContent value="comparison" className="space-y-4">
                       {/* Change Summary Cards */}
-                      <div className="card-elevated rounded-2xl bg-card grid grid-cols-1 @lg/main:grid-cols-3 divide-y @lg/main:divide-y-0 @lg/main:divide-x divide-border/40">
+                      <div className="rounded-2xl border border-border bg-card relative overflow-hidden grid grid-cols-1 @lg/main:grid-cols-3 divide-y @lg/main:divide-y-0 @lg/main:divide-x divide-border/40">
+                        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                         {/* Income Change */}
                         <div className="px-3 sm:px-5 py-4 flex items-start gap-2.5 sm:gap-3.5 min-w-0">
-                          <div className={`mt-0.5 flex size-9 items-center justify-center rounded-xl ${comparisonChanges.income.change >= 0 ? "bg-primary/10" : "bg-destructive/10"}`}>
+                          <div className={`mt-0.5 flex size-9 items-center justify-center rounded-xl ${comparisonChanges.income.change >= 0 ? "bg-lime-500/10" : "bg-destructive/10"}`}>
                             {comparisonChanges.income.change >= 0
-                              ? <IconTrendingUp className="size-4 text-primary" />
+                              ? <IconTrendingUp className="size-4 text-lime-600 dark:text-lime-400" />
                               : <IconTrendingDown className="size-4 text-destructive" />
                             }
                           </div>
@@ -814,10 +825,10 @@ export default function AnalyticsPage() {
                             <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
                               Income
                             </p>
-                            <p className="text-lg font-bold tabular-nums leading-tight truncate">
+                            <p className="text-lg font-black tracking-tight tabular-nums leading-tight truncate">
                               {formatCurrency(comparisonChanges.income.current)}
                             </p>
-                            <p className={`text-[11px] font-semibold mt-0.5 leading-none ${comparisonChanges.income.change >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                            <p className={`text-[11px] font-semibold mt-0.5 leading-none ${comparisonChanges.income.change >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
                               {comparisonChanges.income.change >= 0 ? "\u2191" : "\u2193"} {Math.abs(comparisonChanges.income.change).toFixed(1)}% vs {previousMonth.label.split(" ")[0]}
                             </p>
                           </div>
@@ -825,18 +836,18 @@ export default function AnalyticsPage() {
 
                         {/* Expense Change */}
                         <div className="px-3 sm:px-5 py-4 flex items-start gap-2.5 sm:gap-3.5 min-w-0">
-                          <div className={`mt-0.5 flex size-9 items-center justify-center rounded-xl ${comparisonChanges.expense.change <= 0 ? "bg-primary/10" : "bg-destructive/10"}`}>
-                            <IconArrowsExchange className={`size-4 ${comparisonChanges.expense.change <= 0 ? "text-primary" : "text-destructive"}`} />
+                          <div className={`mt-0.5 flex size-9 items-center justify-center rounded-xl ${comparisonChanges.expense.change <= 0 ? "bg-lime-500/10" : "bg-destructive/10"}`}>
+                            <IconArrowsExchange className={`size-4 ${comparisonChanges.expense.change <= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`} />
                           </div>
                           <div className="min-w-0">
                             <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
                               Expenses
                             </p>
-                            <p className="text-lg font-bold tabular-nums leading-tight truncate">
+                            <p className="text-lg font-black tracking-tight tabular-nums leading-tight truncate">
                               {formatCurrency(comparisonChanges.expense.current)}
                             </p>
                             {/* For expenses, decrease is good (green), increase is bad (red) */}
-                            <p className={`text-[11px] font-semibold mt-0.5 leading-none ${comparisonChanges.expense.change <= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                            <p className={`text-[11px] font-semibold mt-0.5 leading-none ${comparisonChanges.expense.change <= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
                               {comparisonChanges.expense.change > 0 ? "\u2191" : "\u2193"} {Math.abs(comparisonChanges.expense.change).toFixed(1)}% vs {previousMonth.label.split(" ")[0]}
                             </p>
                           </div>
@@ -844,17 +855,17 @@ export default function AnalyticsPage() {
 
                         {/* Savings Change */}
                         <div className="px-3 sm:px-5 py-4 flex items-start gap-2.5 sm:gap-3.5 min-w-0">
-                          <div className={`mt-0.5 flex size-9 items-center justify-center rounded-xl ${comparisonChanges.savings.current >= 0 ? "bg-primary/10" : "bg-destructive/10"}`}>
-                            <IconWallet className={`size-4 ${comparisonChanges.savings.current >= 0 ? "text-primary" : "text-destructive"}`} />
+                          <div className={`mt-0.5 flex size-9 items-center justify-center rounded-xl ${comparisonChanges.savings.current >= 0 ? "bg-lime-500/10" : "bg-destructive/10"}`}>
+                            <IconWallet className={`size-4 ${comparisonChanges.savings.current >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`} />
                           </div>
                           <div className="min-w-0">
                             <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
                               Net Savings
                             </p>
-                            <p className={`text-lg font-bold tabular-nums leading-tight truncate ${comparisonChanges.savings.current >= 0 ? "text-primary" : "text-destructive"}`}>
+                            <p className={`text-lg font-black tracking-tight tabular-nums leading-tight truncate ${comparisonChanges.savings.current >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
                               {formatCurrency(comparisonChanges.savings.current)}
                             </p>
-                            <p className={`text-[11px] font-semibold mt-0.5 leading-none ${comparisonChanges.savings.change >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                            <p className={`text-[11px] font-semibold mt-0.5 leading-none ${comparisonChanges.savings.change >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
                               {comparisonChanges.savings.change >= 0 ? "\u2191" : "\u2193"} {Math.abs(comparisonChanges.savings.change).toFixed(1)}% vs {previousMonth.label.split(" ")[0]}
                             </p>
                           </div>
@@ -863,7 +874,8 @@ export default function AnalyticsPage() {
 
                       {/* Top Category Changes as Badges */}
                       {topCategoryChanges.length > 0 && (
-                        <div className="card-elevated rounded-2xl bg-card px-5 py-4">
+                        <div className="rounded-2xl border border-border bg-card relative overflow-hidden px-5 py-4">
+                          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                           <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest mb-3">
                             Biggest Changes
                           </p>
@@ -875,8 +887,8 @@ export default function AnalyticsPage() {
                                 className={`text-xs font-medium px-3 py-1.5 ${
                                   // For expenses: increase is bad (red), decrease is good (green)
                                   change.change > 0
-                                    ? "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400"
-                                    : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                                    ? "bg-destructive/10 text-destructive"
+                                    : "bg-lime-500/10 text-lime-600 dark:text-lime-400"
                                 }`}
                               >
                                 {change.category} {change.change > 0 ? "\u2191" : "\u2193"} {Math.abs(change.change).toFixed(0)}%
@@ -887,7 +899,8 @@ export default function AnalyticsPage() {
                       )}
 
                       {/* Grouped Bar Chart */}
-                      <div className="card-elevated rounded-2xl bg-card p-5">
+                      <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5">
+                        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                         <div className="mb-5">
                           <h3 className="text-sm font-semibold">Category Comparison</h3>
                           <p className="text-xs text-muted-foreground/70 mt-0.5">
@@ -931,9 +944,10 @@ export default function AnalyticsPage() {
 
                     {/* ── Trends Tab (Category Trends Over Time) ── */}
                     <TabsContent value="trends" className="space-y-4">
-                      <div className="card-elevated rounded-2xl bg-card p-5">
+                      <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5">
+                        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                         <div className="mb-5 flex items-center gap-2">
-                          <IconChartLine className="size-4 text-muted-foreground" />
+                          <IconChartLine className="size-4 text-foreground/70" />
                           <div>
                             <h3 className="text-sm font-semibold">Category Spending Trends</h3>
                             <p className="text-xs text-muted-foreground/70 mt-0.5">
@@ -1029,7 +1043,8 @@ export default function AnalyticsPage() {
                     {/* ── Yearly Tab ── */}
                     <TabsContent value="yearly" className="space-y-4">
                       <div className="grid gap-4 md:grid-cols-3">
-                        <div className="card-elevated rounded-2xl bg-card p-5">
+                        <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5">
+                          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                           <div className="mb-4">
                             <h3 className="text-sm font-semibold">Year Over Year</h3>
                             <p className="text-xs text-muted-foreground/70 mt-0.5">
@@ -1050,7 +1065,7 @@ export default function AnalyticsPage() {
                             ].map(({ label, value }) => (
                               <div key={label} className="flex items-center justify-between">
                                 <span className="text-xs text-muted-foreground">{label}</span>
-                                <span className={`text-sm font-bold tabular-nums ${value >= 0 ? "text-primary" : "text-destructive"}`}>
+                                <span className={`text-sm font-black tracking-tight tabular-nums ${value >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
                                   {value >= 0 ? "+" : ""}{value.toFixed(1)}%
                                 </span>
                               </div>
@@ -1062,7 +1077,8 @@ export default function AnalyticsPage() {
                             )}
                           </div>
                         </div>
-                        <div className="card-elevated rounded-2xl bg-card p-5 md:col-span-2">
+                        <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5 md:col-span-2">
+                          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                           <div className="mb-5">
                             <h3 className="text-sm font-semibold">Annual Performance</h3>
                             <p className="text-xs text-muted-foreground/70 mt-0.5">Income vs expenses by year</p>
@@ -1144,7 +1160,8 @@ export default function AnalyticsPage() {
 function AnalyticsLoadingSkeleton() {
   return (
     <div className="space-y-5">
-      <div className="card-elevated rounded-2xl bg-card grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border/40 overflow-hidden">
+      <div className="rounded-2xl border border-border bg-card relative overflow-hidden grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border/40">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
         {[0, 1, 2, 3].map((i) => (
           <div key={i} className="px-3 sm:px-5 py-4 flex items-start gap-2.5 sm:gap-3.5 min-w-0">
             <Skeleton className="size-9 rounded-xl" />
@@ -1155,8 +1172,8 @@ function AnalyticsLoadingSkeleton() {
           </div>
         ))}
       </div>
-      <Skeleton className="h-10 w-64 rounded-xl" />
-      <Skeleton className="h-[400px] rounded-2xl" />
+      <Skeleton className="h-10 w-64 rounded-2xl border border-border" />
+      <Skeleton className="h-[400px] rounded-2xl border border-border" />
     </div>
   )
 }

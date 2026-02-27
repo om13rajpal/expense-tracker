@@ -42,18 +42,18 @@ export function NavMain({ items, dashboardActive }: { items: NavItem[]; dashboar
         <Link
           href="/dashboard"
           className={cn(
-            "group flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors duration-150",
+            "group relative flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200",
             dashboardActive
-              ? "text-primary bg-primary/8"
-              : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+              ? "text-sidebar-primary-foreground bg-gradient-to-r from-primary/90 to-primary/70 shadow-[0_0_20px_-4px] shadow-primary/25"
+              : "text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-white/[0.04]"
           )}
         >
           <IconDashboard
             className={cn(
               "h-4 w-4 shrink-0 transition-colors",
               dashboardActive
-                ? "text-primary"
-                : "text-sidebar-foreground/40 group-hover:text-sidebar-foreground/60"
+                ? "text-sidebar-primary-foreground"
+                : "text-sidebar-foreground/30 group-hover:text-sidebar-foreground/60"
             )}
           />
           <span>Dashboard</span>
@@ -69,18 +69,18 @@ export function NavMain({ items, dashboardActive }: { items: NavItem[]; dashboar
               key={item.title}
               href={item.url}
               className={cn(
-                "group flex items-center gap-2.5 rounded-lg px-2.5 py-1.5 text-sm font-medium transition-colors duration-150",
+                "group relative flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm font-medium transition-all duration-200",
                 isActive
-                  ? "text-primary bg-primary/8"
-                  : "text-sidebar-foreground/60 hover:text-sidebar-foreground hover:bg-sidebar-accent/50"
+                  ? "text-sidebar-primary-foreground bg-gradient-to-r from-primary/90 to-primary/70 shadow-[0_0_20px_-4px] shadow-primary/25"
+                  : "text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-white/[0.04]"
               )}
             >
               <ItemIcon
                 className={cn(
                   "h-4 w-4 shrink-0 transition-colors",
                   isActive
-                    ? "text-primary"
-                    : "text-sidebar-foreground/40 group-hover:text-sidebar-foreground/60"
+                    ? "text-sidebar-primary-foreground"
+                    : "text-sidebar-foreground/30 group-hover:text-sidebar-foreground/60"
                 )}
               />
               <span>{item.title}</span>

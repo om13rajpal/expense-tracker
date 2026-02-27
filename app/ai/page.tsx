@@ -64,28 +64,24 @@ export default function AiPage() {
     >
       <AppSidebar variant="inset" />
       <SidebarInset className="h-dvh overflow-hidden">
+        <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden hidden dark:block">
+          <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-lime-500/[0.05] blur-[200px]" />
+          <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] rounded-full bg-cyan-500/[0.04] blur-[180px]" />
+        </div>
+        <div className="relative z-[1] flex h-full flex-col overflow-hidden">
         <SiteHeader title="AI Assistant" />
         <Tabs defaultValue={defaultTab} className="flex flex-1 flex-col overflow-hidden">
-          <div className="border-b border-border/40 px-4 overflow-x-auto">
-            <TabsList variant="line" className="inline-flex h-10 items-center gap-1 bg-transparent p-0">
-              <TabsTrigger
-                value="chat"
-                className="relative gap-1.5 rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent"
-              >
+          <div className="border-b border-border px-4">
+            <TabsList variant="line" className="h-10">
+              <TabsTrigger value="chat">
                 <IconRobot className="h-4 w-4" />
                 Chat
               </TabsTrigger>
-              <TabsTrigger
-                value="reports"
-                className="relative gap-1.5 rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent"
-              >
+              <TabsTrigger value="reports">
                 <IconReportAnalytics className="h-4 w-4" />
                 Reports
               </TabsTrigger>
-              <TabsTrigger
-                value="learn"
-                className="relative gap-1.5 rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent"
-              >
+              <TabsTrigger value="learn">
                 <IconSchool className="h-4 w-4" />
                 Learn
               </TabsTrigger>
@@ -101,6 +97,7 @@ export default function AiPage() {
             <LearnView />
           </TabsContent>
         </Tabs>
+        </div>
       </SidebarInset>
     </SidebarProvider>
   )

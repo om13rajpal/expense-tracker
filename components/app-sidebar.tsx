@@ -82,11 +82,16 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 ) : (
                   <IconPigMoney className="!size-5" />
                 )}
-                <span className="text-base font-semibold">Finova</span>
+                <span className="text-base font-semibold tracking-tight">Finova</span>
               </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
+        
+        {/* Prominent Gamification Bar moved to Header */}
+        <div className="px-2 pb-2">
+          <SidebarXP />
+        </div>
       </SidebarHeader>
 
       <SidebarSeparator />
@@ -98,7 +103,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       <SidebarSeparator />
 
       <SidebarFooter>
-        <SidebarXP />
         <NavUser user={userData} />
       </SidebarFooter>
     </Sidebar>

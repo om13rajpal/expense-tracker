@@ -218,7 +218,7 @@ export function Spotlight() {
       {/* Spotlight dialog */}
       <Dialog open={state.open} onOpenChange={(isOpen) => (isOpen ? open() : close())}>
         <DialogContent
-          className="overflow-hidden p-0 shadow-2xl max-w-xl rounded-xl border-border/50 bg-background/95 backdrop-blur-xl gap-0"
+          className="overflow-hidden p-0 shadow-2xl max-w-xl rounded-xl border bg-background gap-0"
           onKeyDown={handleKeyDown}
           aria-label="Spotlight search"
           hideCloseButton

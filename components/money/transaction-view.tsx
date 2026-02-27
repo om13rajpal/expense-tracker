@@ -92,7 +92,8 @@ import {
 import { Checkbox } from "@/components/ui/checkbox"
 import { Tooltip, TooltipTrigger, TooltipContent } from "@/components/ui/tooltip"
 import { InfoTooltip } from "@/components/info-tooltip"
-import { stagger, fadeUp, fadeUpSmall, listItem } from "@/lib/motion"
+import { stagger, fadeUp, fadeUpSmall, listItem, numberPop } from "@/lib/motion"
+import { BentoTile } from "@/components/ui/bento-tile"
 
 const ALL_PAYMENT_METHODS = [
   "Cash", "Debit Card", "Credit Card", "UPI", "NEFT", "IMPS", "Net Banking", "Wallet", "Cheque", "Other",
@@ -121,11 +122,11 @@ import { isSimilarMerchant } from "@/lib/categorizer"
 
 // Category color mapping for rich badges
 const CATEGORY_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
-  "Salary":            { bg: "bg-emerald-100/70 dark:bg-emerald-900/30", text: "text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500" },
-  "Freelance":         { bg: "bg-emerald-100/70 dark:bg-emerald-900/30", text: "text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500" },
-  "Business":          { bg: "bg-emerald-100/70 dark:bg-emerald-900/30", text: "text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500" },
-  "Investment Income": { bg: "bg-emerald-100/70 dark:bg-emerald-900/30", text: "text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500" },
-  "Other Income":      { bg: "bg-emerald-100/70 dark:bg-emerald-900/30", text: "text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500" },
+  "Salary":            { bg: "bg-lime-100/70 dark:bg-lime-900/30", text: "text-lime-700 dark:text-lime-400", dot: "bg-lime-500" },
+  "Freelance":         { bg: "bg-lime-100/70 dark:bg-lime-900/30", text: "text-lime-700 dark:text-lime-400", dot: "bg-lime-500" },
+  "Business":          { bg: "bg-lime-100/70 dark:bg-lime-900/30", text: "text-lime-700 dark:text-lime-400", dot: "bg-lime-500" },
+  "Investment Income": { bg: "bg-lime-100/70 dark:bg-lime-900/30", text: "text-lime-700 dark:text-lime-400", dot: "bg-lime-500" },
+  "Other Income":      { bg: "bg-lime-100/70 dark:bg-lime-900/30", text: "text-lime-700 dark:text-lime-400", dot: "bg-lime-500" },
   "Rent":              { bg: "bg-rose-100/70 dark:bg-rose-900/30", text: "text-rose-700 dark:text-rose-400", dot: "bg-rose-500" },
   "Utilities":         { bg: "bg-amber-100/70 dark:bg-amber-900/30", text: "text-amber-700 dark:text-amber-400", dot: "bg-amber-500" },
   "Groceries":         { bg: "bg-lime-100/70 dark:bg-lime-900/30", text: "text-lime-700 dark:text-lime-400", dot: "bg-lime-500" },
@@ -773,54 +774,61 @@ export function TransactionView() {
         animate="show"
       >
         {/* Stat Summary Cards */}
-        <motion.div
-          variants={fadeUp}
-          className="grid grid-cols-1 sm:grid-cols-3 gap-3"
-        >
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* Income Card */}
-          <div className="card-elevated rounded-xl relative overflow-hidden bg-card p-4 flex items-center gap-4">
-            <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent pointer-events-none" />
-            <div className="relative shrink-0 flex items-center justify-center h-10 w-10 rounded-lg bg-emerald-500/10 dark:bg-emerald-500/15">
-              <IconArrowUpRight className="size-5 text-emerald-600 dark:text-emerald-400" />
+          <BentoTile
+            gradient="from-lime-500/[0.06] to-transparent"
+            hoverBorder="hover:border-lime-500/15"
+          >
+            <div className="p-4 flex items-center gap-4">
+              <div className="shrink-0 flex items-center justify-center size-11 rounded-xl bg-lime-500/10 shadow-[0_0_12px_-2px_rgba(163,230,53,0.15)]">
+                <IconArrowUpRight className="size-5 text-lime-600 dark:text-lime-400" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">Income</p>
+                <motion.p variants={numberPop} className="text-2xl font-black tracking-tight text-lime-600 dark:text-lime-400 tabular-nums truncate">{formatCurrency(incomeTotal)}</motion.p>
+              </div>
             </div>
-            <div className="relative min-w-0">
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Income</p>
-              <p className="text-xl font-semibold text-emerald-600 dark:text-emerald-400 tabular-nums truncate">{formatCurrency(incomeTotal)}</p>
-            </div>
-          </div>
+          </BentoTile>
 
           {/* Expenses Card */}
-          <div className="card-elevated rounded-xl relative overflow-hidden bg-card p-4 flex items-center gap-4">
-            <div className="absolute inset-0 bg-gradient-to-br from-rose-500/5 to-transparent pointer-events-none" />
-            <div className="relative shrink-0 flex items-center justify-center h-10 w-10 rounded-lg bg-rose-500/10 dark:bg-rose-500/15">
-              <IconArrowDownRight className="size-5 text-rose-600 dark:text-rose-400" />
+          <BentoTile>
+            <div className="p-4 flex items-center gap-4">
+              <div className="shrink-0 flex items-center justify-center size-11 rounded-xl bg-muted/80 dark:bg-muted">
+                <IconArrowDownRight className="size-5 text-foreground/70" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">Expenses</p>
+                <motion.p variants={numberPop} className="text-2xl font-black tracking-tight text-foreground/70 tabular-nums truncate">{formatCurrency(expenseTotal)}</motion.p>
+              </div>
             </div>
-            <div className="relative min-w-0">
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Expenses</p>
-              <p className="text-xl font-semibold text-rose-600 dark:text-rose-400 tabular-nums truncate">{formatCurrency(expenseTotal)}</p>
-            </div>
-          </div>
+          </BentoTile>
 
           {/* Net Card */}
-          <div className="card-elevated rounded-xl relative overflow-hidden bg-card p-4 flex items-center gap-4">
-            <div className={`absolute inset-0 bg-gradient-to-br ${netTotal >= 0 ? "from-emerald-500/5" : "from-rose-500/5"} to-transparent pointer-events-none`} />
-            <div className={`relative shrink-0 flex items-center justify-center h-10 w-10 rounded-lg ${netTotal >= 0 ? "bg-emerald-500/10 dark:bg-emerald-500/15" : "bg-rose-500/10 dark:bg-rose-500/15"}`}>
-              <IconTrendingUp className={`size-5 ${netTotal >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`} />
+          <BentoTile
+            gradient={netTotal >= 0 ? "from-lime-500/[0.06] to-transparent" : undefined}
+            hoverBorder={netTotal >= 0 ? "hover:border-lime-500/15" : "hover:border-destructive/15"}
+          >
+            <div className="p-4 flex items-center gap-4">
+              <div className={`shrink-0 flex items-center justify-center size-11 rounded-xl ${netTotal >= 0 ? "bg-lime-500/10 shadow-[0_0_12px_-2px_rgba(163,230,53,0.15)]" : "bg-destructive/10"}`}>
+                <IconTrendingUp className={`size-5 ${netTotal >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`} />
+              </div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">Net</p>
+                <motion.p variants={numberPop} className={`text-2xl font-black tracking-tight tabular-nums truncate ${netTotal >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
+                  {netTotal >= 0 ? "+" : ""}{formatCurrency(netTotal)}
+                </motion.p>
+              </div>
             </div>
-            <div className="relative min-w-0">
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Net</p>
-              <p className={`text-xl font-semibold tabular-nums truncate ${netTotal >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
-                {netTotal >= 0 ? "+" : ""}{formatCurrency(netTotal)}
-              </p>
-            </div>
-          </div>
-        </motion.div>
+          </BentoTile>
+        </div>
 
         {/* Search / Filter Toolbar */}
         <motion.div
           variants={fadeUpSmall}
-          className="card-elevated rounded-xl bg-card p-3 flex flex-wrap items-center gap-3"
+          className="rounded-2xl border border-border bg-card relative overflow-hidden p-3.5 flex flex-wrap items-center gap-3"
         >
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
           {/* Search Input */}
           <div className="relative flex-1 min-w-[200px] max-w-[380px]">
             <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/60" />
@@ -831,7 +839,7 @@ export function TransactionView() {
                 setSearchQuery(e.target.value)
                 setCurrentPage(1)
               }}
-              className="pl-9 h-9 bg-muted/40 border-transparent focus:border-border focus:bg-background transition-colors"
+              className="pl-9 h-9 rounded-xl bg-muted/40 border-transparent focus:border-primary/20 focus:bg-background transition-colors"
             />
             {searchQuery && (
               <button
@@ -844,7 +852,7 @@ export function TransactionView() {
           </div>
 
           {/* Filter Type Toggle */}
-          <div className="flex items-center rounded-lg bg-muted/50 p-0.5 gap-0.5">
+          <div className="flex items-center rounded-xl bg-muted/50 p-0.5 gap-0.5">
             {(["all", "income", "expense"] as const).map((type) => (
               <button
                 key={type}
@@ -988,7 +996,7 @@ export function TransactionView() {
                 </div>
                 <div className="h-4 w-px bg-primary/20" />
                 <Select value={bulkCategory} onValueChange={setBulkCategory}>
-                  <SelectTrigger className="h-8 w-[160px] text-xs border-primary/20 bg-background/60">
+                  <SelectTrigger className="h-8 w-[160px] text-xs border-primary/20 bg-background">
                     <SelectValue placeholder="Assign category" />
                   </SelectTrigger>
                   <SelectContent>
@@ -1050,10 +1058,12 @@ export function TransactionView() {
         </AnimatePresence>
 
         {/* Transaction Table */}
-        <motion.div variants={fadeUp} className="card-elevated rounded-xl bg-card overflow-x-auto">
+        <motion.div variants={fadeUp} className="rounded-2xl border border-border bg-card relative overflow-hidden overflow-x-auto">
+          {/* Top edge light line — dark mode only */}
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent z-10" />
           <Table className="min-w-[640px]">
             <TableHeader>
-              <TableRow className="hover:bg-transparent border-b border-border/50">
+              <TableRow className="hover:bg-transparent border-b border-border">
                 <TableHead className="w-[40px] pl-4">
                   <button onClick={toggleSelectAll} className="flex items-center justify-center">
                     {selectedIds.size === paginatedData.length && paginatedData.length > 0
@@ -1062,19 +1072,19 @@ export function TransactionView() {
                     }
                   </button>
                 </TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 w-[90px]">
+                <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70 w-[90px]">
                   <button onClick={() => toggleSort("date")} className="inline-flex items-center gap-1 hover:text-foreground transition-colors">
                     Date
                     {sortField === "date" ? (sortDir === "asc" ? <IconSortAscending className="size-3.5" /> : <IconSortDescending className="size-3.5" />) : <IconArrowsSort className="size-3.5 opacity-0 group-hover:opacity-40" />}
                   </button>
                 </TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">
                   <button onClick={() => toggleSort("description")} className="inline-flex items-center gap-1 hover:text-foreground transition-colors">
                     Description
                     {sortField === "description" ? (sortDir === "asc" ? <IconSortAscending className="size-3.5" /> : <IconSortDescending className="size-3.5" />) : null}
                   </button>
                 </TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">
                   <span className="inline-flex items-center gap-1">
                     <button onClick={() => toggleSort("category")} className="inline-flex items-center gap-1 hover:text-foreground transition-colors">
                       Category
@@ -1083,8 +1093,8 @@ export function TransactionView() {
                     <InfoTooltip text="Click a category badge to change it." iconClassName="h-3 w-3" />
                   </span>
                 </TableHead>
-                <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell">Method</TableHead>
-                <TableHead className="text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 pr-4">
+                <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70 hidden lg:table-cell">Method</TableHead>
+                <TableHead className="text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70 pr-4">
                   <button onClick={() => toggleSort("amount")} className="inline-flex items-center gap-1 hover:text-foreground transition-colors ml-auto">
                     Amount
                     {sortField === "amount" ? (sortDir === "asc" ? <IconSortAscending className="size-3.5" /> : <IconSortDescending className="size-3.5" />) : null}
@@ -1104,7 +1114,7 @@ export function TransactionView() {
                     <motion.tr
                       key={transaction.id}
                       {...listItem(i)}
-                      className={`group border-b border-border/20 transition-all duration-200
+                      className={`group border-b border-border transition-all duration-200
                         ${selectedIds.has(transaction.id)
                           ? "bg-primary/[0.04] shadow-sm"
                           : isOutlier
@@ -1243,10 +1253,10 @@ export function TransactionView() {
                             </Badge>
                           )}
                           <span
-                            className={`text-[13px] font-semibold tabular-nums ${
+                            className={`text-[13px] font-black tracking-tight tabular-nums ${
                               transaction.type === "income"
-                                ? "text-emerald-600 dark:text-emerald-400"
-                                : "text-rose-600 dark:text-rose-400"
+                                ? "text-lime-600 dark:text-lime-400"
+                                : "text-foreground/70"
                             }`}
                           >
                             {transaction.type === "income" ? "+" : "-"}
@@ -1262,7 +1272,7 @@ export function TransactionView() {
                             <Button
                               variant="ghost"
                               size="icon"
-                              className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
+                              className="size-8 rounded-xl opacity-0 group-hover:opacity-100 transition-opacity text-muted-foreground hover:text-destructive"
                               disabled={isDeletingId === (transaction._id || transaction.id)}
                             >
                               <IconTrash className="h-3.5 w-3.5" />
@@ -1505,7 +1515,7 @@ export function TransactionView() {
           </DialogHeader>
 
           {/* Add Rule Form */}
-          <div className="space-y-3 rounded-xl border border-border/60 p-4 bg-muted/20">
+          <div className="space-y-3 rounded-xl border border-border p-4 bg-card">
             <div className="flex items-center gap-2 text-sm font-medium">
               <IconPlus className="size-4 text-primary" />
               New Rule
@@ -1567,11 +1577,11 @@ export function TransactionView() {
             </div>
             {isLoadingRules ? (
               <div className="space-y-2">
-                <Skeleton className="h-12 rounded-lg" />
-                <Skeleton className="h-12 rounded-lg" />
+                <Skeleton className="h-12 rounded-2xl border border-border" />
+                <Skeleton className="h-12 rounded-2xl border border-border" />
               </div>
             ) : rules.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 py-8 text-center border rounded-xl border-dashed bg-muted/10">
+              <div className="flex flex-col items-center gap-2 py-8 text-center border rounded-xl border-dashed bg-card">
                 <IconFilter className="size-6 text-muted-foreground/30" />
                 <p className="text-sm text-muted-foreground">No rules yet</p>
                 <p className="text-xs text-muted-foreground/70">Add a rule above to auto-categorize transactions on import.</p>
@@ -1622,11 +1632,11 @@ export function TransactionView() {
                   ) : (
                     <div
                       key={rule._id}
-                      className={`card-interactive flex items-center justify-between rounded-lg border px-4 py-2.5 ${rule.enabled ? "border-border/60 bg-card" : "border-border/30 opacity-50 bg-muted/20"}`}
+                      className={`flex items-center justify-between rounded-xl border px-4 py-2.5 ${rule.enabled ? "border-border bg-card" : "border-border opacity-50 bg-card"}`}
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <code className="text-xs bg-muted px-2 py-0.5 rounded-md font-mono border border-border/40">{rule.pattern}</code>
+                          <code className="text-xs bg-muted px-2 py-0.5 rounded-md font-mono border border-border">{rule.pattern}</code>
                           <span className="text-[11px] text-muted-foreground/60">
                             in {rule.matchField === "any" ? "any field" : rule.matchField}
                           </span>
@@ -1647,7 +1657,7 @@ export function TransactionView() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7"
+                          className="size-8 rounded-xl"
                           onClick={() => startEditRule(rule)}
                           title="Edit rule"
                         >
@@ -1656,7 +1666,7 @@ export function TransactionView() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7"
+                          className="size-8 rounded-xl"
                           onClick={() => toggleRuleEnabled(rule)}
                           title={rule.enabled ? "Disable" : "Enable"}
                         >
@@ -1668,7 +1678,7 @@ export function TransactionView() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7 text-destructive hover:text-destructive"
+                          className="size-8 rounded-xl text-destructive hover:text-destructive"
                           onClick={() => deleteRule(rule._id)}
                         >
                           <IconTrash className="size-3.5" />
@@ -1701,28 +1711,28 @@ function TransactionsLoadingSkeleton() {
       {/* Stat cards skeleton */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="card-elevated rounded-xl bg-card p-4 flex items-center gap-4">
-            <Skeleton className="h-10 w-10 rounded-lg" />
+          <div key={i} className="rounded-2xl border border-border bg-card p-4 flex items-center gap-4">
+            <Skeleton className="size-11 rounded-xl" />
             <div className="space-y-2">
-              <Skeleton className="h-3 w-16" />
-              <Skeleton className="h-6 w-24" />
+              <Skeleton className="h-2.5 w-14" />
+              <Skeleton className="h-7 w-28" />
             </div>
           </div>
         ))}
       </div>
       {/* Toolbar skeleton */}
-      <div className="card-elevated rounded-xl bg-card p-3 flex items-center gap-3">
-        <Skeleton className="h-9 flex-1 max-w-[380px]" />
-        <Skeleton className="h-9 w-40" />
+      <div className="rounded-2xl border border-border bg-card p-3.5 flex items-center gap-3">
+        <Skeleton className="h-9 flex-1 max-w-[380px] rounded-xl" />
+        <Skeleton className="h-9 w-40 rounded-xl" />
         <div className="flex-1" />
         <Skeleton className="h-8 w-20" />
         <Skeleton className="h-8 w-16" />
       </div>
       {/* Table skeleton */}
-      <div className="card-elevated rounded-xl bg-card overflow-hidden">
+      <div className="rounded-2xl border border-border bg-card overflow-hidden">
         <div className="space-y-0">
           {Array.from({ length: 10 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-4 px-4 py-3.5 border-b border-border/20">
+            <div key={i} className="flex items-center gap-4 px-4 py-3.5 border-b border-border">
               <Skeleton className="h-4 w-4 rounded" />
               <div className="space-y-1">
                 <Skeleton className="h-3.5 w-14" />

@@ -9,7 +9,7 @@
 import * as React from "react"
 import { useEffect, useMemo, useState, useCallback, useRef } from "react"
 import { useRouter } from "next/navigation"
-import { motion } from "motion/react"
+import { motion, AnimatePresence } from "motion/react"
 import {
   IconCreditCard,
   IconEdit,
@@ -24,6 +24,13 @@ import {
   IconCheck,
   IconAlertTriangle,
   IconEye,
+  IconUsers,
+  IconMail,
+  IconPhone,
+  IconBell,
+  IconX,
+  IconUserPlus,
+  IconDivide,
 } from "@tabler/icons-react"
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query"
 import { toast } from "sonner"
@@ -70,6 +77,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
+import { Switch } from "@/components/ui/switch"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 // --- Popular Services (logo.dev domains + defaults) ---
@@ -208,6 +216,16 @@ interface PaymentHistoryEntry {
   detectedAt: string
 }
 
+interface SharedMember {
+  name: string
+  email?: string
+  phone?: string
+  telegramChatId?: number
+  share: number
+  status: "pending" | "paid" | "overdue"
+  lastPaidDate?: string
+}
+
 interface Subscription {
   _id: string
   userId: string
@@ -222,6 +240,14 @@ interface Subscription {
   merchantPattern?: string
   notes?: string
   paymentHistory?: PaymentHistoryEntry[]
+  // Shared subscription fields
+  isShared?: boolean
+  totalMembers?: number
+  userShare?: number
+  paidByUser?: boolean
+  sharedWith?: SharedMember[]
+  splitGroupId?: string
+  autoCreateSplitExpense?: boolean
   createdAt: string
   updatedAt: string
 }
@@ -243,7 +269,7 @@ const CATEGORY_BADGE_COLORS: Record<string, string> = {
   Shopping: "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400",
   Utilities: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
   Education: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400",
-  Healthcare: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+  Healthcare: "bg-lime-100 text-lime-700 dark:bg-lime-900/30 dark:text-lime-400",
   Fitness: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
   Insurance: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400",
   Transport: "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400",
@@ -257,7 +283,7 @@ function getCategoryBadgeClass(category: string): string {
 }
 
 const STATUS_BADGE: Record<string, { label: string; class: string }> = {
-  active: { label: "Active", class: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800" },
+  active: { label: "Active", class: "bg-lime-100 text-lime-700 dark:bg-lime-900/30 dark:text-lime-400 border-lime-200 dark:border-lime-800" },
   paused: { label: "Paused", class: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800" },
   cancelled: { label: "Cancelled", class: "bg-slate-100 text-slate-500 dark:bg-slate-900/30 dark:text-slate-500 border-slate-200 dark:border-slate-800" },
 }
@@ -267,7 +293,7 @@ const STATUS_BADGE: Record<string, { label: string; class: string }> = {
 type PaymentStatus = "paid" | "due-soon" | "overdue" | "upcoming"
 
 const PAYMENT_STATUS_BADGE: Record<PaymentStatus, { label: string; class: string }> = {
-  paid: { label: "Paid", class: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" },
+  paid: { label: "Paid", class: "bg-lime-100 text-lime-700 dark:bg-lime-900/30 dark:text-lime-400" },
   "due-soon": { label: "Due Soon", class: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
   overdue: { label: "Overdue", class: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" },
   upcoming: { label: "Upcoming", class: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
@@ -336,6 +362,11 @@ function blankForm() {
     nextExpected: new Date().toISOString().split("T")[0],
     lastCharged: "",
     notes: "",
+    isShared: false,
+    paidByUser: true,
+    userShare: "",
+    sharedWith: [] as { name: string; email: string; phone: string; share: string }[],
+    autoCreateSplitExpense: false,
   }
 }
 
@@ -552,6 +583,52 @@ export function SubscriptionsView() {
     },
   })
 
+  // --- Notify Member Mutation ---
+  const notifyMemberMutation = useMutation({
+    mutationFn: async ({ subscriptionId, memberIndex, type }: { subscriptionId: string; memberIndex?: number; type: "reminder" | "new_share" }) => {
+      const res = await fetch("/api/subscriptions/notify", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ subscriptionId, memberIndex, type }),
+      })
+      if (!res.ok) throw new Error("Failed to send notification")
+      return res.json()
+    },
+    onSuccess: (data) => {
+      const total = (data.emailsSent || 0) + (data.telegramSent || 0)
+      if (total > 0) {
+        toast.success(`Reminder sent`, { description: data.message })
+      } else {
+        toast.info("No contact methods available for this member")
+      }
+    },
+    onError: () => {
+      toast.error("Failed to send reminder")
+    },
+  })
+
+  // --- Update Shared Member Status Mutation ---
+  const updateMemberStatusMutation = useMutation({
+    mutationFn: async ({ subscriptionId, sharedWith }: { subscriptionId: string; sharedWith: SharedMember[] }) => {
+      const res = await fetch("/api/subscriptions/shared", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        credentials: "include",
+        body: JSON.stringify({ id: subscriptionId, sharedWith }),
+      })
+      if (!res.ok) throw new Error("Failed to update member status")
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["subscriptions"] })
+      toast.success("Member status updated")
+    },
+    onError: () => {
+      toast.error("Failed to update member status")
+    },
+  })
+
   // --- Handlers ---
 
   const handleCreate = useCallback(() => {
@@ -559,6 +636,17 @@ export function SubscriptionsView() {
     if (!form.name.trim()) { toast.error("Name is required"); return }
     if (!Number.isFinite(amount) || amount <= 0) { toast.error("Enter a valid amount"); return }
     if (!form.nextExpected) { toast.error("Next expected date is required"); return }
+
+    // Validate shared members if shared
+    if (form.isShared && form.sharedWith.length > 0) {
+      for (const m of form.sharedWith) {
+        if (!m.name.trim()) { toast.error("All shared members must have a name"); return }
+        const share = parseFloat(m.share)
+        if (!Number.isFinite(share) || share <= 0) { toast.error(`Enter a valid share for ${m.name || "member"}`); return }
+      }
+    }
+
+    const userShare = form.isShared ? parseFloat(form.userShare) || 0 : amount
 
     createMutation.mutate({
       name: form.name.trim(),
@@ -573,6 +661,21 @@ export function SubscriptionsView() {
       ...(appliedSuggestion && lookupData?.suggestion?.matchedMerchant && {
         merchantPattern: lookupData.suggestion.matchedMerchant,
       }),
+      // Shared subscription fields
+      isShared: form.isShared,
+      ...(form.isShared && {
+        totalMembers: form.sharedWith.length + 1,
+        userShare,
+        paidByUser: form.paidByUser,
+        autoCreateSplitExpense: form.autoCreateSplitExpense,
+        sharedWith: form.sharedWith.map((m) => ({
+          name: m.name.trim(),
+          email: m.email.trim(),
+          phone: m.phone.trim(),
+          share: parseFloat(m.share) || 0,
+          status: "pending",
+        })),
+      }),
     })
   }, [form, createMutation, appliedSuggestion, lookupData])
 
@@ -581,6 +684,17 @@ export function SubscriptionsView() {
     const amount = parseFloat(form.amount)
     if (!form.name.trim()) { toast.error("Name is required"); return }
     if (!Number.isFinite(amount) || amount <= 0) { toast.error("Enter a valid amount"); return }
+
+    // Validate shared members if shared
+    if (form.isShared && form.sharedWith.length > 0) {
+      for (const m of form.sharedWith) {
+        if (!m.name.trim()) { toast.error("All shared members must have a name"); return }
+        const share = parseFloat(m.share)
+        if (!Number.isFinite(share) || share <= 0) { toast.error(`Enter a valid share for ${m.name || "member"}`); return }
+      }
+    }
+
+    const userShare = form.isShared ? parseFloat(form.userShare) || 0 : amount
 
     updateMutation.mutate({
       id: editTarget._id,
@@ -591,6 +705,23 @@ export function SubscriptionsView() {
       nextExpected: form.nextExpected,
       lastCharged: form.lastCharged,
       notes: form.notes,
+      isShared: form.isShared,
+      ...(form.isShared && {
+        totalMembers: form.sharedWith.length + 1,
+        userShare,
+        paidByUser: form.paidByUser,
+        autoCreateSplitExpense: form.autoCreateSplitExpense,
+        sharedWith: form.sharedWith.map((m) => ({
+          name: m.name.trim(),
+          email: m.email.trim(),
+          phone: m.phone.trim(),
+          share: parseFloat(m.share) || 0,
+          status: "pending",
+        })),
+      }),
+      ...(!form.isShared && editTarget.isShared && {
+        isShared: false,
+      }),
     })
   }, [editTarget, form, updateMutation])
 
@@ -604,6 +735,16 @@ export function SubscriptionsView() {
       nextExpected: sub.nextExpected ? sub.nextExpected.split("T")[0] : "",
       lastCharged: sub.lastCharged ? sub.lastCharged.split("T")[0] : "",
       notes: sub.notes || "",
+      isShared: sub.isShared || false,
+      paidByUser: sub.paidByUser !== false,
+      userShare: sub.userShare?.toString() || "",
+      sharedWith: (sub.sharedWith || []).map((m) => ({
+        name: m.name,
+        email: m.email || "",
+        phone: m.phone || "",
+        share: m.share.toString(),
+      })),
+      autoCreateSplitExpense: sub.autoCreateSplitExpense || false,
     })
     setShowEditDialog(true)
   }, [])
@@ -689,24 +830,24 @@ export function SubscriptionsView() {
                 value={activeSubs.length.toString()}
                 trendLabel={pausedSubs.length > 0 ? `${pausedSubs.length} paused` : undefined}
                 icon={<IconRepeat className="h-5 w-5" />}
-                iconBg="bg-blue-500/10 dark:bg-blue-500/15"
-                iconColor="text-blue-600 dark:text-blue-400"
+                iconBg="bg-muted/80 dark:bg-muted"
+                iconColor="text-foreground/70"
               />
               <MetricTile
                 label="Monthly Total"
                 value={formatINR(Math.round(monthlyTotal))}
                 trendLabel={`across ${activeSubs.length} subscriptions`}
                 icon={<IconCurrencyRupee className="h-5 w-5" />}
-                iconBg="bg-emerald-500/10 dark:bg-emerald-500/15"
-                iconColor="text-emerald-600 dark:text-emerald-400"
+                iconBg="bg-muted/80 dark:bg-muted"
+                iconColor="text-foreground/70"
               />
               <MetricTile
                 label="Yearly Projection"
                 value={formatINR(Math.round(yearlyProjection))}
                 trendLabel="estimated annual spend"
                 icon={<IconCalendar className="h-5 w-5" />}
-                iconBg="bg-violet-500/10 dark:bg-violet-500/15"
-                iconColor="text-violet-600 dark:text-violet-400"
+                iconBg="bg-muted/80 dark:bg-muted"
+                iconColor="text-foreground/70"
               />
               {overdueSubs.length > 0 && (
                 <MetricTile
@@ -714,8 +855,8 @@ export function SubscriptionsView() {
                   value={overdueSubs.length.toString()}
                   trendLabel="need attention"
                   icon={<IconAlertTriangle className="h-5 w-5" />}
-                  iconBg="bg-rose-500/10 dark:bg-rose-500/15"
-                  iconColor="text-rose-600 dark:text-rose-400"
+                  iconBg="bg-destructive/10"
+                  iconColor="text-destructive"
                 />
               )}
             </div>
@@ -724,7 +865,8 @@ export function SubscriptionsView() {
           {/* --- Overdue Subscriptions --- */}
           {overdueSubs.length > 0 && (
             <motion.div variants={fadeUp}>
-              <Card className="border-red-200 dark:border-red-800/40 bg-red-50/50 dark:bg-red-950/10">
+              <Card className="rounded-2xl border border-border bg-card relative overflow-hidden border-red-200 dark:border-red-800/40 bg-red-50/50 dark:bg-red-950/10">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                 <CardHeader className="pb-2 pt-4 px-5">
                   <div className="flex items-center justify-between">
                     <div>
@@ -755,7 +897,7 @@ export function SubscriptionsView() {
                       return (
                         <div
                           key={sub._id}
-                          className="flex items-center gap-2 rounded-lg border border-red-200/60 dark:border-red-800/30 bg-background/80 px-3 py-2"
+                          className="flex items-center gap-2 rounded-xl border border-red-200/60 dark:border-red-800/30 bg-background px-3 py-2"
                         >
                           <ServiceLogo name={sub.name} size={20} />
                           <span className="text-sm font-medium">{sub.name}</span>
@@ -778,7 +920,7 @@ export function SubscriptionsView() {
                           <Button
                             size="icon"
                             variant="ghost"
-                            className="h-6 w-6 text-muted-foreground hover:text-emerald-600"
+                            className="h-6 w-6 text-muted-foreground hover:text-lime-600 dark:hover:text-lime-400"
                             onClick={() => markPaidMutation.mutate({ id: sub._id, frequency: sub.frequency })}
                             disabled={markPaidMutation.isPending}
                             title="Mark as Paid"
@@ -797,7 +939,8 @@ export function SubscriptionsView() {
           {/* --- Upcoming Renewals --- */}
           {upcomingRenewals.length > 0 && (
             <motion.div variants={fadeUp}>
-              <Card className="border-amber-200 dark:border-amber-800/40 bg-amber-50/50 dark:bg-amber-950/10">
+              <Card className="rounded-2xl border border-border bg-card relative overflow-hidden border-amber-200 dark:border-amber-800/40 bg-amber-50/50 dark:bg-amber-950/10">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                 <CardHeader className="pb-2 pt-4 px-5">
                   <CardTitle className="text-sm font-semibold flex items-center gap-2">
                     <IconCalendar className="h-4 w-4 text-amber-600 dark:text-amber-400" />
@@ -814,7 +957,7 @@ export function SubscriptionsView() {
                       return (
                         <div
                           key={sub._id}
-                          className="flex items-center gap-2 rounded-lg border border-amber-200/60 dark:border-amber-800/30 bg-background/80 px-3 py-2"
+                          className="flex items-center gap-2 rounded-xl border border-amber-200/60 dark:border-amber-800/30 bg-background px-3 py-2"
                         >
                           <ServiceLogo name={sub.name} size={20} />
                           <span className="text-sm font-medium">{sub.name}</span>
@@ -835,7 +978,8 @@ export function SubscriptionsView() {
 
           {/* --- Subscriptions Table --- */}
           <motion.div variants={fadeUp}>
-            <Card className="card-elevated">
+            <Card className="rounded-2xl border border-border bg-card relative overflow-hidden">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
               <CardHeader className="pb-3 px-5 pt-4">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
@@ -900,6 +1044,18 @@ export function SubscriptionsView() {
                       onCheckPayment={(sub) => checkPaymentsMutation.mutate(sub._id)}
                       onMarkPaid={(sub) => markPaidMutation.mutate({ id: sub._id, frequency: sub.frequency })}
                       showPaymentStatus
+                      onNotifyMember={(subscriptionId, memberIndex) =>
+                        notifyMemberMutation.mutate({ subscriptionId, memberIndex, type: "reminder" })
+                      }
+                      onToggleMemberStatus={(sub, memberIndex) => {
+                        if (!sub.sharedWith) return
+                        const updated = sub.sharedWith.map((m, i) =>
+                          i === memberIndex
+                            ? { ...m, status: m.status === "paid" ? "pending" as const : "paid" as const, lastPaidDate: m.status === "paid" ? undefined : new Date().toISOString().split("T")[0] }
+                            : m
+                        )
+                        updateMemberStatusMutation.mutate({ subscriptionId: sub._id, sharedWith: updated })
+                      }}
                     />
                   </TabsContent>
 
@@ -938,7 +1094,8 @@ export function SubscriptionsView() {
           {/* --- Summary by Category --- */}
           {activeSubs.length > 0 && (
             <motion.div variants={fadeUp}>
-              <Card className="card-elevated">
+              <Card className="rounded-2xl border border-border bg-card relative overflow-hidden">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                 <CardHeader className="pb-3 px-5 pt-4">
                   <CardTitle className="text-sm font-semibold">Spend by Category</CardTitle>
                   <CardDescription className="text-xs mt-0.5">
@@ -968,7 +1125,7 @@ export function SubscriptionsView() {
                                 </Badge>
                                 <span className="text-xs text-muted-foreground">{count} sub{count > 1 ? "s" : ""}</span>
                               </div>
-                              <span className="font-semibold tabular-nums text-sm">
+                              <span className="font-black tracking-tight tabular-nums text-sm">
                                 {formatINR(Math.round(monthly))}
                                 <span className="text-muted-foreground font-normal text-xs">/mo</span>
                               </span>
@@ -1168,13 +1325,13 @@ function SmartSubscriptionForm({
         {/* Match Found card */}
         {suggestion && !appliedSuggestion && !lookupFetching && (
           <div className="col-span-2">
-            <div className="rounded-lg border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50/50 dark:bg-emerald-950/10 p-3 space-y-2">
+            <div className="rounded-xl border border-lime-200 dark:border-lime-800/40 bg-lime-50/50 dark:bg-lime-950/10 p-3 space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <IconCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                  <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">Match Found</span>
+                  <IconCheck className="h-3.5 w-3.5 text-lime-600 dark:text-lime-400" />
+                  <span className="text-xs font-semibold text-lime-700 dark:text-lime-400">Match Found</span>
                 </div>
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-emerald-300 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400">
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-lime-300 dark:border-lime-700 text-lime-600 dark:text-lime-400">
                   {Math.round(suggestion.confidence * 100)}% confidence
                 </Badge>
               </div>
@@ -1207,7 +1364,7 @@ function SmartSubscriptionForm({
         {/* Applied confirmation card */}
         {appliedSuggestion && (
           <div className="col-span-2">
-            <div className="rounded-lg border border-blue-200 dark:border-blue-800/40 bg-blue-50/50 dark:bg-blue-950/10 p-3">
+            <div className="rounded-xl border border-blue-200 dark:border-blue-800/40 bg-blue-50/50 dark:bg-blue-950/10 p-3">
               <div className="flex items-center gap-1.5">
                 <IconCheck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                 <span className="text-xs text-blue-700 dark:text-blue-400">
@@ -1290,6 +1447,11 @@ function SmartSubscriptionForm({
           />
         </div>
       </div>
+
+      <Separator />
+
+      {/* --- Shared Subscription Section --- */}
+      <SharedSubscriptionSection form={form} setForm={setForm} />
     </div>
   )
 }
@@ -1390,7 +1552,299 @@ function SubscriptionForm({ form, setForm }: SubscriptionFormProps) {
           />
         </div>
       </div>
+
+      <Separator />
+
+      {/* --- Shared Subscription Section --- */}
+      <SharedSubscriptionSection form={form} setForm={setForm} />
     </div>
+  )
+}
+
+// --- Shared Subscription Section (reusable across add/edit forms) ---
+
+interface SharedSubscriptionSectionProps {
+  form: ReturnType<typeof blankForm>
+  setForm: React.Dispatch<React.SetStateAction<ReturnType<typeof blankForm>>>
+}
+
+function SharedSubscriptionSection({ form, setForm }: SharedSubscriptionSectionProps) {
+  const amount = parseFloat(form.amount) || 0
+
+  const addMember = () => {
+    setForm((prev) => ({
+      ...prev,
+      sharedWith: [...prev.sharedWith, { name: "", email: "", phone: "", share: "" }],
+    }))
+  }
+
+  const removeMember = (index: number) => {
+    setForm((prev) => ({
+      ...prev,
+      sharedWith: prev.sharedWith.filter((_, i) => i !== index),
+    }))
+  }
+
+  const updateMember = (index: number, field: string, value: string) => {
+    setForm((prev) => ({
+      ...prev,
+      sharedWith: prev.sharedWith.map((m, i) => (i === index ? { ...m, [field]: value } : m)),
+    }))
+  }
+
+  const splitEqually = () => {
+    if (form.sharedWith.length === 0) return
+    const totalPeople = form.sharedWith.length + 1 // members + the user
+    const perPerson = Math.round((amount / totalPeople) * 100) / 100
+    const remainder = Math.round((amount - perPerson * totalPeople) * 100) / 100
+
+    setForm((prev) => ({
+      ...prev,
+      userShare: (perPerson + remainder).toString(),
+      sharedWith: prev.sharedWith.map((m) => ({ ...m, share: perPerson.toString() })),
+    }))
+  }
+
+  const memberSharesTotal = form.sharedWith.reduce((sum, m) => sum + (parseFloat(m.share) || 0), 0)
+  const userShareNum = parseFloat(form.userShare) || 0
+  const allSharesTotal = memberSharesTotal + userShareNum
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <IconUsers className="h-4 w-4 text-muted-foreground" />
+          <Label className="text-sm font-medium">Shared Subscription</Label>
+        </div>
+        <Switch
+          checked={form.isShared}
+          onCheckedChange={(checked) => {
+            setForm((prev) => ({
+              ...prev,
+              isShared: checked,
+              ...(checked && prev.sharedWith.length === 0 && {
+                sharedWith: [{ name: "", email: "", phone: "", share: "" }],
+              }),
+            }))
+          }}
+        />
+      </div>
+
+      <AnimatePresence>
+        {form.isShared && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: "auto" }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2 }}
+            className="overflow-hidden"
+          >
+            <div className="space-y-3 rounded-xl border border-border bg-muted/20 p-3">
+              {/* Who pays? */}
+              <div className="space-y-2">
+                <Label className="text-xs text-muted-foreground">Who pays the full amount?</Label>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={form.paidByUser ? "default" : "outline"}
+                    className="h-7 text-xs flex-1"
+                    onClick={() => setForm((prev) => ({ ...prev, paidByUser: true }))}
+                  >
+                    I pay
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant={!form.paidByUser ? "default" : "outline"}
+                    className="h-7 text-xs flex-1"
+                    onClick={() => setForm((prev) => ({ ...prev, paidByUser: false }))}
+                  >
+                    Someone else
+                  </Button>
+                </div>
+              </div>
+
+              {/* Your share */}
+              <div className="space-y-1">
+                <Label htmlFor="user-share" className="text-xs text-muted-foreground">Your share (INR)</Label>
+                <Input
+                  id="user-share"
+                  type="number"
+                  placeholder="0"
+                  value={form.userShare}
+                  onChange={(e) => setForm((prev) => ({ ...prev, userShare: e.target.value }))}
+                  className="h-8 text-sm"
+                />
+              </div>
+
+              {/* Members */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs text-muted-foreground">Members</Label>
+                  <div className="flex gap-1">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-6 text-[11px] gap-1 px-2"
+                      onClick={splitEqually}
+                      disabled={form.sharedWith.length === 0 || amount <= 0}
+                    >
+                      <IconDivide className="h-3 w-3" />
+                      Equal Split
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="outline"
+                      className="h-6 text-[11px] gap-1 px-2"
+                      onClick={addMember}
+                    >
+                      <IconUserPlus className="h-3 w-3" />
+                      Add
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  {form.sharedWith.map((member, idx) => (
+                    <div key={idx} className="rounded-lg border border-border/60 bg-background p-2.5 space-y-2">
+                      <div className="flex items-center gap-2">
+                        {/* Avatar with initial */}
+                        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary text-xs font-bold">
+                          {member.name ? member.name.charAt(0).toUpperCase() : "?"}
+                        </div>
+                        <Input
+                          placeholder="Name"
+                          value={member.name}
+                          onChange={(e) => updateMember(idx, "name", e.target.value)}
+                          className="h-7 text-xs flex-1"
+                        />
+                        <Input
+                          placeholder="Share"
+                          type="number"
+                          value={member.share}
+                          onChange={(e) => updateMember(idx, "share", e.target.value)}
+                          className="h-7 text-xs w-20"
+                        />
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="ghost"
+                          className="h-6 w-6 shrink-0 text-muted-foreground hover:text-destructive"
+                          onClick={() => removeMember(idx)}
+                        >
+                          <IconX className="h-3 w-3" />
+                        </Button>
+                      </div>
+                      <div className="flex gap-2 pl-9">
+                        <div className="relative flex-1">
+                          <IconMail className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
+                          <Input
+                            placeholder="Email (optional)"
+                            type="email"
+                            value={member.email}
+                            onChange={(e) => updateMember(idx, "email", e.target.value)}
+                            className="h-7 text-xs pl-7"
+                          />
+                        </div>
+                        <div className="relative flex-1">
+                          <IconPhone className="absolute left-2 top-1/2 h-3 w-3 -translate-y-1/2 text-muted-foreground" />
+                          <Input
+                            placeholder="Phone (optional)"
+                            value={member.phone}
+                            onChange={(e) => updateMember(idx, "phone", e.target.value)}
+                            className="h-7 text-xs pl-7"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Split Summary */}
+              {form.sharedWith.length > 0 && amount > 0 && (
+                <div className="rounded-lg border border-border/60 bg-background p-2.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-muted-foreground">
+                      {form.sharedWith.length + 1} members total
+                    </span>
+                    <span className={`font-medium ${Math.abs(allSharesTotal - amount) < 0.01 ? "text-lime-600 dark:text-lime-400" : "text-amber-600 dark:text-amber-400"}`}>
+                      {formatINR(allSharesTotal)} / {formatINR(amount)}
+                      {Math.abs(allSharesTotal - amount) >= 0.01 && (
+                        <span className="ml-1 text-[10px]">
+                          ({allSharesTotal > amount ? "+" : ""}{formatINR(allSharesTotal - amount)})
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              {/* Auto-create split expense toggle */}
+              <div className="flex items-center justify-between">
+                <Label className="text-xs text-muted-foreground">Auto-create split on payment</Label>
+                <Switch
+                  checked={form.autoCreateSplitExpense}
+                  onCheckedChange={(checked) => setForm((prev) => ({ ...prev, autoCreateSplitExpense: checked }))}
+                />
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+// --- Shared Badge Indicator (for subscription table/cards) ---
+
+function SharedBadge({ sub }: { sub: Subscription }) {
+  if (!sub.isShared || !sub.sharedWith || sub.sharedWith.length === 0) return null
+
+  const memberCount = sub.sharedWith.length + 1 // +1 for the user
+
+  return (
+    <div className="flex items-center gap-1">
+      {/* Stacked avatar circles */}
+      <div className="flex -space-x-1.5">
+        {sub.sharedWith.slice(0, 3).map((m, i) => (
+          <div
+            key={i}
+            className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-background bg-primary/15 text-[9px] font-bold text-primary"
+            title={m.name}
+          >
+            {m.name.charAt(0).toUpperCase()}
+          </div>
+        ))}
+        {sub.sharedWith.length > 3 && (
+          <div className="flex h-5 w-5 items-center justify-center rounded-full border-2 border-background bg-muted text-[9px] font-medium text-muted-foreground">
+            +{sub.sharedWith.length - 3}
+          </div>
+        )}
+      </div>
+      <Badge variant="outline" className="text-[10px] px-1 py-0 h-4 border-primary/20 text-primary">
+        {memberCount}
+      </Badge>
+    </div>
+  )
+}
+
+// --- Member Status Dot ---
+
+function MemberStatusDot({ status }: { status: string }) {
+  const colors: Record<string, string> = {
+    paid: "bg-lime-500",
+    pending: "bg-amber-500",
+    overdue: "bg-red-500",
+  }
+  return (
+    <span
+      className={`inline-block h-2 w-2 rounded-full ${colors[status] || colors.pending}`}
+      title={status}
+    />
   )
 }
 
@@ -1407,6 +1861,8 @@ interface SubscriptionTableProps {
   onCheckPayment?: (sub: Subscription) => void
   onMarkPaid?: (sub: Subscription) => void
   showPaymentStatus?: boolean
+  onNotifyMember?: (subscriptionId: string, memberIndex?: number) => void
+  onToggleMemberStatus?: (sub: Subscription, memberIndex: number) => void
 }
 
 function SubscriptionTable({
@@ -1420,6 +1876,8 @@ function SubscriptionTable({
   onCheckPayment,
   onMarkPaid,
   showPaymentStatus,
+  onNotifyMember,
+  onToggleMemberStatus,
 }: SubscriptionTableProps) {
   if (subscriptions.length === 0) {
     return (
@@ -1433,16 +1891,16 @@ function SubscriptionTable({
     <div className="overflow-x-auto">
       <Table>
         <TableHeader>
-          <TableRow className="border-border/40 hover:bg-transparent">
-            <TableHead className="text-[11px] uppercase tracking-wider font-medium">Name</TableHead>
-            <TableHead className="text-right text-[11px] uppercase tracking-wider font-medium">Amount</TableHead>
-            <TableHead className="text-[11px] uppercase tracking-wider font-medium hidden sm:table-cell">Frequency</TableHead>
+          <TableRow className="border-border hover:bg-transparent">
+            <TableHead className="text-[11px] uppercase tracking-widest font-semibold text-muted-foreground/70">Name</TableHead>
+            <TableHead className="text-right text-[11px] uppercase tracking-widest font-semibold text-muted-foreground/70">Amount</TableHead>
+            <TableHead className="text-[11px] uppercase tracking-widest font-semibold text-muted-foreground/70 hidden sm:table-cell">Frequency</TableHead>
             {showPaymentStatus && (
-              <TableHead className="text-[11px] uppercase tracking-wider font-medium hidden sm:table-cell">Status</TableHead>
+              <TableHead className="text-[11px] uppercase tracking-widest font-semibold text-muted-foreground/70 hidden sm:table-cell">Status</TableHead>
             )}
-            <TableHead className="text-[11px] uppercase tracking-wider font-medium hidden md:table-cell">Category</TableHead>
-            <TableHead className="text-[11px] uppercase tracking-wider font-medium hidden lg:table-cell">Last Charged</TableHead>
-            <TableHead className="text-[11px] uppercase tracking-wider font-medium">Next Expected</TableHead>
+            <TableHead className="text-[11px] uppercase tracking-widest font-semibold text-muted-foreground/70 hidden md:table-cell">Category</TableHead>
+            <TableHead className="text-[11px] uppercase tracking-widest font-semibold text-muted-foreground/70 hidden lg:table-cell">Last Charged</TableHead>
+            <TableHead className="text-[11px] uppercase tracking-widest font-semibold text-muted-foreground/70">Next Expected</TableHead>
             <TableHead className="w-[140px]" />
           </TableRow>
         </TableHeader>
@@ -1455,26 +1913,35 @@ function SubscriptionTable({
             const statusBadge = paymentStatus ? PAYMENT_STATUS_BADGE[paymentStatus] : null
 
             return (
+              <React.Fragment key={sub._id}>
               <TableRow
-                key={sub._id}
-                className="h-[52px] border-border/30 group transition-colors hover:bg-muted/30"
+                className="h-[52px] border-border group transition-colors hover:bg-muted/30"
               >
                 <TableCell>
                   <div className="flex items-center gap-2.5">
                     <ServiceLogo name={sub.name} size={32} />
                     <div className="min-w-0">
-                      <p className="text-sm font-medium truncate">{sub.name}</p>
-                      {sub.notes && (
+                      <div className="flex items-center gap-1.5">
+                        <p className="text-sm font-medium truncate">{sub.name}</p>
+                        <SharedBadge sub={sub} />
+                      </div>
+                      {sub.isShared && sub.userShare != null ? (
+                        <p className="text-[11px] text-muted-foreground">
+                          Your share: {formatINR(sub.userShare)} / {formatINR(sub.amount)}
+                        </p>
+                      ) : sub.notes ? (
                         <p className="text-[11px] text-muted-foreground truncate max-w-[180px]">{sub.notes}</p>
-                      )}
+                      ) : null}
                     </div>
                   </div>
                 </TableCell>
                 <TableCell className="text-right">
-                  <div className="text-sm font-semibold tabular-nums">
-                    {formatINR(sub.amount)}
+                  <div className="text-sm font-black tracking-tight tabular-nums">
+                    {sub.isShared && sub.userShare != null ? formatINR(sub.userShare) : formatINR(sub.amount)}
                   </div>
-                  <span className="text-[11px] text-muted-foreground">{frequencyLabel(sub.frequency)}</span>
+                  <span className="text-[11px] text-muted-foreground">
+                    {sub.isShared ? "your share" : ""} {frequencyLabel(sub.frequency)}
+                  </span>
                 </TableCell>
                 <TableCell className="hidden sm:table-cell">
                   <span className="text-xs text-muted-foreground capitalize">{sub.frequency}</span>
@@ -1528,11 +1995,22 @@ function SubscriptionTable({
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-7 w-7 text-muted-foreground hover:text-emerald-600"
+                        className="h-7 w-7 text-muted-foreground hover:text-lime-600 dark:hover:text-lime-400"
                         onClick={() => onMarkPaid(sub)}
                         title="Mark as Paid"
                       >
                         <IconCheck className="h-3.5 w-3.5" />
+                      </Button>
+                    )}
+                    {sub.isShared && onNotifyMember && (
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        className="h-7 w-7 text-muted-foreground hover:text-amber-600 dark:hover:text-amber-400"
+                        onClick={() => onNotifyMember(sub._id)}
+                        title="Remind All Members"
+                      >
+                        <IconBell className="h-3.5 w-3.5" />
                       </Button>
                     )}
                     <Button
@@ -1565,6 +2043,50 @@ function SubscriptionTable({
                   </div>
                 </TableCell>
               </TableRow>
+              {/* Shared members detail row */}
+              {sub.isShared && sub.sharedWith && sub.sharedWith.length > 0 && (
+                <TableRow className="border-border hover:bg-transparent">
+                  <TableCell colSpan={showPaymentStatus ? 8 : 7} className="py-1 px-5">
+                    <div className="flex flex-wrap items-center gap-1.5 pb-1">
+                      {sub.sharedWith.map((member, mIdx) => (
+                        <div
+                          key={mIdx}
+                          className="flex items-center gap-1.5 rounded-lg border border-border/50 bg-muted/20 px-2 py-1"
+                        >
+                          <MemberStatusDot status={member.status} />
+                          <span className="text-[11px] font-medium">{member.name}</span>
+                          <span className="text-[10px] text-muted-foreground tabular-nums">
+                            {formatINR(member.share)}
+                          </span>
+                          {onToggleMemberStatus && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-4 w-4 text-muted-foreground hover:text-lime-600 dark:hover:text-lime-400"
+                              onClick={() => onToggleMemberStatus(sub, mIdx)}
+                              title={member.status === "paid" ? "Mark Pending" : "Mark Paid"}
+                            >
+                              <IconCheck className="h-2.5 w-2.5" />
+                            </Button>
+                          )}
+                          {onNotifyMember && (member.email || member.phone) && (
+                            <Button
+                              size="icon"
+                              variant="ghost"
+                              className="h-4 w-4 text-muted-foreground hover:text-amber-600 dark:hover:text-amber-400"
+                              onClick={() => onNotifyMember(sub._id, mIdx)}
+                              title={`Remind ${member.name}`}
+                            >
+                              <IconBell className="h-2.5 w-2.5" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </TableCell>
+                </TableRow>
+              )}
+              </React.Fragment>
             )
           })}
         </TableBody>
@@ -1579,12 +2101,12 @@ function SubscriptionsLoadingSkeleton() {
   return (
     <div className="space-y-4 p-4">
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
-        <Skeleton className="h-[88px] rounded-xl" />
-        <Skeleton className="h-[88px] rounded-xl" />
-        <Skeleton className="h-[88px] rounded-xl" />
+        <Skeleton className="h-[88px] rounded-2xl border border-border" />
+        <Skeleton className="h-[88px] rounded-2xl border border-border" />
+        <Skeleton className="h-[88px] rounded-2xl border border-border" />
       </div>
-      <Skeleton className="h-[400px] w-full rounded-xl" />
-      <Skeleton className="h-[200px] w-full rounded-xl" />
+      <Skeleton className="h-[400px] w-full rounded-2xl border border-border" />
+      <Skeleton className="h-[200px] w-full rounded-2xl border border-border" />
     </div>
   )
 }

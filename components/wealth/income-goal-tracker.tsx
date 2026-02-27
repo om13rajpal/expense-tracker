@@ -101,7 +101,7 @@ function ProgressRing({
   // Color based on progress
   const ringColor =
     clamped >= 80
-      ? "stroke-emerald-500"
+      ? "stroke-lime-500"
       : clamped >= 50
         ? "stroke-amber-500"
         : "stroke-blue-500"
@@ -133,7 +133,7 @@ function ProgressRing({
         />
       </svg>
       <div className="absolute flex flex-col items-center gap-0.5">
-        <span className="text-2xl font-bold tabular-nums">{Math.round(clamped)}%</span>
+        <span className="text-2xl font-black tabular-nums tracking-tight">{Math.round(clamped)}%</span>
         <span className="text-[10px] text-muted-foreground">complete</span>
       </div>
     </div>
@@ -153,7 +153,7 @@ function ChartTooltipContent({
   if (!active || !payload?.length) return null
 
   return (
-    <div className="rounded-lg border bg-background p-2.5 shadow-md">
+    <div className="rounded-xl bg-card/95 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-border p-2.5">
       <p className="text-xs font-medium text-muted-foreground mb-1.5">{label}</p>
       {payload.map((entry, i) => (
         <div key={i} className="flex items-center gap-2 text-xs">
@@ -344,7 +344,8 @@ export function IncomeGoalTracker() {
 
   if (isLoading) {
     return (
-      <Card>
+      <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <IconTarget className="h-5 w-5 text-primary" />
@@ -360,7 +361,7 @@ export function IncomeGoalTracker() {
               <Skeleton className="h-4 w-32" />
             </div>
           </div>
-          <Skeleton className="h-[180px] w-full" />
+          <Skeleton className="h-[180px] w-full rounded-2xl border border-border" />
         </CardContent>
       </Card>
     )
@@ -370,7 +371,8 @@ export function IncomeGoalTracker() {
 
   if (error) {
     return (
-      <Card>
+      <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <IconTarget className="h-5 w-5 text-primary" />
@@ -395,10 +397,10 @@ export function IncomeGoalTracker() {
           variants={fadeUp}
           initial="hidden"
           animate="show"
-          className="flex items-center justify-between rounded-lg border border-dashed border-border/60 bg-card/50 px-4 py-3"
+          className="flex items-center justify-between rounded-2xl border border-dashed border-border bg-card px-4 py-3"
         >
           <div className="flex items-center gap-3 min-w-0">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10">
+            <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/10">
               <IconCash className="h-4 w-4 text-primary" />
             </div>
             <p className="text-sm text-muted-foreground truncate">
@@ -461,7 +463,8 @@ export function IncomeGoalTracker() {
 
   return (
     <>
-      <Card>
+      <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <IconTarget className="h-5 w-5 text-primary" />
@@ -469,13 +472,13 @@ export function IncomeGoalTracker() {
           </CardTitle>
           <CardAction>
             <div className="flex items-center gap-1.5">
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={openSetGoalDialog}>
+              <Button variant="ghost" size="icon" className="size-8 rounded-xl" onClick={openSetGoalDialog}>
                 <IconEdit className="h-4 w-4" />
               </Button>
               <Button
                 variant="ghost"
                 size="icon"
-                className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                className="size-8 rounded-xl text-muted-foreground hover:text-destructive"
                 onClick={() => setShowDeleteDialog(true)}
               >
                 <IconTrash className="h-4 w-4" />
@@ -501,7 +504,7 @@ export function IncomeGoalTracker() {
             <div className="flex-1 space-y-3">
               <motion.div variants={numberPop}>
                 <p className="text-sm text-muted-foreground">Earned this fiscal year</p>
-                <p className="text-2xl font-bold tabular-nums tracking-tight">
+                <p className="text-2xl font-black tabular-nums tracking-tight">
                   {formatINR(progress?.totalIncome ?? 0)}{" "}
                   <span className="text-sm font-normal text-muted-foreground">
                     / {formatINR(goal.targetAmount)}
@@ -514,7 +517,7 @@ export function IncomeGoalTracker() {
                 {goal.onTrack ? (
                   <Badge
                     variant="outline"
-                    className="gap-1 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800"
+                    className="gap-1 bg-lime-500/10 text-lime-700 dark:text-lime-400 border-lime-200 dark:border-lime-800"
                   >
                     <IconCheck className="h-3 w-3" />
                     On Track
@@ -536,8 +539,8 @@ export function IncomeGoalTracker() {
                       variant="outline"
                       className={`gap-1 ${
                         progress.monthOverMonthGrowth >= 0
-                          ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800"
-                          : "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800"
+                          ? "bg-lime-500/10 text-lime-700 dark:text-lime-400 border-lime-200 dark:border-lime-800"
+                          : "bg-destructive/10 text-destructive border-destructive/30"
                       }`}
                     >
                       {progress.monthOverMonthGrowth >= 0 ? (
@@ -571,7 +574,7 @@ export function IncomeGoalTracker() {
                     )}
                   </p>
                 ) : (
-                  <p className="text-sm text-emerald-600 dark:text-emerald-400 font-medium">
+                  <p className="text-sm text-lime-600 dark:text-lime-400 font-medium">
                     Target reached! You have exceeded your income goal.
                   </p>
                 )}
@@ -582,7 +585,7 @@ export function IncomeGoalTracker() {
           {/* Monthly Income Breakdown Chart */}
           {chartData.length > 0 && (
             <motion.div variants={fadeUp} initial="hidden" animate="show">
-              <p className="text-sm font-medium text-muted-foreground mb-3">
+              <p className="text-sm font-semibold text-muted-foreground/70 uppercase tracking-widest mb-3">
                 Monthly Income Breakdown
               </p>
               <div className="h-[200px] w-full">
@@ -628,7 +631,7 @@ export function IncomeGoalTracker() {
           {/* Source Expectations vs Actual */}
           {goal.sources.length > 0 && progress && (
             <motion.div variants={fadeUp} initial="hidden" animate="show">
-              <p className="text-sm font-medium text-muted-foreground mb-3">
+              <p className="text-sm font-semibold text-muted-foreground/70 uppercase tracking-widest mb-3">
                 Income Sources
               </p>
               <div className="space-y-2">

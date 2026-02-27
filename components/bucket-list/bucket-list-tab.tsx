@@ -64,18 +64,18 @@ const categoryEmoji: Record<string, string> = {
 
 const categoryColors: Record<string, string> = {
   electronics: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
-  travel: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+  travel: "bg-lime-500/10 text-lime-600 dark:text-lime-400",
   vehicle: "bg-orange-500/10 text-orange-600 dark:text-orange-400",
   home: "bg-purple-500/10 text-purple-600 dark:text-purple-400",
   education: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400",
   experience: "bg-pink-500/10 text-pink-600 dark:text-pink-400",
-  fashion: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
+  fashion: "bg-destructive/10 text-destructive",
   health: "bg-green-500/10 text-green-600 dark:text-green-400",
   other: "bg-gray-500/10 text-gray-600 dark:text-gray-400",
 }
 
 const priorityConfig: Record<string, { label: string; color: string }> = {
-  high: { label: "High", color: "bg-red-500/10 text-red-600 dark:text-red-400" },
+  high: { label: "High", color: "bg-destructive/10 text-destructive" },
   medium: { label: "Med", color: "bg-yellow-500/10 text-yellow-600 dark:text-yellow-400" },
   low: { label: "Low", color: "bg-green-500/10 text-green-600 dark:text-green-400" },
 }
@@ -104,10 +104,10 @@ const sortOptions = [
 // ─── Helpers ──────────────────────────────────────────────────────────────
 
 function getProgressGradient(pct: number): string {
-  if (pct >= 75) return "from-green-500 to-emerald-400"
+  if (pct >= 75) return "from-green-500 to-lime-400"
   if (pct >= 50) return "from-yellow-500 to-amber-400"
   if (pct >= 25) return "from-orange-500 to-amber-500"
-  return "from-red-500 to-rose-400"
+  return "from-destructive to-destructive/70"
 }
 
 function formatDate(dateStr?: string): string {
@@ -278,20 +278,20 @@ export function BucketListTab() {
             <Skeleton className="h-7 w-36" />
             <Skeleton className="h-4 w-56" />
           </div>
-          <Skeleton className="h-9 w-28 rounded-lg" />
+          <Skeleton className="h-9 w-28 rounded-2xl border border-border" />
         </div>
         {/* Stats skeleton */}
         <div className="flex gap-3 overflow-x-auto pb-1">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-16 w-32 shrink-0 rounded-xl" />
+            <Skeleton key={i} className="h-16 w-32 shrink-0 rounded-2xl border border-border" />
           ))}
         </div>
         {/* Filter skeleton */}
-        <Skeleton className="h-10 w-full rounded-lg" />
+        <Skeleton className="h-10 w-full rounded-2xl border border-border" />
         {/* Grid skeleton */}
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-52 rounded-xl" />
+            <Skeleton key={i} className="h-52 rounded-2xl border border-border" />
           ))}
         </div>
       </div>
@@ -322,15 +322,15 @@ export function BucketListTab() {
         className="flex items-center justify-between"
       >
         <div>
-          <h2 className="text-xl font-semibold tracking-tight">Bucket List</h2>
-          <p className="text-sm text-muted-foreground">
+          <h2 className="text-xl font-black tracking-tight">Bucket List</h2>
+          <p className="text-sm text-muted-foreground/70">
             Track and save for your dreams
           </p>
         </div>
         <Button
           size="sm"
           onClick={() => setAddDialogOpen(true)}
-          className="gap-1.5 rounded-lg"
+          className="gap-1.5 rounded-xl"
         >
           <IconPlus size={16} />
           Add Item
@@ -352,14 +352,14 @@ export function BucketListTab() {
         ].map((stat) => (
           <div
             key={stat.label}
-            className="shrink-0 rounded-xl border bg-card px-4 py-2.5 min-w-[7.5rem]"
+            className="shrink-0 rounded-2xl border border-border bg-card relative overflow-hidden px-4 py-2.5 min-w-[7.5rem]"
           >
-            <p className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
+            <p className="text-[11px] font-medium uppercase tracking-widest text-muted-foreground/70">
               {stat.label}
             </p>
-            <p className="text-sm font-semibold tabular-nums">{stat.value}</p>
+            <p className="text-sm font-black tracking-tight tabular-nums">{stat.value}</p>
             {stat.sub && (
-              <p className="text-[10px] text-muted-foreground">{stat.sub}</p>
+              <p className="text-[10px] text-muted-foreground/70">{stat.sub}</p>
             )}
           </div>
         ))}
@@ -380,12 +380,12 @@ export function BucketListTab() {
             placeholder="Search items..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="h-9 pl-8 text-sm rounded-lg"
+            className="h-9 pl-8 text-sm rounded-xl"
           />
         </div>
 
         {/* Status */}
-        <div className="flex rounded-lg border bg-muted/40 p-0.5">
+        <div className="flex rounded-xl border bg-muted/40 p-0.5">
           {["all", "saving", "wishlist", "completed"].map((s) => (
             <button
               key={s}
@@ -403,7 +403,7 @@ export function BucketListTab() {
 
         {/* Category */}
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className="h-9 w-auto min-w-[140px] gap-1 rounded-lg text-xs">
+          <SelectTrigger className="h-9 w-auto min-w-[140px] gap-1 rounded-xl text-xs">
             <IconFilter size={14} className="text-muted-foreground" />
             <SelectValue />
           </SelectTrigger>
@@ -421,7 +421,7 @@ export function BucketListTab() {
 
         {/* Sort */}
         <Select value={sortBy} onValueChange={setSortBy}>
-          <SelectTrigger className="h-9 w-auto min-w-[120px] gap-1 rounded-lg text-xs">
+          <SelectTrigger className="h-9 w-auto min-w-[120px] gap-1 rounded-xl text-xs">
             <IconSortAscending size={14} className="text-muted-foreground" />
             <SelectValue />
           </SelectTrigger>
@@ -446,8 +446,8 @@ export function BucketListTab() {
               <Lottie animationData={mascotData} loop />
             </div>
           )}
-          <h3 className="text-lg font-semibold">No items yet</h3>
-          <p className="mt-1 text-sm text-muted-foreground max-w-xs">
+          <h3 className="text-lg font-black tracking-tight">No items yet</h3>
+          <p className="mt-1 text-sm text-muted-foreground/70 max-w-xs">
             {searchQuery || statusFilter !== "all" || categoryFilter !== "all"
               ? "No items match your filters. Try adjusting your search."
               : "Start adding things you dream of owning or experiencing."}
@@ -455,7 +455,7 @@ export function BucketListTab() {
           {!searchQuery && statusFilter === "all" && categoryFilter === "all" && (
             <Button
               size="sm"
-              className="mt-4 gap-1.5 rounded-lg"
+              className="mt-4 gap-1.5 rounded-xl"
               onClick={() => setAddDialogOpen(true)}
             >
               <IconPlus size={16} />
@@ -480,19 +480,20 @@ export function BucketListTab() {
               <motion.div
                 key={item.id}
                 variants={fadeUp}
-                className="card-elevated rounded-xl bg-card border p-4 transition-all duration-200 hover:shadow-md hover:shadow-primary/5 hover:border-primary/20 cursor-pointer group flex flex-col"
+                className="rounded-2xl border border-border bg-card relative overflow-hidden p-4 transition-all duration-200 hover:shadow-md hover:shadow-primary/5 hover:border-primary/20 cursor-pointer group flex flex-col"
                 onClick={() => handleItemClick(item)}
               >
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                 {/* Top: Emoji + Name + Badges */}
                 <div className="flex items-start gap-3">
                   {/* Category Emoji */}
-                  <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-muted/60 text-xl">
+                  <div className="flex size-11 shrink-0 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted text-xl">
                     {categoryEmoji[item.category] ?? "\u{1F381}"}
                   </div>
 
                   <div className="flex-1 min-w-0">
                     {/* Name */}
-                    <h3 className="font-semibold text-sm leading-snug truncate group-hover:text-primary transition-colors">
+                    <h3 className="font-black tracking-tight text-sm leading-snug truncate group-hover:text-primary transition-colors">
                       {item.name}
                     </h3>
 
@@ -513,7 +514,7 @@ export function BucketListTab() {
                         {priorityConfig[item.priority]?.label ?? "Low"}
                       </span>
                       {item.status === "completed" && (
-                        <span className="inline-flex items-center gap-0.5 rounded-md bg-emerald-500/10 px-1.5 py-0.5 text-[10px] font-medium text-emerald-600 dark:text-emerald-400">
+                        <span className="inline-flex items-center gap-0.5 rounded-md bg-lime-500/10 px-1.5 py-0.5 text-[10px] font-medium text-lime-600 dark:text-lime-400">
                           <IconCheck size={10} />
                           Done
                         </span>
@@ -524,7 +525,7 @@ export function BucketListTab() {
 
                 {/* Target date */}
                 {item.targetDate && (
-                  <div className="mt-2.5 flex items-center gap-1 text-[11px] text-muted-foreground">
+                  <div className="mt-2.5 flex items-center gap-1 text-[11px] text-muted-foreground/70">
                     <IconCalendar size={12} />
                     <span>{formatDate(item.targetDate)}</span>
                   </div>
@@ -534,7 +535,7 @@ export function BucketListTab() {
                 <div className="mt-3">
                   <div className="flex items-center justify-between text-[11px] mb-1">
                     <span className="font-medium tabular-nums">{progress}%</span>
-                    <span className="text-muted-foreground tabular-nums">
+                    <span className="text-muted-foreground/70 tabular-nums">
                       {formatINR(item.savedAmount)} / {formatINR(item.targetAmount)}
                     </span>
                   </div>
@@ -549,8 +550,8 @@ export function BucketListTab() {
                 </div>
 
                 {/* Bottom row: monthly + actions */}
-                <div className="mt-3 flex items-center justify-between pt-2 border-t border-border/50">
-                  <span className="text-[11px] text-muted-foreground">
+                <div className="mt-3 flex items-center justify-between pt-2 border-t border-border">
+                  <span className="text-[11px] text-muted-foreground/70">
                     {formatINR(item.monthlyAllocation)}/mo
                   </span>
 
@@ -559,7 +560,7 @@ export function BucketListTab() {
                     <Button
                       variant="ghost"
                       size="icon"
-                      className="h-7 w-7 rounded-lg text-muted-foreground hover:text-amber-500"
+                      className="size-8 rounded-xl text-muted-foreground hover:text-amber-500"
                       onClick={(e) => {
                         e.stopPropagation()
                         handleQuickFund(item)
@@ -574,7 +575,7 @@ export function BucketListTab() {
                         <Button
                           variant="ghost"
                           size="icon"
-                          className="h-7 w-7 rounded-lg text-muted-foreground"
+                          className="size-8 rounded-xl text-muted-foreground"
                           onClick={(e) => e.stopPropagation()}
                         >
                           <IconDotsVertical size={15} />

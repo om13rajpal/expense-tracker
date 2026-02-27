@@ -82,48 +82,48 @@ const quickActions = [
     label: "Spending summary",
     prompt:
       "Give me a summary of my spending patterns this month. What are my top expense categories and how do they compare to my budget?",
-    color: "text-emerald-600 dark:text-emerald-400",
-    bg: "bg-emerald-500/8",
+    color: "text-lime-600 dark:text-lime-400",
+    bg: "bg-lime-500/8",
   },
   {
     icon: IconChartLine,
     label: "Investment review",
     prompt:
       "Review my investment portfolio. How are my stocks, mutual funds, and SIPs performing? Any recommendations?",
-    color: "text-blue-600 dark:text-blue-400",
-    bg: "bg-blue-500/8",
+    color: "text-foreground/70",
+    bg: "bg-muted/80 dark:bg-muted",
   },
   {
     icon: IconTarget,
     label: "FIRE progress",
     prompt:
       "Based on my current savings rate and investments, how am I progressing toward financial independence? What's my estimated FIRE number and years to reach it?",
-    color: "text-amber-600 dark:text-amber-400",
-    bg: "bg-amber-500/8",
+    color: "text-foreground/70",
+    bg: "bg-muted/80 dark:bg-muted",
   },
   {
     icon: IconReceipt,
     label: "Budget check",
     prompt:
       "Am I on track with my budgets this month? Which categories am I overspending in and where can I save more?",
-    color: "text-violet-600 dark:text-violet-400",
-    bg: "bg-violet-500/8",
+    color: "text-foreground/70",
+    bg: "bg-muted/80 dark:bg-muted",
   },
   {
     icon: IconBulb,
     label: "Save more tips",
     prompt:
       "Analyze my spending and give me 5 specific, actionable tips to save more money based on my actual transaction patterns.",
-    color: "text-cyan-600 dark:text-cyan-400",
-    bg: "bg-cyan-500/8",
+    color: "text-foreground/70",
+    bg: "bg-muted/80 dark:bg-muted",
   },
   {
     icon: IconHeartbeat,
     label: "Financial health",
     prompt:
       "Give me an honest assessment of my financial health. Cover emergency fund, savings rate, investment rate, and what I should prioritize improving.",
-    color: "text-rose-600 dark:text-rose-400",
-    bg: "bg-rose-500/8",
+    color: "text-destructive",
+    bg: "bg-destructive/10",
   },
 ]
 
@@ -154,7 +154,7 @@ const mdComponents: Components = {
   ),
   em: ({ children }) => <em className="italic">{children}</em>,
   pre: ({ children }) => (
-    <pre className="my-2 rounded-xl bg-muted/60 p-3.5 overflow-x-auto text-[12px] leading-relaxed">
+    <pre className="my-2 rounded-xl border border-border bg-card p-3.5 overflow-x-auto text-[12px] leading-relaxed">
       {children}
     </pre>
   ),
@@ -176,11 +176,11 @@ const mdComponents: Components = {
     )
   },
   table: ({ children }) => (
-    <div className="my-2 overflow-x-auto rounded-lg border border-border/50">
+    <div className="my-2 overflow-x-auto rounded-xl border border-border bg-card">
       <table className="w-full text-[12px]">{children}</table>
     </div>
   ),
-  thead: ({ children }) => <thead className="bg-muted/50">{children}</thead>,
+  thead: ({ children }) => <thead className="bg-muted/40">{children}</thead>,
   th: ({ children }) => (
     <th className="px-3 py-2 text-left font-semibold text-foreground border-b border-border/50">
       {children}
@@ -244,7 +244,7 @@ const ChatBubble = memo(function ChatBubble({
     <div className={`flex gap-3 ${isUser ? "flex-row-reverse" : "flex-row"}`}>
       {/* Avatar */}
       <div
-        className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg mt-0.5 ${
+        className={`flex size-8 shrink-0 items-center justify-center rounded-xl mt-0.5 ${
           isUser
             ? "bg-foreground/8"
             : "bg-gradient-to-br from-primary to-chart-2"
@@ -262,9 +262,10 @@ const ChatBubble = memo(function ChatBubble({
         className={`max-w-[90%] sm:max-w-[80%] md:max-w-[75%] rounded-2xl px-3 py-2.5 sm:px-4 sm:py-3 ${
           isUser
             ? "bg-primary text-primary-foreground rounded-br-md"
-            : "bg-card border border-border/50 rounded-bl-md card-elevated"
+            : "rounded-bl-md rounded-2xl border border-border bg-card relative overflow-hidden"
         }`}
       >
+        {!isUser && <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />}
         {isUser ? (
           <p className="text-[13px] leading-relaxed whitespace-pre-wrap">
             {content}
@@ -366,7 +367,7 @@ const ThreadItem = memo(function ThreadItem({
 
   return (
     <div
-      className={`group relative flex flex-col gap-1 rounded-lg px-3 py-2.5 cursor-pointer transition-colors ${
+      className={`group relative flex flex-col gap-1 rounded-xl px-3 py-2.5 cursor-pointer transition-colors ${
         isActive
           ? "bg-primary/10 border border-primary/20"
           : "hover:bg-muted/50 border border-transparent"
@@ -407,7 +408,7 @@ const ThreadItem = memo(function ThreadItem({
           </button>
         )}
       </div>
-      <p className="text-[11px] text-muted-foreground line-clamp-1">
+      <p className="text-[11px] text-muted-foreground/70 line-clamp-1">
         {stripMarkdown(thread.preview)}
       </p>
       <div className="flex items-center gap-2 text-[11px] text-muted-foreground/60">
@@ -442,7 +443,7 @@ function ThreadSidebarContent({
       <div className="p-3 border-b border-border/40">
         <button
           onClick={onNewChat}
-          className="flex w-full items-center justify-center gap-2 rounded-lg bg-primary/10 hover:bg-primary/15 text-primary px-3 py-2 text-[12px] font-medium transition-colors"
+          className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary/10 hover:bg-primary/15 text-primary px-3 py-2 text-[12px] font-medium transition-colors"
         >
           <IconPlus className="h-3.5 w-3.5" />
           New Chat
@@ -779,7 +780,11 @@ export default function AgentPage() {
         <SiteHeader
           title="Finance Agent"
         />
-        <div className="flex flex-1 overflow-hidden min-h-0">
+        <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden hidden dark:block">
+          <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-lime-500/[0.05] blur-[200px]" />
+          <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] rounded-full bg-cyan-500/[0.04] blur-[180px]" />
+        </div>
+        <div className="relative z-[1] flex flex-1 overflow-hidden min-h-0">
           {/* ═══════════════════════════════════════════════════════════ */}
           {/* DESKTOP THREAD SIDEBAR                                     */}
           {/* ═══════════════════════════════════════════════════════════ */}
@@ -795,7 +800,7 @@ export default function AgentPage() {
                 <div className="flex items-center justify-between px-3 py-2 border-b border-border/40">
                   <div className="flex items-center gap-1.5">
                     <IconHistory className="h-3.5 w-3.5 text-muted-foreground" />
-                    <span className="text-[11px] font-medium text-muted-foreground">
+                    <span className="text-[11px] font-medium text-muted-foreground/70">
                       Conversations
                     </span>
                   </div>
@@ -832,7 +837,7 @@ export default function AgentPage() {
                   {/* Mobile: Sheet trigger */}
                   <Sheet open={threadPanelOpen} onOpenChange={setThreadPanelOpen}>
                     <SheetTrigger asChild>
-                      <button className="md:hidden flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
+                      <button className="md:hidden flex size-9 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
                         <IconHistory className="h-4 w-4" />
                       </button>
                     </SheetTrigger>
@@ -854,7 +859,7 @@ export default function AgentPage() {
                   {!threadSidebarVisible && (
                     <button
                       onClick={() => setThreadSidebarVisible(true)}
-                      className="hidden md:flex h-8 w-8 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                      className="hidden md:flex size-9 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
                       title="Show conversations"
                     >
                       <IconMenu2 className="h-4 w-4" />
@@ -888,10 +893,10 @@ export default function AgentPage() {
                   )}
 
                   {/* Title */}
-                  <h1 className="mt-4 sm:mt-6 text-xl sm:text-2xl font-bold tracking-tight text-foreground">
+                  <h1 className="mt-4 sm:mt-6 text-xl sm:text-2xl font-black tracking-tight text-foreground">
                     Finance Agent
                   </h1>
-                  <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-muted-foreground text-center max-w-sm leading-relaxed">
+                  <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm text-muted-foreground/70 text-center max-w-sm leading-relaxed">
                     I have access to all your transactions, investments, budgets,
                     and goals. Ask me anything about your finances.
                   </p>
@@ -927,7 +932,7 @@ export default function AgentPage() {
                       <button
                         key={prompt}
                         onClick={() => sendMessage(prompt)}
-                        className={`rounded-full border border-border/50 bg-card/60 px-2.5 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-[11px] text-muted-foreground transition-all hover:border-primary/30 hover:bg-primary/5 hover:text-foreground ${idx >= 4 ? "hidden sm:inline-flex" : ""}`}
+                        className={`rounded-full border border-border bg-card px-2.5 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-[11px] text-muted-foreground/70 transition-all hover:border-primary/30 hover:bg-primary/5 hover:text-foreground ${idx >= 4 ? "hidden sm:inline-flex" : ""}`}
                       >
                         {prompt}
                       </button>
@@ -937,7 +942,8 @@ export default function AgentPage() {
                   {/* Input card */}
                   <div className="w-full mt-5 sm:mt-8">
                     <form onSubmit={handleSubmit}>
-                      <div className="relative rounded-2xl border border-border/60 bg-card/80 backdrop-blur-sm shadow-sm transition-all focus-within:border-primary/40 focus-within:shadow-md focus-within:shadow-primary/5">
+                      <div className="relative rounded-2xl border border-border bg-card backdrop-blur-sm shadow-sm transition-all focus-within:border-primary/40 focus-within:shadow-md focus-within:shadow-primary/5 overflow-hidden">
+                        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                         <textarea
                           ref={textareaRef}
                           value={input}
@@ -958,7 +964,7 @@ export default function AgentPage() {
                           <button
                             type="submit"
                             disabled={!input.trim()}
-                            className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground transition-all hover:bg-primary/90 disabled:opacity-30 disabled:cursor-not-allowed"
+                            className="flex size-9 items-center justify-center rounded-xl bg-primary text-primary-foreground transition-all hover:bg-primary/90 disabled:opacity-30 disabled:cursor-not-allowed"
                           >
                             <IconSend2 className="h-4 w-4" />
                           </button>
@@ -973,14 +979,14 @@ export default function AgentPage() {
                       <button
                         key={action.label}
                         onClick={() => sendMessage(action.prompt)}
-                        className="group flex items-center gap-2 sm:gap-2.5 rounded-xl border border-border/40 bg-card/50 px-2.5 sm:px-3 py-2 sm:py-2.5 text-left transition-all hover:border-primary/20 hover:bg-card hover:shadow-sm"
+                        className="group flex items-center gap-2 sm:gap-2.5 rounded-xl border border-border bg-card px-2.5 sm:px-3 py-2 sm:py-2.5 text-left transition-all hover:border-primary/20 hover:bg-card hover:shadow-sm"
                       >
                         <div
-                          className={`flex h-6 w-6 sm:h-7 sm:w-7 shrink-0 items-center justify-center rounded-lg ${action.bg} ${action.color} transition-colors`}
+                          className={`flex size-7 sm:size-8 shrink-0 items-center justify-center rounded-xl ${action.bg} ${action.color} transition-colors`}
                         >
                           <action.icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                         </div>
-                        <span className="text-[10px] sm:text-[11px] font-medium text-muted-foreground group-hover:text-foreground transition-colors leading-tight">
+                        <span className="text-[10px] sm:text-[11px] font-medium text-muted-foreground/70 group-hover:text-foreground transition-colors leading-tight">
                           {action.label}
                         </span>
                       </button>
@@ -994,12 +1000,13 @@ export default function AgentPage() {
               /* ═══════════════════════════════════════════════════════ */
               <div className="relative flex flex-1 flex-col overflow-hidden">
                 {/* Chat header bar */}
-                <div className="flex items-center justify-between border-b border-border/40 bg-card/50 backdrop-blur-sm px-3 py-2 sm:px-4 md:px-6">
+                <div className="flex items-center justify-between border-b border-border bg-card backdrop-blur-sm px-3 py-2 sm:px-4 md:px-6 relative overflow-hidden">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
                     {/* Mobile: thread panel trigger */}
                     <Sheet open={threadPanelOpen} onOpenChange={setThreadPanelOpen}>
                       <SheetTrigger asChild>
-                        <button className="md:hidden flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
+                        <button className="md:hidden flex size-8 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors">
                           <IconHistory className="h-3.5 w-3.5" />
                         </button>
                       </SheetTrigger>
@@ -1021,7 +1028,7 @@ export default function AgentPage() {
                     {!threadSidebarVisible && (
                       <button
                         onClick={() => setThreadSidebarVisible(true)}
-                        className="hidden md:flex h-7 w-7 items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
+                        className="hidden md:flex size-8 items-center justify-center rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors"
                         title="Show conversations"
                       >
                         <IconMenu2 className="h-3.5 w-3.5" />
@@ -1033,21 +1040,21 @@ export default function AgentPage() {
                           <Lottie animationData={lottieData} loop autoplay className="h-full w-full" />
                         </div>
                       ) : (
-                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-gradient-to-br from-primary to-chart-2">
+                        <div className="flex size-8 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-chart-2">
                           <IconRobot className="h-3.5 w-3.5 text-white" />
                         </div>
                       )}
                       <div
                         className={`absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 rounded-full border-2 border-card ${
-                          isStreaming ? "bg-amber-400" : "bg-emerald-500"
+                          isStreaming ? "bg-amber-400" : "bg-lime-500"
                         }`}
                       />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-xs font-semibold leading-none truncate">
+                      <p className="text-xs font-black tracking-tight leading-none truncate">
                         Finance Agent
                       </p>
-                      <p className="text-[11px] text-muted-foreground mt-0.5">
+                      <p className="text-[11px] text-muted-foreground/70 mt-0.5">
                         {isStreaming ? "Thinking..." : "Ready"}
                       </p>
                     </div>
@@ -1059,7 +1066,7 @@ export default function AgentPage() {
                     </span>
                     <button
                       onClick={startNewChat}
-                      className="flex h-7 items-center gap-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors px-2"
+                      className="flex h-7 items-center gap-1.5 rounded-xl text-muted-foreground hover:text-foreground hover:bg-muted/50 transition-colors px-2"
                       title="New chat"
                     >
                       <IconPlus className="h-3.5 w-3.5" />
@@ -1107,7 +1114,7 @@ export default function AgentPage() {
                     onSubmit={handleSubmit}
                     className="pointer-events-auto mx-auto flex max-w-3xl items-end gap-1.5 sm:gap-2"
                   >
-                    <div className="flex-1 relative rounded-full border border-border/40 bg-background/80 backdrop-blur-xl shadow-lg ring-1 ring-white/5 transition-all focus-within:border-primary/50 focus-within:shadow-primary/10 focus-within:ring-primary/10">
+                    <div className="flex-1 relative rounded-full border border-border bg-background/80 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] ring-1 ring-white/5 transition-all focus-within:border-primary/50 focus-within:shadow-primary/10 focus-within:ring-primary/10">
                       <textarea
                         ref={textareaRef}
                         value={input}

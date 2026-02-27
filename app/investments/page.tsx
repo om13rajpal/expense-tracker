@@ -171,7 +171,7 @@ function CustomPieTooltip({ active, payload }: { active?: boolean; payload?: Arr
   if (!active || !payload?.length) return null
   const d = payload[0]
   return (
-    <div className="rounded-xl border border-border/60 bg-background/95 backdrop-blur-sm px-3.5 py-2.5 shadow-lg shadow-black/5">
+    <div className="rounded-xl bg-card/95 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-border px-3.5 py-2.5">
       <div className="text-sm font-semibold">{d.payload.name}</div>
       <div className="text-xs text-muted-foreground mt-0.5">{fmt(d.value)}</div>
     </div>
@@ -181,7 +181,7 @@ function CustomPieTooltip({ active, payload }: { active?: boolean; payload?: Arr
 function CustomBarTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ name: string; value: number; dataKey: string }>; label?: string }) {
   if (!active || !payload?.length) return null
   return (
-    <div className="rounded-xl border border-border/60 bg-background/95 backdrop-blur-sm px-3.5 py-2.5 shadow-lg shadow-black/5">
+    <div className="rounded-xl bg-card/95 backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)] border border-border px-3.5 py-2.5">
       <div className="text-sm font-semibold mb-1">{label}</div>
       {payload.map((p) => (
         <div key={p.dataKey} className="text-xs text-muted-foreground">
@@ -1034,8 +1034,12 @@ export default function InvestmentsPage() {
       <AppSidebar variant="inset" />
       <SidebarInset>
         <SiteHeader title="Investments" />
-        <div className="flex flex-1 flex-col">
-          <div className="@container/main flex flex-1 flex-col gap-4 md:gap-6 p-4 md:p-6">
+        <div className="flex flex-1 flex-col overflow-y-auto min-h-0">
+          <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden hidden dark:block">
+            <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-lime-500/[0.05] blur-[200px]" />
+            <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] rounded-full bg-cyan-500/[0.04] blur-[180px]" />
+          </div>
+          <div className="relative z-[1] @container/main flex flex-1 flex-col gap-4 md:gap-6 p-4 md:p-6">
 
             {/* ══════════════════════════════════════════════════════════════
                 SECTION 1: Portfolio Hero
@@ -1047,38 +1051,39 @@ export default function InvestmentsPage() {
             <motion.div variants={stagger} initial="hidden" animate="show" className="grid gap-4 @[640px]/main:grid-cols-2 @[1200px]/main:grid-cols-12">
               {/* Main portfolio card - spans wider */}
               <motion.div variants={fadeUp} className="@[1200px]/main:col-span-4">
-                <Card className="card-elevated @[1200px]/main:h-full bg-gradient-to-br from-background via-background to-primary/[0.03] dark:to-primary/[0.06]">
+                <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden @[1200px]/main:h-full bg-gradient-to-br from-background via-background to-primary/[0.03] dark:to-primary/[0.06]">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <CardContent className="p-5">
                     <div className="flex items-center gap-2 mb-3">
-                      <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
+                      <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10">
                         <IconWallet className="size-4 text-primary" />
                       </div>
-                      <span className="text-xs font-medium uppercase tracking-wider text-muted-foreground">Total Portfolio</span>
+                      <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">Total Portfolio</span>
                     </div>
-                    <div className="text-3xl font-bold tabular-nums tracking-tight">{fmt(portfolioTotal.current)}</div>
+                    <div className="text-3xl font-black tabular-nums tracking-tight">{fmt(portfolioTotal.current)}</div>
                     <div className="mt-1.5 flex items-center gap-2">
-                      <span className={`flex items-center gap-0.5 text-sm font-semibold ${portfolioTotal.pl >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                      <span className={`flex items-center gap-0.5 text-sm font-semibold ${portfolioTotal.pl >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
                         {portfolioTotal.pl >= 0 ? <IconArrowUp className="size-3.5" /> : <IconArrowDown className="size-3.5" />}
                         {fmt(portfolioTotal.pl)}
                       </span>
-                      <Badge variant="outline" className={`text-[11px] font-semibold ${portfolioTotal.plPercent >= 0 ? "text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800 bg-emerald-500/5" : "text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-800 bg-rose-500/5"}`}>
+                      <Badge variant="outline" className={`text-[11px] font-semibold ${portfolioTotal.plPercent >= 0 ? "text-lime-600 dark:text-lime-400 border-lime-200 dark:border-lime-800 bg-lime-500/5" : "text-destructive border-destructive/30 bg-destructive/5"}`}>
                         {portfolioTotal.plPercent >= 0 ? "+" : ""}{portfolioTotal.plPercent.toFixed(2)}%
                       </Badge>
                     </div>
-                    <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3 border-t border-border/40 pt-3">
+                    <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3 border-t border-border pt-3">
                       <div>
-                        <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Invested</div>
-                        <div className="text-sm font-semibold tabular-nums">{fmt(portfolioTotal.invested)}</div>
+                        <div className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">Invested</div>
+                        <div className="text-sm font-black tabular-nums tracking-tight">{fmt(portfolioTotal.invested)}</div>
                       </div>
                       <div>
-                        <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Day Change</div>
-                        <div className={`text-sm font-semibold tabular-nums ${dayChange >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                        <div className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">Day Change</div>
+                        <div className={`text-sm font-black tabular-nums tracking-tight ${dayChange >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
                           {dayChange >= 0 ? "+" : ""}{fmt(dayChange)}
                         </div>
                       </div>
                       <div>
-                        <div className="text-[11px] uppercase tracking-wider text-muted-foreground">XIRR</div>
-                        <div className={`text-sm font-semibold tabular-nums ${(portfolioXIRR || 0) >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                        <div className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">XIRR</div>
+                        <div className={`text-sm font-black tabular-nums tracking-tight ${(portfolioXIRR || 0) >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
                           {portfolioXIRR !== null ? `${portfolioXIRR >= 0 ? "+" : ""}${portfolioXIRR.toFixed(1)}%` : <span className="text-muted-foreground text-xs">N/A</span>}
                         </div>
                       </div>
@@ -1090,16 +1095,16 @@ export default function InvestmentsPage() {
               {/* Quick metric tiles */}
               <motion.div variants={stagger} className="@[1200px]/main:col-span-8 grid grid-cols-2 @[640px]/main:grid-cols-4 gap-3">
                 <motion.div variants={fadeUpSmall}>
-                  <Card className="card-elevated h-full relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent pointer-events-none" />
+                  <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden h-full">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardContent className="relative flex items-start gap-3 p-4">
-                      <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-indigo-500/10 dark:bg-indigo-500/15">
-                        <IconChartLine className="size-4 text-indigo-600 dark:text-indigo-400" />
+                      <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+                        <IconChartLine className="size-4 text-foreground/70" />
                       </div>
                       <div className="min-w-0">
-                        <span className="text-[11px] uppercase tracking-wider font-medium text-muted-foreground">Stocks</span>
-                        <div className="text-xl font-bold tabular-nums">{fmt(stockTotals.totalValue)}</div>
-                        <div className={`text-xs font-medium ${stockTotals.totalPL >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                        <span className="text-[11px] uppercase tracking-widest font-semibold text-muted-foreground/70">Stocks</span>
+                        <div className="text-xl font-black tabular-nums tracking-tight">{fmt(stockTotals.totalValue)}</div>
+                        <div className={`text-xs font-medium ${stockTotals.totalPL >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
                           {stockTotals.totalPL >= 0 ? "+" : ""}{stockTotals.plPercent.toFixed(1)}%
                           <span className="text-muted-foreground font-normal ml-1">({stocks.length})</span>
                         </div>
@@ -1108,16 +1113,16 @@ export default function InvestmentsPage() {
                   </Card>
                 </motion.div>
                 <motion.div variants={fadeUpSmall}>
-                  <Card className="card-elevated h-full relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent pointer-events-none" />
+                  <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden h-full">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardContent className="relative flex items-start gap-3 p-4">
-                      <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-amber-500/10 dark:bg-amber-500/15">
-                        <IconChartBar className="size-4 text-amber-600 dark:text-amber-400" />
+                      <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+                        <IconChartBar className="size-4 text-foreground/70" />
                       </div>
                       <div className="min-w-0">
-                        <span className="text-[11px] uppercase tracking-wider font-medium text-muted-foreground">Mutual Funds</span>
-                        <div className="text-xl font-bold tabular-nums">{fmt(fundTotals.current)}</div>
-                        <div className={`text-xs font-medium ${fundTotals.returns >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                        <span className="text-[11px] uppercase tracking-widest font-semibold text-muted-foreground/70">Mutual Funds</span>
+                        <div className="text-xl font-black tabular-nums tracking-tight">{fmt(fundTotals.current)}</div>
+                        <div className={`text-xs font-medium ${fundTotals.returns >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
                           {fundTotals.returns >= 0 ? "+" : ""}{fundTotals.plPercent.toFixed(1)}%
                           <span className="text-muted-foreground font-normal ml-1">({mutualFunds.length})</span>
                         </div>
@@ -1126,30 +1131,30 @@ export default function InvestmentsPage() {
                   </Card>
                 </motion.div>
                 <motion.div variants={fadeUpSmall}>
-                  <Card className="card-elevated h-full relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent pointer-events-none" />
+                  <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden h-full">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardContent className="relative flex items-start gap-3 p-4">
-                      <div className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15">
-                        <IconCoin className="size-4 text-emerald-600 dark:text-emerald-400" />
+                      <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+                        <IconCoin className="size-4 text-foreground/70" />
                       </div>
                       <div className="min-w-0">
-                        <span className="text-[11px] uppercase tracking-wider font-medium text-muted-foreground">Monthly SIP</span>
-                        <div className="text-xl font-bold tabular-nums">{fmt(sipTotals.monthlyTotal)}</div>
+                        <span className="text-[11px] uppercase tracking-widest font-semibold text-muted-foreground/70">Monthly SIP</span>
+                        <div className="text-xl font-black tabular-nums tracking-tight">{fmt(sipTotals.monthlyTotal)}</div>
                         <div className="text-xs text-muted-foreground">{sipTotals.active} active of {sipTotals.total}</div>
                       </div>
                     </CardContent>
                   </Card>
                 </motion.div>
                 <motion.div variants={fadeUpSmall}>
-                  <Card className="card-elevated h-full relative overflow-hidden">
-                    <div className={`absolute inset-0 bg-gradient-to-br ${realizedPL >= 0 ? "from-emerald-500/5" : "from-rose-500/5"} to-transparent pointer-events-none`} />
+                  <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden h-full">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardContent className="relative flex items-start gap-3 p-4">
-                      <div className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ${realizedPL >= 0 ? "bg-emerald-500/10 dark:bg-emerald-500/15" : "bg-rose-500/10 dark:bg-rose-500/15"}`}>
-                        <IconTrendingUp className={`size-4 ${realizedPL >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`} />
+                      <div className={`mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl ${realizedPL >= 0 ? "bg-lime-500/10" : "bg-destructive/10"}`}>
+                        <IconTrendingUp className={`size-4 ${realizedPL >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`} />
                       </div>
                       <div className="min-w-0">
-                        <span className="text-[11px] uppercase tracking-wider font-medium text-muted-foreground">Realized P&L</span>
-                        <div className={`text-xl font-bold tabular-nums ${realizedPL >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                        <span className="text-[11px] uppercase tracking-widest font-semibold text-muted-foreground/70">Realized P&L</span>
+                        <div className={`text-xl font-black tabular-nums tracking-tight ${realizedPL >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
                           {realizedPL >= 0 ? "+" : ""}{fmt(realizedPL)}
                         </div>
                         <div className="text-xs text-muted-foreground">{exitedStocks.length} exited positions</div>
@@ -1168,11 +1173,12 @@ export default function InvestmentsPage() {
 
                 {/* Asset Allocation + Stock Weight combined */}
                 <motion.div variants={fadeUp} className="@[1200px]/main:col-span-4">
-                  <Card className="card-elevated h-full">
+                  <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden h-full">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardHeader className="pb-2">
                       <div className="flex items-center gap-2">
-                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-500/10">
-                          <IconChartPie className="size-3.5 text-violet-500" />
+                        <div className="flex size-8 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+                          <IconChartPie className="size-3.5 text-foreground/70" />
                         </div>
                         <div>
                           <CardTitle className="text-sm font-medium">Asset Allocation</CardTitle>
@@ -1211,9 +1217,9 @@ export default function InvestmentsPage() {
                                 </div>
                               )
                             })}
-                            <div className="rounded-lg bg-muted/40 px-2.5 py-2 mt-2">
-                              <div className="text-[11px] uppercase tracking-wider text-muted-foreground">Total Invested</div>
-                              <div className="text-sm font-semibold">{fmt(portfolioTotal.invested)}</div>
+                            <div className="rounded-xl border border-border bg-card px-2.5 py-2 mt-2">
+                              <div className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">Total Invested</div>
+                              <div className="text-sm font-black tracking-tight">{fmt(portfolioTotal.invested)}</div>
                             </div>
                           </div>
                         </div>
@@ -1221,7 +1227,7 @@ export default function InvestmentsPage() {
 
                       {/* Stock weight breakdown */}
                       {stockWeightData.length > 0 && (
-                        <div className="mt-4 pt-3 border-t border-border/40">
+                        <div className="mt-4 pt-3 border-t border-border">
                           <div className="text-xs font-medium mb-2.5 text-muted-foreground">Stock Weights</div>
                           <div className="space-y-2">
                             {stockWeightData.slice(0, 5).map((s, i) => {
@@ -1249,11 +1255,12 @@ export default function InvestmentsPage() {
                 {/* Stock P&L */}
                 {stockPLData.length > 0 && (
                   <motion.div variants={fadeUp} className="@[1200px]/main:col-span-4">
-                    <Card className="card-elevated h-full">
+                    <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden h-full">
+                      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                       <CardHeader className="pb-1">
                         <div className="flex items-center gap-2">
-                          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/10">
-                            <IconTrendingUp className="size-3.5 text-emerald-500" />
+                          <div className="flex size-8 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+                            <IconTrendingUp className="size-3.5 text-foreground/70" />
                           </div>
                           <div>
                             <CardTitle className="text-sm font-medium">Stock P&L</CardTitle>
@@ -1273,17 +1280,17 @@ export default function InvestmentsPage() {
                                 <div className="flex items-center justify-between mb-1">
                                   <span className="text-xs font-medium">{entry.name}</span>
                                   <div className="flex items-center gap-1.5">
-                                    <span className={`text-xs font-semibold tabular-nums ${isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                                    <span className={`text-xs font-semibold tabular-nums ${isPositive ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
                                       {isPositive ? "+" : ""}{fmt(entry.pl)}
                                     </span>
-                                    <span className={`text-[11px] tabular-nums font-medium px-1.5 py-0.5 rounded-md ${isPositive ? "text-emerald-700 dark:text-emerald-300 bg-emerald-500/10" : "text-rose-700 dark:text-rose-300 bg-rose-500/10"}`}>
+                                    <span className={`text-[11px] tabular-nums font-medium px-1.5 py-0.5 rounded-md ${isPositive ? "text-lime-700 dark:text-lime-300 bg-lime-500/10" : "text-destructive bg-destructive/10"}`}>
                                       {isPositive ? "+" : ""}{entry.plPct}%
                                     </span>
                                   </div>
                                 </div>
                                 <div className="h-1.5 w-full rounded-full bg-muted/50 overflow-hidden">
                                   <div
-                                    className={`h-full rounded-full transition-all duration-700 ease-out ${isPositive ? "bg-gradient-to-r from-emerald-500 to-emerald-400" : "bg-gradient-to-r from-rose-500 to-rose-400"}`}
+                                    className={`h-full rounded-full transition-all duration-700 ease-out ${isPositive ? "bg-gradient-to-r from-lime-500 to-lime-400" : "bg-gradient-to-r from-destructive to-destructive/80"}`}
                                     style={{ width: `${barWidth}%` }}
                                   />
                                 </div>
@@ -1300,11 +1307,12 @@ export default function InvestmentsPage() {
                 {/* Holdings Value (invested vs current) + MF Category */}
                 <motion.div variants={fadeUp} className="@[1200px]/main:col-span-4 grid gap-4">
                   {stockBarData.length > 0 && (
-                    <Card className="card-elevated">
+                    <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
+                      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                       <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <div className="flex items-center gap-2">
-                          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-500/10">
-                            <IconStack2 className="size-3.5 text-indigo-500" />
+                          <div className="flex size-8 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+                            <IconStack2 className="size-3.5 text-foreground/70" />
                           </div>
                           <div>
                             <CardTitle className="text-sm font-medium">Holdings Value</CardTitle>
@@ -1332,11 +1340,12 @@ export default function InvestmentsPage() {
                   )}
 
                   {fundCategoryData.length > 0 && (
-                    <Card className="card-elevated">
+                    <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
+                      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                       <CardHeader className="pb-2">
                         <div className="flex items-center gap-2">
-                          <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-cyan-500/10">
-                            <IconChartPie className="size-3.5 text-cyan-500" />
+                          <div className="flex size-8 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+                            <IconChartPie className="size-3.5 text-foreground/70" />
                           </div>
                           <CardTitle className="text-sm font-medium">MF Category Split</CardTitle>
                         </div>
@@ -1380,9 +1389,9 @@ export default function InvestmentsPage() {
 
             {/* CRUD Error Banner */}
             {crudError && (
-              <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="rounded-xl border border-rose-200 dark:border-rose-800 bg-rose-50 dark:bg-rose-950/20 px-4 py-3 text-sm text-rose-700 dark:text-rose-400 flex items-center justify-between">
+              <motion.div initial={{ opacity: 0, y: -8 }} animate={{ opacity: 1, y: 0 }} className="rounded-xl border border-destructive/30 bg-destructive/5 px-4 py-3 text-sm text-destructive flex items-center justify-between">
                 <span>{crudError}</span>
-                <button onClick={() => setCrudError(null)} className="text-rose-500 hover:text-rose-700 dark:hover:text-rose-300 text-xs font-medium ml-4 px-2 py-1 rounded-md hover:bg-rose-100 dark:hover:bg-rose-900/30 transition-colors">Dismiss</button>
+                <button onClick={() => setCrudError(null)} className="text-destructive hover:text-destructive/80 text-xs font-medium ml-4 px-2 py-1 rounded-md hover:bg-destructive/10 transition-colors">Dismiss</button>
               </motion.div>
             )}
 
@@ -1391,11 +1400,11 @@ export default function InvestmentsPage() {
             ══════════════════════════════════════════════════════════════ */}
             <motion.div variants={fadeUp} initial="hidden" animate="show">
             <Tabs defaultValue="stocks" className="space-y-4">
-              <TabsList variant="line" className="inline-flex h-10 items-center gap-1 bg-transparent p-0 border-b border-border/40 w-full justify-start overflow-x-auto">
-                <TabsTrigger value="stocks" className="relative gap-1 rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent">Stocks ({stocks.length})</TabsTrigger>
-                <TabsTrigger value="stock-txns" className="relative gap-1 rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent">Stock Orders ({stockTxns.length})</TabsTrigger>
-                <TabsTrigger value="funds" className="relative gap-1 rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent">Mutual Funds ({mutualFunds.length})</TabsTrigger>
-                <TabsTrigger value="sips" className="relative gap-1 rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent">SIPs ({sips.length})</TabsTrigger>
+              <TabsList variant="line" className="h-10 border-b border-border w-full justify-start">
+                <TabsTrigger value="stocks">Stocks ({stocks.length})</TabsTrigger>
+                <TabsTrigger value="stock-txns">Stock Orders ({stockTxns.length})</TabsTrigger>
+                <TabsTrigger value="funds">Mutual Funds ({mutualFunds.length})</TabsTrigger>
+                <TabsTrigger value="sips">SIPs ({sips.length})</TabsTrigger>
               </TabsList>
 
               {/* ── STOCKS TAB ── */}
@@ -1404,7 +1413,7 @@ export default function InvestmentsPage() {
                   <Button size="sm" variant="outline" className="rounded-lg" onClick={() => setShowAddStock(!showAddStock)}>
                     <IconPlus className="mr-1.5 size-3.5" /> Add Stock
                   </Button>
-                  <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-border/60 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:border-border">
+                  <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:border-border">
                     <IconUpload className="size-3.5" />
                     Import CSV
                     <input type="file" accept=".csv" className="hidden" onChange={(e) => handleImportStocks(e.target.files?.[0])} />
@@ -1414,7 +1423,7 @@ export default function InvestmentsPage() {
                     <IconRefresh className={`mr-1.5 size-3.5 ${isRefreshing ? "animate-spin" : ""}`} /> Refresh Quotes
                   </Button>
                 </div>
-                {stockImportMsg && <div className="rounded-lg border border-border/50 bg-muted/40 px-3 py-2 text-xs text-muted-foreground">{stockImportMsg}</div>}
+                {stockImportMsg && <div className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">{stockImportMsg}</div>}
 
                 {showAddStock && (
                   <Card className="card-elevated">
@@ -1485,13 +1494,13 @@ export default function InvestmentsPage() {
                               <TableCell className="text-right tabular-nums text-sm hidden sm:table-cell">{fmt(invested)}</TableCell>
                               <TableCell className="text-right tabular-nums text-sm">{fmt(current)}{!q?.current && <span className="text-muted-foreground">*</span>}</TableCell>
                               <TableCell className="text-right">
-                                <span className={`inline-flex items-center gap-1 text-sm font-medium px-2 py-0.5 rounded-md ${pl >= 0 ? "text-emerald-700 dark:text-emerald-300 bg-emerald-500/8" : "text-rose-700 dark:text-rose-300 bg-rose-500/8"}`}>
+                                <span className={`inline-flex items-center gap-1 text-sm font-medium px-2 py-0.5 rounded-md ${pl >= 0 ? "text-lime-700 dark:text-lime-300 bg-lime-500/8" : "text-destructive bg-destructive/8"}`}>
                                   {fmt(pl)} <span className="text-[11px] opacity-75">({plPct.toFixed(1)}%)</span>
                                 </span>
                               </TableCell>
                               <TableCell className="text-right hidden sm:table-cell">
                                 {q ? (
-                                  <span className={`text-xs font-medium tabular-nums px-1.5 py-0.5 rounded-md ${q.changePercent >= 0 ? "text-emerald-700 dark:text-emerald-300 bg-emerald-500/10" : "text-rose-700 dark:text-rose-300 bg-rose-500/10"}`}>
+                                  <span className={`text-xs font-medium tabular-nums px-1.5 py-0.5 rounded-md ${q.changePercent >= 0 ? "text-lime-700 dark:text-lime-300 bg-lime-500/10" : "text-destructive bg-destructive/10"}`}>
                                     {q.changePercent >= 0 ? "+" : ""}{q.changePercent.toFixed(2)}%
                                   </span>
                                 ) : null}
@@ -1513,11 +1522,11 @@ export default function InvestmentsPage() {
                       <div className="flex gap-5 text-xs">
                         <span>Invested: <strong className="font-semibold">{fmt(stockTotals.totalInvested)}</strong></span>
                         <span>Current: <strong className="font-semibold">{fmt(stockTotals.totalValue)}</strong></span>
-                        <span className={`font-semibold ${stockTotals.totalPL >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                        <span className={`font-semibold ${stockTotals.totalPL >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
                           P&L: {fmt(stockTotals.totalPL)} ({stockTotals.plPercent.toFixed(1)}%)
                         </span>
                         {stockXIRR !== null && (
-                          <span className={`font-semibold ${stockXIRR >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                          <span className={`font-semibold ${stockXIRR >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
                             XIRR: {stockXIRR >= 0 ? "+" : ""}{stockXIRR.toFixed(1)}%
                           </span>
                         )}
@@ -1530,21 +1539,22 @@ export default function InvestmentsPage() {
               {/* ── STOCK ORDERS TAB ── */}
               <TabsContent value="stock-txns" className="space-y-4">
                 <div className="flex flex-wrap items-center gap-2">
-                  <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-border/60 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:border-border">
+                  <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:border-border">
                     <IconUpload className="size-3.5" /> Import Order History CSV
                     <input type="file" accept=".csv" className="hidden" onChange={(e) => handleImportStockTxns(e.target.files?.[0])} />
                   </label>
                   <ReplaceToggle checked={replaceStockTxns} onChange={setReplaceStockTxns} label="Replace existing on import" />
                 </div>
-                {stockTxnImportMsg && <div className="rounded-lg border border-border/50 bg-muted/40 px-3 py-2 text-xs text-muted-foreground">{stockTxnImportMsg}</div>}
+                {stockTxnImportMsg && <div className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">{stockTxnImportMsg}</div>}
 
                 {/* Exited positions summary */}
                 {exitedStocks.length > 0 && (
-                  <Card className="card-elevated">
+                  <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardHeader className="pb-2">
                       <div className="flex items-center gap-2">
-                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-500/10">
-                          <IconTrendingUp className="size-3.5 text-amber-500" />
+                        <div className="flex size-8 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+                          <IconTrendingUp className="size-3.5 text-foreground/70" />
                         </div>
                         <div>
                           <CardTitle className="text-sm font-medium">Exited Positions</CardTitle>
@@ -1555,12 +1565,12 @@ export default function InvestmentsPage() {
                     <CardContent>
                       <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
                         {exitedStocks.map((e) => (
-                          <div key={e.symbol} className="flex items-center justify-between rounded-xl border border-border/40 bg-muted/20 px-3 py-2.5 hover:bg-muted/30 transition-colors">
+                          <div key={e.symbol} className="flex items-center justify-between rounded-xl border border-border bg-card px-3 py-2.5 hover:bg-muted/30 transition-colors">
                             <div>
                               <div className="text-sm font-semibold">{e.symbol}</div>
                               <div className="text-[11px] text-muted-foreground">Buy: {fmtPrecise(e.buyValue)} → Sell: {fmtPrecise(e.sellValue)}</div>
                             </div>
-                            <span className={`text-xs font-semibold tabular-nums px-2 py-1 rounded-lg ${e.realizedPL >= 0 ? "text-emerald-700 dark:text-emerald-300 bg-emerald-500/10" : "text-rose-700 dark:text-rose-300 bg-rose-500/10"}`}>
+                            <span className={`text-xs font-semibold tabular-nums px-2 py-1 rounded-lg ${e.realizedPL >= 0 ? "text-lime-700 dark:text-lime-300 bg-lime-500/10" : "text-destructive bg-destructive/10"}`}>
                               {e.realizedPL >= 0 ? "+" : ""}{fmtPrecise(e.realizedPL)}
                             </span>
                           </div>
@@ -1608,7 +1618,7 @@ export default function InvestmentsPage() {
                                 <div className="text-[11px] text-muted-foreground max-w-[200px] truncate">{txn.stockName}</div>
                               </TableCell>
                               <TableCell>
-                                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-md ${txn.type === "BUY" ? "text-emerald-700 dark:text-emerald-300 bg-emerald-500/10" : "text-rose-700 dark:text-rose-300 bg-rose-500/10"}`}>
+                                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-md ${txn.type === "BUY" ? "text-lime-700 dark:text-lime-300 bg-lime-500/10" : "text-destructive bg-destructive/10"}`}>
                                   {txn.type}
                                 </span>
                               </TableCell>
@@ -1626,8 +1636,8 @@ export default function InvestmentsPage() {
                     <div className="flex items-center justify-between border-t bg-muted/20 px-4 py-2.5 text-xs">
                       <span className="font-semibold uppercase tracking-wider text-muted-foreground">{stockTxns.length} transaction(s)</span>
                       <div className="flex gap-4 font-medium">
-                        <span className="text-emerald-600 dark:text-emerald-400">Buy: {fmt(stockTxns.filter((t) => t.type === "BUY").reduce((s, t) => s + t.value, 0))}</span>
-                        <span className="text-rose-600 dark:text-rose-400">Sell: {fmt(stockTxns.filter((t) => t.type === "SELL").reduce((s, t) => s + t.value, 0))}</span>
+                        <span className="text-lime-600 dark:text-lime-400">Buy: {fmt(stockTxns.filter((t) => t.type === "BUY").reduce((s, t) => s + t.value, 0))}</span>
+                        <span className="text-destructive">Sell: {fmt(stockTxns.filter((t) => t.type === "SELL").reduce((s, t) => s + t.value, 0))}</span>
                       </div>
                     </div>
                   </Card>
@@ -1637,53 +1647,56 @@ export default function InvestmentsPage() {
               {/* ── MUTUAL FUNDS TAB ── */}
               <TabsContent value="funds" className="space-y-4">
                 <div className="flex flex-wrap items-center gap-2">
-                  <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-border/60 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:border-border">
+                  <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:border-border">
                     <IconUpload className="size-3.5" /> Import Holdings CSV
                     <input type="file" accept=".csv" className="hidden" onChange={(e) => handleImportFunds(e.target.files?.[0])} />
                   </label>
-                  <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-border/60 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:border-border">
+                  <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:border-border">
                     <IconUpload className="size-3.5" /> Import Order History
                     <input type="file" accept=".csv" className="hidden" onChange={(e) => handleImportFundTxns(e.target.files?.[0])} />
                   </label>
                   <ReplaceToggle checked={replaceFunds} onChange={setReplaceFunds} label="Replace holdings on import" />
                   <ReplaceToggle checked={replaceFundTxns} onChange={setReplaceFundTxns} label="Replace transactions on import" />
                 </div>
-                {fundImportMsg && <div className="rounded-lg border border-border/50 bg-muted/40 px-3 py-2 text-xs text-muted-foreground">{fundImportMsg}</div>}
-                {fundTxnImportMsg && <div className="rounded-lg border border-border/50 bg-muted/40 px-3 py-2 text-xs text-muted-foreground">{fundTxnImportMsg}</div>}
+                {fundImportMsg && <div className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">{fundImportMsg}</div>}
+                {fundTxnImportMsg && <div className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">{fundTxnImportMsg}</div>}
 
                 {/* Fund summary row */}
                 <div className="grid gap-3 sm:grid-cols-3">
-                  <Card className="card-elevated">
+                  <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Invested</span>
-                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-slate-500/10">
-                          <IconArrowUp className="size-3.5 text-slate-500" />
+                        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">Invested</span>
+                        <div className="flex size-8 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+                          <IconArrowUp className="size-3.5 text-foreground/70" />
                         </div>
                       </div>
-                      <div className="mt-2 text-2xl font-bold tabular-nums">{fmt(fundTotals.invested)}</div>
+                      <div className="mt-2 text-2xl font-black tabular-nums tracking-tight">{fmt(fundTotals.invested)}</div>
                     </CardContent>
                   </Card>
-                  <Card className="card-elevated">
+                  <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Current Value</span>
-                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-indigo-500/10">
-                          <IconChartBar className="size-3.5 text-indigo-500" />
+                        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">Current Value</span>
+                        <div className="flex size-8 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+                          <IconChartBar className="size-3.5 text-foreground/70" />
                         </div>
                       </div>
-                      <div className="mt-2 text-2xl font-bold tabular-nums">{fmt(fundTotals.current)}</div>
+                      <div className="mt-2 text-2xl font-black tabular-nums tracking-tight">{fmt(fundTotals.current)}</div>
                     </CardContent>
                   </Card>
-                  <Card className="card-elevated">
+                  <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Returns</span>
-                        <div className={`flex h-7 w-7 items-center justify-center rounded-lg ${fundTotals.returns >= 0 ? "bg-emerald-500/10" : "bg-rose-500/10"}`}>
-                          <IconTrendingUp className={`size-3.5 ${fundTotals.returns >= 0 ? "text-emerald-500" : "text-rose-500"}`} />
+                        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">Returns</span>
+                        <div className={`flex size-8 items-center justify-center rounded-xl ${fundTotals.returns >= 0 ? "bg-lime-500/10" : "bg-destructive/10"}`}>
+                          <IconTrendingUp className={`size-3.5 ${fundTotals.returns >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`} />
                         </div>
                       </div>
-                      <div className={`mt-2 text-2xl font-bold tabular-nums ${fundTotals.returns >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                      <div className={`mt-2 text-2xl font-black tabular-nums tracking-tight ${fundTotals.returns >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
                         {fmt(fundTotals.returns)} <span className="text-sm font-semibold">({fundTotals.plPercent.toFixed(1)}%)</span>
                       </div>
                     </CardContent>
@@ -1731,10 +1744,10 @@ export default function InvestmentsPage() {
                               <TableCell className="text-right tabular-nums text-sm hidden sm:table-cell">{fmt(f.investedValue)}</TableCell>
                               <TableCell className="text-right tabular-nums text-sm">{fmt(f.currentValue)}</TableCell>
                               <TableCell className="text-right">
-                                <span className={`text-sm font-medium px-2 py-0.5 rounded-md ${ret >= 0 ? "text-emerald-700 dark:text-emerald-300 bg-emerald-500/8" : "text-rose-700 dark:text-rose-300 bg-rose-500/8"}`}>{fmt(ret)}</span>
+                                <span className={`text-sm font-medium px-2 py-0.5 rounded-md ${ret >= 0 ? "text-lime-700 dark:text-lime-300 bg-lime-500/8" : "text-destructive bg-destructive/8"}`}>{fmt(ret)}</span>
                               </TableCell>
                               <TableCell className="text-right hidden sm:table-cell">
-                                <span className={`text-xs font-medium tabular-nums px-1.5 py-0.5 rounded-md ${retPct >= 0 ? "text-emerald-700 dark:text-emerald-300 bg-emerald-500/10" : "text-rose-700 dark:text-rose-300 bg-rose-500/10"}`}>
+                                <span className={`text-xs font-medium tabular-nums px-1.5 py-0.5 rounded-md ${retPct >= 0 ? "text-lime-700 dark:text-lime-300 bg-lime-500/10" : "text-destructive bg-destructive/10"}`}>
                                   {retPct >= 0 ? "+" : ""}{retPct.toFixed(1)}%
                                 </span>
                               </TableCell>
@@ -1755,11 +1768,11 @@ export default function InvestmentsPage() {
                       <div className="flex gap-5">
                         <span>Invested: <strong className="font-semibold">{fmt(fundTotals.invested)}</strong></span>
                         <span>Current: <strong className="font-semibold">{fmt(fundTotals.current)}</strong></span>
-                        <span className={`font-semibold ${fundTotals.returns >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                        <span className={`font-semibold ${fundTotals.returns >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
                           P&L: {fmt(fundTotals.returns)} ({fundTotals.plPercent.toFixed(1)}%)
                         </span>
                         {fundXIRR !== null && (
-                          <span className={`font-semibold ${fundXIRR >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                          <span className={`font-semibold ${fundXIRR >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
                             XIRR: {fundXIRR >= 0 ? "+" : ""}{fundXIRR.toFixed(1)}%
                           </span>
                         )}
@@ -1770,11 +1783,12 @@ export default function InvestmentsPage() {
 
                 {/* Recent Transactions */}
                 {mutualFundTxns.length > 0 && (
-                  <Card className="card-elevated">
+                  <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardHeader className="pb-2">
                       <div className="flex items-center gap-2">
-                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-500/10">
-                          <IconFileSpreadsheet className="size-3.5 text-sky-500" />
+                        <div className="flex size-8 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+                          <IconFileSpreadsheet className="size-3.5 text-foreground/70" />
                         </div>
                         <div>
                           <CardTitle className="text-sm font-medium">Recent MF Transactions</CardTitle>
@@ -1785,11 +1799,11 @@ export default function InvestmentsPage() {
                     <CardContent>
                       <div className="space-y-1">
                         {mutualFundTxns.slice(0, 8).map((txn) => (
-                          <div key={txn._id} className="flex items-center justify-between rounded-lg px-3 py-2.5 hover:bg-muted/30 transition-colors border-b border-border/30 last:border-0">
+                          <div key={txn._id} className="flex items-center justify-between rounded-lg px-3 py-2.5 hover:bg-muted/30 transition-colors border-b border-border last:border-0">
                             <div>
                               <div className="text-sm font-medium max-w-[300px] truncate">{txn.schemeName}</div>
                               <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                                <span className={`text-[11px] font-semibold px-1.5 py-0 rounded ${txn.transactionType === "PURCHASE" ? "text-emerald-700 dark:text-emerald-300 bg-emerald-500/10" : "text-rose-700 dark:text-rose-300 bg-rose-500/10"}`}>
+                                <span className={`text-[11px] font-semibold px-1.5 py-0 rounded ${txn.transactionType === "PURCHASE" ? "text-lime-700 dark:text-lime-300 bg-lime-500/10" : "text-destructive bg-destructive/10"}`}>
                                   {txn.transactionType}
                                 </span>
                                 {txn.date}
@@ -1813,15 +1827,15 @@ export default function InvestmentsPage() {
                   <Button size="sm" variant="outline" className="rounded-lg" onClick={() => setShowAddSip(!showAddSip)}>
                     <IconPlus className="mr-1.5 size-3.5" /> Add SIP
                   </Button>
-                  <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-border/60 px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:border-border">
+                  <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:border-border">
                     <IconUpload className="size-3.5" /> Import from MF Order History
                     <input type="file" accept=".csv" className="hidden" onChange={(e) => handleImportSips(e.target.files?.[0])} />
                   </label>
                   <ReplaceToggle checked={replaceSips} onChange={setReplaceSips} label="Replace existing on import" />
                 </div>
-                {sipImportMsg && <div className="rounded-lg border border-border/50 bg-muted/40 px-3 py-2 text-xs text-muted-foreground">{sipImportMsg}</div>}
+                {sipImportMsg && <div className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">{sipImportMsg}</div>}
                 <div className="text-[11px] text-muted-foreground/80 leading-relaxed">
-                  SIPs auto-detected from Groww MF Order History (2+ PURCHASE transactions per scheme). XIRR: {fundXIRR !== null ? <span className={`font-semibold ${fundXIRR >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>{fundXIRR >= 0 ? "+" : ""}{fundXIRR.toFixed(1)}%</span> : <span className="text-muted-foreground">N/A</span>}
+                  SIPs auto-detected from Groww MF Order History (2+ PURCHASE transactions per scheme). XIRR: {fundXIRR !== null ? <span className={`font-semibold ${fundXIRR >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>{fundXIRR >= 0 ? "+" : ""}{fundXIRR.toFixed(1)}%</span> : <span className="text-muted-foreground">N/A</span>}
                 </div>
 
                 {showAddSip && (
@@ -1846,37 +1860,40 @@ export default function InvestmentsPage() {
 
                 {/* SIP Summary */}
                 <div className="grid gap-3 sm:grid-cols-3">
-                  <Card className="card-elevated">
+                  <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Monthly Outflow</span>
-                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-violet-500/10">
-                          <IconCoin className="size-3.5 text-violet-500" />
+                        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">Monthly Outflow</span>
+                        <div className="flex size-8 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+                          <IconCoin className="size-3.5 text-foreground/70" />
                         </div>
                       </div>
-                      <div className="mt-2 text-2xl font-bold tabular-nums">{fmt(sipTotals.monthlyTotal)}</div>
+                      <div className="mt-2 text-2xl font-black tabular-nums tracking-tight">{fmt(sipTotals.monthlyTotal)}</div>
                     </CardContent>
                   </Card>
-                  <Card className="card-elevated">
+                  <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Yearly Outflow</span>
-                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-orange-500/10">
-                          <IconWallet className="size-3.5 text-orange-500" />
+                        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">Yearly Outflow</span>
+                        <div className="flex size-8 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+                          <IconWallet className="size-3.5 text-foreground/70" />
                         </div>
                       </div>
-                      <div className="mt-2 text-2xl font-bold tabular-nums">{fmt(sipTotals.yearlyTotal)}</div>
+                      <div className="mt-2 text-2xl font-black tabular-nums tracking-tight">{fmt(sipTotals.yearlyTotal)}</div>
                     </CardContent>
                   </Card>
-                  <Card className="card-elevated">
+                  <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-medium uppercase tracking-wider text-muted-foreground">Active SIPs</span>
-                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/10">
-                          <IconTrendingUp className="size-3.5 text-emerald-500" />
+                        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">Active SIPs</span>
+                        <div className="flex size-8 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+                          <IconTrendingUp className="size-3.5 text-foreground/70" />
                         </div>
                       </div>
-                      <div className="mt-2 text-2xl font-bold">{sipTotals.active} <span className="text-sm text-muted-foreground font-normal">of {sipTotals.total}</span></div>
+                      <div className="mt-2 text-2xl font-black tracking-tight">{sipTotals.active} <span className="text-sm text-muted-foreground font-normal">of {sipTotals.total}</span></div>
                     </CardContent>
                   </Card>
                 </div>
@@ -1918,7 +1935,7 @@ export default function InvestmentsPage() {
                             <TableCell className="text-right font-bold tabular-nums text-sm">{fmt(s.monthlyAmount)}</TableCell>
                             <TableCell className="text-muted-foreground text-sm">{s.startDate}</TableCell>
                             <TableCell>
-                              <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-md ${s.status === "active" ? "text-emerald-700 dark:text-emerald-300 bg-emerald-500/10" : s.status === "paused" ? "text-amber-700 dark:text-amber-300 bg-amber-500/10" : "text-rose-700 dark:text-rose-300 bg-rose-500/10"}`}>
+                              <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-md ${s.status === "active" ? "text-lime-700 dark:text-lime-300 bg-lime-500/10" : s.status === "paused" ? "text-amber-700 dark:text-amber-300 bg-amber-500/10" : "text-destructive bg-destructive/10"}`}>
                                 {s.status}
                               </span>
                             </TableCell>
@@ -1942,11 +1959,12 @@ export default function InvestmentsPage() {
 
                 {/* SIP Projection Calculator */}
                 {sipProjections && (
-                  <Card className="card-elevated">
+                  <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardHeader className="pb-2">
                       <div className="flex items-center gap-2">
-                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/10">
-                          <IconTrendingUp className="size-3.5 text-emerald-500" />
+                        <div className="flex size-8 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+                          <IconTrendingUp className="size-3.5 text-foreground/70" />
                         </div>
                         <div>
                           <CardTitle className="text-sm font-medium">SIP Projection Calculator</CardTitle>
@@ -1989,14 +2007,14 @@ export default function InvestmentsPage() {
                         {/* Projection Table */}
                         <div className="space-y-2">
                           {sipProjections.projections.map((p) => (
-                            <div key={p.years} className="flex items-center justify-between rounded-xl bg-muted/20 border border-border/30 px-3.5 py-2.5 hover:bg-muted/30 transition-colors">
+                            <div key={p.years} className="flex items-center justify-between rounded-xl bg-muted/20 border border-border px-3.5 py-2.5 hover:bg-muted/30 transition-colors">
                               <div>
                                 <div className="text-sm font-semibold">{p.years} Years</div>
                                 <div className="text-[11px] text-muted-foreground">Invested: {fmt(p.invested)}</div>
                               </div>
                               <div className="text-right">
-                                <div className="text-sm font-bold tabular-nums text-emerald-600 dark:text-emerald-400">{fmt(p.projected)}</div>
-                                <div className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400">+{fmt(p.returns)} ({p.returnPct.toFixed(0)}%)</div>
+                                <div className="text-sm font-black tabular-nums tracking-tight text-lime-600 dark:text-lime-400">{fmt(p.projected)}</div>
+                                <div className="text-[11px] font-medium text-lime-600 dark:text-lime-400">+{fmt(p.returns)} ({p.returnPct.toFixed(0)}%)</div>
                               </div>
                             </div>
                           ))}
@@ -2008,11 +2026,12 @@ export default function InvestmentsPage() {
 
                 {/* SIP Deduction Matching */}
                 {(sipMatches.length > 0 || unmatchedGrowwTxns.length > 0) && (
-                  <Card className="card-elevated">
+                  <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardHeader className="pb-2">
                       <div className="flex items-center gap-2">
-                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-sky-500/10">
-                          <IconWallet className="size-3.5 text-sky-500" />
+                        <div className="flex size-8 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+                          <IconWallet className="size-3.5 text-foreground/70" />
                         </div>
                         <div>
                           <CardTitle className="text-sm font-medium">SIP Deduction Matching</CardTitle>
@@ -2028,14 +2047,14 @@ export default function InvestmentsPage() {
                           <div className="text-xs font-semibold text-muted-foreground mb-2">Matched Deductions</div>
                           <div className="space-y-1.5">
                             {sipMatches.slice(0, 10).map((m, i) => (
-                              <div key={i} className="flex items-center justify-between rounded-xl border border-emerald-200/50 dark:border-emerald-800/30 bg-emerald-50/40 dark:bg-emerald-950/10 px-3.5 py-2.5">
+                              <div key={i} className="flex items-center justify-between rounded-xl border border-lime-200/50 dark:border-lime-800/30 bg-lime-50/40 dark:bg-lime-950/10 px-3.5 py-2.5">
                                 <div>
                                   <div className="text-xs font-semibold max-w-[260px] truncate">{m.sipName}</div>
                                   <div className="text-[11px] text-muted-foreground mt-0.5">{m.bankTxn.date} - {m.bankTxn.description.slice(0, 40)}</div>
                                 </div>
                                 <div className="text-right flex items-center gap-2">
                                   <div className="text-xs font-bold tabular-nums">{fmt(m.bankTxn.amount)}</div>
-                                  <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-md text-emerald-700 dark:text-emerald-300 bg-emerald-500/15">
+                                  <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-md text-lime-700 dark:text-lime-300 bg-lime-500/15">
                                     matched
                                   </span>
                                 </div>
@@ -2159,10 +2178,11 @@ function InvestmentsLoadingSkeleton() {
       <div className="grid gap-4 @[640px]/main:grid-cols-2 @[1200px]/main:grid-cols-12">
         {/* Main portfolio card */}
         <div className="@[1200px]/main:col-span-4">
-          <Card className="card-elevated @[1200px]/main:h-full">
+          <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden @[1200px]/main:h-full">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
             <CardContent className="p-5">
               <div className="flex items-center gap-2 mb-3">
-                <Skeleton className="h-8 w-8 rounded-lg" />
+                <Skeleton className="size-9 rounded-xl" />
                 <Skeleton className="h-3 w-24" />
               </div>
               <Skeleton className="h-9 w-44" />
@@ -2170,7 +2190,7 @@ function InvestmentsLoadingSkeleton() {
                 <Skeleton className="h-5 w-24" />
                 <Skeleton className="h-5 w-16 rounded-full" />
               </div>
-              <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3 border-t border-border/40 pt-3">
+              <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3 border-t border-border pt-3">
                 {Array.from({ length: 3 }).map((_, i) => (
                   <div key={i} className="space-y-1">
                     <Skeleton className="h-2.5 w-14" />
@@ -2184,11 +2204,12 @@ function InvestmentsLoadingSkeleton() {
         {/* Quick metric tiles */}
         <div className="@[1200px]/main:col-span-8 grid grid-cols-2 @[640px]/main:grid-cols-4 gap-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Card key={i} className="card-elevated h-full">
+            <Card key={i} className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden h-full">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
               <CardContent className="p-4">
                 <div className="flex items-center justify-between">
                   <Skeleton className="h-2.5 w-16" />
-                  <Skeleton className="h-7 w-7 rounded-lg" />
+                  <Skeleton className="size-8 rounded-xl" />
                 </div>
                 <Skeleton className="mt-2 h-6 w-28" />
                 <Skeleton className="mt-1 h-3 w-16" />
@@ -2200,10 +2221,11 @@ function InvestmentsLoadingSkeleton() {
       {/* Charts skeleton */}
       <div className="grid gap-4 @[640px]/main:grid-cols-2 @[1200px]/main:grid-cols-12">
         <div className="@[1200px]/main:col-span-4">
-          <Card className="card-elevated h-full">
+          <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden h-full">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
             <CardContent className="p-5 space-y-3">
               <div className="flex items-center gap-2">
-                <Skeleton className="h-7 w-7 rounded-lg" />
+                <Skeleton className="size-8 rounded-xl" />
                 <div className="space-y-1">
                   <Skeleton className="h-4 w-28" />
                   <Skeleton className="h-3 w-20" />
@@ -2228,16 +2250,17 @@ function InvestmentsLoadingSkeleton() {
         </div>
         <div className="@[1200px]/main:col-span-8 grid grid-cols-1 @[640px]/main:grid-cols-2 gap-4">
           {Array.from({ length: 2 }).map((_, i) => (
-            <Card key={i} className="card-elevated">
+            <Card key={i} className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
               <CardContent className="p-5 space-y-3">
                 <div className="flex items-center gap-2">
-                  <Skeleton className="h-7 w-7 rounded-lg" />
+                  <Skeleton className="size-8 rounded-xl" />
                   <div className="space-y-1">
                     <Skeleton className="h-4 w-24" />
                     <Skeleton className="h-3 w-32" />
                   </div>
                 </div>
-                <Skeleton className="h-[180px] w-full rounded-lg" />
+                <Skeleton className="h-[180px] w-full rounded-2xl border border-border" />
               </CardContent>
             </Card>
           ))}

@@ -183,14 +183,14 @@ function StatItem({
       transition={anim.transition}
       className="flex items-center gap-2 sm:gap-3 px-3 sm:px-5 py-3 sm:py-4"
     >
-      <div className="flex h-7 w-7 sm:h-9 sm:w-9 shrink-0 items-center justify-center rounded-lg bg-muted/60">
+      <div className="flex size-7 sm:size-9 shrink-0 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
         <Icon className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-muted-foreground" />
       </div>
       <div className="min-w-0">
-        <p className="text-[10px] sm:text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-0.5 truncate">
+        <p className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest mb-0.5 truncate">
           {label}
         </p>
-        <p className={`text-base sm:text-lg font-bold tabular-nums leading-tight ${colorClass || ""}`}>
+        <p className={`text-base sm:text-lg font-black tracking-tight tabular-nums leading-tight ${colorClass || ""}`}>
           {value}
           {suffix && (
             <span className="text-xs sm:text-sm font-normal text-muted-foreground"> {suffix}</span>
@@ -234,7 +234,7 @@ function BreakdownBar({
       initial={anim.initial}
       animate={anim.animate}
       transition={anim.transition}
-      className="group rounded-lg px-3 py-2.5 -mx-3 transition-colors hover:bg-muted/40"
+      className="group rounded-xl px-3 py-2.5 -mx-3 transition-colors hover:bg-muted/40"
     >
       <div className="flex items-center justify-between text-sm mb-1.5">
         <span className="flex items-center gap-2 font-medium text-foreground/90">
@@ -243,7 +243,7 @@ function BreakdownBar({
           {tooltip && <InfoTooltip text={tooltip} iconClassName="h-3 w-3" />}
         </span>
         <div className="flex items-center gap-3">
-          <span className="text-sm font-bold tabular-nums">
+          <span className="text-sm font-black tracking-tight tabular-nums">
             {score.toFixed(1)}
           </span>
           <span className="text-[11px] text-muted-foreground tabular-nums w-9 text-right">
@@ -285,10 +285,10 @@ function HealthOverviewSkeleton() {
   return (
     <div className="space-y-5">
       {/* Stat bar */}
-      <div className="card-elevated rounded-xl grid grid-cols-2 sm:grid-cols-4 divide-x divide-border/40">
+      <div className="card-elevated rounded-2xl border border-border grid grid-cols-2 sm:grid-cols-4 divide-x divide-border">
         {Array.from({ length: 4 }).map((_, i) => (
           <div key={i} className="px-5 py-4 flex items-center gap-3">
-            <Skeleton className="h-9 w-9 rounded-lg" />
+            <Skeleton className="size-9 rounded-xl" />
             <div className="space-y-1.5">
               <Skeleton className="h-3 w-16" />
               <Skeleton className="h-5 w-20" />
@@ -298,12 +298,12 @@ function HealthOverviewSkeleton() {
       </div>
       {/* Score + Breakdown */}
       <div className="grid gap-5 lg:grid-cols-5">
-        <div className="lg:col-span-2 card-elevated rounded-xl p-6 flex flex-col items-center space-y-4">
+        <div className="lg:col-span-2 card-elevated rounded-2xl border border-border p-6 flex flex-col items-center space-y-4">
           <Skeleton className="h-5 w-36" />
           <Skeleton className="h-[140px] w-[140px] rounded-full" />
           <Skeleton className="h-6 w-24 rounded-full" />
         </div>
-        <div className="lg:col-span-3 card-elevated rounded-xl p-6 space-y-4">
+        <div className="lg:col-span-3 card-elevated rounded-2xl border border-border p-6 space-y-4">
           <Skeleton className="h-5 w-36" />
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="space-y-2">
@@ -364,8 +364,9 @@ export function HealthOverview() {
       {/* Stat Bar */}
       <motion.div
         variants={fadeUp}
-        className="card-elevated rounded-xl grid grid-cols-2 sm:grid-cols-4 divide-x divide-border/40"
+        className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden grid grid-cols-2 sm:grid-cols-4 divide-x divide-border"
       >
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
         <StatItem
           icon={IconChartDonut}
           label="Score"
@@ -381,7 +382,7 @@ export function HealthOverview() {
           suffix="mo"
           index={1}
         />
-        <div className="max-sm:border-t max-sm:border-border/40">
+        <div className="max-sm:border-t max-sm:border-border">
           <StatItem
             icon={
               metrics.expenseVelocity.trend === "decreasing"
@@ -392,15 +393,15 @@ export function HealthOverview() {
             value={`${metrics.expenseVelocity.changePercent >= 0 ? "+" : ""}${metrics.expenseVelocity.changePercent.toFixed(1)}%`}
             colorClass={
               metrics.expenseVelocity.trend === "decreasing"
-                ? "text-emerald-600"
+                ? "text-lime-600 dark:text-lime-400"
                 : metrics.expenseVelocity.trend === "increasing"
-                  ? "text-rose-600"
+                  ? "text-destructive"
                   : ""
             }
             index={2}
           />
         </div>
-        <div className="max-sm:border-t max-sm:border-border/40">
+        <div className="max-sm:border-t max-sm:border-border">
           <StatItem
             icon={IconActivity}
             label="Income Consistency"
@@ -414,7 +415,8 @@ export function HealthOverview() {
       {/* Score Ring + Score Breakdown */}
       <motion.div variants={fadeUp} className="grid gap-5 lg:grid-cols-5">
         {/* Score Ring */}
-        <div className="lg:col-span-2 card-elevated rounded-xl p-6 flex flex-col items-center">
+        <div className="lg:col-span-2 card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-6 flex flex-col items-center">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
           <div className="flex items-center gap-2 self-start mb-6">
             <IconHeartbeat className="h-4 w-4 text-muted-foreground" />
             <h3 className="text-sm font-semibold">Health Score</h3>
@@ -432,7 +434,8 @@ export function HealthOverview() {
         </div>
 
         {/* Score Breakdown */}
-        <div className="lg:col-span-3 card-elevated rounded-xl p-6">
+        <div className="lg:col-span-3 card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-6">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
               <IconChartLine className="h-4 w-4 text-muted-foreground" />

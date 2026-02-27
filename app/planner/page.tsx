@@ -445,7 +445,7 @@ export default function PlannerPage() {
     if (!active || !payload?.length) return null
     const d = payload[0]
     return (
-      <div className="rounded-lg border border-border/60 bg-popover px-3 py-2 shadow-lg">
+      <div className="rounded-lg border border-border/60 bg-popover px-3 py-2 shadow-[0_8px_32px_rgba(0,0,0,0.12)] backdrop-blur-xl">
         <div className="flex items-center gap-2">
           <div className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: d.payload.color }} />
           <span className="text-sm font-medium">{d.name}</span>
@@ -458,7 +458,7 @@ export default function PlannerPage() {
   const CustomBarTooltip = ({ active, payload, label }: { active?: boolean; payload?: Array<{ dataKey: string; value: number }>; label?: string }) => {
     if (!active || !payload?.length) return null
     return (
-      <div className="rounded-lg border border-border/60 bg-popover px-3 py-2 shadow-lg">
+      <div className="rounded-lg border border-border/60 bg-popover px-3 py-2 shadow-[0_8px_32px_rgba(0,0,0,0.12)] backdrop-blur-xl">
         <p className="mb-1 text-xs font-medium text-muted-foreground">{label}</p>
         {payload.map((p) => (
           <div key={p.dataKey} className="flex items-center justify-between gap-4 text-sm">
@@ -492,7 +492,11 @@ export default function PlannerPage() {
             </div>
           }
         />
-        {children}
+        <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden hidden dark:block">
+          <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-lime-500/[0.05] blur-[200px]" />
+          <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] rounded-full bg-cyan-500/[0.04] blur-[180px]" />
+        </div>
+        <div className="relative z-[1]">{children}</div>
       </SidebarInset>
     </SidebarProvider>
   )
@@ -501,16 +505,16 @@ export default function PlannerPage() {
 
   if (authLoading || loading) {
     return shell(
-      <div className="flex flex-1 flex-col gap-4 p-4 md:p-6">
-        <div className="grid gap-4 md:grid-cols-4"><Skeleton className="h-20" /><Skeleton className="h-20" /><Skeleton className="h-20" /><Skeleton className="h-20" /></div>
-        <div className="grid gap-4 md:grid-cols-2"><Skeleton className="h-72" /><Skeleton className="h-72" /></div>
-        <div className="grid gap-4 md:grid-cols-3"><Skeleton className="h-28" /><Skeleton className="h-28" /><Skeleton className="h-28" /></div>
+      <div className="flex flex-1 flex-col overflow-y-auto min-h-0 gap-4 p-4 md:p-6">
+        <div className="grid gap-4 md:grid-cols-4"><Skeleton className="h-20 rounded-2xl border border-border" /><Skeleton className="h-20 rounded-2xl border border-border" /><Skeleton className="h-20 rounded-2xl border border-border" /><Skeleton className="h-20 rounded-2xl border border-border" /></div>
+        <div className="grid gap-4 md:grid-cols-2"><Skeleton className="h-72 rounded-2xl border border-border" /><Skeleton className="h-72 rounded-2xl border border-border" /></div>
+        <div className="grid gap-4 md:grid-cols-3"><Skeleton className="h-28 rounded-2xl border border-border" /><Skeleton className="h-28 rounded-2xl border border-border" /><Skeleton className="h-28 rounded-2xl border border-border" /></div>
       </div>
     )
   }
 
   return shell(
-    <div className="flex flex-1 flex-col gap-5 p-4 md:p-6">
+    <div className="flex flex-1 flex-col overflow-y-auto min-h-0 gap-5 p-4 md:p-6">
       {/* ─── Sticky Section Nav ─── */}
       <nav className="sticky top-0 z-10 -mx-4 -mt-4 md:-mx-6 md:-mt-6 mb-0 border-b border-border/40 bg-background/80 backdrop-blur-md">
         <div className="flex items-center gap-1 overflow-x-auto px-4 py-2 md:px-6" style={{ scrollbarWidth: "none" }}>
@@ -536,32 +540,32 @@ export default function PlannerPage() {
             <motion.div id="overview" variants={fadeUp} className="grid gap-3 grid-cols-2 lg:grid-cols-4 scroll-mt-14">
               <StatCard
                 icon={IconCash}
-                iconBg="bg-emerald-500/10"
-                iconColor="text-emerald-500"
+                iconBg="bg-lime-500/10"
+                iconColor="text-lime-500"
                 label="Monthly Income"
                 value={monthlyIncome > 0 ? formatINR(monthlyIncome) : "—"}
                 sub={monthlyIncome > 0 ? `${formatCompact(monthlyIncome * 12)}/yr` : "Set below"}
               />
               <StatCard
                 icon={IconTrendingUp}
-                iconBg="bg-indigo-500/10"
-                iconColor="text-indigo-500"
+                iconBg="bg-muted/80 dark:bg-muted"
+                iconColor="text-foreground/70"
                 label="Planned Investments"
                 value={totalInvestments > 0 ? formatINR(totalInvestments) : "—"}
                 sub={monthlyIncome > 0 && totalInvestments > 0 ? `${formatPct(totalInvestments, monthlyIncome)} of income` : linked.sips ? `${linked.sips.count} SIPs active` : "—"}
               />
               <StatCard
                 icon={IconPigMoney}
-                iconBg="bg-emerald-500/10"
-                iconColor="text-emerald-500"
+                iconBg="bg-lime-500/10"
+                iconColor="text-lime-500"
                 label="Planned Savings"
                 value={savings > 0 ? formatINR(savings) : "—"}
                 sub={linked.actualSpending ? `Actual: ${linked.actualSpending.savingsRate.toFixed(0)}% rate` : "—"}
               />
               <StatCard
                 icon={IconTarget}
-                iconBg="bg-violet-500/10"
-                iconColor="text-violet-500"
+                iconBg="bg-muted/80 dark:bg-muted"
+                iconColor="text-foreground/70"
                 label="Active Goals"
                 value={linked.goals ? `${linked.goals.length}` : "—"}
                 sub={linked.goals && linked.goals.length > 0
@@ -575,14 +579,15 @@ export default function PlannerPage() {
               {/* Left: Income + Investments */}
               <motion.div variants={fadeUpSmall} className="flex flex-col gap-4">
                 {/* Income */}
-                <div className="rounded-xl border border-border/60 bg-card p-4">
+                <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-4">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10">
-                      <IconCash className="h-4 w-4 text-emerald-500" />
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-lime-500/10">
+                      <IconCash className="h-4 w-4 text-lime-500" />
                     </div>
                     <div className="flex-1">
                       <h2 className="text-sm font-semibold">Monthly Income</h2>
-                      <p className="text-[11px] text-muted-foreground">Expected monthly earning</p>
+                      <p className="text-[11px] text-muted-foreground/70">Expected monthly earning</p>
                     </div>
                     {linked.actualSpending && linked.actualSpending.monthlyIncome > 0 && (
                       <Badge variant="secondary" className="text-[11px] tabular-nums">
@@ -606,11 +611,12 @@ export default function PlannerPage() {
                 </div>
 
                 {/* Investments */}
-                <div className="rounded-xl border border-border/60 bg-card p-4 flex-1 flex flex-col">
+                <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-4 flex-1 flex flex-col">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10">
-                        <IconTrendingUp className="h-4 w-4 text-indigo-500" />
+                      <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+                        <IconTrendingUp className="h-4 w-4 text-foreground/70" />
                       </div>
                       <h2 className="text-sm font-semibold">Investments</h2>
                     </div>
@@ -621,7 +627,7 @@ export default function PlannerPage() {
                         </Badge>
                       )}
                       {totalInvestments > 0 && (
-                        <Badge className="bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border-0 text-xs tabular-nums">
+                        <Badge className="bg-muted/80 dark:bg-muted text-foreground/70 border-0 text-xs tabular-nums">
                           {formatINR(totalInvestments)}
                         </Badge>
                       )}
@@ -661,10 +667,11 @@ export default function PlannerPage() {
               {/* Right: Pie charts */}
               <motion.div variants={fadeUpSmall} className="flex flex-col gap-4">
                 {/* Income Breakdown Pie */}
-                <div className="rounded-xl border border-border/60 bg-card p-4 flex-1 flex flex-col">
+                <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-4 flex-1 flex flex-col">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <div className="flex items-center gap-3 mb-2">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-500/10">
-                      <IconChartPie className="h-4 w-4 text-violet-500" />
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+                      <IconChartPie className="h-4 w-4 text-foreground/70" />
                     </div>
                     <h2 className="text-sm font-semibold">Income Breakdown</h2>
                   </div>
@@ -685,11 +692,11 @@ export default function PlannerPage() {
                   {monthlyIncome > 0 && (
                     <div className="grid grid-cols-2 gap-1.5 mt-1">
                       {pieData.map((d) => (
-                        <div key={d.name} className="flex items-center gap-2 rounded-lg bg-muted/30 px-2.5 py-1.5">
+                        <div key={d.name} className="flex items-center gap-2 rounded-xl border border-border bg-card px-2.5 py-1.5">
                           <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
                           <div className="min-w-0 flex-1">
-                            <p className="text-[11px] text-muted-foreground truncate">{d.name}</p>
-                            <p className="text-xs font-semibold tabular-nums">{formatCompact(d.value)}</p>
+                            <p className="text-[11px] text-muted-foreground/70 truncate">{d.name}</p>
+                            <p className="text-xs font-black tracking-tight tabular-nums">{formatCompact(d.value)}</p>
                           </div>
                           <span className="text-[11px] text-muted-foreground tabular-nums shrink-0">{formatPct(d.value, monthlyIncome)}</span>
                         </div>
@@ -700,10 +707,11 @@ export default function PlannerPage() {
 
                 {/* Investment Split Pie */}
                 {investmentPieData.length > 1 && (
-                  <div className="rounded-xl border border-border/60 bg-card p-4">
+                  <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-4">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <div className="flex items-center gap-3 mb-2">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-indigo-500/10">
-                        <IconBuildingBank className="h-4 w-4 text-indigo-500" />
+                      <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+                        <IconBuildingBank className="h-4 w-4 text-foreground/70" />
                       </div>
                       <h2 className="text-sm font-semibold">Investment Split</h2>
                     </div>
@@ -734,14 +742,15 @@ export default function PlannerPage() {
             {/* ─── Row 3: Savings / Needs / Wants ─── */}
             <motion.div id="allocation" variants={fadeUpSmall} className="grid gap-4 lg:grid-cols-3 scroll-mt-14">
               {/* Savings — expanded with goal allocation */}
-              <div className="rounded-xl border border-border/60 bg-card p-4 lg:col-span-1">
+              <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-4 lg:col-span-1">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                 <div className="flex items-center gap-2.5 mb-3">
-                  <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-emerald-500/10">
-                    <IconPigMoney className="h-4 w-4 text-emerald-500" />
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-lime-500/10">
+                    <IconPigMoney className="h-4 w-4 text-lime-500" />
                   </div>
                   <div className="min-w-0 flex-1">
                     <h3 className="text-sm font-semibold leading-tight">Savings</h3>
-                    <p className="text-[11px] text-muted-foreground leading-snug">Emergency fund, liquid cash</p>
+                    <p className="text-[11px] text-muted-foreground/70 leading-snug">Emergency fund, liquid cash</p>
                   </div>
                   {linked.budgetConfig?.savings != null && (
                     <Badge variant="outline" className="text-[11px] tabular-nums shrink-0">Budget: {linked.budgetConfig.savings}%</Badge>
@@ -753,7 +762,7 @@ export default function PlannerPage() {
                     <Input type="number" value={savings || ""} onChange={(e) => { setSavings(Number(e.target.value) || 0); setSaved(false) }} placeholder="0" className="pl-6 text-sm tabular-nums h-8" />
                   </div>
                   {monthlyIncome > 0 && savings > 0 && (
-                    <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-0 text-[11px] tabular-nums shrink-0">{formatPct(savings, monthlyIncome)}</Badge>
+                    <Badge className="bg-lime-500/10 text-lime-600 dark:text-lime-400 border-0 text-[11px] tabular-nums shrink-0">{formatPct(savings, monthlyIncome)}</Badge>
                   )}
                 </div>
                 {/* Goal allocations */}
@@ -789,7 +798,7 @@ export default function PlannerPage() {
                       return totalGoalAlloc > 0 ? (
                         <div className="flex items-center justify-between text-[11px] pt-1 border-t border-border/30">
                           <span className="text-muted-foreground">Unassigned savings</span>
-                          <span className={`font-medium tabular-nums ${remaining < 0 ? "text-destructive" : "text-emerald-500"}`}>
+                          <span className={`font-medium tabular-nums ${remaining < 0 ? "text-destructive" : "text-lime-500"}`}>
                             {formatINR(Math.abs(remaining))}{remaining < 0 ? " over" : ""}
                           </span>
                         </div>
@@ -818,7 +827,8 @@ export default function PlannerPage() {
 
             {/* ─── Row 4: Allocation Summary ─── */}
             {monthlyIncome > 0 && (
-              <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="rounded-xl border border-border/60 bg-card p-4">
+              <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="rounded-2xl border border-border bg-card relative overflow-hidden p-4">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                 <div className="flex items-center justify-between mb-3">
                   <h3 className="text-sm font-semibold">Allocation Summary</h3>
                   {overAllocated > 0 ? (
@@ -826,7 +836,7 @@ export default function PlannerPage() {
                   ) : unallocated > 0 ? (
                     <Badge variant="secondary" className="text-xs tabular-nums">{formatINR(unallocated)} unallocated</Badge>
                   ) : (
-                    <Badge className="bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-0 text-xs">Fully allocated</Badge>
+                    <Badge className="bg-lime-500/10 text-lime-600 dark:text-lime-400 border-0 text-xs">Fully allocated</Badge>
                   )}
                 </div>
                 <div className="h-3 w-full rounded-full bg-muted/50 overflow-hidden flex">
@@ -855,10 +865,11 @@ export default function PlannerPage() {
 
             {/* ─── Row 5: What-If Simulator ─── */}
             {monthlyIncome > 0 && whatIfCategories.length > 0 && (
-              <motion.div id="what-if" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="rounded-xl border border-border/60 bg-card p-5 scroll-mt-14">
+              <motion.div id="what-if" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="rounded-2xl border border-border bg-card relative overflow-hidden p-5 scroll-mt-14">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                 <div className="flex items-center gap-2.5 mb-5">
-                  <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-violet-500/10">
-                    <IconAdjustments className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+                  <div className="flex items-center justify-center size-8 rounded-xl bg-muted/80 dark:bg-muted">
+                    <IconAdjustments className="h-4 w-4 text-foreground/70" />
                   </div>
                   <h3 className="text-sm font-semibold">What-If Simulator</h3>
                   <Badge variant="outline" className="ml-auto text-xs">Interactive</Badge>
@@ -875,7 +886,7 @@ export default function PlannerPage() {
                         </div>
                         <div className="flex items-center gap-2">
                           <span className="text-xs text-muted-foreground">Current: {formatINR(cat.actual)}</span>
-                          <span className="text-sm font-bold tabular-nums">{formatINR(cat.adjusted)}</span>
+                          <span className="text-sm font-black tracking-tight tabular-nums">{formatINR(cat.adjusted)}</span>
                         </div>
                       </div>
                       <div className="flex items-center gap-3">
@@ -900,8 +911,8 @@ export default function PlannerPage() {
                       {cat.adjusted !== cat.actual && (
                         <p className={`text-xs ${
                           (cat.name === "Savings" || cat.name === "Investments")
-                            ? (cat.adjusted > cat.actual ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600")
-                            : (cat.adjusted < cat.actual ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600")
+                            ? (cat.adjusted > cat.actual ? "text-lime-600 dark:text-lime-400" : "text-destructive")
+                            : (cat.adjusted < cat.actual ? "text-lime-600 dark:text-lime-400" : "text-destructive")
                         }`}>
                           {cat.adjusted < cat.actual ? "\u2193" : "\u2191"} {formatINR(Math.abs(cat.adjusted - cat.actual))}{" "}
                           ({cat.adjusted < cat.actual ? "saving" : "spending"}{" "}
@@ -959,14 +970,15 @@ export default function PlannerPage() {
             <div id="goals" className={`grid gap-5 scroll-mt-14 ${planVsActual.length > 0 ? "lg:grid-cols-2" : ""}`}>
               {/* Plan vs Actual */}
               {planVsActual.length > 0 && (
-                <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="rounded-xl border border-border/60 bg-card p-4">
+                <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="rounded-2xl border border-border bg-card relative overflow-hidden p-4">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <div className="flex items-center gap-3 mb-3">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sky-500/10">
-                      <IconBulb className="h-4 w-4 text-sky-500" />
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+                      <IconBulb className="h-4 w-4 text-foreground/70" />
                     </div>
                     <div>
                       <h2 className="text-sm font-semibold">Plan vs Actual</h2>
-                      <p className="text-[11px] text-muted-foreground">This month&apos;s reality check</p>
+                      <p className="text-[11px] text-muted-foreground/70">This month&apos;s reality check</p>
                     </div>
                   </div>
                   <div className="h-44">
@@ -989,11 +1001,12 @@ export default function PlannerPage() {
               )}
 
               {/* Linked Goals */}
-              <motion.div variants={fadeUpSmall} className="rounded-xl border border-border/60 bg-card p-4">
+              <motion.div variants={fadeUpSmall} className="rounded-2xl border border-border bg-card relative overflow-hidden p-4">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3">
-                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-violet-500/10">
-                      <IconTarget className="h-4 w-4 text-violet-500" />
+                    <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+                      <IconTarget className="h-4 w-4 text-foreground/70" />
                     </div>
                     <h2 className="text-sm font-semibold">Savings Goals</h2>
                   </div>
@@ -1047,11 +1060,12 @@ export default function PlannerPage() {
             <div id="portfolio-tips" className={`grid gap-5 scroll-mt-14 ${(linked.sips || linked.stocks) ? "lg:grid-cols-2" : ""}`}>
               {/* Portfolio Summary */}
               {(linked.sips || linked.stocks) && (
-                <motion.div variants={fadeUpSmall} className="rounded-xl border border-border/60 bg-card p-4">
+                <motion.div variants={fadeUpSmall} className="rounded-2xl border border-border bg-card relative overflow-hidden p-4">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <div className="flex items-center justify-between mb-3">
                     <div className="flex items-center gap-3">
-                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-teal-500/10">
-                        <IconBuildingBank className="h-4 w-4 text-teal-500" />
+                      <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+                        <IconBuildingBank className="h-4 w-4 text-foreground/70" />
                       </div>
                       <h2 className="text-sm font-semibold">Current Portfolio</h2>
                     </div>
@@ -1061,17 +1075,17 @@ export default function PlannerPage() {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     {linked.sips && (
-                      <div className="rounded-lg bg-muted/30 p-3">
-                        <p className="text-[11px] text-muted-foreground">Active SIPs</p>
-                        <p className="text-lg font-bold tabular-nums">{linked.sips.count}</p>
-                        <p className="text-xs text-muted-foreground tabular-nums">{formatINR(linked.sips.totalMonthly)}/mo</p>
+                      <div className="rounded-xl border border-border bg-card p-3">
+                        <p className="text-[11px] text-muted-foreground/70">Active SIPs</p>
+                        <p className="text-lg font-black tracking-tight tabular-nums">{linked.sips.count}</p>
+                        <p className="text-xs text-muted-foreground/70 tabular-nums">{formatINR(linked.sips.totalMonthly)}/mo</p>
                       </div>
                     )}
                     {linked.stocks && (
-                      <div className="rounded-lg bg-muted/30 p-3">
-                        <p className="text-[11px] text-muted-foreground">Stocks Held</p>
-                        <p className="text-lg font-bold tabular-nums">{linked.stocks.count}</p>
-                        <p className="text-xs text-muted-foreground tabular-nums">{formatINR(linked.stocks.totalInvested)} invested</p>
+                      <div className="rounded-xl border border-border bg-card p-3">
+                        <p className="text-[11px] text-muted-foreground/70">Stocks Held</p>
+                        <p className="text-lg font-black tracking-tight tabular-nums">{linked.stocks.count}</p>
+                        <p className="text-xs text-muted-foreground/70 tabular-nums">{formatINR(linked.stocks.totalInvested)} invested</p>
                       </div>
                     )}
                   </div>
@@ -1079,9 +1093,10 @@ export default function PlannerPage() {
               )}
 
               {/* Quick Tips */}
-              <motion.div variants={fadeUpSmall} className="rounded-xl border border-border/60 bg-card p-4">
+              <motion.div variants={fadeUpSmall} className="rounded-2xl border border-border bg-card relative overflow-hidden p-4">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                 <div className="flex items-start gap-2.5">
-                  <IconInfoCircle className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
+                  <IconInfoCircle className="h-4 w-4 text-foreground/70 mt-0.5 shrink-0" />
                   <div className="space-y-1.5 text-xs text-muted-foreground">
                     {linked.budgetConfig ? (
                       <p>
@@ -1116,15 +1131,16 @@ function StatCard({ icon: Icon, iconBg, iconColor, label, value, sub }: {
   icon: React.ElementType; iconBg: string; iconColor: string; label: string; value: string; sub: string
 }) {
   return (
-    <div className="rounded-xl border border-border/60 bg-card p-3">
+    <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-3">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
       <div className="flex items-center gap-2.5">
-        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${iconBg}`}>
+        <div className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${iconBg}`}>
           <Icon className={`h-4 w-4 ${iconColor}`} />
         </div>
         <div className="min-w-0">
-          <p className="text-[11px] text-muted-foreground truncate">{label}</p>
-          <p className="text-sm font-bold tabular-nums truncate">{value}</p>
-          <p className="text-[11px] text-muted-foreground tabular-nums truncate">{sub}</p>
+          <p className="text-[11px] text-muted-foreground/70 truncate">{label}</p>
+          <p className="text-sm font-black tracking-tight tabular-nums truncate">{value}</p>
+          <p className="text-[11px] text-muted-foreground/70 tabular-nums truncate">{sub}</p>
         </div>
       </div>
     </div>
@@ -1139,14 +1155,15 @@ interface AllocationCardProps {
 
 function AllocationCard({ icon: Icon, iconBg, iconColor, label, hint, value, onChange, pctStr, badgeColor, budgetPct }: AllocationCardProps) {
   return (
-    <div className="rounded-xl border border-border/60 bg-card p-4">
+    <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-4">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
       <div className="flex items-center gap-2.5 mb-3">
-        <div className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-lg ${iconBg}`}>
+        <div className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${iconBg}`}>
           <Icon className={`h-4 w-4 ${iconColor}`} />
         </div>
         <div className="min-w-0 flex-1">
           <h3 className="text-sm font-semibold leading-tight">{label}</h3>
-          <p className="text-[11px] text-muted-foreground leading-snug">{hint}</p>
+          <p className="text-[11px] text-muted-foreground/70 leading-snug">{hint}</p>
         </div>
         {budgetPct != null && (
           <Badge variant="outline" className="text-[11px] tabular-nums shrink-0">Budget: {budgetPct}%</Badge>
@@ -1170,13 +1187,13 @@ function ImpactCard({ label, value, isPositive, subtitle }: {
     ? `${value >= 0 ? "+" : ""}${formatINR(value)}`
     : value
   return (
-    <div className="rounded-lg bg-muted/30 p-3">
-      <p className="text-[11px] text-muted-foreground uppercase tracking-wider">{label}</p>
-      <p className={`text-lg font-bold tabular-nums ${
-        isPositive === true ? "text-emerald-600 dark:text-emerald-400" :
-        isPositive === false ? "text-rose-600" : ""
+    <div className="rounded-xl border border-border bg-card p-3">
+      <p className="text-[11px] text-muted-foreground/70 uppercase tracking-widest">{label}</p>
+      <p className={`text-lg font-black tracking-tight tabular-nums ${
+        isPositive === true ? "text-lime-600 dark:text-lime-400" :
+        isPositive === false ? "text-destructive" : ""
       }`}>{displayValue}</p>
-      {subtitle && <p className="text-[11px] text-muted-foreground">{subtitle}</p>}
+      {subtitle && <p className="text-[11px] text-muted-foreground/70">{subtitle}</p>}
     </div>
   )
 }
@@ -1184,20 +1201,20 @@ function ImpactCard({ label, value, isPositive, subtitle }: {
 // ─── AI Plan Analysis Section ───
 
 const PLAN_SEVERITY_STYLES: Record<string, { border: string; bg: string; text: string }> = {
-  positive: { border: "border-emerald-200/70 dark:border-emerald-800/50", bg: "bg-emerald-50/50 dark:bg-emerald-950/20", text: "text-emerald-600 dark:text-emerald-400" },
+  positive: { border: "border-lime-200/70 dark:border-lime-800/50", bg: "bg-lime-50/50 dark:bg-lime-950/20", text: "text-lime-600 dark:text-lime-400" },
   warning: { border: "border-amber-200/70 dark:border-amber-800/50", bg: "bg-amber-50/50 dark:bg-amber-950/20", text: "text-amber-600 dark:text-amber-400" },
-  critical: { border: "border-rose-200/70 dark:border-rose-800/50", bg: "bg-rose-50/50 dark:bg-rose-950/20", text: "text-rose-600 dark:text-rose-400" },
+  critical: { border: "border-destructive/30 dark:border-destructive/40", bg: "bg-destructive/5 dark:bg-destructive/10", text: "text-destructive" },
 }
 
 const PLAN_IMPACT_STYLES: Record<string, { dot: string; text: string }> = {
-  high: { dot: "bg-rose-500", text: "text-rose-600 dark:text-rose-400" },
+  high: { dot: "bg-destructive", text: "text-destructive" },
   medium: { dot: "bg-amber-500", text: "text-amber-600 dark:text-amber-400" },
-  low: { dot: "bg-emerald-500", text: "text-emerald-600 dark:text-emerald-400" },
+  low: { dot: "bg-lime-500", text: "text-lime-600 dark:text-lime-400" },
 }
 
 const PLAN_STATUS_STYLES: Record<string, { label: string; color: string; bg: string }> = {
-  on_track: { label: "On track", color: "text-emerald-700 dark:text-emerald-300", bg: "bg-emerald-100 dark:bg-emerald-900/40" },
-  over: { label: "Over", color: "text-rose-700 dark:text-rose-300", bg: "bg-rose-100 dark:bg-rose-900/40" },
+  on_track: { label: "On track", color: "text-lime-700 dark:text-lime-300", bg: "bg-lime-100 dark:bg-lime-900/40" },
+  over: { label: "Over", color: "text-destructive", bg: "bg-destructive/10" },
   under: { label: "Under", color: "text-blue-700 dark:text-blue-300", bg: "bg-blue-100 dark:bg-blue-900/40" },
 }
 
@@ -1206,7 +1223,7 @@ function PlanScoreRing({ score }: { score: number }) {
   const stroke = 6
   const circumference = 2 * Math.PI * radius
   const offset = circumference - (score / 100) * circumference
-  const color = score >= 75 ? "text-emerald-500" : score >= 50 ? "text-amber-500" : "text-rose-500"
+  const color = score >= 75 ? "text-lime-500" : score >= 50 ? "text-amber-500" : "text-destructive"
 
   return (
     <div className="relative shrink-0" style={{ width: 100, height: 100 }}>
@@ -1215,7 +1232,7 @@ function PlanScoreRing({ score }: { score: number }) {
         <circle cx="50" cy="50" r={radius} fill="none" strokeWidth={stroke} strokeLinecap="round" strokeDasharray={circumference} strokeDashoffset={offset} className={`${color} transition-all duration-1000 ease-out`} style={{ stroke: "currentColor" }} />
       </svg>
       <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className={`text-2xl font-bold tabular-nums ${color}`}>{score}</span>
+        <span className={`text-2xl font-black tracking-tight tabular-nums ${color}`}>{score}</span>
         <span className="text-[11px] text-muted-foreground">/ 100</span>
       </div>
     </div>
@@ -1231,8 +1248,8 @@ function PlannerAiSection() {
   const header = (
     <div className="flex items-center justify-between gap-3">
       <div className="flex items-center gap-3">
-        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-purple-500/10 dark:bg-purple-500/15">
-          <IconSparkles className="h-[18px] w-[18px] text-purple-600 dark:text-purple-400" />
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+          <IconSparkles className="h-[18px] w-[18px] text-foreground/70" />
         </div>
         <div className="min-w-0">
           <h3 className="text-sm font-semibold leading-tight">AI Plan Analysis</h3>
@@ -1261,7 +1278,7 @@ function PlannerAiSection() {
     return (
       <div className="space-y-4">
         {header}
-        <div className="rounded-xl border bg-card p-5">
+        <div className="rounded-2xl border border-border bg-card p-5">
           <div className="flex items-center gap-5">
             <Skeleton className="h-[100px] w-[100px] rounded-full shrink-0" />
             <div className="flex-1 space-y-2">
@@ -1272,9 +1289,9 @@ function PlannerAiSection() {
           </div>
         </div>
         <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-          <Skeleton className="h-20 rounded-xl" /><Skeleton className="h-20 rounded-xl" /><Skeleton className="h-20 rounded-xl" /><Skeleton className="h-20 rounded-xl" />
+          <Skeleton className="h-20 rounded-2xl border border-border" /><Skeleton className="h-20 rounded-2xl border border-border" /><Skeleton className="h-20 rounded-2xl border border-border" /><Skeleton className="h-20 rounded-2xl border border-border" />
         </div>
-        <Skeleton className="h-32 rounded-xl" />
+        <Skeleton className="h-32 rounded-2xl border border-border" />
       </div>
     )
   }
@@ -1284,13 +1301,13 @@ function PlannerAiSection() {
     return (
       <div className="space-y-4">
         {header}
-        <div className="rounded-xl border border-rose-200/80 bg-rose-50/50 p-4 dark:border-rose-900/50 dark:bg-rose-950/30">
+        <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4 dark:border-destructive/40 dark:bg-destructive/10">
           <div className="flex items-start gap-3">
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-rose-100 dark:bg-rose-900/50">
-              <IconAlertTriangle className="h-4 w-4 text-rose-600 dark:text-rose-400" />
+            <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-destructive/10">
+              <IconAlertTriangle className="h-4 w-4 text-destructive" />
             </div>
             <div className="min-w-0 space-y-2">
-              <p className="text-sm font-medium text-rose-700 dark:text-rose-300">{error}</p>
+              <p className="text-sm font-medium text-destructive">{error}</p>
               <Button variant="outline" size="sm" onClick={() => regenerate()} className="h-7 gap-1 text-xs">
                 <IconRefresh className="h-3.5 w-3.5" /> Retry
               </Button>
@@ -1306,9 +1323,10 @@ function PlannerAiSection() {
     return (
       <div className="space-y-4">
         {header}
-        <div className="flex flex-col items-center justify-center rounded-xl border bg-card py-10 text-center">
-          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-purple-500/10">
-            <IconSparkles className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+        <div className="flex flex-col items-center justify-center rounded-2xl border border-border bg-card relative overflow-hidden py-10 text-center">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+          <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-muted/80 dark:bg-muted">
+            <IconSparkles className="h-5 w-5 text-foreground/70" />
           </div>
           <p className="text-sm font-medium">No plan analysis yet</p>
           <p className="mt-1 text-xs text-muted-foreground">Click Regenerate to get AI insights on your financial plan</p>
@@ -1323,7 +1341,7 @@ function PlannerAiSection() {
     { label: "Needs", pct: data.allocationReview.needsPct, target: 50, color: "bg-blue-500", trackColor: "bg-blue-100 dark:bg-blue-900/30", textColor: "text-blue-600 dark:text-blue-400" },
     { label: "Wants", pct: data.allocationReview.wantsPct, target: 30, color: "bg-amber-500", trackColor: "bg-amber-100 dark:bg-amber-900/30", textColor: "text-amber-600 dark:text-amber-400" },
     { label: "Investments", pct: data.allocationReview.investmentsPct, target: 12, color: "bg-indigo-500", trackColor: "bg-indigo-100 dark:bg-indigo-900/30", textColor: "text-indigo-600 dark:text-indigo-400" },
-    { label: "Savings", pct: data.allocationReview.savingsPct, target: 8, color: "bg-emerald-500", trackColor: "bg-emerald-100 dark:bg-emerald-900/30", textColor: "text-emerald-600 dark:text-emerald-400" },
+    { label: "Savings", pct: data.allocationReview.savingsPct, target: 8, color: "bg-lime-500", trackColor: "bg-lime-100 dark:bg-lime-900/30", textColor: "text-lime-600 dark:text-lime-400" },
   ]
 
   return (
@@ -1338,7 +1356,8 @@ function PlannerAiSection() {
       )}
 
       {/* 1. Score Ring + Summary */}
-      <div className="rounded-xl border bg-card p-5">
+      <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
         <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start">
           <PlanScoreRing score={data.planScore} />
           <div className="flex-1 min-w-0">
@@ -1353,8 +1372,8 @@ function PlannerAiSection() {
       </div>
 
       {/* 2. Allocation Breakdown */}
-      <div className={`rounded-xl border ${severity.border} ${severity.bg} p-5`}>
-        <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Allocation Breakdown</h4>
+      <div className={`rounded-2xl border ${severity.border} ${severity.bg} p-5`}>
+        <h4 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">Allocation Breakdown</h4>
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           {allocBuckets.map((b) => (
             <div key={b.label}>
@@ -1374,13 +1393,14 @@ function PlannerAiSection() {
 
       {/* 3. Plan vs Actual */}
       {data.planVsActual.length > 0 && (
-        <div className="rounded-xl border bg-card p-5">
-          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Plan vs Actual</h4>
+        <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+          <h4 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">Plan vs Actual</h4>
           <div className="space-y-3">
             {data.planVsActual.map((item) => {
               const statusStyle = PLAN_STATUS_STYLES[item.status] || PLAN_STATUS_STYLES.on_track
               const barPct = item.planned > 0 ? (item.actual / item.planned) * 100 : 0
-              const barColor = item.status === "over" ? "bg-rose-500" : item.status === "under" ? "bg-blue-500" : "bg-emerald-500"
+              const barColor = item.status === "over" ? "bg-destructive" : item.status === "under" ? "bg-blue-500" : "bg-lime-500"
               return (
                 <div key={item.category}>
                   <div className="flex items-center justify-between">
@@ -1406,30 +1426,31 @@ function PlannerAiSection() {
 
       {/* 4. Goal Feasibility */}
       {data.goalFeasibility.length > 0 && (
-        <div className="rounded-xl border bg-card p-5">
-          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Goal Feasibility</h4>
+        <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+          <h4 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">Goal Feasibility</h4>
           <div className="space-y-3">
             {data.goalFeasibility.map((goal) => {
               const pctDone = goal.targetAmount > 0 ? (goal.currentAmount / goal.targetAmount) * 100 : 0
               return (
-                <div key={goal.goalName} className="rounded-lg border bg-muted/20 p-3">
+                <div key={goal.goalName} className="rounded-xl border border-border bg-card p-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2 min-w-0">
-                      <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${goal.feasible ? "bg-emerald-100 dark:bg-emerald-900/40" : "bg-amber-100 dark:bg-amber-900/40"}`}>
+                      <div className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full ${goal.feasible ? "bg-lime-100 dark:bg-lime-900/40" : "bg-amber-100 dark:bg-amber-900/40"}`}>
                         {goal.feasible
-                          ? <IconCircleCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
+                          ? <IconCircleCheck className="h-3.5 w-3.5 text-lime-600 dark:text-lime-400" />
                           : <IconAlertCircle className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
                         }
                       </div>
                       <span className="text-sm font-semibold truncate">{goal.goalName}</span>
                     </div>
-                    <span className={`shrink-0 inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${goal.feasible ? "text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-900/40" : "text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/40"}`}>
+                    <span className={`shrink-0 inline-flex rounded-full px-2 py-0.5 text-[11px] font-medium ${goal.feasible ? "text-lime-700 dark:text-lime-300 bg-lime-100 dark:bg-lime-900/40" : "text-amber-700 dark:text-amber-300 bg-amber-100 dark:bg-amber-900/40"}`}>
                       {goal.feasible ? "On track" : "At risk"}
                     </span>
                   </div>
                   {/* Progress bar */}
                   <div className="mt-2 h-1.5 w-full overflow-hidden rounded-full bg-muted/50">
-                    <div className={`h-full rounded-full transition-all duration-700 ${goal.feasible ? "bg-emerald-500" : "bg-amber-500"}`} style={{ width: `${Math.min(pctDone, 100)}%` }} />
+                    <div className={`h-full rounded-full transition-all duration-700 ${goal.feasible ? "bg-lime-500" : "bg-amber-500"}`} style={{ width: `${Math.min(pctDone, 100)}%` }} />
                   </div>
                   <div className="mt-2 flex items-center justify-between text-xs text-muted-foreground">
                     <span className="tabular-nums">{formatINR(goal.currentAmount)} of {formatINR(goal.targetAmount)}</span>
@@ -1437,7 +1458,7 @@ function PlannerAiSection() {
                       {goal.monthlySaving > 0 ? `${formatINR(goal.monthlySaving)}/mo \u2022 ${goal.monthsToGoal} mo left` : "No monthly saving"}
                     </span>
                   </div>
-                  <p className={`mt-1.5 text-xs ${goal.feasible ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"}`}>
+                  <p className={`mt-1.5 text-xs ${goal.feasible ? "text-lime-600 dark:text-lime-400" : "text-amber-600 dark:text-amber-400"}`}>
                     {goal.suggestion}
                   </p>
                 </div>
@@ -1450,12 +1471,13 @@ function PlannerAiSection() {
       {/* 5. Recommendations */}
       {data.recommendations.length > 0 && (
         <div>
-          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">Recommendations</h4>
+          <h4 className="mb-3 text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">Recommendations</h4>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {data.recommendations.map((rec, i) => {
               const impact = PLAN_IMPACT_STYLES[rec.impact] || PLAN_IMPACT_STYLES.low
               return (
-                <div key={i} className="relative rounded-xl border bg-card p-4">
+                <div key={i} className="relative rounded-2xl border border-border bg-card overflow-hidden p-4">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <div className="absolute right-3 top-3 flex items-center gap-1">
                     <span className={`h-1.5 w-1.5 rounded-full ${impact.dot}`} />
                     <span className={`text-[11px] font-medium ${impact.text}`}>{rec.impact}</span>
@@ -1471,11 +1493,11 @@ function PlannerAiSection() {
       )}
 
       {/* 6. Key Takeaway Callout */}
-      <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+      <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4">
         <div className="flex items-start gap-3">
           <IconSparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
           <div className="min-w-0">
-            <p className="text-xs font-semibold uppercase tracking-wider text-primary">Key Takeaway</p>
+            <p className="text-xs font-semibold uppercase tracking-widest text-primary">Key Takeaway</p>
             <p className="mt-1 text-sm leading-relaxed">{data.keyTakeaway}</p>
           </div>
         </div>

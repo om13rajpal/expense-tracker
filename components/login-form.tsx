@@ -8,6 +8,7 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { Mail, Lock } from "lucide-react"
+import { IconBrandOpenai } from "@tabler/icons-react"
 import { toast } from "sonner"
 
 import { Button } from "@/components/ui/button"
@@ -57,14 +58,10 @@ export function LoginForm() {
   }
 
   return (
-    <Card className="border border-border/70 bg-card/90 shadow-xl backdrop-blur">
-      <CardHeader className="space-y-2">
-        <CardTitle className="text-2xl font-semibold">Welcome back</CardTitle>
-        <CardDescription>Access your finance workspace</CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
+    <div className="space-y-6">
+      {/* Title removed, rendered in page.tsx */}
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-2">
             <Label htmlFor="username">Username</Label>
             <div className="relative">
               <Mail className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
@@ -76,7 +73,7 @@ export function LoginForm() {
                 onChange={(e) => setUsername(e.target.value)}
                 required
                 disabled={isLoading}
-                className="pl-10"
+                className="pl-10 h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl transition-all hover:bg-white/10 focus-visible:ring-1 focus-visible:ring-lime-400/50 focus-visible:border-lime-400/50 focus-visible:bg-white/10"
               />
             </div>
           </div>
@@ -93,19 +90,46 @@ export function LoginForm() {
                 onChange={(e) => setPassword(e.target.value)}
                 required
                 disabled={isLoading}
-                className="pl-10"
+                className="pl-10 h-12 bg-white/5 border-white/10 text-white placeholder:text-white/30 rounded-xl transition-all hover:bg-white/10 focus-visible:ring-1 focus-visible:ring-lime-400/50 focus-visible:border-lime-400/50 focus-visible:bg-white/10"
               />
             </div>
           </div>
 
-          <Button type="submit" disabled={isLoading} className="w-full">
-            {isLoading ? "Logging in..." : "Sign in"}
+          <Button
+            type="submit"
+            disabled={isLoading}
+            className="w-full h-12 rounded-xl bg-lime-400 text-black hover:bg-lime-300 font-bold tracking-wide transition-all hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_20px_rgba(163,230,53,0.2)] mt-6"
+          >
+            {isLoading ? "Authenticating..." : "Sign In"}
           </Button>
-          <p className="text-xs text-muted-foreground">
-            Protected by encrypted session storage and JWT verification.
+
+          {/* Divider */}
+          <div className="relative my-6">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-white/10" />
+            </div>
+            <div className="relative flex justify-center text-xs">
+              <span className="bg-black px-3 text-white/30 uppercase tracking-widest font-semibold">or</span>
+            </div>
+          </div>
+
+          {/* ChatGPT Connect */}
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              toast.info("Log in first, then connect ChatGPT from Settings")
+            }}
+            className="w-full h-12 rounded-xl border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white font-medium tracking-wide transition-all"
+          >
+            <IconBrandOpenai className="h-5 w-5 mr-2 text-emerald-400" />
+            Sign in with ChatGPT
+          </Button>
+
+          <p className="text-xs text-white/30 text-center mt-6 uppercase tracking-widest font-semibold">
+            Protected Workspace
           </p>
         </form>
-      </CardContent>
-    </Card>
+    </div>
   )
 }

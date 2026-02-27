@@ -3,7 +3,9 @@ import { Sora, JetBrains_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { KeyboardShortcutsProvider } from "@/components/keyboard-shortcuts-provider";
+
 import { Toaster } from "@/components/ui/sonner";
+import { PageTransitionWrapper } from "@/components/page-transition-wrapper";
 import "./globals.css";
 
 const sora = Sora({
@@ -34,14 +36,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="en" suppressHydrationWarning className="dark">
       <body className={`${sora.variable} ${jetbrainsMono.variable} antialiased`}>
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="dark" forcedTheme="dark" disableTransitionOnChange>
           <QueryProvider>
             <KeyboardShortcutsProvider>
-              {children}
+              <PageTransitionWrapper>
+                {children}
+              </PageTransitionWrapper>
             </KeyboardShortcutsProvider>
-            <Toaster position="bottom-right" richColors closeButton />
+            <Toaster position="bottom-right" richColors closeButton theme="dark" />
           </QueryProvider>
         </ThemeProvider>
       </body>

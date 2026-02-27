@@ -59,6 +59,7 @@ import {
 import { calculateBalanceTrend } from "@/lib/balance-utils"
 import { isCompletedStatus, toDate } from "@/lib/utils"
 import { stagger, fadeUp, fadeUpSmall, numberPop } from "@/lib/motion"
+import { BentoTile } from "@/components/ui/bento-tile"
 import { MonthSelector } from "@/components/month-selector"
 import { MonthlySummaryCard } from "@/components/monthly-summary-card"
 import { WeeklyAnalyticsContent } from "@/components/weekly-analytics-content"
@@ -84,16 +85,16 @@ const TREND_COLORS = ["var(--chart-1)", "var(--chart-2)", "var(--chart-3)", "var
 function ChartTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null
   return (
-    <div className="rounded-xl border border-border/60 bg-card/95 backdrop-blur-sm px-4 py-3 shadow-lg">
-      <p className="text-xs font-medium text-muted-foreground mb-1.5">{label}</p>
+    <div className="rounded-xl border border-border bg-card/95 px-4 py-3" style={{ backdropFilter: "blur(24px)", boxShadow: "0 8px 32px rgba(0,0,0,0.12)", borderRadius: 16 }}>
+      <p className="text-xs font-medium text-muted-foreground/70 mb-1.5">{label}</p>
       {payload.map((entry: any, i: number) => (
         <div key={i} className="flex items-center gap-2">
           <div
             className="size-2 rounded-full"
             style={{ backgroundColor: entry.color }}
           />
-          <span className="text-xs text-muted-foreground capitalize">{entry.dataKey}:</span>
-          <span className="text-sm font-semibold tabular-nums">{formatCurrency(entry.value)}</span>
+          <span className="text-xs text-muted-foreground/70 capitalize">{entry.dataKey}:</span>
+          <span className="text-sm font-black tracking-tight tabular-nums">{formatCurrency(entry.value)}</span>
         </div>
       ))}
     </div>
@@ -104,16 +105,16 @@ function ChartTooltip({ active, payload, label }: any) {
 function ComparisonTooltip({ active, payload, label }: any) {
   if (!active || !payload?.length) return null
   return (
-    <div className="rounded-xl border border-border/60 bg-card/95 backdrop-blur-sm px-4 py-3 shadow-lg">
-      <p className="text-xs font-medium text-muted-foreground mb-1.5">{label}</p>
+    <div className="rounded-xl border border-border bg-card/95 px-4 py-3" style={{ backdropFilter: "blur(24px)", boxShadow: "0 8px 32px rgba(0,0,0,0.12)", borderRadius: 16 }}>
+      <p className="text-xs font-medium text-muted-foreground/70 mb-1.5">{label}</p>
       {payload.map((entry: any, i: number) => (
         <div key={i} className="flex items-center gap-2">
           <div
             className="size-2 rounded-full"
             style={{ backgroundColor: entry.color }}
           />
-          <span className="text-xs text-muted-foreground">{entry.name}:</span>
-          <span className="text-sm font-semibold tabular-nums">{formatCurrency(entry.value)}</span>
+          <span className="text-xs text-muted-foreground/70">{entry.name}:</span>
+          <span className="text-sm font-black tracking-tight tabular-nums">{formatCurrency(entry.value)}</span>
         </div>
       ))}
     </div>
@@ -123,7 +124,7 @@ function ComparisonTooltip({ active, payload, label }: any) {
 // Chart legend rendered below each chart
 function ChartLegend({ items }: { items: { label: string; color: string }[] }) {
   return (
-    <div className="flex items-center justify-center gap-6 mt-4 pt-3 border-t border-border/30">
+    <div className="flex items-center justify-center gap-6 mt-4 pt-3 border-t border-border/50">
       {items.map((item) => (
         <div key={item.label} className="flex items-center gap-2 text-xs text-muted-foreground">
           <div className="size-2.5 rounded-full" style={{ backgroundColor: item.color }} />
@@ -145,7 +146,7 @@ function TrendLegend({
   onToggle: (cat: string) => void
 }) {
   return (
-    <div className="flex flex-wrap items-center justify-center gap-3 mt-4 pt-3 border-t border-border/30">
+    <div className="flex flex-wrap items-center justify-center gap-3 mt-4 pt-3 border-t border-border/50">
       {categories.map((cat) => {
         const isVisible = visibleCategories.has(cat.name)
         return (
@@ -463,18 +464,21 @@ export function AnalyticsView() {
         {/* ── Stat Bar ── */}
         <motion.div
           variants={fadeUp}
-          className="card-elevated rounded-xl bg-card grid grid-cols-2 @xl/main:grid-cols-4 divide-y @xl/main:divide-y-0 @xl/main:divide-x divide-border/40 overflow-hidden"
+          className="rounded-2xl border border-border bg-card relative overflow-hidden grid grid-cols-2 @xl/main:grid-cols-4 divide-y @xl/main:divide-y-0 @xl/main:divide-x divide-border"
         >
+          {/* Top edge light line — dark mode only */}
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+
           {/* Opening Balance */}
           <div className="px-3 sm:px-5 py-3 sm:py-4 flex items-start gap-2.5 sm:gap-3.5">
-            <div className="mt-0.5 flex size-7 sm:size-9 items-center justify-center rounded-xl bg-blue-500/10 dark:bg-blue-500/15 shrink-0">
-              <IconScale className="size-3.5 sm:size-4 text-blue-600 dark:text-blue-400" />
+            <div className="mt-0.5 flex size-7 sm:size-9 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted shrink-0">
+              <IconScale className="size-3.5 sm:size-4 text-muted-foreground" />
             </div>
             <div className="min-w-0">
               <p className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
                 Opening Balance
               </p>
-              <motion.p variants={numberPop} className="text-base sm:text-lg font-bold tabular-nums leading-tight truncate">
+              <motion.p variants={numberPop} className="text-base sm:text-lg font-black tracking-tight tabular-nums leading-tight truncate">
                 {formatCurrency(openingBalance)}
               </motion.p>
             </div>
@@ -482,14 +486,14 @@ export function AnalyticsView() {
 
           {/* Income */}
           <div className="px-3 sm:px-5 py-3 sm:py-4 flex items-start gap-2.5 sm:gap-3.5">
-            <div className="mt-0.5 flex size-7 sm:size-9 items-center justify-center rounded-xl bg-emerald-500/10 dark:bg-emerald-500/15 shrink-0">
-              <IconArrowUpRight className="size-3.5 sm:size-4 text-emerald-600 dark:text-emerald-400" />
+            <div className="mt-0.5 flex size-7 sm:size-9 items-center justify-center rounded-xl bg-lime-500/10 shadow-[0_0_12px_-2px_rgba(163,230,53,0.15)] shrink-0">
+              <IconArrowUpRight className="size-3.5 sm:size-4 text-lime-600 dark:text-lime-400" />
             </div>
             <div className="min-w-0">
               <p className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
                 Income
               </p>
-              <motion.p variants={numberPop} className="text-base sm:text-lg font-bold text-emerald-600 dark:text-emerald-400 tabular-nums leading-tight truncate">
+              <motion.p variants={numberPop} className="text-base sm:text-lg font-black tracking-tight text-lime-600 dark:text-lime-400 tabular-nums leading-tight truncate">
                 {totalIncome === 0 ? "No income" : formatCurrency(totalIncome)}
               </motion.p>
             </div>
@@ -497,14 +501,14 @@ export function AnalyticsView() {
 
           {/* Expenses */}
           <div className="px-3 sm:px-5 py-3 sm:py-4 flex items-start gap-2.5 sm:gap-3.5">
-            <div className="mt-0.5 flex size-7 sm:size-9 items-center justify-center rounded-xl bg-rose-500/10 dark:bg-rose-500/15 shrink-0">
-              <IconArrowDownRight className="size-3.5 sm:size-4 text-rose-600 dark:text-rose-400" />
+            <div className="mt-0.5 flex size-7 sm:size-9 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted shrink-0">
+              <IconArrowDownRight className="size-3.5 sm:size-4 text-foreground/70" />
             </div>
             <div className="min-w-0">
               <p className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
                 Expenses
               </p>
-              <motion.p variants={numberPop} className="text-base sm:text-lg font-bold tabular-nums leading-tight truncate">
+              <motion.p variants={numberPop} className="text-base sm:text-lg font-black tracking-tight text-foreground/70 tabular-nums leading-tight truncate">
                 {formatCurrency(totalExpenses)}
               </motion.p>
             </div>
@@ -512,14 +516,14 @@ export function AnalyticsView() {
 
           {/* Current Balance */}
           <div className="px-3 sm:px-5 py-3 sm:py-4 flex items-start gap-2.5 sm:gap-3.5">
-            <div className={`mt-0.5 flex size-7 sm:size-9 items-center justify-center rounded-xl shrink-0 ${netChange >= 0 ? "bg-primary/10" : "bg-destructive/10"}`}>
-              <IconWallet className={`size-3.5 sm:size-4 ${netChange >= 0 ? "text-primary" : "text-destructive"}`} />
+            <div className={`mt-0.5 flex size-7 sm:size-9 items-center justify-center rounded-xl shrink-0 ${netChange >= 0 ? "bg-lime-500/10 shadow-[0_0_12px_-2px_rgba(163,230,53,0.15)]" : "bg-destructive/10"}`}>
+              <IconWallet className={`size-3.5 sm:size-4 ${netChange >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`} />
             </div>
             <div className="min-w-0">
               <p className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
                 Current Balance
               </p>
-              <motion.p variants={numberPop} className={`text-base sm:text-lg font-bold tabular-nums leading-tight truncate ${netChange >= 0 ? "text-primary" : "text-destructive"}`}>
+              <motion.p variants={numberPop} className={`text-base sm:text-lg font-black tracking-tight tabular-nums leading-tight truncate ${netChange >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
                 {formatCurrency(closingBalance)}
               </motion.p>
               <p className="text-[10px] sm:text-[11px] text-muted-foreground/60 font-medium mt-0.5 leading-none truncate">
@@ -533,10 +537,11 @@ export function AnalyticsView() {
         {hasOneTimeExpenses && (
           <motion.div
             variants={fadeUpSmall}
-            className="card-elevated rounded-xl bg-card flex items-center justify-between px-5 py-3.5 gap-4"
+            className="rounded-2xl border border-border bg-card relative overflow-hidden flex items-center justify-between px-5 py-3.5 gap-4"
           >
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
             <div className="flex items-center gap-3">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-amber-500/10">
+              <div className="flex size-9 items-center justify-center rounded-xl bg-amber-500/10">
                 <IconAlertTriangle className="size-4 text-amber-600 dark:text-amber-400" />
               </div>
               <div>
@@ -565,19 +570,20 @@ export function AnalyticsView() {
         <motion.div variants={fadeUp}>
           <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="space-y-4">
             <div className="overflow-x-auto">
-              <TabsList className="inline-flex h-10 gap-1 rounded-xl bg-muted/50 p-1 min-w-max">
-                <TabsTrigger value="daily" className="rounded-lg px-3 sm:px-4 text-xs font-medium">Daily</TabsTrigger>
-                <TabsTrigger value="weekly" className="rounded-lg px-3 sm:px-4 text-xs font-medium">Weekly</TabsTrigger>
-                <TabsTrigger value="monthly" className="rounded-lg px-3 sm:px-4 text-xs font-medium">Monthly</TabsTrigger>
-                <TabsTrigger value="comparison" className="rounded-lg px-3 sm:px-4 text-xs font-medium">Comparison</TabsTrigger>
-                <TabsTrigger value="trends" className="rounded-lg px-3 sm:px-4 text-xs font-medium">Trends</TabsTrigger>
-                <TabsTrigger value="yearly" className="rounded-lg px-3 sm:px-4 text-xs font-medium">Yearly</TabsTrigger>
+              <TabsList className="inline-flex h-10 gap-1 rounded-2xl bg-muted/50 p-1 min-w-max">
+                <TabsTrigger value="daily" className="rounded-xl px-3 sm:px-4 text-xs font-semibold">Daily</TabsTrigger>
+                <TabsTrigger value="weekly" className="rounded-xl px-3 sm:px-4 text-xs font-semibold">Weekly</TabsTrigger>
+                <TabsTrigger value="monthly" className="rounded-xl px-3 sm:px-4 text-xs font-semibold">Monthly</TabsTrigger>
+                <TabsTrigger value="comparison" className="rounded-xl px-3 sm:px-4 text-xs font-semibold">Comparison</TabsTrigger>
+                <TabsTrigger value="trends" className="rounded-xl px-3 sm:px-4 text-xs font-semibold">Trends</TabsTrigger>
+                <TabsTrigger value="yearly" className="rounded-xl px-3 sm:px-4 text-xs font-semibold">Yearly</TabsTrigger>
               </TabsList>
             </div>
 
             {/* ── Daily Tab ── */}
             <TabsContent value="daily" className="space-y-4">
-              <div className="card-elevated rounded-xl bg-card p-5">
+              <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                 <div className="mb-5">
                   <h3 className="text-sm font-semibold">Daily Cashflow</h3>
                   <p className="text-xs text-muted-foreground/70 mt-0.5">Income and expenses by day</p>
@@ -592,8 +598,8 @@ export function AnalyticsView() {
                     <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={10} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} />
                     <YAxis tickLine={false} axisLine={false} tickFormatter={formatCompactAxis} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} width={52} />
                     <Tooltip content={<ChartTooltip />} cursor={{ fill: "var(--color-muted)", opacity: 0.3, radius: 4 }} />
-                    <Bar dataKey="income" fill={CHART_INCOME} radius={[4, 4, 0, 0]} isAnimationActive={false} />
-                    <Bar dataKey="expenses" fill={CHART_EXPENSE} radius={[4, 4, 0, 0]} isAnimationActive={false} />
+                    <Bar dataKey="income" fill={CHART_INCOME} radius={[6, 6, 0, 0]} isAnimationActive={false} />
+                    <Bar dataKey="expenses" fill={CHART_EXPENSE} radius={[6, 6, 0, 0]} isAnimationActive={false} />
                   </BarChart>
                 </ResponsiveContainer>
                 <ChartLegend items={[
@@ -603,42 +609,44 @@ export function AnalyticsView() {
               </div>
 
               {/* Daily Highlights */}
-              <div className="card-elevated rounded-xl bg-card grid grid-cols-3 divide-x divide-border/40">
+              <div className="rounded-2xl border border-border bg-card relative overflow-hidden grid grid-cols-3 divide-x divide-border">
+                {/* Top edge light line — dark mode only */}
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                 <div className="px-5 py-4 flex items-start gap-3">
-                  <div className="mt-0.5 flex size-8 items-center justify-center rounded-lg bg-amber-500/10 dark:bg-amber-500/15">
-                    <IconCalendarStats className="size-3.5 text-amber-600 dark:text-amber-400" />
+                  <div className="mt-0.5 flex size-8 items-center justify-center rounded-xl bg-lime-500/10">
+                    <IconCalendarStats className="size-3.5 text-lime-600 dark:text-lime-300" />
                   </div>
                   <div>
                     <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
                       Avg Daily Spend
                     </p>
-                    <p className="text-lg font-bold tabular-nums leading-tight">
+                    <p className="text-lg font-black tracking-tight tabular-nums leading-tight">
                       {formatCurrency(analytics?.dailyAverageSpend || 0)}
                     </p>
                   </div>
                 </div>
                 <div className="px-5 py-4 flex items-start gap-3">
-                  <div className="mt-0.5 flex size-8 items-center justify-center rounded-lg bg-blue-500/10 dark:bg-blue-500/15">
-                    <IconReceipt2 className="size-3.5 text-blue-600 dark:text-blue-400" />
+                  <div className="mt-0.5 flex size-8 items-center justify-center rounded-xl bg-lime-500/10">
+                    <IconReceipt2 className="size-3.5 text-lime-600 dark:text-lime-300" />
                   </div>
                   <div>
                     <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
                       Transactions
                     </p>
-                    <p className="text-lg font-bold tabular-nums leading-tight">
+                    <p className="text-lg font-black tracking-tight tabular-nums leading-tight">
                       {monthTransactions.length}
                     </p>
                   </div>
                 </div>
                 <div className="px-5 py-4 flex items-start gap-3">
-                  <div className="mt-0.5 flex size-8 items-center justify-center rounded-lg bg-violet-500/10 dark:bg-violet-500/15">
-                    <IconCalendar className="size-3.5 text-violet-600 dark:text-violet-400" />
+                  <div className="mt-0.5 flex size-8 items-center justify-center rounded-xl bg-lime-500/10">
+                    <IconCalendar className="size-3.5 text-lime-600 dark:text-lime-300" />
                   </div>
                   <div>
                     <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
                       Period
                     </p>
-                    <p className="text-lg font-bold leading-tight">
+                    <p className="text-lg font-black tracking-tight leading-tight">
                       {selectedMonth.label}
                     </p>
                   </div>
@@ -665,7 +673,8 @@ export function AnalyticsView() {
             <TabsContent value="monthly" className="space-y-4">
               <MonthlySummaryCard metrics={monthlyMetrics} />
 
-              <div className="card-elevated rounded-xl bg-card p-5">
+              <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                 <div className="mb-5">
                   <h3 className="text-sm font-semibold">Balance Trend</h3>
                   <p className="text-xs text-muted-foreground/70 mt-0.5">Selected month balance trend</p>
@@ -683,8 +692,9 @@ export function AnalyticsView() {
                   >
                     <defs>
                       <linearGradient id="balanceGradient" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={CHART_INCOME} stopOpacity={0.2} />
-                        <stop offset="95%" stopColor={CHART_INCOME} stopOpacity={0} />
+                        <stop offset="0%" stopColor={CHART_INCOME} stopOpacity={0.25} />
+                        <stop offset="50%" stopColor={CHART_INCOME} stopOpacity={0.08} />
+                        <stop offset="100%" stopColor={CHART_INCOME} stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--color-border)" strokeOpacity={0.4} />
@@ -707,7 +717,8 @@ export function AnalyticsView() {
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
-                <div className="card-elevated rounded-xl bg-card p-5">
+                <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <div className="mb-5">
                     <h3 className="text-sm font-semibold">Monthly Trends</h3>
                     <p className="text-xs text-muted-foreground/70 mt-0.5">Income and expenses across months</p>
@@ -716,12 +727,14 @@ export function AnalyticsView() {
                     <AreaChart data={monthlyTrends}>
                       <defs>
                         <linearGradient id="incomeGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={CHART_INCOME} stopOpacity={0.15} />
-                          <stop offset="95%" stopColor={CHART_INCOME} stopOpacity={0} />
+                          <stop offset="0%" stopColor={CHART_INCOME} stopOpacity={0.2} />
+                          <stop offset="50%" stopColor={CHART_INCOME} stopOpacity={0.06} />
+                          <stop offset="100%" stopColor={CHART_INCOME} stopOpacity={0} />
                         </linearGradient>
                         <linearGradient id="expenseGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={CHART_EXPENSE} stopOpacity={0.15} />
-                          <stop offset="95%" stopColor={CHART_EXPENSE} stopOpacity={0} />
+                          <stop offset="0%" stopColor={CHART_EXPENSE} stopOpacity={0.2} />
+                          <stop offset="50%" stopColor={CHART_EXPENSE} stopOpacity={0.06} />
+                          <stop offset="100%" stopColor={CHART_EXPENSE} stopOpacity={0} />
                         </linearGradient>
                       </defs>
                       <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--color-border)" strokeOpacity={0.4} />
@@ -764,7 +777,7 @@ export function AnalyticsView() {
             {/* ── Comparison Tab (Month-over-Month) ── */}
             <TabsContent value="comparison" className="space-y-4">
               {/* Change Summary Cards */}
-              <div className="card-elevated rounded-xl bg-card grid grid-cols-1 @lg/main:grid-cols-3 divide-y @lg/main:divide-y-0 @lg/main:divide-x divide-border/40">
+              <div className="rounded-2xl border border-border bg-card relative overflow-hidden grid grid-cols-1 @lg/main:grid-cols-3 divide-y @lg/main:divide-y-0 @lg/main:divide-x divide-border">
                 {/* Income Change */}
                 <div className="px-5 py-4 flex items-start gap-3.5">
                   <div className={`mt-0.5 flex size-9 items-center justify-center rounded-xl ${comparisonChanges.income.change >= 0 ? "bg-primary/10" : "bg-destructive/10"}`}>
@@ -777,10 +790,10 @@ export function AnalyticsView() {
                     <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
                       Income
                     </p>
-                    <p className="text-lg font-bold tabular-nums leading-tight truncate">
+                    <p className="text-lg font-black tracking-tight tabular-nums leading-tight truncate">
                       {formatCurrency(comparisonChanges.income.current)}
                     </p>
-                    <p className={`text-[11px] font-semibold mt-0.5 leading-none ${comparisonChanges.income.change >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                    <p className={`text-[11px] font-semibold mt-0.5 leading-none ${comparisonChanges.income.change >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
                       {comparisonChanges.income.change >= 0 ? "\u2191" : "\u2193"} {Math.abs(comparisonChanges.income.change).toFixed(1)}% vs {previousMonth.label.split(" ")[0]}
                     </p>
                   </div>
@@ -788,18 +801,18 @@ export function AnalyticsView() {
 
                 {/* Expense Change */}
                 <div className="px-5 py-4 flex items-start gap-3.5">
-                  <div className={`mt-0.5 flex size-9 items-center justify-center rounded-xl ${comparisonChanges.expense.change <= 0 ? "bg-primary/10" : "bg-destructive/10"}`}>
-                    <IconArrowsExchange className={`size-4 ${comparisonChanges.expense.change <= 0 ? "text-primary" : "text-destructive"}`} />
+                  <div className={`mt-0.5 flex size-9 items-center justify-center rounded-xl ${comparisonChanges.expense.change <= 0 ? "bg-lime-500/10" : "bg-destructive/10"}`}>
+                    <IconArrowsExchange className={`size-4 ${comparisonChanges.expense.change <= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`} />
                   </div>
                   <div className="min-w-0">
                     <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
                       Expenses
                     </p>
-                    <p className="text-lg font-bold tabular-nums leading-tight truncate">
+                    <p className="text-lg font-black tracking-tight tabular-nums leading-tight truncate">
                       {formatCurrency(comparisonChanges.expense.current)}
                     </p>
-                    {/* For expenses, decrease is good (green), increase is bad (red) */}
-                    <p className={`text-[11px] font-semibold mt-0.5 leading-none ${comparisonChanges.expense.change <= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                    {/* For expenses, decrease is good (lime), increase is bad (destructive) */}
+                    <p className={`text-[11px] font-semibold mt-0.5 leading-none ${comparisonChanges.expense.change <= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
                       {comparisonChanges.expense.change > 0 ? "\u2191" : "\u2193"} {Math.abs(comparisonChanges.expense.change).toFixed(1)}% vs {previousMonth.label.split(" ")[0]}
                     </p>
                   </div>
@@ -807,17 +820,17 @@ export function AnalyticsView() {
 
                 {/* Savings Change */}
                 <div className="px-5 py-4 flex items-start gap-3.5">
-                  <div className={`mt-0.5 flex size-9 items-center justify-center rounded-xl ${comparisonChanges.savings.current >= 0 ? "bg-primary/10" : "bg-destructive/10"}`}>
-                    <IconWallet className={`size-4 ${comparisonChanges.savings.current >= 0 ? "text-primary" : "text-destructive"}`} />
+                  <div className={`mt-0.5 flex size-9 items-center justify-center rounded-xl ${comparisonChanges.savings.current >= 0 ? "bg-lime-500/10" : "bg-destructive/10"}`}>
+                    <IconWallet className={`size-4 ${comparisonChanges.savings.current >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`} />
                   </div>
                   <div className="min-w-0">
                     <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
                       Net Savings
                     </p>
-                    <p className={`text-lg font-bold tabular-nums leading-tight truncate ${comparisonChanges.savings.current >= 0 ? "text-primary" : "text-destructive"}`}>
+                    <p className={`text-lg font-black tracking-tight tabular-nums leading-tight truncate ${comparisonChanges.savings.current >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
                       {formatCurrency(comparisonChanges.savings.current)}
                     </p>
-                    <p className={`text-[11px] font-semibold mt-0.5 leading-none ${comparisonChanges.savings.change >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                    <p className={`text-[11px] font-semibold mt-0.5 leading-none ${comparisonChanges.savings.change >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
                       {comparisonChanges.savings.change >= 0 ? "\u2191" : "\u2193"} {Math.abs(comparisonChanges.savings.change).toFixed(1)}% vs {previousMonth.label.split(" ")[0]}
                     </p>
                   </div>
@@ -826,7 +839,8 @@ export function AnalyticsView() {
 
               {/* Top Category Changes as Badges */}
               {topCategoryChanges.length > 0 && (
-                <div className="card-elevated rounded-xl bg-card px-5 py-4">
+                <div className="rounded-2xl border border-border bg-card relative overflow-hidden px-5 py-4">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest mb-3">
                     Biggest Changes
                   </p>
@@ -836,10 +850,10 @@ export function AnalyticsView() {
                         key={change.category}
                         variant="secondary"
                         className={`text-xs font-medium px-3 py-1.5 ${
-                          // For expenses: increase is bad (red), decrease is good (green)
+                          // For expenses: increase is bad (destructive), decrease is good (lime)
                           change.change > 0
-                            ? "bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400"
-                            : "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+                            ? "bg-destructive/10 text-destructive"
+                            : "bg-lime-100 text-lime-700 dark:bg-lime-900/30 dark:text-lime-400"
                         }`}
                       >
                         {change.category} {change.change > 0 ? "\u2191" : "\u2193"} {Math.abs(change.change).toFixed(0)}%
@@ -850,7 +864,8 @@ export function AnalyticsView() {
               )}
 
               {/* Grouped Bar Chart */}
-              <div className="card-elevated rounded-xl bg-card p-5">
+              <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                 <div className="mb-5">
                   <h3 className="text-sm font-semibold">Category Comparison</h3>
                   <p className="text-xs text-muted-foreground/70 mt-0.5">
@@ -875,8 +890,8 @@ export function AnalyticsView() {
                         />
                         <YAxis tickLine={false} axisLine={false} tickFormatter={formatCompactAxis} tick={{ fontSize: 11, fill: "var(--muted-foreground)" }} width={52} />
                         <Tooltip content={<ComparisonTooltip />} cursor={{ fill: "var(--color-muted)", opacity: 0.3, radius: 4 }} />
-                        <Bar dataKey="current" name={selectedMonth.label.split(" ")[0]} fill="var(--chart-2)" radius={[4, 4, 0, 0]} isAnimationActive={false} />
-                        <Bar dataKey="previous" name={previousMonth.label.split(" ")[0]} fill="var(--muted-foreground)" radius={[4, 4, 0, 0]} isAnimationActive={false} />
+                        <Bar dataKey="current" name={selectedMonth.label.split(" ")[0]} fill="var(--chart-2)" radius={[6, 6, 0, 0]} isAnimationActive={false} />
+                        <Bar dataKey="previous" name={previousMonth.label.split(" ")[0]} fill="var(--muted-foreground)" radius={[6, 6, 0, 0]} isAnimationActive={false} />
                       </BarChart>
                     </ResponsiveContainer>
                     <ChartLegend items={[
@@ -893,16 +908,17 @@ export function AnalyticsView() {
 
               {/* Detailed Breakdown Table */}
               {comparisonData.length > 0 && (
-                <div className="card-elevated rounded-xl bg-card p-5">
+                <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <div className="mb-4">
                     <h3 className="text-sm font-semibold">Detailed Breakdown</h3>
                   </div>
                   <div className="space-y-1">
-                    <div className="grid grid-cols-[1fr_90px_90px_80px] gap-2 px-2 pb-2 border-b border-border/40">
-                      <span className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider">Category</span>
-                      <span className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider text-right">{selectedMonth.label.split(" ")[0]}</span>
-                      <span className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider text-right">{previousMonth.label.split(" ")[0]}</span>
-                      <span className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-wider text-right">Change</span>
+                    <div className="grid grid-cols-[1fr_90px_90px_80px] gap-2 px-2 pb-2 border-b border-border">
+                      <span className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest">Category</span>
+                      <span className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest text-right">{selectedMonth.label.split(" ")[0]}</span>
+                      <span className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest text-right">{previousMonth.label.split(" ")[0]}</span>
+                      <span className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest text-right">Change</span>
                     </div>
                     {comparisonData.map((comp) => {
                       const changePct = comp.previous > 0
@@ -913,9 +929,9 @@ export function AnalyticsView() {
                       return (
                         <div key={comp.category} className="grid grid-cols-[1fr_90px_90px_80px] gap-2 items-center px-2 py-2 rounded-lg hover:bg-muted/40 transition-colors">
                           <span className="text-[13px] font-medium truncate">{comp.category}</span>
-                          <span className="text-[13px] font-semibold tabular-nums text-right">{formatCurrency(comp.current)}</span>
+                          <span className="text-[13px] font-black tracking-tight tabular-nums text-right">{formatCurrency(comp.current)}</span>
                           <span className="text-[13px] tabular-nums text-right text-muted-foreground">{formatCurrency(comp.previous)}</span>
-                          <span className={`text-[12px] font-semibold tabular-nums text-right ${isDecrease ? "text-emerald-600 dark:text-emerald-400" : isIncrease ? "text-rose-600 dark:text-rose-400" : "text-muted-foreground"}`}>
+                          <span className={`text-[12px] font-semibold tabular-nums text-right ${isDecrease ? "text-lime-600 dark:text-lime-400" : isIncrease ? "text-destructive" : "text-muted-foreground"}`}>
                             {comp.previous > 0
                               ? `${changePct > 0 ? "+" : ""}${changePct.toFixed(0)}%`
                               : comp.current > 0 ? "New" : "-"}
@@ -923,11 +939,11 @@ export function AnalyticsView() {
                         </div>
                       )
                     })}
-                    <div className="grid grid-cols-[1fr_90px_90px_80px] gap-2 px-2 pt-2 mt-1 border-t border-border/40">
-                      <span className="text-[13px] font-bold">Total</span>
-                      <span className="text-[13px] font-bold tabular-nums text-right">{formatCurrency(comparisonChanges.expense.current)}</span>
-                      <span className="text-[13px] font-bold tabular-nums text-right text-muted-foreground">{formatCurrency(comparisonChanges.expense.previous)}</span>
-                      <span className={`text-[12px] font-bold tabular-nums text-right ${comparisonChanges.expense.change <= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                    <div className="grid grid-cols-[1fr_90px_90px_80px] gap-2 px-2 pt-2 mt-1 border-t border-border">
+                      <span className="text-[13px] font-black tracking-tight">Total</span>
+                      <span className="text-[13px] font-black tracking-tight tabular-nums text-right">{formatCurrency(comparisonChanges.expense.current)}</span>
+                      <span className="text-[13px] font-black tracking-tight tabular-nums text-right text-muted-foreground">{formatCurrency(comparisonChanges.expense.previous)}</span>
+                      <span className={`text-[12px] font-black tracking-tight tabular-nums text-right ${comparisonChanges.expense.change <= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
                         {comparisonChanges.expense.change > 0 ? "+" : ""}{comparisonChanges.expense.change.toFixed(0)}%
                       </span>
                     </div>
@@ -938,7 +954,8 @@ export function AnalyticsView() {
 
             {/* ── Trends Tab (Category Trends Over Time) ── */}
             <TabsContent value="trends" className="space-y-4">
-              <div className="card-elevated rounded-xl bg-card p-5">
+              <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                 <div className="mb-5 flex items-center gap-2">
                   <IconChartLine className="size-4 text-muted-foreground" />
                   <div>
@@ -1036,7 +1053,8 @@ export function AnalyticsView() {
             {/* ── Yearly Tab ── */}
             <TabsContent value="yearly" className="space-y-4">
               <div className="grid gap-4 md:grid-cols-3">
-                <div className="card-elevated rounded-xl bg-card p-5">
+                <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <div className="mb-4">
                     <h3 className="text-sm font-semibold">Year Over Year</h3>
                     <p className="text-xs text-muted-foreground/70 mt-0.5">
@@ -1057,7 +1075,7 @@ export function AnalyticsView() {
                     ].map(({ label, value }) => (
                       <div key={label} className="flex items-center justify-between">
                         <span className="text-xs text-muted-foreground">{label}</span>
-                        <span className={`text-sm font-bold tabular-nums ${value >= 0 ? "text-primary" : "text-destructive"}`}>
+                        <span className={`text-sm font-black tracking-tight tabular-nums ${value >= 0 ? "text-primary" : "text-destructive"}`}>
                           {value >= 0 ? "+" : ""}{value.toFixed(1)}%
                         </span>
                       </div>
@@ -1069,7 +1087,8 @@ export function AnalyticsView() {
                     )}
                   </div>
                 </div>
-                <div className="card-elevated rounded-xl bg-card p-5 md:col-span-2">
+                <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5 md:col-span-2">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <div className="mb-5">
                     <h3 className="text-sm font-semibold">Annual Performance</h3>
                     <p className="text-xs text-muted-foreground/70 mt-0.5">Income vs expenses by year</p>
@@ -1078,12 +1097,14 @@ export function AnalyticsView() {
                     <AreaChart data={yearlyData}>
                       <defs>
                         <linearGradient id="yearIncomeGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={CHART_INCOME} stopOpacity={0.15} />
-                          <stop offset="95%" stopColor={CHART_INCOME} stopOpacity={0} />
+                          <stop offset="0%" stopColor={CHART_INCOME} stopOpacity={0.2} />
+                          <stop offset="50%" stopColor={CHART_INCOME} stopOpacity={0.06} />
+                          <stop offset="100%" stopColor={CHART_INCOME} stopOpacity={0} />
                         </linearGradient>
                         <linearGradient id="yearExpenseGradient" x1="0" y1="0" x2="0" y2="1">
-                          <stop offset="5%" stopColor={CHART_EXPENSE} stopOpacity={0.15} />
-                          <stop offset="95%" stopColor={CHART_EXPENSE} stopOpacity={0} />
+                          <stop offset="0%" stopColor={CHART_EXPENSE} stopOpacity={0.2} />
+                          <stop offset="50%" stopColor={CHART_EXPENSE} stopOpacity={0.06} />
+                          <stop offset="100%" stopColor={CHART_EXPENSE} stopOpacity={0} />
                         </linearGradient>
                       </defs>
                       <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--color-border)" strokeOpacity={0.4} />
@@ -1149,19 +1170,19 @@ export function AnalyticsView() {
 function AnalyticsLoadingSkeleton() {
   return (
     <div className="space-y-5 p-4">
-      <div className="card-elevated rounded-xl bg-card grid grid-cols-4 divide-x divide-border/40">
+      <div className="rounded-2xl border border-border bg-card grid grid-cols-4 divide-x divide-border">
         {[0, 1, 2, 3].map((i) => (
           <div key={i} className="px-5 py-4 flex items-start gap-3.5">
             <Skeleton className="size-9 rounded-xl" />
             <div className="space-y-2 flex-1">
-              <Skeleton className="h-3 w-14" />
-              <Skeleton className="h-5 w-24" />
+              <Skeleton className="h-2.5 w-14" />
+              <Skeleton className="h-6 w-24" />
             </div>
           </div>
         ))}
       </div>
-      <Skeleton className="h-10 w-64 rounded-xl" />
-      <Skeleton className="h-[400px] rounded-xl" />
+      <Skeleton className="h-10 w-64 rounded-2xl border border-border" />
+      <Skeleton className="h-[400px] rounded-2xl border border-border" />
     </div>
   )
 }

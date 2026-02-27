@@ -38,7 +38,9 @@ export function SiteHeader({
   actions,
 }: SiteHeaderProps) {
   return (
-    <header className="sticky top-0 z-30 flex h-(--header-height) shrink-0 items-center border-b border-border/40 bg-background/60 backdrop-blur-xl backdrop-saturate-150 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height)">
+    <header className="sticky top-0 z-30 flex h-(--header-height) shrink-0 items-center bg-background transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-(--header-height) relative">
+      {/* Gradient bottom border */}
+      <div className="absolute bottom-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
       <div className="flex w-full items-center gap-2 px-4 lg:px-6">
         <SidebarTrigger className="-ml-1 text-muted-foreground hover:text-foreground transition-colors" />
         <Separator
@@ -48,7 +50,7 @@ export function SiteHeader({
         <div className="flex flex-1 items-center justify-between gap-4">
           <div className="min-w-0">
             <div className="flex items-baseline gap-2">
-              <h1 className="text-base font-bold tracking-tight text-foreground truncate">
+              <h1 className="text-base lg:text-lg font-semibold tracking-tight text-foreground truncate">
                 {title}
               </h1>
               {subtitle && (
@@ -71,7 +73,7 @@ export function SiteHeader({
             {actions}
             <span className="hidden sm:inline-flex"><StreakCounter linkTo="/gamification" /></span>
             <NotificationCenter />
-            <AnimatedThemeToggler />
+            <AnimatedThemeToggler className="inline-flex items-center justify-center size-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer [&_svg]:size-4" />
           </div>
         </div>
       </div>

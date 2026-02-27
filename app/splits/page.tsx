@@ -152,7 +152,7 @@ function SectionHeading({
       <div className="flex items-center gap-2.5">
         <div
           className={cn(
-            "flex items-center justify-center h-7 w-7 rounded-lg",
+            "flex items-center justify-center size-8 rounded-xl",
             iconBg
           )}
         >
@@ -183,7 +183,8 @@ function EmptyState({
   action?: React.ReactNode
 }) {
   return (
-    <div className="card-elevated rounded-xl bg-card overflow-hidden">
+    <div className="rounded-2xl border border-border bg-card relative overflow-hidden">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
       <div className="bg-gradient-to-b from-primary/[0.04] to-transparent">
         <div className="flex flex-col items-center justify-center py-14 px-6 text-center">
           <div className="relative mb-5">
@@ -373,7 +374,7 @@ function CreateGroupDialog({
             <Label>Members *</Label>
             <p className="text-xs text-muted-foreground -mt-1">You are included automatically</p>
             {contacts.length === 0 ? (
-              <div className="rounded-lg border border-dashed p-4 text-center">
+              <div className="rounded-xl border border-dashed p-4 text-center">
                 <IconUserPlus className="h-5 w-5 text-muted-foreground/40 mx-auto mb-1.5" />
                 <p className="text-sm text-muted-foreground">
                   No contacts yet. Add contacts first.
@@ -507,8 +508,8 @@ function AddExpenseDialog({
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-1">
-            <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500/15 to-cyan-500/15">
-              <IconReceipt className="h-5 w-5 text-emerald-500" strokeWidth={1.8} />
+            <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-lime-500/10">
+              <IconReceipt className="h-5 w-5 text-lime-600 dark:text-lime-400" strokeWidth={1.8} />
             </div>
             <div>
               <DialogTitle>Add Expense</DialogTitle>
@@ -610,7 +611,7 @@ function AddExpenseDialog({
                 ))}
               </div>
               {selectedPeople.length > 0 && amount && (
-                <div className="rounded-lg bg-accent/50 px-3 py-2">
+                <div className="rounded-xl border border-border bg-card px-3 py-2">
                   <p className="text-xs text-muted-foreground">
                     <span className="font-medium text-foreground">
                       {formatINR(parseFloat(amount) / selectedPeople.length)}
@@ -627,7 +628,7 @@ function AddExpenseDialog({
               <Label>
                 {splitType === "percentage" ? "Percentage per person" : "Amount per person"}
               </Label>
-              <div className="space-y-2 rounded-lg border p-3">
+              <div className="space-y-2 rounded-xl border border-border p-3">
                 {members.map((m) => (
                   <div key={m} className="flex items-center gap-3">
                     <PersonAvatar name={m} size="sm" />
@@ -884,7 +885,7 @@ function ShareDialog({
         </DialogHeader>
         <div className="space-y-4 mt-2">
           {!shareData ? (
-            <div className="rounded-xl border border-dashed p-6 text-center">
+            <div className="rounded-2xl border border-dashed p-6 text-center">
               <div className="flex items-center justify-center h-12 w-12 rounded-full bg-pink-500/10 mx-auto mb-3">
                 <IconLink className="h-5 w-5 text-pink-500" />
               </div>
@@ -898,7 +899,7 @@ function ShareDialog({
             </div>
           ) : (
             <div className="space-y-3">
-              <div className="rounded-xl border bg-accent/30 p-4 space-y-3">
+              <div className="rounded-xl border border-border bg-card p-4 space-y-3">
                 <div className="flex gap-2">
                   <Input
                     value={shareData.url}
@@ -942,12 +943,13 @@ function BalanceSummaryCard({
     <motion.div
       {...listItem(index)}
       className={cn(
-        "card-elevated rounded-xl p-4 transition-all duration-300 hover:scale-[1.01]",
+        "rounded-2xl border relative overflow-hidden p-4 transition-all duration-300 hover:scale-[1.01]",
         isPositive
-          ? "bg-gradient-to-br from-emerald-500/5 to-emerald-500/[0.02] hover:shadow-emerald-500/10 hover:shadow-lg border border-emerald-500/10"
-          : "bg-gradient-to-br from-red-500/5 to-red-500/[0.02] hover:shadow-red-500/10 hover:shadow-lg border border-red-500/10"
+          ? "border-lime-500/15 bg-gradient-to-br from-lime-500/5 to-lime-500/[0.02] hover:shadow-lime-500/10 hover:shadow-lg"
+          : "border-destructive/15 bg-gradient-to-br from-destructive/5 to-destructive/[0.02] hover:shadow-destructive/10 hover:shadow-lg"
       )}
     >
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
       <div className="flex items-center gap-3">
         <PersonAvatar name={person} />
         <div className="flex-1 min-w-0">
@@ -956,8 +958,8 @@ function BalanceSummaryCard({
             className={cn(
               "text-xs font-medium",
               isPositive
-                ? "text-emerald-600 dark:text-emerald-400"
-                : "text-red-600 dark:text-red-400"
+                ? "text-lime-600 dark:text-lime-400"
+                : "text-destructive"
             )}
           >
             {isPositive ? "owes you" : "you owe"}
@@ -967,10 +969,10 @@ function BalanceSummaryCard({
           <div className="text-right">
             <p
               className={cn(
-                "text-lg font-bold tabular-nums",
+                "text-lg font-black tracking-tight tabular-nums",
                 isPositive
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-red-600 dark:text-red-400"
+                  ? "text-lime-600 dark:text-lime-400"
+                  : "text-destructive"
               )}
             >
               {formatINR(Math.abs(netBalance))}
@@ -979,8 +981,8 @@ function BalanceSummaryCard({
               className={cn(
                 "mt-0.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium",
                 isPositive
-                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                  : "bg-red-500/10 text-red-600 dark:text-red-400"
+                  ? "bg-lime-500/10 text-lime-600 dark:text-lime-400"
+                  : "bg-destructive/10 text-destructive"
               )}
             >
               {isPositive ? (
@@ -1027,20 +1029,21 @@ function ActivityFeedItem({ item, index }: { item: ActivityItem; index: number }
             isAutoSettled
               ? "bg-gradient-to-br from-amber-500/15 to-yellow-500/15"
               : isExpense
-                ? "bg-gradient-to-br from-blue-500/15 to-indigo-500/15"
-                : "bg-gradient-to-br from-emerald-500/15 to-cyan-500/15"
+                ? "bg-muted/80 dark:bg-muted"
+                : "bg-lime-500/10"
           )}
         >
           {isAutoSettled ? (
             <IconBolt className="h-4 w-4 text-amber-500" strokeWidth={1.8} />
           ) : isExpense ? (
-            <IconReceipt className="h-4 w-4 text-blue-500" strokeWidth={1.8} />
+            <IconReceipt className="h-4 w-4 text-foreground/70" strokeWidth={1.8} />
           ) : (
-            <IconArrowsExchange className="h-4 w-4 text-emerald-500" strokeWidth={1.8} />
+            <IconArrowsExchange className="h-4 w-4 text-lime-600 dark:text-lime-400" strokeWidth={1.8} />
           )}
         </div>
       </div>
-      <div className="flex-1 min-w-0 card-elevated rounded-xl bg-card p-3.5 transition-all duration-200 hover:shadow-md">
+      <div className="flex-1 min-w-0 rounded-xl border border-border bg-card relative overflow-hidden p-3.5 transition-all duration-200 hover:shadow-md">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0">
             <div className="flex items-center gap-2">
@@ -1063,8 +1066,8 @@ function ActivityFeedItem({ item, index }: { item: ActivityItem; index: number }
           </div>
           <span
             className={cn(
-              "text-sm font-bold tabular-nums shrink-0",
-              isExpense ? "text-foreground" : "text-emerald-600 dark:text-emerald-400"
+              "text-sm font-black tracking-tight tabular-nums shrink-0",
+              isExpense ? "text-foreground" : "text-lime-600 dark:text-lime-400"
             )}
           >
             {formatINR(item.amount)}
@@ -1118,7 +1121,8 @@ function GroupDetailView({
       className="flex flex-col gap-5"
     >
       {/* Header card */}
-      <div className="card-elevated rounded-xl bg-card p-5">
+      <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={onBack} className="shrink-0 -ml-1">
             <IconChevronLeft className="h-5 w-5" />
@@ -1127,7 +1131,7 @@ function GroupDetailView({
             <IconUsersGroup className="h-5 w-5 text-violet-500" strokeWidth={1.8} />
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="text-lg font-bold truncate">{group.name}</h2>
+            <h2 className="text-lg font-black tracking-tight truncate">{group.name}</h2>
             {group.description && (
               <p className="text-xs text-muted-foreground truncate">{group.description}</p>
             )}
@@ -1184,8 +1188,8 @@ function GroupDetailView({
         <div className="space-y-3">
           <SectionHeading
             icon={IconScale}
-            iconBg="bg-gradient-to-br from-emerald-500/15 to-cyan-500/15"
-            iconColor="text-emerald-500"
+            iconBg="bg-lime-500/10"
+            iconColor="text-lime-600 dark:text-lime-400"
             title="Balances"
             count={activeBalances.length}
           />
@@ -1202,13 +1206,14 @@ function GroupDetailView({
           </div>
         </div>
       ) : balances.length > 0 ? (
-        <div className="card-elevated rounded-xl bg-card overflow-hidden">
+        <div className="rounded-2xl border border-border bg-card relative overflow-hidden">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
           <div className="bg-gradient-to-b from-primary/[0.04] to-transparent">
             <div className="flex flex-col items-center justify-center py-8 px-6 text-center">
               <div className="flex items-center justify-center h-12 w-12 rounded-2xl bg-primary/[0.08] border border-primary/10 mb-3">
                 <IconCheck className="h-6 w-6 text-primary" />
               </div>
-              <h3 className="text-base font-bold">All Settled!</h3>
+              <h3 className="text-base font-black tracking-tight">All Settled!</h3>
               <p className="text-sm text-muted-foreground mt-1">
                 Everyone in this group is square.
               </p>
@@ -1221,8 +1226,8 @@ function GroupDetailView({
       <div className="space-y-3">
         <SectionHeading
           icon={IconReceipt}
-          iconBg="bg-gradient-to-br from-blue-500/15 to-indigo-500/15"
-          iconColor="text-blue-500"
+          iconBg="bg-muted/80 dark:bg-muted"
+          iconColor="text-foreground/70"
           title="Expenses"
           count={expenses.length}
         />
@@ -1247,11 +1252,12 @@ function GroupDetailView({
               <motion.div
                 key={exp._id}
                 {...listItem(i)}
-                className="card-elevated rounded-xl bg-card p-4 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5"
+                className="rounded-2xl border border-border bg-card relative overflow-hidden p-4 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5"
               >
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/15 to-indigo-500/15">
-                    <IconReceipt className="h-4.5 w-4.5 text-blue-500" strokeWidth={1.8} />
+                  <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+                    <IconReceipt className="h-4.5 w-4.5 text-foreground/70" strokeWidth={1.8} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate">{exp.description}</p>
@@ -1266,11 +1272,11 @@ function GroupDetailView({
                       })}
                     </p>
                   </div>
-                  <span className="text-sm font-bold tabular-nums">{formatINR(exp.amount)}</span>
+                  <span className="text-sm font-black tracking-tight tabular-nums">{formatINR(exp.amount)}</span>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 shrink-0"
+                    className="h-8 w-8 text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
                     onClick={async () => {
                       try {
                         await deleteExpense(exp._id)
@@ -1384,13 +1390,13 @@ function OverviewTab() {
       <div className="space-y-5">
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-28 w-full rounded-xl" />
+            <Skeleton key={i} className="h-28 w-full rounded-2xl border border-border" />
           ))}
         </div>
-        <Skeleton className="h-10 w-64 rounded-lg" />
+        <Skeleton className="h-10 w-64 rounded-2xl border border-border" />
         <div className="space-y-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-20 w-full rounded-xl" />
+            <Skeleton key={i} className="h-20 w-full rounded-2xl border border-border" />
           ))}
         </div>
       </div>
@@ -1444,11 +1450,12 @@ function OverviewTab() {
               animate={{ opacity: 1, y: 0, height: "auto" }}
               exit={{ opacity: 0, y: -8, height: 0 }}
               transition={spring.fast}
-              className="rounded-xl border border-amber-500/20 bg-gradient-to-r from-amber-500/5 to-yellow-500/5 p-4"
+              className="rounded-2xl border border-amber-500/20 bg-gradient-to-r from-amber-500/5 to-yellow-500/5 p-4 relative overflow-hidden"
             >
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
               <div className="flex items-start justify-between gap-3">
                 <div className="flex items-start gap-3">
-                  <div className="flex items-center justify-center h-8 w-8 rounded-lg bg-amber-500/10 shrink-0 mt-0.5">
+                  <div className="flex items-center justify-center size-8 rounded-xl bg-amber-500/10 shrink-0 mt-0.5">
                     <IconBolt className="h-4 w-4 text-amber-500" />
                   </div>
                   <div>
@@ -1534,8 +1541,8 @@ function OverviewTab() {
         >
           <SectionHeading
             icon={IconScale}
-            iconBg="bg-gradient-to-br from-emerald-500/15 to-cyan-500/15"
-            iconColor="text-emerald-500"
+            iconBg="bg-lime-500/10"
+            iconColor="text-lime-600 dark:text-lime-400"
             title="Balances"
             count={activeBalances.length}
           />
@@ -1557,8 +1564,9 @@ function OverviewTab() {
           initial={{ opacity: 0, scale: 0.96 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={spring.smooth}
-          className="card-elevated rounded-xl bg-card overflow-hidden"
+          className="rounded-2xl border border-border bg-card relative overflow-hidden"
         >
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
           <div className="bg-gradient-to-b from-primary/[0.04] to-transparent">
             <div className="flex flex-col items-center justify-center py-12 px-6 text-center">
               <div className="relative mb-5">
@@ -1567,7 +1575,7 @@ function OverviewTab() {
                   <IconCheck className="h-7 w-7 text-primary" />
                 </div>
               </div>
-              <h3 className="text-lg font-bold">All Settled!</h3>
+              <h3 className="text-lg font-black tracking-tight">All Settled!</h3>
               <p className="text-sm text-muted-foreground mt-1.5 max-w-xs">
                 No outstanding balances. You&apos;re all square with everyone.
               </p>
@@ -1648,7 +1656,7 @@ function GroupsTab() {
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-32 w-full rounded-xl" />
+            <Skeleton key={i} className="h-32 w-full rounded-2xl border border-border" />
           ))}
         </div>
       </div>
@@ -1712,10 +1720,11 @@ function GroupsTab() {
                 key={g._id}
                 {...listItem(i)}
                 onClick={() => setSelectedGroup(g)}
-                className="card-elevated rounded-xl bg-card p-5 text-left transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 hover:scale-[1.01]"
+                className="rounded-2xl border border-border bg-card relative overflow-hidden p-5 text-left transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 hover:scale-[1.01]"
               >
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                 <div className="flex items-start gap-3">
-                  <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br from-violet-500/15 to-pink-500/15 shrink-0">
+                  <div className="flex items-center justify-center size-9 rounded-xl bg-gradient-to-br from-violet-500/15 to-pink-500/15 shrink-0">
                     <IconUsersGroup className="h-5 w-5 text-violet-500" strokeWidth={1.8} />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -1757,8 +1766,8 @@ function GroupsTab() {
             <div className="space-y-3">
               <SectionHeading
                 icon={IconUsersGroup}
-                iconBg="bg-gradient-to-br from-slate-500/15 to-gray-500/15"
-                iconColor="text-slate-400"
+                iconBg="bg-muted/80 dark:bg-muted"
+                iconColor="text-foreground/70"
                 title="Archived"
                 count={archivedGroups.length}
               />
@@ -1768,11 +1777,12 @@ function GroupsTab() {
                     key={g._id}
                     {...listItem(i)}
                     onClick={() => setSelectedGroup(g)}
-                    className="card-elevated rounded-xl bg-card p-4 text-left opacity-60 transition-all duration-200 hover:opacity-80"
+                    className="rounded-2xl border border-border bg-card relative overflow-hidden p-4 text-left opacity-60 transition-all duration-200 hover:opacity-80"
                   >
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <div className="flex items-center gap-3">
-                      <div className="flex items-center justify-center h-9 w-9 rounded-xl bg-slate-500/10 shrink-0">
-                        <IconUsersGroup className="h-4 w-4 text-slate-400" strokeWidth={1.8} />
+                      <div className="flex items-center justify-center size-9 rounded-xl bg-muted/80 dark:bg-muted shrink-0">
+                        <IconUsersGroup className="h-4 w-4 text-foreground/70" strokeWidth={1.8} />
                       </div>
                       <div className="min-w-0">
                         <h4 className="text-sm font-semibold truncate">{g.name}</h4>
@@ -1804,7 +1814,7 @@ function ActivityTab() {
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="flex items-start gap-3">
             <Skeleton className="h-9 w-9 rounded-xl shrink-0" />
-            <Skeleton className="h-16 flex-1 rounded-xl" />
+            <Skeleton className="h-16 flex-1 rounded-2xl border border-border" />
           </div>
         ))}
       </div>
@@ -1843,7 +1853,7 @@ function ActivityTab() {
         <div key={month} className="space-y-3">
           <div className="flex items-center gap-2">
             <div className="h-px flex-1 bg-border/60" />
-            <span className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider px-2">
+            <span className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest px-2">
               {month}
             </span>
             <div className="h-px flex-1 bg-border/60" />
@@ -1889,13 +1899,13 @@ export default function SplitsPage() {
         <AppSidebar variant="inset" />
         <SidebarInset>
           <SiteHeader title="Split Expenses" />
-          <div className="flex flex-1 flex-col">
+          <div className="flex flex-1 flex-col overflow-y-auto min-h-0">
             <div className="@container/main flex flex-1 flex-col gap-5 p-4 md:p-6">
               <div className="space-y-5">
-                <Skeleton className="h-10 w-64" />
+                <Skeleton className="h-10 w-64 rounded-2xl border border-border" />
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   {Array.from({ length: 3 }).map((_, i) => (
-                    <Skeleton key={i} className="h-28 w-full rounded-xl" />
+                    <Skeleton key={i} className="h-28 w-full rounded-2xl border border-border" />
                   ))}
                 </div>
               </div>
@@ -1918,7 +1928,11 @@ export default function SplitsPage() {
       <AppSidebar variant="inset" />
       <SidebarInset>
         <SiteHeader title="Split Expenses" subtitle="Manage shared expenses" />
-        <div className="flex flex-1 flex-col">
+        <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden hidden dark:block">
+          <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-lime-500/[0.05] blur-[200px]" />
+          <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] rounded-full bg-cyan-500/[0.04] blur-[180px]" />
+        </div>
+        <div className="relative z-[1] flex flex-1 flex-col overflow-y-auto min-h-0">
           <div className="@container/main flex flex-1 flex-col gap-5 p-4 md:p-6">
             <Tabs defaultValue="overview" className="w-full">
               <TabsList className="mb-1">

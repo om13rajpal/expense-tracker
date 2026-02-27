@@ -186,7 +186,11 @@ export default function WeeklyAnalyticsPage() {
         <SiteHeader
           title="Weekly Analytics"
         />
-        <div className="flex flex-1 flex-col">
+        <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden hidden dark:block">
+          <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-lime-500/[0.05] blur-[200px]" />
+          <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] rounded-full bg-cyan-500/[0.04] blur-[180px]" />
+        </div>
+        <div className="relative z-[1] flex flex-1 flex-col overflow-y-auto min-h-0">
           <div className="@container/main flex flex-1 flex-col gap-6 p-6">
             <div className="flex flex-wrap items-center justify-between gap-4">
               <div>
@@ -237,8 +241,8 @@ export default function WeeklyAnalyticsPage() {
 
             {isLoading ? (
               <div className="space-y-4">
-                <Skeleton className="h-32" />
-                <Skeleton className="h-80" />
+                <Skeleton className="h-32 rounded-2xl border border-border" />
+                <Skeleton className="h-80 rounded-2xl border border-border" />
               </div>
             ) : (
               <>
@@ -252,40 +256,45 @@ export default function WeeklyAnalyticsPage() {
                 />
 
                 <div className="grid gap-4 md:grid-cols-4">
-                  <Card className="card-elevated">
+                  <Card className="rounded-2xl border border-border bg-card relative overflow-hidden">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground">Total Income</p>
-                      <p className="text-2xl font-semibold text-emerald-600">{formatCurrency(weeklyMetrics.totalIncome)}</p>
+                      <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">Total Income</p>
+                      <p className="text-2xl font-black tracking-tight text-lime-600 dark:text-lime-400">{formatCurrency(weeklyMetrics.totalIncome)}</p>
                       <p className="text-xs text-muted-foreground">{weeklyMetrics.incomeTransactionCount} entries</p>
                     </CardContent>
                   </Card>
-                  <Card className="card-elevated">
+                  <Card className="rounded-2xl border border-border bg-card relative overflow-hidden">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground">Total Expenses</p>
-                      <p className="text-2xl font-semibold text-rose-600">{formatCurrency(weeklyMetrics.totalExpenses)}</p>
+                      <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">Total Expenses</p>
+                      <p className="text-2xl font-black tracking-tight text-destructive">{formatCurrency(weeklyMetrics.totalExpenses)}</p>
                       <p className="text-xs text-muted-foreground">{weeklyMetrics.expenseTransactionCount} entries</p>
                     </CardContent>
                   </Card>
-                  <Card className="card-elevated">
+                  <Card className="rounded-2xl border border-border bg-card relative overflow-hidden">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground">Net Change</p>
-                      <p className={`text-2xl font-semibold ${(weeklyMetrics.totalIncome - weeklyMetrics.totalExpenses) >= 0 ? "text-emerald-600" : "text-rose-600"}`}>
+                      <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">Net Change</p>
+                      <p className={`text-2xl font-black tracking-tight ${(weeklyMetrics.totalIncome - weeklyMetrics.totalExpenses) >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
                         {(weeklyMetrics.totalIncome - weeklyMetrics.totalExpenses) >= 0 ? "+" : ""}{formatCurrency(weeklyMetrics.totalIncome - weeklyMetrics.totalExpenses)}
                       </p>
                       <p className="text-xs text-muted-foreground">Balance change this week</p>
                     </CardContent>
                   </Card>
-                  <Card className="card-elevated">
+                  <Card className="rounded-2xl border border-border bg-card relative overflow-hidden">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardContent className="p-4">
-                      <p className="text-xs text-muted-foreground">Average Daily Spend</p>
-                      <p className="text-2xl font-semibold">{formatCurrency(weeklyMetrics.averageDailySpend)}</p>
+                      <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">Average Daily Spend</p>
+                      <p className="text-2xl font-black tracking-tight">{formatCurrency(weeklyMetrics.averageDailySpend)}</p>
                       <p className="text-xs text-muted-foreground">{weeklyMetrics.daysInWeek} active days</p>
                     </CardContent>
                   </Card>
                 </div>
 
                 <div className="grid gap-4 lg:grid-cols-2">
-                  <Card className="card-elevated">
+                  <Card className="rounded-2xl border border-border bg-card relative overflow-hidden">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardHeader>
                       <CardTitle>Daily Breakdown</CardTitle>
                       <CardDescription>Income vs expenses by day</CardDescription>
@@ -299,10 +308,12 @@ export default function WeeklyAnalyticsPage() {
                           <Tooltip
                             formatter={(value: number) => formatCurrency(value)}
                             contentStyle={{
-                              borderRadius: 10,
+                              borderRadius: 12,
                               fontSize: 12,
                               border: "1px solid var(--border)",
-                              background: "var(--card)",
+                              background: "oklch(from var(--card) l c h / 0.95)",
+                              backdropFilter: "blur(24px)",
+                              boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
                               color: "var(--card-foreground)",
                             }}
                             cursor={{ fill: "var(--muted)", opacity: 0.3 }}
@@ -313,7 +324,8 @@ export default function WeeklyAnalyticsPage() {
                       </ResponsiveContainer>
                     </CardContent>
                   </Card>
-                  <Card className="card-elevated">
+                  <Card className="rounded-2xl border border-border bg-card relative overflow-hidden">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardHeader>
                       <CardTitle>Top Categories</CardTitle>
                       <CardDescription>Highest weekly spend areas</CardDescription>
@@ -333,7 +345,8 @@ export default function WeeklyAnalyticsPage() {
                   </Card>
                 </div>
 
-                <Card className="card-elevated">
+                <Card className="rounded-2xl border border-border bg-card relative overflow-hidden">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <CardHeader>
                     <CardTitle>Top Expenses</CardTitle>
                     <CardDescription>Largest transactions this week</CardDescription>
@@ -348,7 +361,7 @@ export default function WeeklyAnalyticsPage() {
                               {txn.merchant} · {txn.category}
                             </p>
                           </div>
-                          <span className="text-rose-600 font-semibold">
+                          <span className="text-destructive font-black tracking-tight">
                             {formatCurrency(txn.amount)}
                           </span>
                         </div>

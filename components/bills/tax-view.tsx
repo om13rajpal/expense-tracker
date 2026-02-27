@@ -148,7 +148,7 @@ function FieldRow({
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground/70 mb-3">
+    <h3 className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70 mb-3">
       {children}
     </h3>
   )
@@ -353,12 +353,12 @@ export function TaxView() {
         <div className="@container/main flex flex-1 flex-col gap-5 p-4 md:p-6">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {Array.from({ length: 4 }).map((_, i) => (
-              <Skeleton key={i} className="h-24 rounded-xl" />
+              <Skeleton key={i} className="h-24 rounded-2xl border border-border" />
             ))}
           </div>
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            <Skeleton className="h-96 rounded-xl" />
-            <Skeleton className="h-96 rounded-xl" />
+            <Skeleton className="h-96 rounded-2xl border border-border" />
+            <Skeleton className="h-96 rounded-2xl border border-border" />
           </div>
         </div>
       </div>
@@ -405,8 +405,8 @@ export function TaxView() {
                 value={formatINR(oldTax.grossTotalIncome)}
                 trendLabel={`~${formatCompact(Math.round(oldTax.grossTotalIncome / 12))}/mo`}
                 icon={<IconCash className="h-5 w-5" />}
-                iconBg="bg-emerald-500/10 dark:bg-emerald-500/15"
-                iconColor="text-emerald-600 dark:text-emerald-400"
+                iconBg="bg-muted/80 dark:bg-muted"
+                iconColor="text-foreground/70"
                 tooltip="Salary + Other Income"
               />
             </motion.div>
@@ -416,8 +416,8 @@ export function TaxView() {
                 value={formatINR(oldTax.totalTax)}
                 trendLabel={`Effective ${oldTax.effectiveRate.toFixed(1)}%`}
                 icon={<IconReceipt2 className="h-5 w-5" />}
-                iconBg="bg-amber-500/10 dark:bg-amber-500/15"
-                iconColor="text-amber-600 dark:text-amber-400"
+                iconBg="bg-muted/80 dark:bg-muted"
+                iconColor="text-foreground/70"
                 tone={recommended === "old" ? "positive" : "neutral"}
                 tooltip="Tax under Old Regime with all deductions"
               />
@@ -428,8 +428,8 @@ export function TaxView() {
                 value={formatINR(newTax.totalTax)}
                 trendLabel={`Effective ${newTax.effectiveRate.toFixed(1)}%`}
                 icon={<IconScale className="h-5 w-5" />}
-                iconBg="bg-blue-500/10 dark:bg-blue-500/15"
-                iconColor="text-blue-600 dark:text-blue-400"
+                iconBg="bg-muted/80 dark:bg-muted"
+                iconColor="text-foreground/70"
                 tone={recommended === "new" ? "positive" : "neutral"}
                 tooltip="Tax under New Regime (only standard deduction)"
               />
@@ -440,8 +440,8 @@ export function TaxView() {
                 value={formatINR(savings)}
                 trendLabel={`with ${recommended === "old" ? "Old" : "New"} Regime`}
                 icon={<IconPigMoney className="h-5 w-5" />}
-                iconBg="bg-violet-500/10 dark:bg-violet-500/15"
-                iconColor="text-violet-600 dark:text-violet-400"
+                iconBg="bg-muted/80 dark:bg-muted"
+                iconColor="text-foreground/70"
                 tone="positive"
                 tooltip="Difference between the two regimes"
               />
@@ -450,12 +450,13 @@ export function TaxView() {
 
           {/* -- AI Tax Savings -- */}
           <motion.div variants={fadeUp}>
-            <Card className="card-elevated">
+            <Card className="rounded-2xl border border-border bg-card relative overflow-hidden">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10">
-                      <IconSparkles className="h-4 w-4 text-primary" />
+                    <div className="flex size-9 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+                      <IconSparkles className="h-4 w-4 text-foreground/70" />
                     </div>
                     <div>
                       <CardTitle className="text-sm">AI Tax Saving Tips</CardTitle>
@@ -482,7 +483,7 @@ export function TaxView() {
                         {/* Hero banner */}
                         <div className="relative rounded-xl bg-gradient-to-r from-primary/10 to-primary/5 p-4">
                           <div>
-                            <p className="text-2xl font-bold text-primary tabular-nums">
+                            <p className="text-2xl font-black tracking-tight text-primary tabular-nums">
                               {formatINR(taxTipData.totalSavingPotential)}
                             </p>
                             <p className="text-xs text-muted-foreground mt-0.5">
@@ -491,7 +492,7 @@ export function TaxView() {
                           </div>
                           <Badge
                             variant="outline"
-                            className="absolute top-3 right-3 text-[11px] bg-background/80 backdrop-blur-sm"
+                            className="absolute top-3 right-3 text-[11px] bg-background"
                           >
                             {taxTipData.regime.recommended === "new" ? "New" : "Old"} Regime Recommended
                           </Badge>
@@ -500,13 +501,13 @@ export function TaxView() {
                         {/* Deduction Utilization Progress Bars */}
                         {taxTipData.deductionUtilization && taxTipData.deductionUtilization.length > 0 && (
                           <div>
-                            <p className="text-xs font-semibold text-muted-foreground mb-2">Deduction Utilization</p>
+                            <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest mb-2">Deduction Utilization</p>
                             <div className="grid grid-cols-2 gap-3">
                               {taxTipData.deductionUtilization.map((item, idx) => {
                                 const pct = item.limit > 0 ? (item.used / item.limit) * 100 : 0
                                 const barColor =
                                   pct > 75
-                                    ? "[&>div]:bg-emerald-500"
+                                    ? "[&>div]:bg-lime-500"
                                     : pct >= 25
                                       ? "[&>div]:bg-amber-500"
                                       : ""
@@ -527,12 +528,12 @@ export function TaxView() {
                         {/* Tips Cards */}
                         {taxTipData.tips && taxTipData.tips.length > 0 && (
                           <div>
-                            <p className="text-xs font-semibold text-muted-foreground mb-2">Recommendations</p>
+                            <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest mb-2">Recommendations</p>
                             <div className="space-y-2">
                               {taxTipData.tips.map((tip, i) => (
                                 <div
                                   key={i}
-                                  className="rounded-lg border border-border/40 bg-muted/20 px-3 py-2.5 flex items-start justify-between gap-3"
+                                  className="rounded-xl border border-border bg-card px-3 py-2.5 flex items-start justify-between gap-3"
                                 >
                                   <div className="flex-1 min-w-0">
                                     <div className="flex items-center gap-1.5 mb-0.5">
@@ -542,7 +543,7 @@ export function TaxView() {
                                             ? "bg-red-500"
                                             : tip.priority === "medium"
                                               ? "bg-amber-500"
-                                              : "bg-emerald-500"
+                                              : "bg-lime-500"
                                         }`}
                                       />
                                       <p className="text-xs font-semibold truncate">{tip.title}</p>
@@ -557,7 +558,7 @@ export function TaxView() {
                                     </p>
                                   </div>
                                   {tip.savingAmount > 0 && (
-                                    <span className="bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 rounded-full px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap flex-shrink-0 tabular-nums">
+                                    <span className="bg-lime-100 text-lime-700 dark:bg-lime-900/30 dark:text-lime-400 rounded-full px-2 py-0.5 text-[11px] font-semibold whitespace-nowrap flex-shrink-0 tabular-nums">
                                       {formatINR(tip.savingAmount)}
                                     </span>
                                   )}
@@ -575,9 +576,9 @@ export function TaxView() {
                             <div>
                               {/* Section header with totals */}
                               <div className="flex items-end justify-between mb-3">
-                                <p className="text-xs font-semibold text-muted-foreground">Subscriptions</p>
+                                <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">Subscriptions</p>
                                 <div className="text-right">
-                                  <p className="text-sm font-bold tabular-nums">{formatINR(totalMonthly)}<span className="text-[11px] font-normal text-muted-foreground">/mo</span></p>
+                                  <p className="text-sm font-black tracking-tight tabular-nums">{formatINR(totalMonthly)}<span className="text-[11px] font-normal text-muted-foreground">/mo</span></p>
                                   <p className="text-[11px] text-muted-foreground tabular-nums">{formatINR(totalAnnual)}/yr</p>
                                 </div>
                               </div>
@@ -587,7 +588,7 @@ export function TaxView() {
                                 {taxTipData.subscriptions.map((sub, i) => (
                                   <div
                                     key={i}
-                                    className="group rounded-xl border border-border/40 bg-card/60 p-3 flex items-center gap-3 transition-colors hover:bg-card"
+                                    className="group rounded-xl border border-border bg-card p-3 flex items-center gap-3 transition-colors hover:bg-card"
                                   >
                                     {/* Logo */}
                                     <div className="flex-shrink-0 h-10 w-10 relative">
@@ -620,7 +621,7 @@ export function TaxView() {
 
                                     {/* Cost pill */}
                                     <div className="flex-shrink-0 text-right">
-                                      <p className="text-sm font-bold tabular-nums">{formatINR(sub.monthlyCost)}</p>
+                                      <p className="text-sm font-black tracking-tight tabular-nums">{formatINR(sub.monthlyCost)}</p>
                                       <p className="text-[11px] text-muted-foreground tabular-nums">{formatINR(sub.annualCost)}/yr</p>
                                     </div>
                                   </div>
@@ -636,7 +637,7 @@ export function TaxView() {
                   <div className="space-y-3">
                     {taxInsight.sections.map((section) => (
                       <div key={section.id}>
-                        <p className="text-xs font-semibold text-muted-foreground mb-1">{section.title}</p>
+                        <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest mb-1">{section.title}</p>
                         {section.type === "summary" && section.text && (
                           <p className="text-sm text-foreground">{section.text}</p>
                         )}
@@ -648,8 +649,8 @@ export function TaxView() {
                           </ul>
                         )}
                         {section.type === "highlight" && section.highlight && (
-                          <div className={`rounded-lg px-3 py-2 text-sm font-medium ${
-                            section.severity === "positive" ? "bg-emerald-50 text-emerald-700 dark:bg-emerald-950/30 dark:text-emerald-400" :
+                          <div className={`rounded-xl px-3 py-2 text-sm font-medium ${
+                            section.severity === "positive" ? "bg-lime-50 text-lime-700 dark:bg-lime-950/30 dark:text-lime-400" :
                             section.severity === "warning" ? "bg-amber-50 text-amber-700 dark:bg-amber-950/30 dark:text-amber-400" :
                             "bg-muted text-foreground"
                           }`}>
@@ -683,7 +684,8 @@ export function TaxView() {
                 {/* -- Income Tab -- */}
                 <TabsContent value="income">
                   <motion.div variants={fadeUp} initial="hidden" animate="show">
-                    <Card className="card-elevated">
+                    <Card className="rounded-2xl border border-border bg-card relative overflow-hidden">
+                      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-base">
                           <IconCash className="h-4 w-4 text-primary" />
@@ -724,7 +726,8 @@ export function TaxView() {
                 {/* -- 80C Tab -- */}
                 <TabsContent value="80c">
                   <motion.div variants={fadeUp} initial="hidden" animate="show">
-                    <Card className="card-elevated">
+                    <Card className="rounded-2xl border border-border bg-card relative overflow-hidden">
+                      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-base">
                           <IconShieldCheck className="h-4 w-4 text-primary" />
@@ -745,7 +748,7 @@ export function TaxView() {
                               variant="outline"
                               className={
                                 utilization80CPct >= 100
-                                  ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800"
+                                  ? "bg-lime-500/10 text-lime-700 dark:text-lime-400 border-lime-200 dark:border-lime-800"
                                   : utilization80CPct >= 70
                                     ? "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800"
                                     : "bg-slate-500/10 text-slate-700 dark:text-slate-400"
@@ -758,7 +761,7 @@ export function TaxView() {
                             value={utilization80CPct}
                             className={`h-2 ${
                               utilization80CPct >= 100
-                                ? "[&>div]:bg-emerald-500"
+                                ? "[&>div]:bg-lime-500"
                                 : utilization80CPct >= 70
                                   ? "[&>div]:bg-amber-500"
                                   : ""
@@ -792,7 +795,8 @@ export function TaxView() {
                 <TabsContent value="health">
                   <motion.div variants={fadeUp} initial="hidden" animate="show" className="space-y-6">
                     {/* 80D */}
-                    <Card className="card-elevated">
+                    <Card className="rounded-2xl border border-border bg-card relative overflow-hidden">
+                      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-base">
                           <IconHeartbeat className="h-4 w-4 text-primary" />
@@ -828,7 +832,8 @@ export function TaxView() {
                     </Card>
 
                     {/* HRA */}
-                    <Card className="card-elevated">
+                    <Card className="rounded-2xl border border-border bg-card relative overflow-hidden">
+                      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-base">
                           <IconHomeDollar className="h-4 w-4 text-primary" />
@@ -859,8 +864,8 @@ export function TaxView() {
                           </Label>
                         </div>
                         {oldTax.hraExemption > 0 && (
-                          <div className="rounded-lg bg-emerald-500/5 border border-emerald-200 dark:border-emerald-900 p-3">
-                            <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">
+                          <div className="rounded-xl bg-lime-500/5 border border-lime-200 dark:border-lime-900 p-3">
+                            <p className="text-sm font-medium text-lime-700 dark:text-lime-400">
                               HRA Exemption: {formatINR(oldTax.hraExemption)}
                             </p>
                             <p className="text-xs text-muted-foreground mt-0.5">
@@ -876,7 +881,8 @@ export function TaxView() {
                 {/* -- Other Deductions Tab -- */}
                 <TabsContent value="other">
                   <motion.div variants={fadeUp} initial="hidden" animate="show">
-                    <Card className="card-elevated">
+                    <Card className="rounded-2xl border border-border bg-card relative overflow-hidden">
+                      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-base">
                           <IconBuildingBank className="h-4 w-4 text-primary" />
@@ -902,7 +908,8 @@ export function TaxView() {
             <div className="space-y-6">
               {/* Recommendation badge */}
               <motion.div variants={scaleIn} initial="hidden" animate="show">
-                <Card className="card-elevated border-primary/30 bg-primary/5">
+                <Card className="rounded-2xl border border-primary/30 bg-primary/5 relative overflow-hidden">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <CardContent className="p-4 text-center">
                     <div className="flex items-center justify-center gap-2 mb-1">
                       <IconCheck className="h-4 w-4 text-primary" />
@@ -910,7 +917,7 @@ export function TaxView() {
                         {recommended === "old" ? "Old" : "New"} Regime Recommended
                       </p>
                     </div>
-                    <p className="text-2xl font-bold tracking-tight">
+                    <p className="text-2xl font-black tracking-tight">
                       {formatINR(savings)}
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5">
@@ -922,7 +929,8 @@ export function TaxView() {
 
               {/* Bar chart comparison */}
               <motion.div variants={fadeUp} initial="hidden" animate="show">
-                <Card className="card-elevated">
+                <Card className="rounded-2xl border border-border bg-card relative overflow-hidden">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm">Tax Comparison</CardTitle>
                   </CardHeader>
@@ -948,11 +956,13 @@ export function TaxView() {
                         <RechartsTooltip
                           formatter={(v: number) => [formatINR(v), "Total Tax"]}
                           contentStyle={{
-                            background: "var(--card)",
+                            background: "oklch(from var(--card) l c h / 0.95)",
                             color: "var(--card-foreground)",
                             border: "1px solid var(--border)",
-                            borderRadius: 8,
+                            borderRadius: 12,
                             fontSize: 12,
+                            backdropFilter: "blur(16px)",
+                            boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
                           }}
                         />
                         <Bar dataKey="tax" radius={[0, 6, 6, 0]}>
@@ -968,16 +978,17 @@ export function TaxView() {
 
               {/* Side-by-side breakdown */}
               <motion.div variants={fadeUp} initial="hidden" animate="show">
-                <Card className="card-elevated">
+                <Card className="rounded-2xl border border-border bg-card relative overflow-hidden">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm">Detailed Breakdown</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-0">
                     {/* Column headers */}
-                    <div className="grid grid-cols-[1fr_auto_auto] gap-2 pb-2 mb-1 border-b border-border/50">
-                      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60">Item</span>
-                      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 w-24 text-right">Old</span>
-                      <span className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/60 w-24 text-right">New</span>
+                    <div className="grid grid-cols-[1fr_auto_auto] gap-2 pb-2 mb-1 border-b border-border">
+                      <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">Item</span>
+                      <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70 w-24 text-right">Old</span>
+                      <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70 w-24 text-right">New</span>
                     </div>
                     <ComparisonRow label="Gross Income" old={oldTax.grossTotalIncome} new_={newTax.grossTotalIncome} />
                     <ComparisonRow label="Standard Deduction" old={oldTax.standardDeduction} new_={newTax.standardDeduction} />
@@ -1020,7 +1031,8 @@ export function TaxView() {
 
               {/* Slab-wise breakdown */}
               <motion.div variants={fadeUp} initial="hidden" animate="show">
-                <Card className="card-elevated">
+                <Card className="rounded-2xl border border-border bg-card relative overflow-hidden">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm">Slab-wise Tax</CardTitle>
                   </CardHeader>
@@ -1078,7 +1090,7 @@ function ComparisonRow({
 }) {
   const oldDisplay = oldStr ?? (old !== undefined ? formatINR(old) : "-")
   const newDisplay = newStr ?? (new_ !== undefined ? formatINR(new_) : "-")
-  const rowFont = bold ? "font-semibold" : "font-normal"
+  const rowFont = bold ? "font-black tracking-tight" : "font-normal"
 
   return (
     <div

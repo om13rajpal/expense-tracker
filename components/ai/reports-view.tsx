@@ -68,32 +68,32 @@ const insightConfig: InsightMeta[] = [
     title: "Spending Analysis",
     description: "AI-powered analysis of your spending patterns and financial health",
     icon: IconReportAnalytics,
-    iconBg: "bg-blue-500/10 dark:bg-blue-500/15",
-    iconColor: "text-blue-600 dark:text-blue-400",
+    iconBg: "bg-muted/80 dark:bg-muted",
+    iconColor: "text-foreground/70",
   },
   {
     type: "monthly_budget",
     title: "Monthly Budget",
     description: "Personalized budget allocation for the upcoming month",
     icon: IconTargetArrow,
-    iconBg: "bg-emerald-500/10 dark:bg-emerald-500/15",
-    iconColor: "text-emerald-600 dark:text-emerald-400",
+    iconBg: "bg-muted/80 dark:bg-muted",
+    iconColor: "text-foreground/70",
   },
   {
     type: "weekly_budget",
     title: "Weekly Budget",
     description: "Short-term spending targets for the coming week",
     icon: IconTargetArrow,
-    iconBg: "bg-amber-500/10 dark:bg-amber-500/15",
-    iconColor: "text-amber-600 dark:text-amber-400",
+    iconBg: "bg-muted/80 dark:bg-muted",
+    iconColor: "text-foreground/70",
   },
   {
     type: "investment_insights",
     title: "Investment Insights",
     description: "AI analysis of your SIPs, stocks, and mutual fund portfolio",
     icon: IconChartPie,
-    iconBg: "bg-purple-500/10 dark:bg-purple-500/15",
-    iconColor: "text-purple-600 dark:text-purple-400",
+    iconBg: "bg-muted/80 dark:bg-muted",
+    iconColor: "text-foreground/70",
   },
 ]
 
@@ -122,12 +122,12 @@ function relativeTime(iso: string): string {
 /** Tailwind theme tokens (border, bg, icon, badge) for each insight severity level. */
 const severityStyles: Record<string, { border: string; bg: string; icon: React.ComponentType<{ className?: string }>; iconColor: string; badge: string; badgeText: string }> = {
   positive: {
-    border: "border-emerald-200/70 dark:border-emerald-800/50",
-    bg: "bg-emerald-50/50 dark:bg-emerald-950/20",
+    border: "border-lime-200/70 dark:border-lime-800/50",
+    bg: "bg-lime-50/50 dark:bg-lime-950/20",
     icon: IconArrowUpRight,
-    iconColor: "text-emerald-600 dark:text-emerald-400",
-    badge: "bg-emerald-100 dark:bg-emerald-900/40",
-    badgeText: "text-emerald-700 dark:text-emerald-300",
+    iconColor: "text-lime-600 dark:text-lime-400",
+    badge: "bg-lime-100 dark:bg-lime-900/40",
+    badgeText: "text-lime-700 dark:text-lime-300",
   },
   warning: {
     border: "border-amber-200/70 dark:border-amber-800/50",
@@ -138,15 +138,15 @@ const severityStyles: Record<string, { border: string; bg: string; icon: React.C
     badgeText: "text-amber-700 dark:text-amber-300",
   },
   critical: {
-    border: "border-rose-200/70 dark:border-rose-800/50",
-    bg: "bg-rose-50/50 dark:bg-rose-950/20",
+    border: "border-destructive/30 dark:border-destructive/40",
+    bg: "bg-destructive/5 dark:bg-destructive/10",
     icon: IconArrowDownRight,
-    iconColor: "text-rose-600 dark:text-rose-400",
-    badge: "bg-rose-100 dark:bg-rose-900/40",
-    badgeText: "text-rose-700 dark:text-rose-300",
+    iconColor: "text-destructive",
+    badge: "bg-destructive/10",
+    badgeText: "text-destructive",
   },
   neutral: {
-    border: "border-border/60",
+    border: "border-border",
     bg: "bg-muted/30",
     icon: IconInfoCircle,
     iconColor: "text-muted-foreground",
@@ -162,8 +162,8 @@ function getSeverityStyle(severity?: string) {
 
 /** Colour and label mapping for budget category status (on_track / over / under). */
 const statusConfig: Record<string, { label: string; color: string; bg: string }> = {
-  on_track: { label: "On track", color: "text-emerald-700 dark:text-emerald-300", bg: "bg-emerald-100 dark:bg-emerald-900/40" },
-  over: { label: "Over", color: "text-rose-700 dark:text-rose-300", bg: "bg-rose-100 dark:bg-rose-900/40" },
+  on_track: { label: "On track", color: "text-lime-700 dark:text-lime-300", bg: "bg-lime-100 dark:bg-lime-900/40" },
+  over: { label: "Over", color: "text-destructive", bg: "bg-destructive/10" },
   under: { label: "Under", color: "text-blue-700 dark:text-blue-300", bg: "bg-blue-100 dark:bg-blue-900/40" },
 }
 
@@ -179,9 +179,9 @@ function StatusBadge({ status }: { status: string }) {
 
 /** Dot and text colour classes for action item priority levels (high / medium / low). */
 const priorityColors: Record<string, { dot: string; text: string }> = {
-  high: { dot: "bg-rose-500", text: "text-rose-600 dark:text-rose-400" },
+  high: { dot: "bg-destructive", text: "text-destructive" },
   medium: { dot: "bg-amber-500", text: "text-amber-600 dark:text-amber-400" },
-  low: { dot: "bg-emerald-500", text: "text-emerald-600 dark:text-emerald-400" },
+  low: { dot: "bg-lime-500", text: "text-lime-600 dark:text-lime-400" },
 }
 
 /**
@@ -272,7 +272,7 @@ function DashboardShell({
       <DashboardHeader meta={meta} insight={insight} isWorking={isWorking} Icon={Icon} />
 
       {insight.isRegenerating && (
-        <div className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2">
+        <div className="flex items-center gap-2 rounded-xl border border-border bg-accent px-3 py-2">
           <IconRefresh className="h-3.5 w-3.5 animate-spin text-primary" />
           <span className="text-xs font-medium text-primary">
             Regenerating with latest data...
@@ -296,7 +296,7 @@ function HealthScoreRing({ score }: { score: number }) {
   const circumference = 2 * Math.PI * radius
   const offset = circumference - (score / 100) * circumference
   const color =
-    score >= 70 ? "text-emerald-500" : score >= 40 ? "text-amber-500" : "text-rose-500"
+    score >= 70 ? "text-lime-500" : score >= 40 ? "text-amber-500" : "text-destructive"
 
   return (
     <div className="flex flex-col items-center gap-1.5">
@@ -324,11 +324,11 @@ function HealthScoreRing({ score }: { score: number }) {
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className={`text-3xl font-bold tabular-nums ${color}`}>{score}</span>
+          <span className={`text-3xl font-black tracking-tight tabular-nums ${color}`}>{score}</span>
           <span className="text-[11px] text-muted-foreground">/ 100</span>
         </div>
       </div>
-      <span className="text-xs font-medium text-muted-foreground">Financial Health</span>
+      <span className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">Financial Health</span>
     </div>
   )
 }
@@ -356,16 +356,17 @@ function SpendingDashboard({
   return (
     <DashboardShell meta={meta} insight={insight}>
       {/* 1. Health Score + Summary */}
-      <div className="rounded-xl border bg-card p-5">
+      <div className="rounded-2xl border border-border bg-card p-5 relative overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
         <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start">
           <div className="flex shrink-0 items-center justify-center">
             <HealthScoreRing score={data.healthScore} />
           </div>
           <div className="grid flex-1 grid-cols-2 gap-3">
-            <StatTile label="Income" value={data.summary.income} color="text-emerald-600 dark:text-emerald-400" />
-            <StatTile label="Expenses" value={data.summary.expenses} color="text-rose-600 dark:text-rose-400" />
-            <StatTile label="Savings" value={data.summary.savings} color="text-blue-600 dark:text-blue-400" />
-            <StatTile label="Savings Rate" value={data.summary.savingsRate} isPercent color="text-purple-600 dark:text-purple-400" />
+            <StatTile label="Income" value={data.summary.income} color="text-lime-600 dark:text-lime-400" />
+            <StatTile label="Expenses" value={data.summary.expenses} color="text-destructive" />
+            <StatTile label="Savings" value={data.summary.savings} color="text-foreground/70" />
+            <StatTile label="Savings Rate" value={data.summary.savingsRate} isPercent color="text-foreground/70" />
           </div>
         </div>
         {data.summary.verdict && (
@@ -375,8 +376,9 @@ function SpendingDashboard({
 
       {/* 2. Top Categories */}
       {data.topCategories && data.topCategories.length > 0 && (
-        <div className="rounded-xl border bg-card p-5">
-          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="rounded-2xl border border-border bg-card p-5 relative overflow-hidden">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+          <h4 className="mb-3 text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">
             Top Spending Categories
           </h4>
           <div className="space-y-2.5">
@@ -389,9 +391,9 @@ function SpendingDashboard({
                     : IconMinus
               const trendColor =
                 cat.trend === "up"
-                  ? "text-rose-500"
+                  ? "text-destructive"
                   : cat.trend === "down"
-                    ? "text-emerald-500"
+                    ? "text-lime-500"
                     : "text-muted-foreground"
 
               return (
@@ -426,14 +428,15 @@ function SpendingDashboard({
       {/* 3. Action Items */}
       {data.actionItems && data.actionItems.length > 0 && (
         <div>
-          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <h4 className="mb-3 text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">
             Action Items
           </h4>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {data.actionItems.map((item, i) => {
               const impact = priorityColors[item.impact] || priorityColors.low
               return (
-                <div key={i} className="relative rounded-xl border bg-card p-4">
+                <div key={i} className="relative rounded-2xl border border-border bg-card p-4 overflow-hidden">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <div className="absolute right-3 top-3 flex items-center gap-1">
                     <span className={`h-1.5 w-1.5 rounded-full ${impact.dot}`} />
                     <span className={`text-[11px] font-medium ${impact.text}`}>
@@ -447,7 +450,7 @@ function SpendingDashboard({
                       {item.category}
                     </span>
                     {item.savingAmount > 0 && (
-                      <span className="inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                      <span className="inline-flex rounded-full bg-lime-500/10 px-2 py-0.5 text-[11px] font-medium text-lime-600 dark:text-lime-400">
                         Save {formatCurrency(item.savingAmount)}
                       </span>
                     )}
@@ -483,11 +486,12 @@ function SpendingDashboard({
 
       {/* 5. Key Insight Callout */}
       {data.keyInsight && (
-        <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+        <div className="rounded-2xl border border-border bg-card p-4 relative overflow-hidden">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
           <div className="flex items-start gap-3">
             <IconSparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+              <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest text-primary">
                 Key Insight
               </p>
               <p className="mt-1 text-sm leading-relaxed">{data.keyInsight}</p>
@@ -520,16 +524,16 @@ function MonthlyBudgetDashboard({
   const buckets = [
     { label: "Needs", data: data.needs, color: "bg-blue-500", trackColor: "bg-blue-100 dark:bg-blue-900/30", textColor: "text-blue-600 dark:text-blue-400", target: 50 },
     { label: "Wants", data: data.wants, color: "bg-amber-500", trackColor: "bg-amber-100 dark:bg-amber-900/30", textColor: "text-amber-600 dark:text-amber-400", target: 30 },
-    { label: "Savings", data: data.savingsInvestments, color: "bg-emerald-500", trackColor: "bg-emerald-100 dark:bg-emerald-900/30", textColor: "text-emerald-600 dark:text-emerald-400", target: 20 },
+    { label: "Savings", data: data.savingsInvestments, color: "bg-lime-500", trackColor: "bg-lime-100 dark:bg-lime-900/30", textColor: "text-lime-600 dark:text-lime-400", target: 20 },
   ]
 
   return (
     <DashboardShell meta={meta} insight={insight}>
       {/* 1. Overview stat tiles */}
       <div className="grid grid-cols-3 gap-3">
-        <StatTile label="Income" value={data.totalIncome} color="text-emerald-600 dark:text-emerald-400" />
-        <StatTile label="Budget" value={data.totalBudget} color="text-blue-600 dark:text-blue-400" />
-        <StatTile label="Surplus" value={data.surplus} color={data.surplus >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"} />
+        <StatTile label="Income" value={data.totalIncome} color="text-lime-600 dark:text-lime-400" />
+        <StatTile label="Budget" value={data.totalBudget} color="text-foreground/70" />
+        <StatTile label="Surplus" value={data.surplus} color={data.surplus >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"} />
       </div>
 
       {/* 2. 50/30/20 Bucket breakdown */}
@@ -537,7 +541,8 @@ function MonthlyBudgetDashboard({
         {buckets.map((bucket) => {
           const pct = bucket.data.percentage
           return (
-            <div key={bucket.label} className="rounded-xl border bg-card p-4">
+            <div key={bucket.label} className="rounded-2xl border border-border bg-card p-4 relative overflow-hidden">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-semibold">{bucket.label}</h4>
                 <span className={`text-xs font-medium ${bucket.textColor}`}>
@@ -581,19 +586,20 @@ function MonthlyBudgetDashboard({
       {/* 3. Savings opportunities */}
       {data.savingsOpportunities && data.savingsOpportunities.length > 0 && (
         <div>
-          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <h4 className="mb-3 text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">
             Savings Opportunities
           </h4>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {data.savingsOpportunities.map((opp, i) => (
-              <div key={i} className="flex items-start gap-3 rounded-xl border bg-card p-4">
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-emerald-100 dark:bg-emerald-900/40">
-                  <IconBulb className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              <div key={i} className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4 relative overflow-hidden">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+                <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-lime-500/10">
+                  <IconBulb className="h-4 w-4 text-lime-600 dark:text-lime-400" />
                 </div>
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-semibold">{opp.title}</p>
                   <p className="mt-0.5 text-xs text-muted-foreground">{opp.description}</p>
-                  <span className="mt-2 inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                  <span className="mt-2 inline-flex rounded-full bg-lime-500/10 px-2 py-0.5 text-[11px] font-medium text-lime-600 dark:text-lime-400">
                     Save {formatCurrency(opp.amount)}/mo
                   </span>
                 </div>
@@ -624,9 +630,10 @@ function MonthlyBudgetDashboard({
 
       {/* 5. Positive note */}
       {data.positiveNote && (
-        <div className="rounded-xl border border-emerald-200/70 bg-emerald-50/50 p-4 dark:border-emerald-800/50 dark:bg-emerald-950/20">
+        <div className="rounded-2xl border border-lime-200/70 bg-lime-50/50 p-4 dark:border-lime-800/50 dark:bg-lime-950/20 relative overflow-hidden">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
           <div className="flex items-start gap-3">
-            <IconCircleCheck className="mt-0.5 h-4 w-4 shrink-0 text-emerald-600 dark:text-emerald-400" />
+            <IconCircleCheck className="mt-0.5 h-4 w-4 shrink-0 text-lime-600 dark:text-lime-400" />
             <p className="text-sm leading-relaxed">{data.positiveNote}</p>
           </div>
         </div>
@@ -657,11 +664,12 @@ function WeeklyBudgetDashboard({
   return (
     <DashboardShell meta={meta} insight={insight}>
       {/* 1. Overview stat tiles + on-track indicator */}
-      <div className="rounded-xl border bg-card p-5">
+      <div className="rounded-2xl border border-border bg-card p-5 relative overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <span className={`h-2.5 w-2.5 rounded-full ${data.onTrack ? "bg-emerald-500" : "bg-rose-500"}`} />
-            <span className={`text-sm font-semibold ${data.onTrack ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+            <span className={`h-2.5 w-2.5 rounded-full ${data.onTrack ? "bg-lime-500" : "bg-destructive"}`} />
+            <span className={`text-sm font-semibold ${data.onTrack ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
               {data.onTrack ? "On Track" : "Over Budget"}
             </span>
           </div>
@@ -670,7 +678,7 @@ function WeeklyBudgetDashboard({
         {/* Progress bar */}
         <div className="mt-3 h-3 w-full overflow-hidden rounded-full bg-muted/50">
           <div
-            className={`h-full rounded-full transition-all duration-700 ${data.onTrack ? "bg-emerald-500" : "bg-rose-500"}`}
+            className={`h-full rounded-full transition-all duration-700 ${data.onTrack ? "bg-lime-500" : "bg-destructive"}`}
             style={{ width: `${Math.min(spentPct, 100)}%` }}
           />
         </div>
@@ -679,16 +687,17 @@ function WeeklyBudgetDashboard({
           <span>Target: <span className="font-medium text-foreground">{formatCurrency(data.weeklyTarget)}</span></span>
         </div>
         <div className="mt-3 grid grid-cols-3 gap-3">
-          <StatTile label="Remaining" value={data.remaining} color={data.remaining >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"} />
-          <StatTile label="Daily Limit" value={data.dailyLimit} color="text-blue-600 dark:text-blue-400" />
-          <StatTile label="Days Left" value={data.daysRemaining} color="text-purple-600 dark:text-purple-400" isRaw />
+          <StatTile label="Remaining" value={data.remaining} color={data.remaining >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"} />
+          <StatTile label="Daily Limit" value={data.dailyLimit} color="text-foreground/70" />
+          <StatTile label="Days Left" value={data.daysRemaining} color="text-foreground/70" isRaw />
         </div>
       </div>
 
       {/* 2. Category progress */}
       {data.categories && data.categories.length > 0 && (
-        <div className="rounded-xl border bg-card p-5">
-          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="rounded-2xl border border-border bg-card p-5 relative overflow-hidden">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+          <h4 className="mb-3 text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">
             Category Budgets
           </h4>
           <div className="space-y-3">
@@ -698,7 +707,7 @@ function WeeklyBudgetDashboard({
               const computedStatus = cat.weeklyBudget > 0
                 ? (cat.spent > cat.weeklyBudget ? "over" : cat.spent < cat.weeklyBudget * 0.8 ? "under" : "on_track")
                 : (cat.spent > 0 ? "over" : "on_track")
-              const barColor = computedStatus === "over" ? "bg-rose-500" : computedStatus === "under" ? "bg-blue-500" : "bg-emerald-500"
+              const barColor = computedStatus === "over" ? "bg-destructive" : computedStatus === "under" ? "bg-blue-500" : "bg-lime-500"
               return (
                 <div key={cat.name}>
                   <div className="flex items-center justify-between">
@@ -726,20 +735,21 @@ function WeeklyBudgetDashboard({
       {/* 3. Quick wins */}
       {data.quickWins && data.quickWins.length > 0 && (
         <div>
-          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <h4 className="mb-3 text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">
             Quick Wins
           </h4>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             {data.quickWins.map((qw, i) => (
-              <div key={i} className="flex items-start gap-3 rounded-xl border bg-card p-4">
-                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-xs font-bold text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+              <div key={i} className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4 relative overflow-hidden">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+                <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-lime-500/10 text-xs font-bold text-lime-600 dark:text-lime-400">
                   {i + 1}
                 </span>
                 <div className="min-w-0">
                   <p className="text-sm font-semibold">{qw.title}</p>
                   <p className="mt-0.5 text-xs text-muted-foreground">{qw.description}</p>
                   {qw.savingAmount > 0 && (
-                    <span className="mt-2 inline-flex rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-700 dark:bg-emerald-900/40 dark:text-emerald-300">
+                    <span className="mt-2 inline-flex rounded-full bg-lime-500/10 px-2 py-0.5 text-[11px] font-medium text-lime-600 dark:text-lime-400">
                       Save {formatCurrency(qw.savingAmount)}
                     </span>
                   )}
@@ -767,11 +777,12 @@ function WeeklyBudgetDashboard({
 
       {/* 5. Weekly rule callout */}
       {data.weeklyRule && (
-        <div className="rounded-xl border border-primary/20 bg-primary/5 p-4">
+        <div className="rounded-2xl border border-border bg-card p-4 relative overflow-hidden">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
           <div className="flex items-start gap-3">
             <IconSparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
             <div className="min-w-0">
-              <p className="text-xs font-semibold uppercase tracking-wider text-primary">
+              <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest text-primary">
                 Rule of the Week
               </p>
               <p className="mt-1 text-sm font-medium leading-relaxed">{data.weeklyRule}</p>
@@ -803,16 +814,17 @@ function InvestmentDashboard({
   }
 
   const returnColor = data.totalReturns >= 0
-    ? "text-emerald-600 dark:text-emerald-400"
-    : "text-rose-600 dark:text-rose-400"
+    ? "text-lime-600 dark:text-lime-400"
+    : "text-destructive"
 
   return (
     <DashboardShell meta={meta} insight={insight}>
       {/* 1. Portfolio overview */}
-      <div className="rounded-xl border bg-card p-5">
+      <div className="rounded-2xl border border-border bg-card p-5 relative overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <StatTile label="Portfolio Value" value={data.portfolioValue} color="text-foreground" />
-          <StatTile label="Total Invested" value={data.totalInvested} color="text-blue-600 dark:text-blue-400" />
+          <StatTile label="Total Invested" value={data.totalInvested} color="text-foreground/70" />
           <StatTile label="Returns" value={data.totalReturns} color={returnColor} />
           <StatTile label={data.xirr != null ? "XIRR" : "Return %"} value={data.xirr ?? data.returnPercentage} isPercent color={returnColor} />
         </div>
@@ -823,16 +835,17 @@ function InvestmentDashboard({
 
       {/* 2. Stock holdings */}
       {data.stocks && data.stocks.length > 0 && (
-        <div className="rounded-xl border bg-card p-5">
-          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="rounded-2xl border border-border bg-card p-5 relative overflow-hidden">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+          <h4 className="mb-3 text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">
             Stock Holdings
           </h4>
           <div className="space-y-3">
             {data.stocks.map((stock) => {
-              const retColor = stock.returns >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
+              const retColor = stock.returns >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"
               const RetIcon = stock.returns >= 0 ? IconTrendingUp : IconTrendingDown
               return (
-                <div key={stock.symbol} className="flex items-center justify-between gap-3 rounded-lg border bg-muted/20 p-3">
+                <div key={stock.symbol} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-3">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold">{stock.symbol}</span>
@@ -860,16 +873,17 @@ function InvestmentDashboard({
 
       {/* 3. Mutual fund holdings */}
       {data.mutualFunds && data.mutualFunds.length > 0 && (
-        <div className="rounded-xl border bg-card p-5">
-          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+        <div className="rounded-2xl border border-border bg-card p-5 relative overflow-hidden">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+          <h4 className="mb-3 text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">
             Mutual Funds
           </h4>
           <div className="space-y-3">
             {data.mutualFunds.map((fund, i) => {
-              const retColor = fund.returns >= 0 ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"
+              const retColor = fund.returns >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"
               const RetIcon = fund.returns >= 0 ? IconTrendingUp : IconTrendingDown
               return (
-                <div key={i} className="flex items-center justify-between gap-3 rounded-lg border bg-muted/20 p-3">
+                <div key={i} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-3">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold">{fund.name}</p>
                     <div className="mt-0.5 flex items-center gap-2">
@@ -905,7 +919,7 @@ function InvestmentDashboard({
           <div className="flex items-start gap-3">
             <IconShieldCheck className={`mt-0.5 h-4 w-4 shrink-0 ${getSeverityStyle(data.diversification.severity).iconColor}`} />
             <div className="min-w-0 space-y-2">
-              <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+              <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">
                 Diversification
               </p>
               <p className="text-sm leading-relaxed">{data.diversification.assessment}</p>
@@ -927,14 +941,15 @@ function InvestmentDashboard({
       {/* 5. Action items */}
       {data.actionItems && data.actionItems.length > 0 && (
         <div>
-          <h4 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <h4 className="mb-3 text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">
             Action Items
           </h4>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {data.actionItems.map((item, i) => {
               const prio = priorityColors[item.priority] || priorityColors.low
               return (
-                <div key={i} className="relative rounded-xl border bg-card p-4">
+                <div key={i} className="relative rounded-2xl border border-border bg-card p-4 overflow-hidden">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <div className="absolute right-3 top-3 flex items-center gap-1">
                     <span className={`h-1.5 w-1.5 rounded-full ${prio.dot}`} />
                     <span className={`text-[11px] font-medium ${prio.text}`}>{item.priority}</span>
@@ -951,14 +966,16 @@ function InvestmentDashboard({
       {/* 6. Market context + Goal alignment */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {data.marketContext && (
-          <div className="rounded-xl border bg-card p-4">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Market Context</p>
+          <div className="rounded-2xl border border-border bg-card p-4 relative overflow-hidden">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+            <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">Market Context</p>
             <p className="mt-2 text-sm leading-relaxed text-foreground/90">{data.marketContext}</p>
           </div>
         )}
         {data.goalAlignment && (
-          <div className="rounded-xl border border-emerald-200/70 bg-emerald-50/50 p-4 dark:border-emerald-800/50 dark:bg-emerald-950/20">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">Goal Alignment</p>
+          <div className="rounded-2xl border border-lime-200/70 bg-lime-50/50 p-4 dark:border-lime-800/50 dark:bg-lime-950/20 relative overflow-hidden">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+            <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">Goal Alignment</p>
             <p className="mt-2 text-sm leading-relaxed text-foreground/90">{data.goalAlignment}</p>
           </div>
         )}
@@ -1051,9 +1068,9 @@ function StatTile({
   isRaw?: boolean
 }) {
   return (
-    <div className="rounded-lg border bg-muted/30 p-3">
-      <p className="text-[11px] font-medium text-muted-foreground">{label}</p>
-      <p className={`mt-0.5 text-lg font-bold tabular-nums ${color}`}>
+    <div className="rounded-xl border border-border bg-card p-3">
+      <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest">{label}</p>
+      <p className={`mt-0.5 text-lg font-black tracking-tight tabular-nums ${color}`}>
         {isRaw ? value : isPercent ? `${value.toFixed(1)}%` : formatCurrency(value)}
       </p>
     </div>
@@ -1147,7 +1164,7 @@ function InsightCard({
       ) : insight.content ? (
         <div className="space-y-3">
           {insight.isRegenerating && (
-            <div className="flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-3 py-2">
+            <div className="flex items-center gap-2 rounded-xl border border-border bg-accent px-3 py-2">
               <IconRefresh className="h-3.5 w-3.5 animate-spin text-primary" />
               <span className="text-xs font-medium text-primary">
                 Regenerating with latest data...
@@ -1192,11 +1209,11 @@ function SectionCard({ section }: { section: InsightSection }) {
     return (
       <div className={`rounded-xl border ${style.border} ${style.bg} p-4`}>
         <div className="flex items-start gap-3">
-          <div className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${style.badge}`}>
+          <div className={`mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl ${style.badge}`}>
             <IconCircleCheck className={`h-4 w-4 ${style.iconColor}`} />
           </div>
           <div className="min-w-0 space-y-1">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">
               {section.title}
             </p>
             <div className="text-sm font-medium leading-relaxed">
@@ -1212,11 +1229,11 @@ function SectionCard({ section }: { section: InsightSection }) {
     return (
       <div className={`rounded-xl border ${style.border} ${style.bg} p-4`}>
         <div className="flex items-start gap-3">
-          <div className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${style.badge}`}>
+          <div className={`mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl ${style.badge}`}>
             <SeverityIcon className={`h-4 w-4 ${style.iconColor}`} />
           </div>
           <div className="min-w-0 space-y-1">
-            <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">
               {section.title}
             </p>
             <div className="text-sm leading-relaxed text-foreground/90">
@@ -1233,11 +1250,11 @@ function SectionCard({ section }: { section: InsightSection }) {
   return (
     <div className={`rounded-xl border ${style.border} ${style.bg} p-4`}>
       <div className="flex items-start gap-3">
-        <div className={`mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg ${style.badge}`}>
+        <div className={`mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl ${style.badge}`}>
           <SeverityIcon className={`h-4 w-4 ${style.iconColor}`} />
         </div>
         <div className="min-w-0 flex-1 space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+          <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">
             {section.title}
           </p>
           {section.text && (
@@ -1275,7 +1292,7 @@ function LoadingSkeleton({ featured }: { featured?: boolean }) {
       {featured && (
         <>
           <Skeleton className="h-4 w-3/4" />
-          <Skeleton className="h-16 w-full rounded-lg" />
+          <Skeleton className="h-16 w-full rounded-2xl border border-border" />
         </>
       )}
       <Skeleton className="h-4 w-4/5" />
@@ -1299,22 +1316,22 @@ function ErrorState({
   onRetry: () => void
 }) {
   return (
-    <div className="rounded-lg border border-rose-200/80 bg-rose-50/50 p-4 dark:border-rose-900/50 dark:bg-rose-950/30">
+    <div className="rounded-2xl border border-destructive/30 bg-destructive/5 p-4 dark:border-destructive/40 dark:bg-destructive/10">
       <div className="flex items-start gap-3">
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-rose-100 dark:bg-rose-900/50">
-          <IconAlertTriangle className="h-4 w-4 text-rose-600 dark:text-rose-400" />
+        <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-destructive/10">
+          <IconAlertTriangle className="h-4 w-4 text-destructive" />
         </div>
         <div className="min-w-0 space-y-2">
           {isApiKeyError ? (
-            <p className="text-sm font-medium text-rose-700 dark:text-rose-300">
+            <p className="text-sm font-medium text-destructive">
               AI Insights requires an OpenRouter API key. Add{" "}
-              <code className="rounded bg-rose-100 px-1.5 py-0.5 text-xs dark:bg-rose-900/50">
+              <code className="rounded bg-destructive/10 px-1.5 py-0.5 text-xs">
                 OPENROUTER_API_KEY
               </code>{" "}
               to your environment variables.
             </p>
           ) : (
-            <p className="text-sm font-medium text-rose-700 dark:text-rose-300">
+            <p className="text-sm font-medium text-destructive">
               {error}
             </p>
           )}

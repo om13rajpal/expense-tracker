@@ -156,7 +156,7 @@ function NetWorthTooltip({ active, payload, label }: {
 }) {
   if (!active || !payload) return null
   return (
-    <div className="rounded-xl border border-border/60 bg-card/95 backdrop-blur-sm px-4 py-3 shadow-lg">
+    <div className="rounded-xl border border-border bg-card/95 backdrop-blur-xl px-4 py-3 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
       <p className="text-xs font-semibold text-foreground mb-2">{label}</p>
       {payload.map((entry) => (
         <div key={entry.dataKey} className="flex items-center gap-2.5 text-sm py-0.5">
@@ -167,7 +167,7 @@ function NetWorthTooltip({ active, payload, label }: {
           <span className="text-muted-foreground">
             {entry.dataKey === "bankBalance" ? "Bank" : "Investments"}
           </span>
-          <span className="font-bold tabular-nums ml-auto">
+          <span className="font-black tracking-tight tabular-nums ml-auto">
             {formatCurrency(entry.value)}
           </span>
         </div>
@@ -183,14 +183,14 @@ function AssetPieTooltip({ active, payload }: {
   if (!active || !payload || !payload[0]) return null
   const entry = payload[0]
   return (
-    <div className="rounded-lg border border-border/60 bg-card/95 backdrop-blur-sm px-3 py-2 shadow-lg">
+    <div className="rounded-xl border border-border bg-card/95 backdrop-blur-xl px-3 py-2 shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
       <div className="flex items-center gap-2 text-sm">
         <div
           className="h-2.5 w-2.5 rounded-full"
           style={{ backgroundColor: entry.payload.color }}
         />
         <span className="text-muted-foreground">{entry.name}</span>
-        <span className="font-bold tabular-nums ml-auto">{formatCurrency(entry.value)}</span>
+        <span className="font-black tracking-tight tabular-nums ml-auto">{formatCurrency(entry.value)}</span>
       </div>
     </div>
   )
@@ -235,10 +235,11 @@ function NetWorthHero({
 
   return (
     <motion.div variants={fadeUp}>
-      <div className="card-elevated rounded-xl p-5 md:p-6">
+      <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-5 md:p-6">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
         <div className="flex items-center gap-2 mb-5">
-          <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-primary/10">
-            <IconBuildingBank className="h-4 w-4 text-primary" />
+          <div className="flex items-center justify-center size-8 rounded-xl bg-muted/80 dark:bg-muted">
+            <IconBuildingBank className="h-4 w-4 text-foreground/70" />
           </div>
           <h3 className="text-sm font-semibold">Net Worth</h3>
           <InfoTooltip text="Total net worth = Bank Balance + Investment Value - Outstanding Debts." />
@@ -247,7 +248,7 @@ function NetWorthHero({
         <div className="grid gap-5 md:grid-cols-[1fr_auto]">
           <div className="space-y-4">
             <div>
-              <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1">
+              <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest mb-1">
                 Total Net Worth
               </p>
               <motion.p
@@ -261,8 +262,8 @@ function NetWorthHero({
                   <span
                     className={`inline-flex items-center gap-1 text-xs font-semibold px-2 py-0.5 rounded-md ${
                       isPositiveChange
-                        ? "bg-emerald-500/10 text-emerald-600"
-                        : "bg-rose-500/10 text-rose-600"
+                        ? "bg-lime-500/10 text-lime-600 dark:text-lime-400"
+                        : "bg-destructive/10 text-destructive"
                     }`}
                   >
                     {isPositiveChange ? (
@@ -274,7 +275,7 @@ function NetWorthHero({
                     {formatCompact(netWorthChange)}
                   </span>
                   <span className={`text-xs font-medium tabular-nums ${
-                    isPositiveChange ? "text-emerald-600" : "text-rose-600"
+                    isPositiveChange ? "text-lime-600 dark:text-lime-400" : "text-destructive"
                   }`}>
                     {isPositiveChange ? "+" : ""}{netWorthChangePct.toFixed(1)}% vs last month
                   </span>
@@ -283,18 +284,18 @@ function NetWorthHero({
             </div>
 
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
-              <div className="rounded-lg bg-muted/30 p-3">
+              <div className="rounded-xl border border-border bg-card p-3">
                 <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-0.5">Bank</p>
-                <p className="text-sm font-bold tabular-nums">{formatCurrency(bankBalance)}</p>
+                <p className="text-sm font-black tracking-tight tabular-nums">{formatCurrency(bankBalance)}</p>
                 {totalAssets > 0 && (
                   <p className="text-[11px] text-muted-foreground tabular-nums">
                     {((bankBalance / totalAssets) * 100).toFixed(0)}% of assets
                   </p>
                 )}
               </div>
-              <div className="rounded-lg bg-muted/30 p-3">
+              <div className="rounded-xl border border-border bg-card p-3">
                 <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-0.5">Investments</p>
-                <p className="text-sm font-bold tabular-nums text-emerald-600">{formatCurrency(investmentValue)}</p>
+                <p className="text-sm font-black tracking-tight tabular-nums text-lime-600 dark:text-lime-400">{formatCurrency(investmentValue)}</p>
                 {totalAssets > 0 && (
                   <p className="text-[11px] text-muted-foreground tabular-nums">
                     {((investmentValue / totalAssets) * 100).toFixed(0)}% of assets
@@ -302,9 +303,9 @@ function NetWorthHero({
                 )}
               </div>
               {totalDebts > 0 && (
-                <div className="rounded-lg bg-muted/30 p-3">
+                <div className="rounded-xl border border-border bg-card p-3">
                   <p className="text-[11px] text-muted-foreground uppercase tracking-wider mb-0.5">Debts</p>
-                  <p className="text-sm font-bold tabular-nums text-rose-600">-{formatCurrency(totalDebts)}</p>
+                  <p className="text-sm font-black tracking-tight tabular-nums text-destructive">-{formatCurrency(totalDebts)}</p>
                   <p className="text-[11px] text-muted-foreground tabular-nums">
                     {totalAssets > 0 ? ((totalDebts / totalAssets) * 100).toFixed(0) : 0}% of assets
                   </p>
@@ -645,14 +646,15 @@ function DebtTrackerSection() {
   if (debtsLoading) {
     return (
       <motion.div variants={fadeUp}>
-        <div className="card-elevated rounded-xl p-5">
+        <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-5">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
           <div className="flex items-center gap-2.5 mb-5">
-            <Skeleton className="h-7 w-7 rounded-lg" />
+            <Skeleton className="size-8 rounded-xl" />
             <Skeleton className="h-4 w-24" />
           </div>
           <div className="grid grid-cols-3 gap-3 mb-5">
             {Array.from({ length: 3 }).map((_, i) => (
-              <Skeleton key={i} className="h-16 rounded-lg" />
+              <Skeleton key={i} className="h-16 rounded-xl" />
             ))}
           </div>
           <div className="space-y-3">
@@ -668,11 +670,12 @@ function DebtTrackerSection() {
   return (
     <>
       <motion.div variants={fadeUp}>
-        <div className="card-elevated rounded-xl bg-card p-5">
+        <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-5">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2.5">
-              <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-rose-500/10">
-                <IconCreditCard className="h-4 w-4 text-rose-600 dark:text-rose-400" />
+              <div className="flex items-center justify-center size-8 rounded-xl bg-destructive/10">
+                <IconCreditCard className="h-4 w-4 text-destructive" />
               </div>
               <h3 className="text-sm font-semibold">Debt Tracker</h3>
               <InfoTooltip text="Track all your loans and credit card debts. Monitor EMI payments and remaining balances." />
@@ -683,36 +686,36 @@ function DebtTrackerSection() {
           </div>
 
           <div className="grid grid-cols-3 gap-3 mb-5">
-            <div className="rounded-lg bg-muted/30 p-3">
+            <div className="rounded-xl border border-border bg-card p-3">
               <p className="text-[11px] text-muted-foreground uppercase tracking-wider">
                 Total Outstanding
               </p>
-              <p className="text-lg font-bold tabular-nums text-rose-600">
+              <p className="text-lg font-black tracking-tight tabular-nums text-destructive">
                 {formatCurrency(totalOutstanding)}
               </p>
             </div>
-            <div className="rounded-lg bg-muted/30 p-3">
+            <div className="rounded-xl border border-border bg-card p-3">
               <p className="text-[11px] text-muted-foreground uppercase tracking-wider">
                 Active Debts
               </p>
-              <p className="text-lg font-bold tabular-nums">
+              <p className="text-lg font-black tracking-tight tabular-nums">
                 {activeDebts.length}
               </p>
             </div>
-            <div className="rounded-lg bg-muted/30 p-3">
+            <div className="rounded-xl border border-border bg-card p-3">
               <p className="text-[11px] text-muted-foreground uppercase tracking-wider">
                 Monthly EMI
               </p>
-              <p className="text-lg font-bold tabular-nums">
+              <p className="text-lg font-black tracking-tight tabular-nums">
                 {formatCurrency(monthlyEMITotal)}
               </p>
             </div>
           </div>
 
           {debts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border/50 py-12 px-6 bg-gradient-to-br from-muted/20 via-transparent to-muted/10">
-              <div className="flex items-center justify-center h-14 w-14 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 mb-4">
-                <IconShieldCheck className="h-7 w-7 text-emerald-500" />
+            <div className="flex flex-col items-center justify-center rounded-xl border border-dashed border-border py-12 px-6 bg-gradient-to-br from-muted/20 via-transparent to-muted/10">
+              <div className="flex items-center justify-center h-14 w-14 rounded-2xl bg-gradient-to-br from-lime-500/10 to-lime-500/5 mb-4">
+                <IconShieldCheck className="h-7 w-7 text-lime-500" />
               </div>
               <h4 className="text-sm font-semibold text-foreground mb-1">Debt Free!</h4>
               <p className="text-xs text-muted-foreground text-center max-w-xs mb-4">
@@ -836,7 +839,8 @@ function DebtTrackerSection() {
  */
 function NetWorthTimeline({ metrics }: { metrics: FinancialHealthMetrics }) {
   return (
-    <motion.div variants={fadeUp} className="card-elevated rounded-xl p-6">
+    <motion.div variants={fadeUp} className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-6">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
       <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-2">
           <IconWallet className="h-4 w-4 text-muted-foreground" />
@@ -909,7 +913,7 @@ function NetWorthTimeline({ metrics }: { metrics: FinancialHealthMetrics }) {
           </AreaChart>
         </ResponsiveContainer>
       ) : (
-        <div className="flex h-[260px] flex-col items-center justify-center rounded-lg border border-dashed border-border/50 bg-gradient-to-br from-muted/20 via-transparent to-muted/10">
+        <div className="flex h-[260px] flex-col items-center justify-center rounded-lg border border-dashed border-border bg-gradient-to-br from-muted/20 via-transparent to-muted/10">
           <div className="flex items-center justify-center h-12 w-12 rounded-xl bg-muted/40 mb-3">
             <IconChartLine className="h-6 w-6 text-muted-foreground/40" />
           </div>
@@ -931,9 +935,9 @@ function NetWorthViewSkeleton() {
   return (
     <div className="space-y-5">
       {/* Net Worth Hero */}
-      <div className="card-elevated rounded-xl p-6">
+      <div className="card-elevated rounded-2xl border border-border p-6">
         <div className="flex items-center gap-2 mb-5">
-          <Skeleton className="h-7 w-7 rounded-lg" />
+          <Skeleton className="size-8 rounded-xl" />
           <Skeleton className="h-4 w-24" />
         </div>
         <div className="grid gap-5 md:grid-cols-[1fr_auto]">
@@ -945,7 +949,7 @@ function NetWorthViewSkeleton() {
             </div>
             <div className="grid grid-cols-3 gap-3">
               {Array.from({ length: 3 }).map((_, i) => (
-                <Skeleton key={i} className="h-16 rounded-lg" />
+                <Skeleton key={i} className="h-16 rounded-xl" />
               ))}
             </div>
           </div>
@@ -953,21 +957,21 @@ function NetWorthViewSkeleton() {
         </div>
       </div>
       {/* Debt tracker */}
-      <div className="card-elevated rounded-xl p-5">
+      <div className="card-elevated rounded-2xl border border-border p-5">
         <div className="flex items-center gap-2.5 mb-5">
-          <Skeleton className="h-7 w-7 rounded-lg" />
+          <Skeleton className="size-8 rounded-xl" />
           <Skeleton className="h-4 w-24" />
         </div>
         <div className="grid grid-cols-3 gap-3 mb-5">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-16 rounded-lg" />
+            <Skeleton key={i} className="h-16 rounded-xl" />
           ))}
         </div>
       </div>
       {/* Timeline chart */}
-      <div className="card-elevated rounded-xl p-6">
+      <div className="card-elevated rounded-2xl border border-border p-6">
         <Skeleton className="h-5 w-36 mb-3" />
-        <Skeleton className="h-[260px] w-full rounded-lg" />
+        <Skeleton className="h-[260px] w-full rounded-xl" />
       </div>
     </div>
   )
@@ -1001,7 +1005,7 @@ export function NetWorthView() {
 
   if (queryError || !metrics) {
     return (
-      <div className="card-elevated rounded-xl flex h-40 items-center justify-center">
+      <div className="card-elevated rounded-2xl border border-border flex h-40 items-center justify-center">
         <p className="text-sm text-muted-foreground">
           {queryError ? "Failed to load financial data" : "No financial data available"}
         </p>

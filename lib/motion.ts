@@ -13,8 +13,8 @@
 export const spring = {
   gentle: { type: "spring" as const, stiffness: 120, damping: 14 },
   snappy: { type: "spring" as const, stiffness: 300, damping: 24 },
-  smooth: { duration: 0.4, ease: [0.25, 0.1, 0.25, 1] as const },
-  fast: { duration: 0.25, ease: [0.25, 0.1, 0.25, 1] as const },
+  smooth: { duration: 0.5, ease: [0.32, 0.72, 0, 1] as const },
+  fast: { duration: 0.3, ease: [0.32, 0.72, 0, 1] as const },
 } as const
 
 /** Container variant that staggers children by 60ms. */
@@ -56,7 +56,7 @@ export const numberPop = {
     opacity: 1,
     scale: 1,
     y: 0,
-    transition: { duration: 0.35, ease: [0.25, 0.1, 0.25, 1] as const },
+    transition: { duration: 0.4, ease: [0.32, 0.72, 0, 1] as const },
   },
 } as const
 
@@ -71,8 +71,8 @@ export const listItem = (index: number) => ({
   animate: { opacity: 1, x: 0 },
   transition: {
     delay: 0.04 + index * 0.03,
-    duration: 0.25,
-    ease: [0.25, 0.1, 0.25, 1] as const,
+    duration: 0.4,
+    ease: [0.32, 0.72, 0, 1] as const,
   },
 })
 

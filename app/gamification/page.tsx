@@ -233,8 +233,8 @@ function BadgeShowcaseCard({
         onClick={() => onSelect(badge.id)}
         className="flex flex-col items-center gap-1.5 min-w-[72px] cursor-pointer group"
       >
-        <div className="flex items-center justify-center size-12 rounded-full bg-muted/30 ring-1 ring-border/30 group-hover:ring-border/60 transition-all">
-          <IconLock className="size-4 text-muted-foreground/30" stroke={1.5} />
+        <div className="flex items-center justify-center size-12 rounded-full bg-muted/80 dark:bg-muted ring-1 ring-border group-hover:ring-border transition-all">
+          <IconLock className="size-4 text-foreground/70" stroke={1.5} />
         </div>
         <span className="text-[10px] font-medium text-muted-foreground/40 text-center leading-tight truncate max-w-[72px]">
           {badge.name}
@@ -302,10 +302,10 @@ function BadgeCard({
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: index * 0.02, duration: 0.2 }}
         onClick={() => onSelect(badge.id)}
-        className="flex items-center gap-2.5 rounded-xl border border-dashed border-border/40 px-3 py-2.5 cursor-pointer hover:bg-muted/30 hover:border-border/60 transition-all"
+        className="flex items-center gap-2.5 rounded-xl border border-dashed border-border px-3 py-2.5 cursor-pointer hover:bg-muted/30 hover:border-border transition-all"
       >
-        <div className="flex items-center justify-center size-8 rounded-lg bg-muted/40 shrink-0">
-          <IconLock className="size-3.5 text-muted-foreground/30" stroke={1.5} />
+        <div className="flex items-center justify-center size-8 rounded-xl bg-muted/80 dark:bg-muted shrink-0">
+          <IconLock className="size-3.5 text-foreground/70" stroke={1.5} />
         </div>
         <div className="min-w-0">
           <p className="text-xs font-medium text-muted-foreground/50 truncate">{badge.name}</p>
@@ -323,7 +323,7 @@ function BadgeCard({
       onClick={() => onSelect(badge.id)}
       className={cn(
         "group relative flex flex-col items-center gap-3 rounded-2xl p-5 text-center cursor-pointer transition-all duration-300 overflow-hidden",
-        "bg-card border border-border/60 shadow-sm hover:shadow-xl",
+        "bg-card border border-border shadow-sm hover:shadow-xl",
       )}
     >
       <div className={cn(
@@ -408,7 +408,7 @@ function BadgeDetailOverlay({
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.9, y: 20 }}
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          className="relative bg-card rounded-2xl border border-border/60 shadow-2xl max-w-xs w-full overflow-hidden"
+          className="relative bg-card rounded-2xl border border-border shadow-2xl max-w-xs w-full overflow-hidden"
           onClick={(e) => e.stopPropagation()}
         >
           {badge.unlocked && lottieData && (
@@ -438,14 +438,14 @@ function BadgeDetailOverlay({
 
           <div className="p-5 text-center space-y-3">
             <div>
-              <h3 className="text-base font-bold text-foreground">{badge.name}</h3>
+              <h3 className="text-base font-black tracking-tight text-foreground">{badge.name}</h3>
               <p className="text-xs text-muted-foreground mt-1">{badge.description}</p>
             </div>
             <div className="inline-flex items-center gap-1.5 rounded-full bg-muted/50 px-3 py-1.5 text-[11px] text-muted-foreground">
               {badge.unlocked ? (
                 <>
-                  <IconCircleCheck className="size-3.5 text-emerald-500" stroke={2} />
-                  <span className="font-medium text-emerald-600 dark:text-emerald-400">Unlocked</span>
+                  <IconCircleCheck className="size-3.5 text-lime-500" stroke={2} />
+                  <span className="font-medium text-lime-600 dark:text-lime-400">Unlocked</span>
                   {badge.unlockedAt && (
                     <span className="text-muted-foreground/60">
                       {new Date(badge.unlockedAt).toLocaleDateString("en-US", {
@@ -465,7 +465,7 @@ function BadgeDetailOverlay({
             </div>
             <button
               onClick={onClose}
-              className="w-full mt-2 rounded-xl bg-muted/50 hover:bg-muted/80 py-2.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
+              className="w-full mt-2 rounded-xl border border-border bg-card hover:bg-muted/80 py-2.5 text-xs font-medium text-muted-foreground hover:text-foreground transition-colors"
             >
               Close
             </button>
@@ -644,10 +644,10 @@ function FriendDialog({
 
 function ScoreDot({ value }: { value: number }) {
   const color =
-    value >= 80 ? "bg-emerald-500" :
+    value >= 80 ? "bg-lime-500" :
     value >= 60 ? "bg-amber-500" :
     value >= 40 ? "bg-orange-500" :
-    "bg-red-500"
+    "bg-destructive"
   return <span className={cn("inline-block size-2 rounded-full", color)} />
 }
 
@@ -801,8 +801,12 @@ export default function GamificationPage() {
         <AppSidebar variant="inset" />
         <SidebarInset>
           <SiteHeader title="Achievements" />
-          <div className="flex flex-1 flex-col">
-            <div className="@container/main flex flex-1 flex-col gap-5 p-4 md:p-6 max-w-5xl mx-auto w-full">
+          <div className="flex flex-1 flex-col overflow-y-auto min-h-0">
+            <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden hidden dark:block">
+              <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-lime-500/[0.05] blur-[200px]" />
+              <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] rounded-full bg-cyan-500/[0.04] blur-[180px]" />
+            </div>
+            <div className="relative z-[1] @container/main flex flex-1 flex-col gap-5 p-4 md:p-6 max-w-5xl mx-auto w-full">
               <GamificationLoadingSkeleton />
             </div>
           </div>
@@ -821,8 +825,12 @@ export default function GamificationPage() {
       <AppSidebar variant="inset" />
       <SidebarInset>
         <SiteHeader title="Achievements" />
-        <div className="flex flex-1 flex-col">
-          <div className="@container/main flex flex-1 flex-col gap-5 p-4 md:p-6 max-w-5xl mx-auto w-full">
+        <div className="flex flex-1 flex-col overflow-y-auto min-h-0">
+          <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden hidden dark:block">
+            <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-lime-500/[0.05] blur-[200px]" />
+            <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] rounded-full bg-cyan-500/[0.04] blur-[180px]" />
+          </div>
+          <div className="relative z-[1] @container/main flex flex-1 flex-col gap-5 p-4 md:p-6 max-w-5xl mx-auto w-full">
             <motion.div
               variants={stagger}
               initial="hidden"
@@ -833,7 +841,8 @@ export default function GamificationPage() {
               {/*  A. COMPACT PROFILE ROW                                   */}
               {/* ────────────────────────────────────────────────────────── */}
               <motion.div variants={fadeUp}>
-                <div className="card-elevated rounded-xl bg-card p-4">
+                <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-4">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <div className="flex items-center gap-4 flex-wrap">
                     {/* XP Ring */}
                     <motion.div variants={scaleIn}>
@@ -848,10 +857,10 @@ export default function GamificationPage() {
                     {/* Level info */}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2">
-                        <h2 className="text-sm font-bold text-foreground truncate">
+                        <h2 className="text-sm font-black tracking-tight text-foreground truncate">
                           {xp?.levelName ?? "Beginner"}
                         </h2>
-                        <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-bold text-primary">
+                        <span className="inline-flex items-center gap-0.5 rounded-full bg-primary/10 px-2 py-0.5 text-[11px] font-black tracking-tight text-primary">
                           <IconBolt className="size-3" stroke={2.5} />
                           {(xp?.totalXP ?? 0).toLocaleString()} XP
                         </span>
@@ -901,16 +910,16 @@ export default function GamificationPage() {
               {/* ────────────────────────────────────────────────────────── */}
               {activeChallenges.length > 0 && (
                 <motion.div variants={fadeUp}>
-                  <div className="card-elevated rounded-xl bg-card relative overflow-hidden">
-                    <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-transparent pointer-events-none" />
+                  <div className="rounded-2xl border border-border bg-card relative overflow-hidden">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <div className="relative p-5">
                       <div className="flex items-center gap-2.5 mb-4">
-                        <div className="flex items-center justify-center h-8 w-8 rounded-xl bg-gradient-to-br from-emerald-500/15 to-teal-500/15">
-                          <IconTarget className="size-4 text-emerald-500" stroke={1.5} />
+                        <div className="flex items-center justify-center size-9 rounded-xl bg-muted/80 dark:bg-muted">
+                          <IconTarget className="size-4 text-foreground/70" stroke={1.5} />
                         </div>
                         <div>
                           <h3 className="text-sm font-semibold">Monthly Challenges</h3>
-                          <p className="text-[11px] text-muted-foreground">Complete challenges to earn bonus XP</p>
+                          <p className="text-[11px] text-muted-foreground/70">Complete challenges to earn bonus XP</p>
                         </div>
                       </div>
 
@@ -921,14 +930,14 @@ export default function GamificationPage() {
                             initial={{ opacity: 0, y: 8 }}
                             animate={{ opacity: 1, y: 0 }}
                             transition={{ delay: i * 0.05 }}
-                            className="rounded-xl border border-border/50 p-4 space-y-3"
+                            className="rounded-xl border border-border bg-card p-4 space-y-3"
                           >
                             <div className="flex items-start justify-between gap-2">
                               <div>
-                                <p className="text-sm font-semibold text-foreground">{challenge.name}</p>
+                                <p className="text-sm font-black tracking-tight text-foreground">{challenge.name}</p>
                                 <p className="text-[11px] text-muted-foreground mt-0.5">{challenge.description}</p>
                               </div>
-                              <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full bg-amber-500/10 px-2 py-0.5 text-[11px] font-bold text-amber-600 dark:text-amber-400">
+                              <span className="shrink-0 inline-flex items-center gap-0.5 rounded-full bg-amber-500/10 px-2 py-0.5 text-[11px] font-black tracking-tight text-amber-600 dark:text-amber-400">
                                 <IconBolt className="size-2.5" stroke={2.5} />
                                 {challenge.xpReward}
                               </span>
@@ -940,7 +949,7 @@ export default function GamificationPage() {
                                   className={cn(
                                     "absolute inset-y-0 left-0 rounded-full",
                                     challenge.status === "completed"
-                                      ? "bg-emerald-500"
+                                      ? "bg-lime-500"
                                       : "bg-gradient-to-r from-blue-500 to-indigo-500",
                                   )}
                                   initial={{ width: 0 }}
@@ -953,7 +962,7 @@ export default function GamificationPage() {
                                   {challenge.current} / {challenge.target}
                                 </span>
                                 {challenge.status === "completed" ? (
-                                  <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 flex items-center gap-0.5">
+                                  <span className="text-[10px] font-semibold text-lime-600 dark:text-lime-400 flex items-center gap-0.5">
                                     <IconCircleCheck className="size-3" stroke={2} />
                                     Complete
                                   </span>
@@ -993,17 +1002,17 @@ export default function GamificationPage() {
               {/*  C. FRIEND LEADERBOARD                                    */}
               {/* ────────────────────────────────────────────────────────── */}
               <motion.div variants={fadeUp}>
-                <div className="card-elevated rounded-xl bg-card relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/5 to-transparent pointer-events-none" />
+                <div className="rounded-2xl border border-border bg-card relative overflow-hidden">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <div className="relative p-5">
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-2.5">
-                        <div className="flex items-center justify-center h-8 w-8 rounded-xl bg-gradient-to-br from-indigo-500/15 to-blue-500/15">
-                          <IconUsers className="size-4 text-indigo-500" stroke={1.5} />
+                        <div className="flex items-center justify-center size-9 rounded-xl bg-muted/80 dark:bg-muted">
+                          <IconUsers className="size-4 text-foreground/70" stroke={1.5} />
                         </div>
                         <div>
                           <h3 className="text-sm font-semibold">Leaderboard</h3>
-                          <p className="text-[11px] text-muted-foreground">Compare your progress with friends</p>
+                          <p className="text-[11px] text-muted-foreground/70">Compare your progress with friends</p>
                         </div>
                       </div>
                       <Button
@@ -1020,14 +1029,14 @@ export default function GamificationPage() {
                     {friendsLoading ? (
                       <div className="space-y-2">
                         {Array.from({ length: 3 }).map((_, i) => (
-                          <Skeleton key={i} className="h-12 rounded-lg" />
+                          <Skeleton key={i} className="h-12 rounded-2xl border border-border" />
                         ))}
                       </div>
                     ) : leaderboardRows.length === 1 && friends.length === 0 ? (
                       /* Only "You" row, no friends added yet */
                       <div className="text-center py-6">
-                        <div className="flex items-center justify-center size-12 rounded-full bg-muted/40 mx-auto mb-3">
-                          <IconUserPlus className="size-5 text-muted-foreground/40" stroke={1.5} />
+                        <div className="flex items-center justify-center size-12 rounded-full bg-muted/80 dark:bg-muted mx-auto mb-3">
+                          <IconUserPlus className="size-5 text-foreground/70" stroke={1.5} />
                         </div>
                         <p className="text-sm font-medium text-foreground mb-1">No friends yet</p>
                         <p className="text-xs text-muted-foreground max-w-xs mx-auto mb-3">
@@ -1041,7 +1050,7 @@ export default function GamificationPage() {
                     ) : (
                       <div className="space-y-0">
                         {/* Table header */}
-                        <div className="grid grid-cols-[2rem_1fr_5rem_5rem_5rem_2.5rem] gap-2 px-3 pb-2 text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+                        <div className="grid grid-cols-[2rem_1fr_5rem_5rem_5rem_2.5rem] gap-2 px-3 pb-2 text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">
                           <span>#</span>
                           <span>Name</span>
                           <span className="text-right">Health</span>
@@ -1057,7 +1066,7 @@ export default function GamificationPage() {
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.05 + idx * 0.04, duration: 0.25 }}
                             className={cn(
-                              "grid grid-cols-[2rem_1fr_5rem_5rem_5rem_2.5rem] gap-2 items-center px-3 py-2.5 rounded-lg transition-colors",
+                              "grid grid-cols-[2rem_1fr_5rem_5rem_5rem_2.5rem] gap-2 items-center px-3 py-2.5 rounded-xl transition-colors",
                               row.isYou
                                 ? "bg-primary/5 ring-1 ring-primary/15"
                                 : "hover:bg-muted/30",
@@ -1065,7 +1074,7 @@ export default function GamificationPage() {
                           >
                             {/* Rank */}
                             <span className={cn(
-                              "text-sm font-bold tabular-nums",
+                              "text-sm font-black tracking-tight tabular-nums",
                               idx === 0 ? "text-amber-500" :
                               idx === 1 ? "text-slate-400" :
                               idx === 2 ? "text-amber-700 dark:text-amber-600" :
@@ -1096,7 +1105,7 @@ export default function GamificationPage() {
                             {/* Health Score */}
                             <div className="flex items-center justify-end gap-1.5">
                               <ScoreDot value={row.healthScore} />
-                              <span className="text-sm font-medium tabular-nums text-foreground">
+                              <span className="text-sm font-black tracking-tight tabular-nums text-foreground">
                                 {row.healthScore}
                               </span>
                             </div>
@@ -1124,7 +1133,7 @@ export default function GamificationPage() {
                                   </button>
                                   <button
                                     onClick={() => handleDeleteFriend(row.id)}
-                                    className="p-1 rounded hover:bg-red-500/10 text-muted-foreground hover:text-red-500 transition-colors"
+                                    className="p-1 rounded hover:bg-destructive/10 text-muted-foreground hover:text-destructive transition-colors"
                                     title="Remove"
                                   >
                                     <IconTrash className="size-3" stroke={1.5} />
@@ -1144,18 +1153,18 @@ export default function GamificationPage() {
               {/*  D. BADGE SHOWCASE                                        */}
               {/* ────────────────────────────────────────────────────────── */}
               <motion.div variants={fadeUp}>
-                <div className="card-elevated rounded-xl bg-card relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent pointer-events-none" />
+                <div className="rounded-2xl border border-border bg-card relative overflow-hidden">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <div className="relative p-5">
                     {/* Header */}
                     <div className="flex items-center justify-between mb-4">
                       <div className="flex items-center gap-2.5">
-                        <div className="flex items-center justify-center h-8 w-8 rounded-xl bg-gradient-to-br from-amber-500/15 to-orange-500/15">
+                        <div className="flex items-center justify-center size-9 rounded-xl bg-gradient-to-br from-amber-500/15 to-orange-500/15">
                           <IconTrophy className="size-4 text-amber-500" stroke={1.5} />
                         </div>
                         <div>
                           <h3 className="text-sm font-semibold">Your Badges</h3>
-                          <p className="text-[11px] text-muted-foreground">
+                          <p className="text-[11px] text-muted-foreground/70">
                             {unlockedBadges.length} of {totalBadges} unlocked
                           </p>
                         </div>
@@ -1169,7 +1178,7 @@ export default function GamificationPage() {
                             transition={{ delay: 0.3, duration: 0.6, ease: [0, 0, 0.2, 1] }}
                           />
                         </div>
-                        <span className="text-[11px] font-bold text-amber-600 dark:text-amber-400 tabular-nums">
+                        <span className="text-[11px] font-black tracking-tight text-amber-600 dark:text-amber-400 tabular-nums">
                           {badgePercent}%
                         </span>
                       </div>
@@ -1283,8 +1292,8 @@ export default function GamificationPage() {
                       </>
                     ) : (
                       <div className="flex flex-col items-center justify-center py-6">
-                        <div className="flex items-center justify-center size-12 rounded-2xl bg-muted/40 mb-3">
-                          <IconTrophy className="size-6 text-muted-foreground/30" stroke={1.5} />
+                        <div className="flex items-center justify-center size-12 rounded-2xl bg-muted/80 dark:bg-muted mb-3">
+                          <IconTrophy className="size-6 text-foreground/70" stroke={1.5} />
                         </div>
                         <p className="text-sm font-medium text-foreground mb-1">No badges yet</p>
                         <p className="text-xs text-muted-foreground max-w-xs text-center">
@@ -1300,12 +1309,12 @@ export default function GamificationPage() {
               {/*  E. RECENT XP ACTIVITY                                    */}
               {/* ────────────────────────────────────────────────────────── */}
               <motion.div variants={fadeUp}>
-                <div className="card-elevated rounded-xl bg-card relative overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-br from-amber-500/5 to-transparent pointer-events-none" />
+                <div className="rounded-2xl border border-border bg-card relative overflow-hidden">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <div className="relative p-5 pb-0">
                     <div className="flex items-center gap-2.5 mb-4">
-                      <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-gradient-to-br from-amber-500/15 to-yellow-500/15">
-                        <IconHistory className="size-4 text-amber-500" stroke={1.5} />
+                      <div className="flex items-center justify-center size-8 rounded-xl bg-muted/80 dark:bg-muted">
+                        <IconHistory className="size-4 text-foreground/70" stroke={1.5} />
                       </div>
                       <h3 className="text-sm font-semibold">Recent Activity</h3>
                     </div>
@@ -1314,8 +1323,8 @@ export default function GamificationPage() {
                   <div className="relative px-5 pb-5">
                     {recentXP.length === 0 ? (
                       <div className="flex flex-col items-center justify-center py-6">
-                        <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-muted/40 mb-3">
-                          <IconBolt className="h-5 w-5 text-muted-foreground/40" stroke={1.5} />
+                        <div className="flex items-center justify-center size-10 rounded-xl bg-muted/80 dark:bg-muted mb-3">
+                          <IconBolt className="size-5 text-foreground/70" stroke={1.5} />
                         </div>
                         <p className="text-sm text-muted-foreground">
                           No XP events yet. Start logging expenses!
@@ -1329,10 +1338,10 @@ export default function GamificationPage() {
                             initial={{ opacity: 0, x: -8 }}
                             animate={{ opacity: 1, x: 0 }}
                             transition={{ delay: 0.04 + i * 0.03, duration: 0.25 }}
-                            className="group flex items-center justify-between rounded-lg px-3 py-2 transition-colors hover:bg-muted/40"
+                            className="group flex items-center justify-between rounded-xl px-3 py-2 transition-colors hover:bg-muted/40"
                           >
                             <div className="flex items-center gap-3 min-w-0">
-                              <div className="flex items-center justify-center size-6 rounded-md bg-gradient-to-br from-amber-500/10 to-orange-500/10 shrink-0">
+                              <div className="flex items-center justify-center size-6 rounded-lg bg-gradient-to-br from-amber-500/10 to-orange-500/10 shrink-0">
                                 <IconBolt className="size-3 text-amber-500" stroke={2} />
                               </div>
                               <span className="truncate text-xs text-muted-foreground group-hover:text-foreground transition-colors">
@@ -1340,7 +1349,7 @@ export default function GamificationPage() {
                               </span>
                             </div>
                             <div className="flex items-center gap-3 shrink-0 ml-4">
-                              <span className="inline-flex items-center gap-0.5 font-bold text-xs text-amber-600 dark:text-amber-400">
+                              <span className="inline-flex items-center gap-0.5 font-black tracking-tight text-xs text-amber-600 dark:text-amber-400">
                                 <IconArrowUp className="size-2.5" stroke={2.5} />
                                 {event.xp} XP
                               </span>
@@ -1393,24 +1402,24 @@ function GamificationLoadingSkeleton() {
   return (
     <div className="space-y-5">
       {/* Compact profile row skeleton */}
-      <Skeleton className="h-[76px] rounded-xl" />
+      <Skeleton className="h-[76px] rounded-2xl border border-border" />
 
       {/* Challenge skeleton */}
-      <Skeleton className="h-[140px] rounded-xl" />
+      <Skeleton className="h-[140px] rounded-2xl border border-border" />
 
       {/* Leaderboard skeleton */}
       <div className="space-y-2">
         <Skeleton className="h-8 w-40" />
         {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-12 rounded-lg" />
+          <Skeleton key={i} className="h-12 rounded-2xl border border-border" />
         ))}
       </div>
 
       {/* Badge showcase skeleton */}
-      <Skeleton className="h-[140px] rounded-xl" />
+      <Skeleton className="h-[140px] rounded-2xl border border-border" />
 
       {/* Activity skeleton */}
-      <Skeleton className="h-[180px] rounded-xl" />
+      <Skeleton className="h-[180px] rounded-2xl border border-border" />
     </div>
   )
 }

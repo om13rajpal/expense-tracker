@@ -99,9 +99,9 @@ type Difficulty = "beginner" | "intermediate" | "advanced"
 function difficultyColor(d: Difficulty) {
   switch (d) {
     case "beginner":
-      return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+      return "bg-lime-500/10 text-lime-600 dark:text-lime-400 border-lime-500/20"
     case "intermediate":
-      return "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
+      return "bg-muted/80 dark:bg-muted text-foreground/70 border-border"
     case "advanced":
       return "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20"
   }
@@ -110,9 +110,9 @@ function difficultyColor(d: Difficulty) {
 function difficultyIconBg(d: Difficulty) {
   switch (d) {
     case "beginner":
-      return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+      return "bg-lime-500/10 text-lime-600 dark:text-lime-400"
     case "intermediate":
-      return "bg-blue-500/10 text-blue-600 dark:text-blue-400"
+      return "bg-muted/80 dark:bg-muted text-foreground/70"
     case "advanced":
       return "bg-amber-500/10 text-amber-600 dark:text-amber-400"
   }
@@ -129,9 +129,9 @@ type ProgressStatus = "unread" | "read" | "quizzed" | "mastered"
 function statusBadge(status: ProgressStatus) {
   switch (status) {
     case "mastered":
-      return { label: "Mastered", className: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20", icon: IconTrophy }
+      return { label: "Mastered", className: "bg-lime-500/10 text-lime-600 dark:text-lime-400 border-lime-500/20", icon: IconTrophy }
     case "quizzed":
-      return { label: "Quizzed", className: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20", icon: IconBrain }
+      return { label: "Quizzed", className: "bg-muted/80 dark:bg-muted text-foreground/70 border-border", icon: IconBrain }
     case "read":
       return { label: "Read", className: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20", icon: IconCheck }
     default:
@@ -356,15 +356,15 @@ function QuizSection({
   if (result) {
     return (
       <div className="space-y-4">
-        <div className={`rounded-xl border p-4 ${result.passed ? "border-emerald-500/30 bg-emerald-500/5" : "border-amber-500/30 bg-amber-500/5"}`}>
+        <div className={`rounded-2xl border p-4 ${result.passed ? "border-lime-500/30 bg-lime-500/5" : "border-amber-500/30 bg-amber-500/5"}`}>
           <div className="flex items-center gap-3 mb-2">
             {result.passed ? (
-              <IconTrophy className="h-5 w-5 text-emerald-500" />
+              <IconTrophy className="h-5 w-5 text-lime-500" />
             ) : (
               <IconBrain className="h-5 w-5 text-amber-500" />
             )}
             <div>
-              <h4 className="text-sm font-semibold text-foreground">
+              <h4 className="text-sm font-black tracking-tight text-foreground">
                 {result.passed ? "Mastered!" : "Keep Learning"}
               </h4>
               <p className="text-xs text-muted-foreground">
@@ -378,13 +378,13 @@ function QuizSection({
         {result.explanations.map((exp, i) => (
           <div
             key={i}
-            className={`rounded-lg border p-3 ${exp.correct ? "border-emerald-500/20 bg-emerald-500/5" : "border-red-500/20 bg-red-500/5"}`}
+            className={`rounded-xl border border-border bg-card p-3 ${exp.correct ? "border-lime-500/20 bg-lime-500/5" : "border-destructive/20 bg-destructive/5"}`}
           >
             <div className="flex items-start gap-2 mb-1.5">
               {exp.correct ? (
-                <IconCircleCheck className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                <IconCircleCheck className="h-4 w-4 text-lime-500 shrink-0 mt-0.5" />
               ) : (
-                <IconCircleX className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+                <IconCircleX className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
               )}
               <p className="text-xs font-medium text-foreground">{exp.question}</p>
             </div>
@@ -398,7 +398,7 @@ function QuizSection({
   return (
     <div className="space-y-4">
       {questions.map((q, qi) => (
-        <div key={qi} className="rounded-lg border border-border/50 p-4">
+        <div key={qi} className="rounded-xl border border-border bg-card p-4">
           <p className="text-sm font-medium text-foreground mb-3">
             {qi + 1}. {q.question}
           </p>
@@ -533,21 +533,21 @@ function TopicDetailView({
         </button>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2.5">
-            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${difficultyIconBg(topic.difficulty)}`}>
+            <div className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${difficultyIconBg(topic.difficulty)}`}>
               <TopicIcon className="h-4 w-4" />
             </div>
             <div>
-              <h2 className="text-lg font-semibold text-foreground leading-tight">{topic.title}</h2>
+              <h2 className="text-lg font-black tracking-tight text-foreground leading-tight">{topic.title}</h2>
               <div className="flex items-center gap-2 mt-0.5">
-                <span className={`inline-flex items-center rounded border px-1.5 py-0 text-[8px] font-semibold uppercase tracking-wider ${difficultyColor(topic.difficulty)}`}>
+                <span className={`inline-flex items-center rounded border px-1.5 py-0 text-[8px] font-semibold uppercase tracking-widest ${difficultyColor(topic.difficulty)}`}>
                   {difficultyLabel(topic.difficulty)}
                 </span>
-                <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground/50">
+                <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground/70">
                   <IconClock className="h-2.5 w-2.5" />
                   {topic.readTime} read
                 </span>
                 {badge && (
-                  <span className={`inline-flex items-center gap-1 rounded border px-1.5 py-0 text-[8px] font-semibold uppercase tracking-wider ${badge.className}`}>
+                  <span className={`inline-flex items-center gap-1 rounded border px-1.5 py-0 text-[8px] font-semibold uppercase tracking-widest ${badge.className}`}>
                     <badge.icon className="h-2.5 w-2.5" />
                     {badge.label}
                   </span>
@@ -559,7 +559,8 @@ function TopicDetailView({
       </div>
 
       {/* Content card */}
-      <div className="rounded-xl bg-card/80 backdrop-blur-sm border border-border/50 card-elevated overflow-hidden">
+      <div className="rounded-2xl border border-border bg-card relative overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
         <div className="p-5 md:p-6" ref={contentRef}>
           {/* Static content */}
           <div className="prose-finance prose-sm max-w-none">
@@ -581,8 +582,8 @@ function TopicDetailView({
                 th: ({ children }) => <th className="text-left px-2 py-1.5 text-foreground font-semibold">{children}</th>,
                 td: ({ children }) => <td className="px-2 py-1.5 text-muted-foreground border-t border-border/30">{children}</td>,
                 blockquote: ({ children }) => (
-                  <div className="mt-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3.5">
-                    <div className="text-sm text-muted-foreground leading-relaxed [&>p]:mb-0">{children}</div>
+                  <div className="mt-3 rounded-xl border border-lime-500/20 bg-lime-500/5 p-3.5">
+                    <div className="text-sm text-muted-foreground/70 leading-relaxed [&>p]:mb-0">{children}</div>
                   </div>
                 ),
               }}
@@ -686,11 +687,12 @@ function TopicGridCard({
     <motion.button
       variants={fadeUpSmall}
       onClick={onClick}
-      className="group relative text-left rounded-xl border border-border/50 bg-card/80 hover:bg-accent/30 hover:border-border transition-all duration-200 overflow-hidden"
+      className="group relative text-left rounded-2xl border border-border bg-card hover:bg-accent/30 hover:border-border transition-all duration-200 overflow-hidden"
     >
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
       {badge && (
-        <div className="absolute top-0 right-0">
-          <div className={`text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-bl-lg border-b border-l ${badge.className}`}>
+        <div className="absolute top-0 right-0 z-[1]">
+          <div className={`text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-bl-lg border-b border-l ${badge.className}`}>
             {badge.label}
           </div>
         </div>
@@ -698,18 +700,18 @@ function TopicGridCard({
 
       <div className="p-4">
         <div className="flex items-center gap-3 mb-2.5">
-          <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${difficultyIconBg(topic.difficulty)} transition-transform duration-200 group-hover:scale-105`}>
+          <div className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${difficultyIconBg(topic.difficulty)} transition-transform duration-200 group-hover:scale-105`}>
             <TopicIcon className="h-4 w-4" />
           </div>
           <div className="flex-1 min-w-0 pr-12">
-            <h3 className={`text-sm font-medium leading-tight truncate ${progress?.status && progress.status !== "unread" ? "text-muted-foreground" : "text-foreground"}`}>
+            <h3 className={`text-sm font-medium leading-tight truncate ${progress?.status && progress.status !== "unread" ? "text-muted-foreground/70" : "text-foreground"}`}>
               {topic.title}
             </h3>
             <div className="flex items-center gap-2 mt-0.5">
-              <span className={`inline-flex items-center rounded border px-1.5 py-0 text-[8px] font-semibold uppercase tracking-wider ${difficultyColor(topic.difficulty)}`}>
+              <span className={`inline-flex items-center rounded border px-1.5 py-0 text-[8px] font-semibold uppercase tracking-widest ${difficultyColor(topic.difficulty)}`}>
                 {difficultyLabel(topic.difficulty)}
               </span>
-              <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground/50">
+              <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground/70">
                 <IconClock className="h-2.5 w-2.5" />
                 {topic.readTime}
               </span>
@@ -724,7 +726,7 @@ function TopicGridCard({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
             {hasQuiz && (
-              <span className="text-[9px] text-muted-foreground/50 font-medium uppercase tracking-wider flex items-center gap-1">
+              <span className="text-[9px] text-muted-foreground/70 font-medium uppercase tracking-widest flex items-center gap-1">
                 <IconBrain className="h-2.5 w-2.5" />
                 Quiz
               </span>
@@ -762,9 +764,9 @@ function RecommendedSection({
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="rounded-xl border border-border/50 bg-card/60 p-4 animate-pulse">
+            <div key={i} className="rounded-2xl border border-border p-4 animate-pulse">
               <div className="flex items-center gap-3 mb-3">
-                <div className="h-9 w-9 rounded-lg bg-muted/60" />
+                <div className="size-9 rounded-xl bg-muted/60" />
                 <div className="flex-1 space-y-2">
                   <div className="h-3.5 w-2/3 rounded bg-muted/60" />
                   <div className="h-2.5 w-1/3 rounded bg-muted/40" />
@@ -804,35 +806,36 @@ function RecommendedSection({
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.1 + idx * 0.08, duration: 0.35, ease: [0.25, 0.1, 0.25, 1] }}
               onClick={() => onTopicClick(rec.topicId)}
-              className="group relative text-left rounded-xl border border-primary/20 bg-gradient-to-br from-primary/[0.04] to-transparent hover:from-primary/[0.08] hover:border-primary/30 transition-all duration-200 overflow-hidden"
+              className="group relative text-left rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/[0.04] to-transparent hover:from-primary/[0.08] hover:border-primary/30 transition-all duration-200 overflow-hidden"
             >
-              <div className="absolute top-0 right-0">
-                <div className="bg-primary/10 text-primary text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-bl-lg border-b border-l border-primary/15">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+              <div className="absolute top-0 right-0 z-[1]">
+                <div className="bg-primary/10 text-primary text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-bl-lg border-b border-l border-primary/15">
                   Recommended
                 </div>
               </div>
 
               <div className="p-4 pt-3">
                 <div className="flex items-center gap-3 mb-2.5">
-                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${difficultyIconBg(topic.difficulty)} transition-transform duration-200 group-hover:scale-105`}>
+                  <div className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${difficultyIconBg(topic.difficulty)} transition-transform duration-200 group-hover:scale-105`}>
                     <TopicIcon className="h-4 w-4" />
                   </div>
                   <div className="flex-1 min-w-0 pr-16">
                     <div className="flex items-center gap-1.5">
-                      <h3 className={`text-sm font-medium leading-tight truncate ${isRead ? "text-muted-foreground" : "text-foreground"}`}>
+                      <h3 className={`text-sm font-medium leading-tight truncate ${isRead ? "text-muted-foreground/70" : "text-foreground"}`}>
                         {topic.title}
                       </h3>
                       {isRead && (
-                        <div className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-emerald-500">
+                        <div className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-lime-500">
                           <IconCheck className="h-2 w-2 text-white" strokeWidth={3} />
                         </div>
                       )}
                     </div>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className={`inline-flex items-center rounded border px-1.5 py-0 text-[8px] font-semibold uppercase tracking-wider ${difficultyColor(topic.difficulty)}`}>
+                      <span className={`inline-flex items-center rounded border px-1.5 py-0 text-[8px] font-semibold uppercase tracking-widest ${difficultyColor(topic.difficulty)}`}>
                         {difficultyLabel(topic.difficulty)}
                       </span>
-                      <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground/50">
+                      <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground/70">
                         <IconClock className="h-2.5 w-2.5" />
                         {topic.readTime}
                       </span>
@@ -895,13 +898,13 @@ function SectionGridBlock({
             <div className="flex items-center gap-3 mb-1">
               <h2 className="text-base font-semibold text-foreground">{section.title}</h2>
               {percent === 100 && (
-                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/25">
+                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-lime-500 shadow-sm shadow-lime-500/25">
                   <IconCheck className="h-3 w-3 text-white" strokeWidth={3} />
                 </div>
               )}
             </div>
             <div className="flex items-center gap-3">
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-[11px] text-muted-foreground/70">
                 {readCount} of {total} completed
               </p>
               <div className="flex-1 max-w-[120px] h-1.5 rounded-full bg-muted/60 overflow-hidden">
@@ -912,7 +915,7 @@ function SectionGridBlock({
                   transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
                 />
               </div>
-              <span className="text-[11px] font-semibold text-muted-foreground tabular-nums">
+              <span className="text-[11px] font-black tracking-tight text-muted-foreground/70 tabular-nums">
                 {percent}%
               </span>
             </div>
@@ -1063,7 +1066,11 @@ export default function LearnPage() {
       <AppSidebar variant="inset" />
       <SidebarInset>
         <SiteHeader title="Learn" />
-        <div className="flex flex-1 flex-col">
+        <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden hidden dark:block">
+          <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-lime-500/[0.05] blur-[200px]" />
+          <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] rounded-full bg-cyan-500/[0.04] blur-[180px]" />
+        </div>
+        <div className="relative z-[1] flex flex-1 flex-col overflow-y-auto min-h-0">
           <div className="@container/main flex flex-1 flex-col gap-6 p-4 md:p-6">
             <AnimatePresence mode="wait">
               {selectedTopic ? (
@@ -1084,9 +1091,10 @@ export default function LearnPage() {
                 >
                   {/* Hero / Progress Section */}
                   <motion.div variants={fadeUp} className="relative">
-                    <div className="absolute -inset-2 rounded-3xl bg-gradient-to-br from-primary/10 via-cyan-500/8 to-emerald-500/10 blur-2xl opacity-50 pointer-events-none" />
-                    <div className="relative rounded-2xl bg-card/80 backdrop-blur-sm border border-border/60 card-elevated overflow-hidden">
-                      <div className="h-1 bg-gradient-to-r from-primary/60 via-cyan-500/60 to-emerald-500/60" />
+                    <div className="absolute -inset-2 rounded-3xl bg-gradient-to-br from-primary/10 via-cyan-500/8 to-lime-500/10 blur-2xl opacity-50 pointer-events-none" />
+                    <div className="relative rounded-2xl border border-border bg-card overflow-hidden">
+                      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+                      <div className="h-1 bg-gradient-to-r from-primary/60 via-cyan-500/60 to-lime-500/60" />
                       <div className="absolute inset-0 pointer-events-none opacity-[0.02]">
                         <svg width="100%" height="100%">
                           <pattern id="learn-grid" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
@@ -1100,14 +1108,14 @@ export default function LearnPage() {
                         <div className="flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-8">
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-3 mb-3">
-                              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-emerald-500/20 border border-primary/10">
+                              <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-lime-500/20 border border-primary/10">
                                 <IconSchool className="h-6 w-6 text-primary" />
                               </div>
                               <div>
-                                <h1 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">
+                                <h1 className="text-xl md:text-2xl font-black text-foreground tracking-tight">
                                   Financial Academy
                                 </h1>
-                                <p className="text-xs text-muted-foreground mt-0.5">
+                                <p className="text-xs text-muted-foreground/70 mt-0.5">
                                   {totalTopics} bite-sized lessons across {SECTIONS.length} modules
                                 </p>
                               </div>
@@ -1122,17 +1130,17 @@ export default function LearnPage() {
 
                             <div className="max-w-sm">
                               <div className="flex items-center justify-between mb-2">
-                                <span className="text-xs font-medium text-muted-foreground">
+                                <span className="text-xs font-medium text-muted-foreground/70">
                                   {completedCount} of {totalTopics} read
                                   {masteredCount > 0 && ` · ${masteredCount} mastered`}
                                 </span>
-                                <span className="text-xs font-bold tabular-nums text-foreground">
+                                <span className="text-xs font-black tracking-tight tabular-nums text-foreground">
                                   {progressPercent}%
                                 </span>
                               </div>
                               <div className="h-2.5 rounded-full bg-muted/60 overflow-hidden">
                                 <motion.div
-                                  className="h-full rounded-full bg-gradient-to-r from-primary via-cyan-500 to-emerald-500"
+                                  className="h-full rounded-full bg-gradient-to-r from-primary via-cyan-500 to-lime-500"
                                   initial={{ width: 0 }}
                                   animate={{ width: `${progressPercent}%` }}
                                   transition={{ duration: 0.7, ease: [0.25, 0.1, 0.25, 1], delay: 0.3 }}
@@ -1144,7 +1152,7 @@ export default function LearnPage() {
                           {/* Donut ring */}
                           <div className="shrink-0 self-center">
                             <div className="relative flex items-center justify-center h-28 w-28 md:h-32 md:w-32">
-                              <div className="absolute inset-2 rounded-full bg-gradient-to-br from-primary/10 to-emerald-500/10 blur-md" />
+                              <div className="absolute inset-2 rounded-full bg-gradient-to-br from-primary/10 to-lime-500/10 blur-md" />
                               <svg className="h-full w-full -rotate-90 relative" viewBox="0 0 100 100">
                                 <circle
                                   cx="50" cy="50" r="40"
@@ -1163,15 +1171,15 @@ export default function LearnPage() {
                                   <linearGradient id="heroProgressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                                     <stop offset="0%" stopColor="oklch(0.55 0.12 145)" />
                                     <stop offset="50%" stopColor="rgb(6 182 212)" />
-                                    <stop offset="100%" stopColor="rgb(16 185 129)" />
+                                    <stop offset="100%" stopColor="rgb(132 204 22)" />
                                   </linearGradient>
                                 </defs>
                               </svg>
                               <div className="absolute flex flex-col items-center justify-center">
-                                <span className="text-2xl md:text-3xl font-extrabold tabular-nums text-foreground leading-none">
+                                <span className="text-2xl md:text-3xl font-black tracking-tight tabular-nums text-foreground leading-none">
                                   {progressPercent}
                                 </span>
-                                <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mt-0.5">
+                                <span className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest mt-0.5">
                                   percent
                                 </span>
                               </div>
@@ -1186,10 +1194,10 @@ export default function LearnPage() {
                             transition={{ delay: 0.5, ...spring.smooth }}
                             className="flex items-center gap-2.5 mt-5 pt-4 border-t border-border/40"
                           >
-                            <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/10">
-                              <IconTrophy className="h-4 w-4 text-emerald-500" />
+                            <div className="flex size-8 items-center justify-center rounded-xl bg-lime-500/10">
+                              <IconTrophy className="h-4 w-4 text-lime-500" />
                             </div>
-                            <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                            <span className="text-sm font-medium text-lime-600 dark:text-lime-400">
                               Congratulations! You have completed all topics. You are now financially literate.
                             </span>
                           </motion.div>
@@ -1202,8 +1210,8 @@ export default function LearnPage() {
                   <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-3">
                     <div className="relative group/search flex-1">
                       <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-primary/10 via-transparent to-primary/10 opacity-0 group-focus-within/search:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                      <div className="relative flex items-center rounded-xl border border-border/60 bg-card/80 backdrop-blur-sm card-elevated transition-all duration-200 focus-within:border-primary/30 focus-within:ring-1 focus-within:ring-primary/15">
-                        <IconSearch className="ml-4 h-[18px] w-[18px] text-muted-foreground/50 shrink-0" />
+                      <div className="relative flex items-center rounded-2xl border border-border bg-card transition-all duration-200 focus-within:border-primary/30 focus-within:ring-1 focus-within:ring-primary/15">
+                        <IconSearch className="ml-4 h-[18px] w-[18px] text-muted-foreground/70 shrink-0" />
                         <input
                           ref={searchRef}
                           type="text"
@@ -1227,16 +1235,16 @@ export default function LearnPage() {
                     </div>
 
                     {/* Difficulty filter */}
-                    <div className="flex items-center gap-1.5 rounded-xl border border-border/60 bg-card/80 px-2 h-12">
-                      <IconFilter className="h-4 w-4 text-muted-foreground/50 shrink-0" />
+                    <div className="flex items-center gap-1.5 rounded-2xl border border-border bg-card px-2 h-12">
+                      <IconFilter className="h-4 w-4 text-muted-foreground/70 shrink-0" />
                       {(["all", "beginner", "intermediate", "advanced"] as const).map((d) => (
                         <button
                           key={d}
                           onClick={() => setDifficultyFilter(d)}
-                          className={`rounded-lg px-2.5 py-1.5 text-[11px] font-semibold uppercase tracking-wider transition-all duration-150 ${
+                          className={`rounded-lg px-2.5 py-1.5 text-[11px] font-semibold uppercase tracking-widest transition-all duration-150 ${
                             difficultyFilter === d
                               ? "bg-primary/10 text-primary"
-                              : "text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/30"
+                              : "text-muted-foreground/70 hover:text-muted-foreground hover:bg-muted/30"
                           }`}
                         >
                           {d === "all" ? "All" : difficultyLabel(d)}
@@ -1315,7 +1323,8 @@ export default function LearnPage() {
                       className="relative overflow-hidden"
                     >
                       <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-amber-500/8 via-orange-500/5 to-rose-500/8 blur-xl opacity-50 pointer-events-none" />
-                      <div className="relative rounded-2xl bg-card/80 backdrop-blur-sm border border-amber-500/15 card-elevated overflow-hidden">
+                      <div className="relative rounded-2xl border border-border bg-card overflow-hidden">
+                        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                         <div className="h-[2px] bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
                         <div className="p-6">
                           <div className="absolute top-4 right-5 text-amber-400/15">
@@ -1332,10 +1341,10 @@ export default function LearnPage() {
                               <IconBookmark className="h-5 w-5 text-amber-600 dark:text-amber-400" />
                             </div>
                             <div className="flex-1">
-                              <h3 className="text-[15px] font-semibold text-foreground mb-1.5">
+                              <h3 className="text-[15px] font-black tracking-tight text-foreground mb-1.5">
                                 Knowledge is Your Best Investment
                               </h3>
-                              <p className="text-sm text-muted-foreground leading-relaxed mb-3">
+                              <p className="text-sm text-muted-foreground/70 leading-relaxed mb-3">
                                 Warren Buffett spends 80% of his day reading. The more you understand about
                                 money, the better decisions you will make. Come back to these topics whenever
                                 you need a refresher. Your progress is saved to your account.

@@ -34,7 +34,7 @@ const CommandDialog = ({
 }: React.ComponentProps<typeof Dialog> & { shouldFilter?: boolean }) => {
   return (
     <Dialog {...props}>
-      <DialogContent className="overflow-hidden p-0 shadow-2xl max-w-2xl rounded-xl border-border/50 bg-background/95 backdrop-blur-xl">
+      <DialogContent className="overflow-hidden p-0 shadow-2xl max-w-2xl rounded-xl border bg-background">
         <DialogTitle className="sr-only">Command Palette</DialogTitle>
         <DialogDescription className="sr-only">
           Search for pages and actions

@@ -129,31 +129,31 @@ import { isSimilarMerchant } from "@/lib/categorizer"
 
 // Category color mapping for rich badges
 const CATEGORY_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
-  "Salary":            { bg: "bg-emerald-100/70 dark:bg-emerald-900/30", text: "text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500" },
-  "Freelance":         { bg: "bg-emerald-100/70 dark:bg-emerald-900/30", text: "text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500" },
-  "Business":          { bg: "bg-emerald-100/70 dark:bg-emerald-900/30", text: "text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500" },
-  "Investment Income": { bg: "bg-emerald-100/70 dark:bg-emerald-900/30", text: "text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500" },
-  "Other Income":      { bg: "bg-emerald-100/70 dark:bg-emerald-900/30", text: "text-emerald-700 dark:text-emerald-400", dot: "bg-emerald-500" },
-  "Rent":              { bg: "bg-rose-100/70 dark:bg-rose-900/30", text: "text-rose-700 dark:text-rose-400", dot: "bg-rose-500" },
+  "Salary":            { bg: "bg-lime-100/70 dark:bg-lime-900/30", text: "text-lime-700 dark:text-lime-400", dot: "bg-lime-500" },
+  "Freelance":         { bg: "bg-lime-100/70 dark:bg-lime-900/30", text: "text-lime-700 dark:text-lime-400", dot: "bg-lime-500" },
+  "Business":          { bg: "bg-lime-100/70 dark:bg-lime-900/30", text: "text-lime-700 dark:text-lime-400", dot: "bg-lime-500" },
+  "Investment Income": { bg: "bg-lime-100/70 dark:bg-lime-900/30", text: "text-lime-700 dark:text-lime-400", dot: "bg-lime-500" },
+  "Other Income":      { bg: "bg-lime-100/70 dark:bg-lime-900/30", text: "text-lime-700 dark:text-lime-400", dot: "bg-lime-500" },
+  "Rent":              { bg: "bg-destructive/10", text: "text-destructive", dot: "bg-destructive" },
   "Utilities":         { bg: "bg-amber-100/70 dark:bg-amber-900/30", text: "text-amber-700 dark:text-amber-400", dot: "bg-amber-500" },
   "Groceries":         { bg: "bg-lime-100/70 dark:bg-lime-900/30", text: "text-lime-700 dark:text-lime-400", dot: "bg-lime-500" },
-  "Healthcare":        { bg: "bg-red-100/70 dark:bg-red-900/30", text: "text-red-700 dark:text-red-400", dot: "bg-red-500" },
+  "Healthcare":        { bg: "bg-destructive/10", text: "text-destructive", dot: "bg-destructive" },
   "Insurance":         { bg: "bg-orange-100/70 dark:bg-orange-900/30", text: "text-orange-700 dark:text-orange-400", dot: "bg-orange-500" },
-  "Transport":         { bg: "bg-sky-100/70 dark:bg-sky-900/30", text: "text-sky-700 dark:text-sky-400", dot: "bg-sky-500" },
-  "Fuel":              { bg: "bg-sky-100/70 dark:bg-sky-900/30", text: "text-sky-700 dark:text-sky-400", dot: "bg-sky-500" },
+  "Transport":         { bg: "bg-muted/80 dark:bg-muted", text: "text-foreground/70", dot: "bg-sky-500" },
+  "Fuel":              { bg: "bg-muted/80 dark:bg-muted", text: "text-foreground/70", dot: "bg-sky-500" },
   "Dining":            { bg: "bg-orange-100/70 dark:bg-orange-900/30", text: "text-orange-700 dark:text-orange-400", dot: "bg-orange-500" },
   "Entertainment":     { bg: "bg-purple-100/70 dark:bg-purple-900/30", text: "text-purple-700 dark:text-purple-400", dot: "bg-purple-500" },
   "Shopping":          { bg: "bg-pink-100/70 dark:bg-pink-900/30", text: "text-pink-700 dark:text-pink-400", dot: "bg-pink-500" },
-  "Travel":            { bg: "bg-indigo-100/70 dark:bg-indigo-900/30", text: "text-indigo-700 dark:text-indigo-400", dot: "bg-indigo-500" },
-  "Education":         { bg: "bg-blue-100/70 dark:bg-blue-900/30", text: "text-blue-700 dark:text-blue-400", dot: "bg-blue-500" },
+  "Travel":            { bg: "bg-muted/80 dark:bg-muted", text: "text-foreground/70", dot: "bg-indigo-500" },
+  "Education":         { bg: "bg-muted/80 dark:bg-muted", text: "text-foreground/70", dot: "bg-blue-500" },
   "Fitness":           { bg: "bg-teal-100/70 dark:bg-teal-900/30", text: "text-teal-700 dark:text-teal-400", dot: "bg-teal-500" },
   "Personal Care":     { bg: "bg-fuchsia-100/70 dark:bg-fuchsia-900/30", text: "text-fuchsia-700 dark:text-fuchsia-400", dot: "bg-fuchsia-500" },
   "Savings":           { bg: "bg-cyan-100/70 dark:bg-cyan-900/30", text: "text-cyan-700 dark:text-cyan-400", dot: "bg-cyan-500" },
-  "Investment":        { bg: "bg-violet-100/70 dark:bg-violet-900/30", text: "text-violet-700 dark:text-violet-400", dot: "bg-violet-500" },
-  "Loan Payment":      { bg: "bg-red-100/70 dark:bg-red-900/30", text: "text-red-700 dark:text-red-400", dot: "bg-red-500" },
+  "Investment":        { bg: "bg-muted/80 dark:bg-muted", text: "text-foreground/70", dot: "bg-violet-500" },
+  "Loan Payment":      { bg: "bg-destructive/10", text: "text-destructive", dot: "bg-destructive" },
   "Credit Card":       { bg: "bg-slate-100/70 dark:bg-slate-800/50", text: "text-slate-700 dark:text-slate-300", dot: "bg-slate-500" },
   "Tax":               { bg: "bg-stone-100/70 dark:bg-stone-800/50", text: "text-stone-700 dark:text-stone-300", dot: "bg-stone-500" },
-  "Subscription":      { bg: "bg-violet-100/70 dark:bg-violet-900/30", text: "text-violet-700 dark:text-violet-400", dot: "bg-violet-500" },
+  "Subscription":      { bg: "bg-muted/80 dark:bg-muted", text: "text-foreground/70", dot: "bg-violet-500" },
   "Gifts":             { bg: "bg-pink-100/70 dark:bg-pink-900/30", text: "text-pink-700 dark:text-pink-400", dot: "bg-pink-500" },
   "Charity":           { bg: "bg-amber-100/70 dark:bg-amber-900/30", text: "text-amber-700 dark:text-amber-400", dot: "bg-amber-500" },
   "Miscellaneous":     { bg: "bg-gray-100/70 dark:bg-gray-800/50", text: "text-gray-600 dark:text-gray-400", dot: "bg-gray-400" },
@@ -817,7 +817,11 @@ export default function TransactionsPage() {
         <SiteHeader
           title="Transactions"
         />
-        <div className="flex flex-1 flex-col">
+        <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden hidden dark:block">
+          <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-lime-500/[0.05] blur-[200px]" />
+          <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] rounded-full bg-cyan-500/[0.04] blur-[180px]" />
+        </div>
+        <div className="relative z-[1] flex flex-1 flex-col overflow-y-auto min-h-0">
           {isLoading ? (
             <TransactionsLoadingSkeleton />
           ) : transactionsError ? (
@@ -847,35 +851,38 @@ export default function TransactionsPage() {
                 className="grid grid-cols-1 sm:grid-cols-3 gap-3"
               >
                 {/* Income Card */}
-                <div className="card-elevated rounded-xl bg-card p-4 flex items-center gap-4">
-                  <div className="shrink-0 flex items-center justify-center h-10 w-10 rounded-lg bg-primary/10">
+                <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-4 flex items-center gap-4">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+                  <div className="shrink-0 flex items-center justify-center size-9 rounded-xl bg-primary/10">
                     <IconArrowUpRight className="size-5 text-primary" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Income</p>
-                    <p className="text-xl font-semibold text-primary tabular-nums truncate">{formatCurrency(incomeTotal)}</p>
+                    <p className="text-[11px] font-medium text-muted-foreground/70 uppercase tracking-widest">Income</p>
+                    <p className="text-xl font-black tracking-tight text-primary tabular-nums truncate">{formatCurrency(incomeTotal)}</p>
                   </div>
                 </div>
 
                 {/* Expenses Card */}
-                <div className="card-elevated rounded-xl bg-card p-4 flex items-center gap-4">
-                  <div className="shrink-0 flex items-center justify-center h-10 w-10 rounded-lg bg-muted">
-                    <IconArrowDownRight className="size-5 text-muted-foreground" />
+                <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-4 flex items-center gap-4">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+                  <div className="shrink-0 flex items-center justify-center size-9 rounded-xl bg-muted/80 dark:bg-muted">
+                    <IconArrowDownRight className="size-5 text-foreground/70" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Expenses</p>
-                    <p className="text-xl font-semibold tabular-nums truncate">{formatCurrency(expenseTotal)}</p>
+                    <p className="text-[11px] font-medium text-muted-foreground/70 uppercase tracking-widest">Expenses</p>
+                    <p className="text-xl font-black tracking-tight tabular-nums truncate">{formatCurrency(expenseTotal)}</p>
                   </div>
                 </div>
 
                 {/* Net Card */}
-                <div className="card-elevated rounded-xl bg-card p-4 flex items-center gap-4">
-                  <div className={`shrink-0 flex items-center justify-center h-10 w-10 rounded-lg ${netTotal >= 0 ? "bg-primary/10" : "bg-destructive/10"}`}>
+                <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-4 flex items-center gap-4">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+                  <div className={`shrink-0 flex items-center justify-center size-9 rounded-xl ${netTotal >= 0 ? "bg-primary/10" : "bg-destructive/10"}`}>
                     <IconTrendingUp className={`size-5 ${netTotal >= 0 ? "text-primary" : "text-destructive"}`} />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Net</p>
-                    <p className={`text-xl font-semibold tabular-nums truncate ${netTotal >= 0 ? "text-primary" : "text-destructive"}`}>
+                    <p className="text-[11px] font-medium text-muted-foreground/70 uppercase tracking-widest">Net</p>
+                    <p className={`text-xl font-black tracking-tight tabular-nums truncate ${netTotal >= 0 ? "text-primary" : "text-destructive"}`}>
                       {netTotal >= 0 ? "+" : ""}{formatCurrency(netTotal)}
                     </p>
                   </div>
@@ -885,8 +892,9 @@ export default function TransactionsPage() {
               {/* Search / Filter Toolbar */}
               <motion.div
                 variants={fadeUpSmall}
-                className="card-elevated rounded-xl bg-card p-3 flex flex-wrap items-center gap-3"
+                className="rounded-2xl border border-border bg-card relative overflow-hidden p-3 flex flex-wrap items-center gap-3"
               >
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                 {/* Search Input */}
                 <div className="relative flex-1 min-w-[140px] sm:min-w-[200px] max-w-[380px]">
                   <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/60" />
@@ -983,7 +991,7 @@ export default function TransactionsPage() {
                         <span className="hidden sm:inline">{isAiCategorizing ? "Categorizing..." : "AI Categorize"}</span>
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>Use AI to categorize uncategorized transactions</TooltipContent>
+                    <TooltipContent className="backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)]">Use AI to categorize uncategorized transactions</TooltipContent>
                   </Tooltip>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -1002,7 +1010,7 @@ export default function TransactionsPage() {
                         <span className="hidden sm:inline">CSV</span>
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>Download CSV</TooltipContent>
+                    <TooltipContent className="backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)]">Download CSV</TooltipContent>
                   </Tooltip>
                   <Tooltip>
                     <TooltipTrigger asChild>
@@ -1021,7 +1029,7 @@ export default function TransactionsPage() {
                         )}
                       </Button>
                     </TooltipTrigger>
-                    <TooltipContent>Categorization Rules</TooltipContent>
+                    <TooltipContent className="backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)]">Categorization Rules</TooltipContent>
                   </Tooltip>
                   <Button
                     size="sm"
@@ -1116,7 +1124,8 @@ export default function TransactionsPage() {
               </AnimatePresence>
 
               {/* Transaction Table */}
-              <motion.div variants={fadeUp} className="card-elevated rounded-xl bg-card overflow-x-auto">
+              <motion.div variants={fadeUp} className="rounded-2xl border border-border bg-card relative overflow-hidden overflow-x-auto">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                 <Table className="min-w-[480px]">
                   <TableHeader>
                     <TableRow className="hover:bg-transparent border-b border-border/50">
@@ -1128,19 +1137,19 @@ export default function TransactionsPage() {
                           }
                         </button>
                       </TableHead>
-                      <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 w-[90px] hidden sm:table-cell">
+                      <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70 w-[90px] hidden sm:table-cell">
                         <button onClick={() => toggleSort("date")} className="inline-flex items-center gap-1 hover:text-foreground transition-colors">
                           Date
                           {sortField === "date" ? (sortDir === "asc" ? <IconSortAscending className="size-3.5" /> : <IconSortDescending className="size-3.5" />) : <IconArrowsSort className="size-3.5 opacity-0 group-hover:opacity-40" />}
                         </button>
                       </TableHead>
-                      <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+                      <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">
                         <button onClick={() => toggleSort("description")} className="inline-flex items-center gap-1 hover:text-foreground transition-colors">
                           Description
                           {sortField === "description" ? (sortDir === "asc" ? <IconSortAscending className="size-3.5" /> : <IconSortDescending className="size-3.5" />) : null}
                         </button>
                       </TableHead>
-                      <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 hidden md:table-cell">
+                      <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70 hidden md:table-cell">
                         <span className="inline-flex items-center gap-1">
                           <button onClick={() => toggleSort("category")} className="inline-flex items-center gap-1 hover:text-foreground transition-colors">
                             Category
@@ -1149,8 +1158,8 @@ export default function TransactionsPage() {
                           <InfoTooltip text="Click a category badge to change it." iconClassName="h-3 w-3" />
                         </span>
                       </TableHead>
-                      <TableHead className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 hidden lg:table-cell">Method</TableHead>
-                      <TableHead className="text-right text-[11px] font-semibold uppercase tracking-wider text-muted-foreground/70 pr-4">
+                      <TableHead className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70 hidden lg:table-cell">Method</TableHead>
+                      <TableHead className="text-right text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70 pr-4">
                         <button onClick={() => toggleSort("amount")} className="inline-flex items-center gap-1 hover:text-foreground transition-colors ml-auto">
                           Amount
                           {sortField === "amount" ? (sortDir === "asc" ? <IconSortAscending className="size-3.5" /> : <IconSortDescending className="size-3.5" />) : null}
@@ -1214,7 +1223,7 @@ export default function TransactionsPage() {
                                       {cleanMerchantName(transaction.merchant || transaction.description)}
                                     </div>
                                   </TooltipTrigger>
-                                  <TooltipContent side="top" className="max-w-[400px]">
+                                  <TooltipContent side="top" className="max-w-[400px] backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
                                     {cleanMerchantName(transaction.merchant || transaction.description)}
                                   </TooltipContent>
                                 </Tooltip>
@@ -1223,7 +1232,7 @@ export default function TransactionsPage() {
                                     <TooltipTrigger asChild>
                                       <div className="text-[11px] text-muted-foreground/60 truncate max-w-[320px] cursor-default mt-0.5">{cleanMerchantName(transaction.description)}</div>
                                     </TooltipTrigger>
-                                    <TooltipContent side="bottom" className="max-w-[400px]">
+                                    <TooltipContent side="bottom" className="max-w-[400px] backdrop-blur-xl shadow-[0_8px_32px_rgba(0,0,0,0.12)]">
                                       {transaction.description}
                                     </TooltipContent>
                                   </Tooltip>
@@ -1309,10 +1318,10 @@ export default function TransactionsPage() {
                                   </Badge>
                                 )}
                                 <span
-                                  className={`text-[13px] font-semibold tabular-nums ${
+                                  className={`text-[13px] font-black tracking-tight tabular-nums ${
                                     transaction.type === "income"
-                                      ? "text-emerald-600 dark:text-emerald-400"
-                                      : "text-rose-600 dark:text-rose-400"
+                                      ? "text-lime-600 dark:text-lime-400"
+                                      : "text-destructive"
                                   }`}
                                 >
                                   {transaction.type === "income" ? "+" : "-"}
@@ -1574,7 +1583,7 @@ export default function TransactionsPage() {
           </DialogHeader>
 
           {/* Add Rule Form */}
-          <div className="space-y-3 rounded-xl border border-border/60 p-4 bg-muted/20">
+          <div className="space-y-3 rounded-xl border border-border p-4 bg-card">
             <div className="flex items-center gap-2 text-sm font-medium">
               <IconPlus className="size-4 text-primary" />
               New Rule
@@ -1636,11 +1645,11 @@ export default function TransactionsPage() {
             </div>
             {isLoadingRules ? (
               <div className="space-y-2">
-                <Skeleton className="h-12 rounded-lg" />
-                <Skeleton className="h-12 rounded-lg" />
+                <Skeleton className="h-12 rounded-2xl border border-border" />
+                <Skeleton className="h-12 rounded-2xl border border-border" />
               </div>
             ) : rules.length === 0 ? (
-              <div className="flex flex-col items-center gap-2 py-8 text-center border rounded-xl border-dashed bg-muted/10">
+              <div className="flex flex-col items-center gap-2 py-8 text-center rounded-xl border border-border border-dashed bg-card">
                 <IconFilter className="size-6 text-muted-foreground/30" />
                 <p className="text-sm text-muted-foreground">No rules yet</p>
                 <p className="text-xs text-muted-foreground/70">Add a rule above to auto-categorize transactions on import.</p>
@@ -1691,7 +1700,7 @@ export default function TransactionsPage() {
                   ) : (
                     <div
                       key={rule._id}
-                      className={`card-interactive flex items-center justify-between rounded-lg border px-4 py-2.5 ${rule.enabled ? "border-border/60 bg-card" : "border-border/30 opacity-50 bg-muted/20"}`}
+                      className={`card-interactive flex items-center justify-between rounded-xl border px-4 py-2.5 ${rule.enabled ? "border-border bg-card" : "border-border/30 opacity-50 bg-card"}`}
                     >
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
@@ -1771,8 +1780,9 @@ function TransactionsLoadingSkeleton() {
       {/* Stat cards skeleton */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="card-elevated rounded-xl bg-card p-4 flex items-center gap-4">
-            <Skeleton className="h-10 w-10 rounded-lg" />
+          <div key={i} className="rounded-2xl border border-border bg-card relative overflow-hidden p-4 flex items-center gap-4">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+            <Skeleton className="h-10 w-10 rounded-xl" />
             <div className="space-y-2">
               <Skeleton className="h-3 w-16" />
               <Skeleton className="h-6 w-24" />
@@ -1781,7 +1791,8 @@ function TransactionsLoadingSkeleton() {
         ))}
       </div>
       {/* Toolbar skeleton */}
-      <div className="card-elevated rounded-xl bg-card p-3 flex items-center gap-3">
+      <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-3 flex items-center gap-3">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
         <Skeleton className="h-9 flex-1 max-w-[380px]" />
         <Skeleton className="h-9 w-40" />
         <div className="flex-1" />
@@ -1789,7 +1800,8 @@ function TransactionsLoadingSkeleton() {
         <Skeleton className="h-8 w-16" />
       </div>
       {/* Table skeleton */}
-      <div className="card-elevated rounded-xl bg-card overflow-hidden">
+      <div className="rounded-2xl border border-border bg-card relative overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
         <div className="space-y-0">
           {Array.from({ length: 10 }).map((_, i) => (
             <div key={i} className="flex items-center gap-4 px-4 py-3.5 border-b border-border/20">

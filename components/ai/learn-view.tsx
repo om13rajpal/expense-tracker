@@ -98,7 +98,7 @@ type Difficulty = "beginner" | "intermediate" | "advanced"
 function difficultyColor(d: Difficulty) {
   switch (d) {
     case "beginner":
-      return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20"
+      return "bg-lime-500/10 text-lime-600 dark:text-lime-400 border-lime-500/20"
     case "intermediate":
       return "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20"
     case "advanced":
@@ -110,11 +110,11 @@ function difficultyColor(d: Difficulty) {
 function difficultyIconBg(d: Difficulty) {
   switch (d) {
     case "beginner":
-      return "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+      return "bg-muted/80 dark:bg-muted text-foreground/70"
     case "intermediate":
-      return "bg-blue-500/10 text-blue-600 dark:text-blue-400"
+      return "bg-muted/80 dark:bg-muted text-foreground/70"
     case "advanced":
-      return "bg-amber-500/10 text-amber-600 dark:text-amber-400"
+      return "bg-muted/80 dark:bg-muted text-foreground/70"
   }
 }
 
@@ -122,7 +122,7 @@ function difficultyIconBg(d: Difficulty) {
 function difficultyGradient(d: Difficulty) {
   switch (d) {
     case "beginner":
-      return "from-emerald-500 to-teal-500"
+      return "from-lime-500 to-teal-500"
     case "intermediate":
       return "from-blue-500 to-indigo-500"
     case "advanced":
@@ -175,11 +175,11 @@ type ProgressStatus = "unread" | "read" | "quizzed" | "mastered"
 function statusBadge(status: ProgressStatus) {
   switch (status) {
     case "mastered":
-      return { label: "Mastered", className: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20", icon: IconTrophy }
+      return { label: "Mastered", className: "bg-lime-500/10 text-lime-600 dark:text-lime-400 border-lime-500/20", icon: IconTrophy }
     case "quizzed":
       return { label: "Quizzed", className: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20", icon: IconBrain }
     case "read":
-      return { label: "Read", className: "bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 border-cyan-500/20", icon: IconCheck }
+      return { label: "Read", className: "bg-muted/80 dark:bg-muted text-foreground/70 border-border", icon: IconCheck }
     default:
       return null
   }
@@ -456,7 +456,7 @@ function QuizSection({
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
-          className={`relative rounded-xl border p-5 overflow-hidden ${result.passed ? "border-emerald-500/30 bg-emerald-500/5" : "border-amber-500/30 bg-amber-500/5"}`}
+          className={`relative rounded-2xl border p-5 overflow-hidden ${result.passed ? "border-lime-500/30 bg-lime-500/5" : "border-amber-500/30 bg-amber-500/5"}`}
         >
           {result.passed && (
             <div className="absolute inset-0 pointer-events-none">
@@ -464,7 +464,7 @@ function QuizSection({
                 initial={{ opacity: 0 }}
                 animate={{ opacity: [0, 1, 0] }}
                 transition={{ duration: 2, times: [0, 0.3, 1] }}
-                className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 via-yellow-500/10 to-emerald-500/10"
+                className="absolute inset-0 bg-gradient-to-r from-lime-500/10 via-yellow-500/10 to-lime-500/10"
               />
             </div>
           )}
@@ -473,7 +473,7 @@ function QuizSection({
               initial={{ scale: 0 }}
               animate={{ scale: 1 }}
               transition={{ delay: 0.2, type: "spring", stiffness: 200, damping: 12 }}
-              className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ${result.passed ? "bg-gradient-to-br from-emerald-500 to-teal-500" : "bg-gradient-to-br from-amber-500 to-orange-500"}`}
+              className={`flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl ${result.passed ? "bg-gradient-to-br from-lime-500 to-teal-500" : "bg-gradient-to-br from-amber-500 to-orange-500"}`}
             >
               {result.passed ? (
                 <IconTrophy className="h-7 w-7 text-white" />
@@ -482,7 +482,7 @@ function QuizSection({
               )}
             </motion.div>
             <div>
-              <h4 className="text-base font-bold text-foreground">
+              <h4 className="text-base font-black tracking-tight text-foreground">
                 {result.passed ? "Topic Mastered!" : "Keep Learning"}
               </h4>
               <p className="text-sm text-muted-foreground mt-0.5">
@@ -490,8 +490,8 @@ function QuizSection({
               </p>
               {result.passed && (
                 <div className="flex items-center gap-1.5 mt-1">
-                  <IconConfetti className="h-3.5 w-3.5 text-emerald-500" />
-                  <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
+                  <IconConfetti className="h-3.5 w-3.5 text-lime-500" />
+                  <span className="text-xs font-medium text-lime-600 dark:text-lime-400">
                     +50 XP earned
                   </span>
                 </div>
@@ -510,7 +510,7 @@ function QuizSection({
               initial={{ width: 0 }}
               animate={{ width: `${scorePercent}%` }}
               transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1], delay: 0.3 }}
-              className={`h-full rounded-full ${result.passed ? "bg-gradient-to-r from-emerald-500 to-teal-500" : "bg-gradient-to-r from-amber-500 to-orange-500"}`}
+              className={`h-full rounded-full ${result.passed ? "bg-gradient-to-r from-lime-500 to-teal-500" : "bg-gradient-to-r from-amber-500 to-orange-500"}`}
             />
           </div>
         </motion.div>
@@ -521,13 +521,13 @@ function QuizSection({
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.4 + i * 0.1, duration: 0.3 }}
-            className={`rounded-lg border p-3 ${exp.correct ? "border-emerald-500/20 bg-emerald-500/5" : "border-red-500/20 bg-red-500/5"}`}
+            className={`rounded-xl border p-3 ${exp.correct ? "border-lime-500/20 bg-lime-500/5" : "border-destructive/20 bg-destructive/5"}`}
           >
             <div className="flex items-start gap-2 mb-1.5">
               {exp.correct ? (
-                <IconCircleCheck className="h-4 w-4 text-emerald-500 shrink-0 mt-0.5" />
+                <IconCircleCheck className="h-4 w-4 text-lime-500 shrink-0 mt-0.5" />
               ) : (
-                <IconCircleX className="h-4 w-4 text-red-500 shrink-0 mt-0.5" />
+                <IconCircleX className="h-4 w-4 text-destructive shrink-0 mt-0.5" />
               )}
               <p className="text-xs font-medium text-foreground">{exp.question}</p>
             </div>
@@ -565,7 +565,7 @@ function QuizSection({
           initial={{ opacity: 0, y: 6 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: qi * 0.05, duration: 0.25 }}
-          className="rounded-lg border border-border/50 p-4"
+          className="rounded-xl border border-border p-4"
         >
           <p className="text-sm font-medium text-foreground mb-3">
             <span className="inline-flex items-center justify-center h-5 w-5 rounded-full bg-primary/10 text-primary text-[10px] font-bold mr-2">
@@ -582,10 +582,10 @@ function QuizSection({
                   next[qi] = oi
                   setAnswers(next)
                 }}
-                className={`w-full text-left rounded-lg border px-3 py-2.5 text-xs transition-all duration-150 ${
+                className={`w-full text-left rounded-xl border px-3 py-2.5 text-xs transition-all duration-150 ${
                   answers[qi] === oi
                     ? "border-primary/50 bg-primary/10 text-foreground shadow-sm"
-                    : "border-border/40 bg-card/50 text-muted-foreground hover:border-border hover:bg-accent/30"
+                    : "border-border bg-card text-muted-foreground hover:border-border hover:bg-accent"
                 }`}
               >
                 <span className={`inline-flex items-center justify-center h-4 w-4 rounded text-[9px] font-bold mr-2 ${
@@ -605,7 +605,7 @@ function QuizSection({
       <button
         onClick={handleSubmit}
         disabled={!allAnswered || submitting}
-        className={`inline-flex items-center gap-2 rounded-lg px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
+        className={`inline-flex items-center gap-2 rounded-xl px-4 py-2.5 text-sm font-medium transition-all duration-200 ${
           allAnswered && !submitting
             ? "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm"
             : "bg-muted text-muted-foreground cursor-not-allowed"
@@ -705,19 +705,19 @@ function TopicDetailView({
       <div className="flex items-center gap-3">
         <button
           onClick={onBack}
-          className="flex h-9 w-9 items-center justify-center rounded-lg border border-border/50 bg-card/80 text-muted-foreground hover:text-foreground hover:bg-accent/50 transition-all"
+          className="flex size-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent transition-all"
         >
           <IconArrowLeft className="h-4 w-4" />
         </button>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2.5">
-            <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${difficultyIconBg(topic.difficulty)}`}>
+            <div className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${difficultyIconBg(topic.difficulty)}`}>
               <TopicIcon className="h-4 w-4" />
             </div>
             <div>
               <h2 className="text-lg font-semibold text-foreground leading-tight">{topic.title}</h2>
               <div className="flex items-center gap-2 mt-0.5">
-                <span className={`inline-flex items-center rounded border px-1.5 py-0 text-[8px] font-semibold uppercase tracking-wider ${difficultyColor(topic.difficulty)}`}>
+                <span className={`inline-flex items-center rounded border px-1.5 py-0 text-[8px] font-semibold uppercase tracking-widest ${difficultyColor(topic.difficulty)}`}>
                   {difficultyLabel(topic.difficulty)}
                 </span>
                 <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground/50">
@@ -725,7 +725,7 @@ function TopicDetailView({
                   {topic.readTime} read
                 </span>
                 {badge && (
-                  <span className={`inline-flex items-center gap-1 rounded border px-1.5 py-0 text-[8px] font-semibold uppercase tracking-wider ${badge.className}`}>
+                  <span className={`inline-flex items-center gap-1 rounded border px-1.5 py-0 text-[8px] font-semibold uppercase tracking-widest ${badge.className}`}>
                     <badge.icon className="h-2.5 w-2.5" />
                     {badge.label}
                   </span>
@@ -737,7 +737,8 @@ function TopicDetailView({
       </div>
 
       {/* Content card */}
-      <div className="rounded-xl bg-card/80 backdrop-blur-sm border border-border/50 card-elevated overflow-hidden">
+      <div className="rounded-2xl bg-card border border-border relative overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
         <div className="p-5 md:p-6" ref={contentRef}>
           {/* Static content */}
           <div className="prose-finance prose-sm max-w-none">
@@ -755,11 +756,11 @@ function TopicDetailView({
                     <table className="w-full text-xs border-collapse">{children}</table>
                   </div>
                 ),
-                thead: ({ children }) => <thead className="border-b border-border/60">{children}</thead>,
+                thead: ({ children }) => <thead className="border-b border-border">{children}</thead>,
                 th: ({ children }) => <th className="text-left px-2 py-1.5 text-foreground font-semibold">{children}</th>,
-                td: ({ children }) => <td className="px-2 py-1.5 text-muted-foreground border-t border-border/30">{children}</td>,
+                td: ({ children }) => <td className="px-2 py-1.5 text-muted-foreground border-t border-border">{children}</td>,
                 blockquote: ({ children }) => (
-                  <div className="mt-3 rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-3.5">
+                  <div className="mt-3 rounded-xl border border-lime-500/20 bg-lime-500/5 p-3.5">
                     <div className="text-sm text-muted-foreground leading-relaxed [&>p]:mb-0">{children}</div>
                   </div>
                 ),
@@ -770,17 +771,17 @@ function TopicDetailView({
           </div>
 
           {/* AI Personalization */}
-          <div className="mt-6 pt-5 border-t border-border/30">
+          <div className="mt-6 pt-5 border-t border-border">
             {!showAi ? (
               <button
                 onClick={handlePersonalize}
-                className="inline-flex items-center gap-2 rounded-lg border border-primary/20 bg-primary/5 px-4 py-2.5 text-sm font-medium text-primary hover:bg-primary/10 hover:border-primary/30 transition-all duration-200"
+                className="inline-flex items-center gap-2 rounded-xl border border-border bg-accent px-4 py-2.5 text-sm font-medium text-primary hover:bg-primary/10 hover:border-primary/30 transition-all duration-200"
               >
                 <IconSparkles className="h-4 w-4" />
                 Personalize with AI
               </button>
             ) : aiLoading ? (
-              <div className="flex items-center gap-3 p-4 rounded-xl border border-primary/20 bg-primary/5">
+              <div className="flex items-center gap-3 p-4 rounded-xl border border-border bg-accent">
                 <IconLoader2 className="h-5 w-5 text-primary animate-spin" />
                 <div>
                   <p className="text-sm font-medium text-foreground">Generating personalized lesson...</p>
@@ -821,7 +822,7 @@ function TopicDetailView({
 
           {/* Quiz section */}
           {quiz && quiz.length > 0 && (
-            <div className="mt-6 pt-5 border-t border-border/30">
+            <div className="mt-6 pt-5 border-t border-border">
               <div className="flex items-center gap-2 mb-4">
                 <IconBrain className="h-4 w-4 text-primary" />
                 <h4 className="text-sm font-semibold text-foreground">Test Your Knowledge</h4>
@@ -872,12 +873,13 @@ function TopicGridCard({
       onClick={onClick}
       whileHover={{ scale: 1.02, y: -2 }}
       transition={{ duration: 0.2 }}
-      className="group relative text-left rounded-xl border border-border/50 bg-card/80 hover:border-border hover:shadow-lg hover:shadow-black/5 dark:hover:shadow-black/20 transition-all duration-200 overflow-hidden"
+      className="group relative text-left rounded-2xl border border-border bg-card hover:border-border hover:shadow-lg hover:shadow-black/5 dark:hover:shadow-black/20 transition-all duration-200 overflow-hidden"
     >
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
       {/* Completion overlay checkmark */}
       {isMastered && (
         <div className="absolute top-2.5 right-2.5 z-10">
-          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/30">
+          <div className="flex h-6 w-6 items-center justify-center rounded-full bg-lime-500 shadow-sm shadow-lime-500/30">
             <IconCheck className="h-3.5 w-3.5 text-white" strokeWidth={3} />
           </div>
         </div>
@@ -886,7 +888,7 @@ function TopicGridCard({
       {/* Status badge */}
       {badge && !isMastered && (
         <div className="absolute top-0 right-0 z-10">
-          <div className={`text-[8px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-bl-lg border-b border-l ${badge.className}`}>
+          <div className={`text-[8px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-bl-lg border-b border-l ${badge.className}`}>
             {badge.label}
           </div>
         </div>
@@ -903,7 +905,7 @@ function TopicGridCard({
               {topic.title}
             </h3>
             <div className="flex items-center gap-2 mt-1">
-              <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider ${difficultyColor(topic.difficulty)}`}>
+              <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-widest ${difficultyColor(topic.difficulty)}`}>
                 {difficultyLabel(topic.difficulty)}
               </span>
               <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground/60">
@@ -921,7 +923,7 @@ function TopicGridCard({
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             {hasQuiz && (
-              <span className="inline-flex items-center gap-1 rounded-md bg-primary/5 border border-primary/10 px-1.5 py-0.5 text-[9px] text-primary/70 font-semibold uppercase tracking-wider">
+              <span className="inline-flex items-center gap-1 rounded-md bg-accent border border-border px-1.5 py-0.5 text-[9px] text-primary/70 font-semibold uppercase tracking-widest">
                 <IconBrain className="h-2.5 w-2.5" />
                 Quiz
               </span>
@@ -962,9 +964,9 @@ function RecommendedSection({
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="rounded-xl border border-border/50 bg-card/60 p-4 animate-pulse">
+            <div key={i} className="rounded-2xl border border-border bg-card p-4 animate-pulse">
               <div className="flex items-center gap-3 mb-3">
-                <div className="h-9 w-9 rounded-lg bg-muted/60" />
+                <div className="size-9 rounded-xl bg-muted/60" />
                 <div className="flex-1 space-y-2">
                   <div className="h-3.5 w-2/3 rounded bg-muted/60" />
                   <div className="h-2.5 w-1/3 rounded bg-muted/40" />
@@ -1007,14 +1009,14 @@ function RecommendedSection({
               className="group relative text-left rounded-xl border border-primary/20 bg-gradient-to-br from-primary/[0.04] to-transparent hover:from-primary/[0.08] hover:border-primary/30 transition-all duration-200 overflow-hidden"
             >
               <div className="absolute top-0 right-0">
-                <div className="bg-primary/10 text-primary text-[9px] font-bold uppercase tracking-wider px-2.5 py-1 rounded-bl-lg border-b border-l border-primary/15">
+                <div className="bg-primary/10 text-primary text-[9px] font-bold uppercase tracking-widest px-2.5 py-1 rounded-bl-lg border-b border-l border-primary/15">
                   Recommended
                 </div>
               </div>
 
               <div className="p-4 pt-3">
                 <div className="flex items-center gap-3 mb-2.5">
-                  <div className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-lg ${difficultyIconBg(topic.difficulty)} transition-transform duration-200 group-hover:scale-105`}>
+                  <div className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${difficultyIconBg(topic.difficulty)} transition-transform duration-200 group-hover:scale-105`}>
                     <TopicIcon className="h-4 w-4" />
                   </div>
                   <div className="flex-1 min-w-0 pr-16">
@@ -1023,13 +1025,13 @@ function RecommendedSection({
                         {topic.title}
                       </h3>
                       {isRead && (
-                        <div className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-emerald-500">
+                        <div className="flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full bg-lime-500">
                           <IconCheck className="h-2 w-2 text-white" strokeWidth={3} />
                         </div>
                       )}
                     </div>
                     <div className="flex items-center gap-2 mt-0.5">
-                      <span className={`inline-flex items-center rounded border px-1.5 py-0 text-[8px] font-semibold uppercase tracking-wider ${difficultyColor(topic.difficulty)}`}>
+                      <span className={`inline-flex items-center rounded border px-1.5 py-0 text-[8px] font-semibold uppercase tracking-widest ${difficultyColor(topic.difficulty)}`}>
                         {difficultyLabel(topic.difficulty)}
                       </span>
                       <span className="flex items-center gap-0.5 text-[11px] text-muted-foreground/50">
@@ -1087,7 +1089,7 @@ function SectionGridBlock({
     <motion.div variants={fadeUp} className="flex flex-col gap-3">
       <button
         onClick={() => setIsOpen((prev) => !prev)}
-        className={`group/section w-full text-left rounded-2xl p-4 transition-all duration-200 bg-gradient-to-r ${section.accentBg} border border-border/40 hover:border-border/60 hover:shadow-md hover:shadow-black/5 dark:hover:shadow-black/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
+        className={`group/section w-full text-left rounded-2xl p-4 transition-all duration-200 bg-gradient-to-r ${section.accentBg} border border-border hover:border-border hover:shadow-md hover:shadow-black/5 dark:hover:shadow-black/15 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring`}
       >
         <div className="flex items-center gap-4">
           <div className={`flex h-11 w-11 items-center justify-center rounded-xl bg-gradient-to-br ${section.gradient} text-white shadow-sm shrink-0`}>
@@ -1100,7 +1102,7 @@ function SectionGridBlock({
                 {total} topic{total !== 1 ? "s" : ""}
               </span>
               {percent === 100 && (
-                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-emerald-500 shadow-sm shadow-emerald-500/25">
+                <div className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-lime-500 shadow-sm shadow-lime-500/25">
                   <IconCheck className="h-3 w-3 text-white" strokeWidth={3} />
                 </div>
               )}
@@ -1117,7 +1119,7 @@ function SectionGridBlock({
                   transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
                 />
               </div>
-              <span className="text-[11px] font-semibold text-muted-foreground tabular-nums">
+              <span className="text-[11px] font-black tracking-tight text-muted-foreground tabular-nums">
                 {percent}%
               </span>
             </div>
@@ -1311,9 +1313,10 @@ export function LearnView() {
             >
               {/* Hero / Progress Section */}
               <motion.div variants={fadeUp} className="relative">
-                <div className="absolute -inset-2 rounded-3xl bg-gradient-to-br from-primary/10 via-cyan-500/8 to-emerald-500/10 blur-2xl opacity-50 pointer-events-none" />
-                <div className="relative rounded-2xl bg-card/80 backdrop-blur-sm border border-border/60 card-elevated overflow-hidden">
-                  <div className="h-1 bg-gradient-to-r from-primary/60 via-cyan-500/60 to-emerald-500/60" />
+                <div className="absolute -inset-2 rounded-3xl bg-gradient-to-br from-primary/10 via-cyan-500/8 to-lime-500/10 blur-2xl opacity-50 pointer-events-none" />
+                <div className="relative rounded-2xl border border-border bg-card overflow-hidden">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+                  <div className="h-1 bg-gradient-to-r from-primary/60 via-cyan-500/60 to-lime-500/60" />
                   <div className="absolute inset-0 pointer-events-none opacity-[0.02]">
                     <svg width="100%" height="100%">
                       <pattern id="learn-grid" x="0" y="0" width="40" height="40" patternUnits="userSpaceOnUse">
@@ -1327,11 +1330,11 @@ export function LearnView() {
                     <div className="flex flex-col md:flex-row items-start md:items-center gap-6 md:gap-8">
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-3 mb-3">
-                          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-emerald-500/20 border border-primary/10">
+                          <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/20 to-lime-500/20 border border-primary/10">
                             <IconSchool className="h-6 w-6 text-primary" />
                           </div>
                           <div>
-                            <h1 className="text-xl md:text-2xl font-bold text-foreground tracking-tight">
+                            <h1 className="text-xl md:text-2xl font-black text-foreground tracking-tight">
                               Financial Academy
                             </h1>
                             <p className="text-xs text-muted-foreground mt-0.5">
@@ -1353,13 +1356,13 @@ export function LearnView() {
                               {completedCount} of {totalTopics} read
                               {masteredCount > 0 && ` · ${masteredCount} mastered`}
                             </span>
-                            <span className="text-xs font-bold tabular-nums text-foreground">
+                            <span className="text-xs font-black tracking-tight tabular-nums text-foreground">
                               {progressPercent}%
                             </span>
                           </div>
                           <div className="h-2.5 rounded-full bg-muted/60 overflow-hidden">
                             <motion.div
-                              className="h-full rounded-full bg-gradient-to-r from-primary via-cyan-500 to-emerald-500"
+                              className="h-full rounded-full bg-gradient-to-r from-primary via-cyan-500 to-lime-500"
                               initial={{ width: 0 }}
                               animate={{ width: `${progressPercent}%` }}
                               transition={{ duration: 0.7, ease: [0.25, 0.1, 0.25, 1], delay: 0.3 }}
@@ -1368,7 +1371,7 @@ export function LearnView() {
                           {learnXP > 0 && (
                             <div className="flex items-center gap-1.5 mt-2.5">
                               <IconStar className="h-3.5 w-3.5 text-amber-500" />
-                              <span className="text-[11px] font-semibold text-amber-600 dark:text-amber-400 tabular-nums">
+                              <span className="text-[11px] font-black tracking-tight text-amber-600 dark:text-amber-400 tabular-nums">
                                 {learnXP} XP
                               </span>
                               <span className="text-[11px] text-muted-foreground/50">earned from learning</span>
@@ -1380,7 +1383,7 @@ export function LearnView() {
                       {/* Donut ring */}
                       <div className="shrink-0 self-center">
                         <div className="relative flex items-center justify-center h-28 w-28 md:h-32 md:w-32">
-                          <div className="absolute inset-2 rounded-full bg-gradient-to-br from-primary/10 to-emerald-500/10 blur-md" />
+                          <div className="absolute inset-2 rounded-full bg-gradient-to-br from-primary/10 to-lime-500/10 blur-md" />
                           <svg className="h-full w-full -rotate-90 relative" viewBox="0 0 100 100">
                             <circle
                               cx="50" cy="50" r="40"
@@ -1399,15 +1402,15 @@ export function LearnView() {
                               <linearGradient id="heroProgressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
                                 <stop offset="0%" stopColor="oklch(0.55 0.12 145)" />
                                 <stop offset="50%" stopColor="rgb(6 182 212)" />
-                                <stop offset="100%" stopColor="rgb(16 185 129)" />
+                                <stop offset="100%" stopColor="rgb(132 204 22)" />
                               </linearGradient>
                             </defs>
                           </svg>
                           <div className="absolute flex flex-col items-center justify-center">
-                            <span className="text-2xl md:text-3xl font-extrabold tabular-nums text-foreground leading-none">
+                            <span className="text-2xl md:text-3xl font-black tracking-tight tabular-nums text-foreground leading-none">
                               {progressPercent}
                             </span>
-                            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mt-0.5">
+                            <span className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest mt-0.5">
                               percent
                             </span>
                           </div>
@@ -1420,12 +1423,12 @@ export function LearnView() {
                         initial={{ opacity: 0, scale: 0.95 }}
                         animate={{ opacity: 1, scale: 1 }}
                         transition={{ delay: 0.5, ...spring.smooth }}
-                        className="flex items-center gap-2.5 mt-5 pt-4 border-t border-border/40"
+                        className="flex items-center gap-2.5 mt-5 pt-4 border-t border-border"
                       >
-                        <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/10">
-                          <IconTrophy className="h-4 w-4 text-emerald-500" />
+                        <div className="flex size-8 items-center justify-center rounded-xl bg-lime-500/10">
+                          <IconTrophy className="h-4 w-4 text-lime-500" />
                         </div>
-                        <span className="text-sm font-medium text-emerald-600 dark:text-emerald-400">
+                        <span className="text-sm font-medium text-lime-600 dark:text-lime-400">
                           Congratulations! You have completed all topics. You are now financially literate.
                         </span>
                       </motion.div>
@@ -1444,7 +1447,7 @@ export function LearnView() {
                       </div>
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-2 mb-1">
-                          <h3 className="text-xs font-bold uppercase tracking-wider text-amber-600 dark:text-amber-400">
+                          <h3 className="text-xs font-bold uppercase tracking-widest text-amber-600 dark:text-amber-400">
                             Daily Tip
                           </h3>
                         </div>
@@ -1482,14 +1485,14 @@ export function LearnView() {
                             <ContinueIcon className="h-5 w-5 text-white" />
                           </div>
                           <div className="flex-1 min-w-0">
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-primary mb-0.5">
+                            <p className="text-[10px] font-bold uppercase tracking-widest text-primary mb-0.5">
                               Continue where you left off
                             </p>
                             <h3 className="text-sm font-semibold text-foreground truncate">
                               {continueTopic.title}
                             </h3>
                             <div className="flex items-center gap-2 mt-0.5">
-                              <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wider ${difficultyColor(continueTopic.difficulty)}`}>
+                              <span className={`inline-flex items-center rounded-md px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-widest ${difficultyColor(continueTopic.difficulty)}`}>
                                 {difficultyLabel(continueTopic.difficulty)}
                               </span>
                               {continueProgress?.status === "read" && continueHasQuiz && (
@@ -1514,7 +1517,7 @@ export function LearnView() {
               <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-3">
                 <div className="relative group/search flex-1">
                   <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-primary/10 via-transparent to-primary/10 opacity-0 group-focus-within/search:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                  <div className="relative flex items-center rounded-xl border border-border/60 bg-card/80 backdrop-blur-sm card-elevated transition-all duration-200 focus-within:border-primary/30 focus-within:ring-1 focus-within:ring-primary/15">
+                  <div className="relative flex items-center rounded-xl border border-border bg-card transition-all duration-200 focus-within:border-primary/30 focus-within:ring-1 focus-within:ring-primary/15">
                     <IconSearch className="ml-4 h-[18px] w-[18px] text-muted-foreground/50 shrink-0" />
                     <input
                       ref={searchRef}
@@ -1539,13 +1542,13 @@ export function LearnView() {
                 </div>
 
                 {/* Difficulty filter */}
-                <div className="flex items-center gap-1.5 rounded-xl border border-border/60 bg-card/80 px-2 h-12">
+                <div className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-2 h-12">
                   <IconFilter className="h-4 w-4 text-muted-foreground/50 shrink-0" />
                   {(["all", "beginner", "intermediate", "advanced"] as const).map((d) => (
                     <button
                       key={d}
                       onClick={() => setDifficultyFilter(d)}
-                      className={`rounded-lg px-2.5 py-1.5 text-[11px] font-semibold uppercase tracking-wider transition-all duration-150 ${
+                      className={`rounded-lg px-2.5 py-1.5 text-[11px] font-semibold uppercase tracking-widest transition-all duration-150 ${
                         difficultyFilter === d
                           ? "bg-primary/10 text-primary"
                           : "text-muted-foreground/50 hover:text-muted-foreground hover:bg-muted/30"
@@ -1576,9 +1579,9 @@ export function LearnView() {
                   className="flex flex-col items-center justify-center py-20 text-center"
                 >
                   <div className="relative mb-5">
-                    <div className="absolute -inset-4 rounded-full border border-border/30 animate-pulse" />
-                    <div className="absolute -inset-8 rounded-full border border-border/15" />
-                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted/40 border border-border/40">
+                    <div className="absolute -inset-4 rounded-full border border-border animate-pulse" />
+                    <div className="absolute -inset-8 rounded-full border border-border" />
+                    <div className="flex h-16 w-16 items-center justify-center rounded-2xl bg-muted/40 border border-border">
                       <IconSearch className="h-7 w-7 text-muted-foreground/30" />
                     </div>
                   </div>
@@ -1627,7 +1630,8 @@ export function LearnView() {
                   className="relative overflow-hidden"
                 >
                   <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-amber-500/8 via-orange-500/5 to-rose-500/8 blur-xl opacity-50 pointer-events-none" />
-                  <div className="relative rounded-2xl bg-card/80 backdrop-blur-sm border border-amber-500/15 card-elevated overflow-hidden">
+                  <div className="relative rounded-2xl border border-border bg-card overflow-hidden">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <div className="h-[2px] bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
                     <div className="p-6">
                       <div className="absolute top-4 right-5 text-amber-400/15">

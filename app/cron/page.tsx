@@ -105,14 +105,14 @@ function formatTime(iso: string | undefined): string {
 function statusBadge(status: string) {
   if (status === "success") {
     return (
-      <Badge className="bg-emerald-500/10 text-emerald-700 border-emerald-200">
+      <Badge className="bg-lime-500/10 text-lime-700 dark:text-lime-400 border-lime-200 dark:border-lime-800">
         <IconCheck className="h-3 w-3 mr-1" /> Success
       </Badge>
     )
   }
   if (status === "error") {
     return (
-      <Badge className="bg-rose-500/10 text-rose-700 border-rose-200">
+      <Badge className="bg-destructive/10 text-destructive border-destructive/20">
         <IconX className="h-3 w-3 mr-1" /> Error
       </Badge>
     )
@@ -232,19 +232,24 @@ export default function CronPage() {
             </>
           }
         />
-        <div className="flex flex-1 flex-col">
+        <div className="flex flex-1 flex-col overflow-y-auto min-h-0">
+          {/* Ambient glow orbs */}
+          <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden hidden dark:block">
+            <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-lime-500/[0.05] blur-[200px]" />
+            <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] rounded-full bg-cyan-500/[0.04] blur-[180px]" />
+          </div>
           {isLoading ? (
             <div className="flex items-center justify-center flex-1">
               <Skeleton className="h-96 w-full max-w-4xl mx-6" />
             </div>
           ) : (
-            <div className="space-y-6 p-6">
+            <div className="space-y-6 p-6 relative z-[1]">
               {/* Job cards */}
               <div className="grid gap-4 md:grid-cols-3">
                 {Object.entries(JOB_CONFIG).map(([key, config]) => {
                   const status = jobStatus[key]
                   return (
-                    <Card key={key} className="card-elevated">
+                    <Card key={key} className="rounded-2xl border border-border relative overflow-hidden">
                       <CardHeader className="pb-3">
                         <div className="flex items-center justify-between">
                           <CardTitle className="text-base">{config.label}</CardTitle>
@@ -272,7 +277,7 @@ export default function CronPage() {
                           </div>
                         </div>
                         {status?.error && (
-                          <p className="text-xs text-rose-600 bg-rose-50 p-2 rounded">
+                          <p className="text-xs text-destructive bg-destructive/5 p-2 rounded-xl">
                             {status.error}
                           </p>
                         )}
@@ -293,7 +298,7 @@ export default function CronPage() {
               </div>
 
               {/* Recent run history */}
-              <Card className="card-elevated">
+              <Card className="rounded-2xl border border-border relative overflow-hidden">
                 <CardHeader>
                   <CardTitle>Recent Runs</CardTitle>
                   <p className="text-sm text-muted-foreground">
@@ -335,7 +340,7 @@ export default function CronPage() {
                             <TableCell className="text-right text-sm">
                               {formatDuration(entry.durationMs)}
                             </TableCell>
-                            <TableCell className="text-sm text-rose-600 max-w-[200px] truncate">
+                            <TableCell className="text-sm text-destructive max-w-[200px] truncate">
                               {entry.error || "-"}
                             </TableCell>
                           </TableRow>

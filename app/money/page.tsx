@@ -74,20 +74,19 @@ export default function MoneyPage() {
       <AppSidebar variant="inset" />
       <SidebarInset>
         <SiteHeader title="Money" />
-        <div className="flex flex-1 flex-col overflow-x-hidden">
-          <Tabs value={tab} onValueChange={handleTabChange} className="flex flex-1 flex-col">
-            <div className="border-b border-border/40 px-4 md:px-6 overflow-x-auto">
-              <TabsList variant="line" className="inline-flex h-10 items-center gap-1 bg-transparent p-0">
-                <TabsTrigger
-                  value="transactions"
-                  className="relative gap-1.5 rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent"
-                >
+        <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto min-h-0 relative">
+          {/* Ambient background glow orbs — cinematic aurora (dark only) */}
+          <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden hidden dark:block">
+            <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-lime-500/[0.05] blur-[200px]" />
+            <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] rounded-full bg-cyan-500/[0.04] blur-[180px]" />
+          </div>
+          <Tabs value={tab} onValueChange={handleTabChange} className="flex flex-1 flex-col relative z-[1]">
+            <div className="border-b border-border px-4 md:px-6">
+              <TabsList variant="line" className="h-10">
+                <TabsTrigger value="transactions">
                   Transactions
                 </TabsTrigger>
-                <TabsTrigger
-                  value="analytics"
-                  className="relative gap-1.5 rounded-none border-b-2 border-transparent px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground data-[state=active]:border-b-primary data-[state=active]:text-foreground data-[state=active]:shadow-none data-[state=active]:bg-transparent"
-                >
+                <TabsTrigger value="analytics">
                   Analytics
                 </TabsTrigger>
               </TabsList>

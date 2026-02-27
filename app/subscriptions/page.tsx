@@ -183,7 +183,7 @@ function ServiceLogo({ name, size = 32 }: { name: string; size?: number }) {
     const initial = name.charAt(0).toUpperCase()
     return (
       <div
-        className="flex shrink-0 items-center justify-center rounded-lg text-white font-bold"
+        className="flex shrink-0 items-center justify-center rounded-xl text-white font-bold"
         style={{ width: size, height: size, backgroundColor: color, fontSize: size * 0.4 }}
       >
         {initial}
@@ -197,7 +197,7 @@ function ServiceLogo({ name, size = 32 }: { name: string; size?: number }) {
       alt={`${name} logo`}
       width={size}
       height={size}
-      className="shrink-0 rounded-lg object-contain"
+      className="shrink-0 rounded-xl object-contain"
       style={{ width: size, height: size }}
       onError={() => setImgError(true)}
       loading="lazy"
@@ -250,7 +250,7 @@ const CATEGORY_BADGE_COLORS: Record<string, string> = {
   Shopping: "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-400",
   Utilities: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400",
   Education: "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400",
-  Healthcare: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+  Healthcare: "bg-lime-100 text-lime-700 dark:bg-lime-900/30 dark:text-lime-400",
   Fitness: "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400",
   Insurance: "bg-cyan-100 text-cyan-700 dark:bg-cyan-900/30 dark:text-cyan-400",
   Transport: "bg-teal-100 text-teal-700 dark:bg-teal-900/30 dark:text-teal-400",
@@ -264,7 +264,7 @@ function getCategoryBadgeClass(category: string): string {
 }
 
 const STATUS_BADGE: Record<string, { label: string; class: string }> = {
-  active: { label: "Active", class: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800" },
+  active: { label: "Active", class: "bg-lime-100 text-lime-700 dark:bg-lime-900/30 dark:text-lime-400 border-lime-200 dark:border-lime-800" },
   paused: { label: "Paused", class: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400 border-amber-200 dark:border-amber-800" },
   cancelled: { label: "Cancelled", class: "bg-slate-100 text-slate-500 dark:bg-slate-900/30 dark:text-slate-500 border-slate-200 dark:border-slate-800" },
 }
@@ -274,9 +274,9 @@ const STATUS_BADGE: Record<string, { label: string; class: string }> = {
 type PaymentStatus = "paid" | "due-soon" | "overdue" | "upcoming"
 
 const PAYMENT_STATUS_BADGE: Record<PaymentStatus, { label: string; class: string }> = {
-  paid: { label: "Paid", class: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" },
+  paid: { label: "Paid", class: "bg-lime-100 text-lime-700 dark:bg-lime-900/30 dark:text-lime-400" },
   "due-soon": { label: "Due Soon", class: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
-  overdue: { label: "Overdue", class: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" },
+  overdue: { label: "Overdue", class: "bg-destructive/10 text-destructive dark:bg-destructive/20 dark:text-destructive" },
   upcoming: { label: "Upcoming", class: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
 }
 
@@ -722,7 +722,11 @@ export default function SubscriptionsPage() {
             </Button>
           }
         />
-        <div className="flex flex-1 flex-col">
+        <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden hidden dark:block">
+          <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-lime-500/[0.05] blur-[200px]" />
+          <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] rounded-full bg-cyan-500/[0.04] blur-[180px]" />
+        </div>
+        <div className="relative z-[1] flex flex-1 flex-col overflow-y-auto min-h-0">
           {isLoading ? (
             <SubscriptionsLoadingSkeleton />
           ) : (
@@ -767,12 +771,13 @@ export default function SubscriptionsPage() {
               {/* ─── Overdue Subscriptions ─── */}
               {overdueSubs.length > 0 && (
                 <motion.div variants={fadeUp}>
-                  <Card className="border-red-200 dark:border-red-800/40 bg-red-50/50 dark:bg-red-950/10">
+                  <Card className="rounded-2xl border border-destructive/30 dark:border-destructive/20 bg-destructive/5 dark:bg-destructive/5 relative overflow-hidden">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-destructive/20 to-transparent" />
                     <CardHeader className="pb-2 pt-4 px-5">
                       <div className="flex items-center justify-between">
                         <div>
                           <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                            <IconAlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
+                            <IconAlertTriangle className="h-4 w-4 text-destructive" />
                             Overdue Subscriptions
                           </CardTitle>
                           <CardDescription className="text-xs">
@@ -782,7 +787,7 @@ export default function SubscriptionsPage() {
                         <Button
                           size="sm"
                           variant="outline"
-                          className="h-7 text-xs gap-1 border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/20"
+                          className="h-7 text-xs gap-1 border-destructive/30 dark:border-destructive/20 text-destructive hover:bg-destructive/10 dark:hover:bg-destructive/10"
                           onClick={() => checkPaymentsMutation.mutate(undefined)}
                           disabled={checkPaymentsMutation.isPending}
                         >
@@ -798,7 +803,7 @@ export default function SubscriptionsPage() {
                           return (
                             <div
                               key={sub._id}
-                              className="flex items-center gap-2 rounded-lg border border-red-200/60 dark:border-red-800/30 bg-background/80 px-3 py-2"
+                              className="flex items-center gap-2 rounded-xl border border-destructive/20 dark:border-destructive/10 bg-background/80 px-3 py-2"
                             >
                               <ServiceLogo name={sub.name} size={20} />
                               <span className="text-sm font-medium">{sub.name}</span>
@@ -821,7 +826,7 @@ export default function SubscriptionsPage() {
                               <Button
                                 size="icon"
                                 variant="ghost"
-                                className="h-6 w-6 text-muted-foreground hover:text-emerald-600"
+                                className="h-6 w-6 text-muted-foreground hover:text-lime-600"
                                 onClick={() => markPaidMutation.mutate({ id: sub._id, frequency: sub.frequency })}
                                 disabled={markPaidMutation.isPending}
                                 title="Mark as Paid"
@@ -840,7 +845,8 @@ export default function SubscriptionsPage() {
               {/* ─── Upcoming Renewals ─── */}
               {upcomingRenewals.length > 0 && (
                 <motion.div variants={fadeUp}>
-                  <Card className="border-amber-200 dark:border-amber-800/40 bg-amber-50/50 dark:bg-amber-950/10">
+                  <Card className="rounded-2xl border border-amber-200 dark:border-amber-800/40 bg-amber-50/50 dark:bg-amber-950/10 relative overflow-hidden">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardHeader className="pb-2 pt-4 px-5">
                       <CardTitle className="text-sm font-semibold flex items-center gap-2">
                         <IconCalendar className="h-4 w-4 text-amber-600 dark:text-amber-400" />
@@ -857,7 +863,7 @@ export default function SubscriptionsPage() {
                           return (
                             <div
                               key={sub._id}
-                              className="flex items-center gap-2 rounded-lg border border-amber-200/60 dark:border-amber-800/30 bg-background/80 px-3 py-2"
+                              className="flex items-center gap-2 rounded-xl border border-amber-200/60 dark:border-amber-800/30 bg-background/80 px-3 py-2"
                             >
                               <ServiceLogo name={sub.name} size={20} />
                               <span className="text-sm font-medium">{sub.name}</span>
@@ -878,7 +884,8 @@ export default function SubscriptionsPage() {
 
               {/* ─── Subscriptions Table ─── */}
               <motion.div variants={fadeUp}>
-                <Card className="card-elevated">
+                <Card className="rounded-2xl border border-border bg-card relative overflow-hidden">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <CardHeader className="pb-3 px-5 pt-4">
                     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                       <div>
@@ -981,7 +988,8 @@ export default function SubscriptionsPage() {
               {/* ─── Summary by Category ─── */}
               {activeSubs.length > 0 && (
                 <motion.div variants={fadeUp}>
-                  <Card className="card-elevated">
+                  <Card className="rounded-2xl border border-border bg-card relative overflow-hidden">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardHeader className="pb-3 px-5 pt-4">
                       <CardTitle className="text-sm font-semibold">Spend by Category</CardTitle>
                       <CardDescription className="text-xs mt-0.5">
@@ -1009,11 +1017,11 @@ export default function SubscriptionsPage() {
                                     <Badge variant="outline" className={`text-[11px] px-1.5 py-0 h-4 border-0 ${getCategoryBadgeClass(cat)}`}>
                                       {cat}
                                     </Badge>
-                                    <span className="text-xs text-muted-foreground">{count} sub{count > 1 ? "s" : ""}</span>
+                                    <span className="text-xs text-muted-foreground/70">{count} sub{count > 1 ? "s" : ""}</span>
                                   </div>
-                                  <span className="font-semibold tabular-nums text-sm">
+                                  <span className="font-black tracking-tight tabular-nums text-sm">
                                     {formatINR(Math.round(monthly))}
-                                    <span className="text-muted-foreground font-normal text-xs">/mo</span>
+                                    <span className="text-muted-foreground/70 font-normal text-xs">/mo</span>
                                   </span>
                                 </div>
                                 <div className="h-1.5 rounded-full bg-muted/40 overflow-hidden">
@@ -1155,7 +1163,7 @@ function SmartSubscriptionForm({
     <div className="space-y-4 py-2">
       {/* Quick-select popular services */}
       <div className="space-y-2">
-        <Label className="text-xs text-muted-foreground">Quick Add</Label>
+        <Label className="text-xs text-muted-foreground/70">Quick Add</Label>
         <Select
           value=""
           onValueChange={(val) => {
@@ -1213,27 +1221,27 @@ function SmartSubscriptionForm({
         {/* Match Found card */}
         {suggestion && !appliedSuggestion && !lookupFetching && (
           <div className="col-span-2">
-            <div className="rounded-lg border border-emerald-200 dark:border-emerald-800/40 bg-emerald-50/50 dark:bg-emerald-950/10 p-3 space-y-2">
+            <div className="rounded-xl border border-lime-200 dark:border-lime-800/40 bg-lime-50/50 dark:bg-lime-950/10 p-3 space-y-2">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
-                  <IconCheck className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" />
-                  <span className="text-xs font-semibold text-emerald-700 dark:text-emerald-400">Match Found</span>
+                  <IconCheck className="h-3.5 w-3.5 text-lime-600 dark:text-lime-400" />
+                  <span className="text-xs font-semibold text-lime-700 dark:text-lime-400">Match Found</span>
                 </div>
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-emerald-300 dark:border-emerald-700 text-emerald-600 dark:text-emerald-400">
+                <Badge variant="outline" className="text-[10px] px-1.5 py-0 h-4 border-lime-300 dark:border-lime-700 text-lime-600 dark:text-lime-400">
                   {Math.round(suggestion.confidence * 100)}% confidence
                 </Badge>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
                 <div>
-                  <span className="text-muted-foreground block">Amount</span>
+                  <span className="text-muted-foreground/70 block">Amount</span>
                   <span className="font-medium">{formatINR(suggestion.amount)}</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground block">Last Paid</span>
+                  <span className="text-muted-foreground/70 block">Last Paid</span>
                   <span className="font-medium">{formatDate(suggestion.lastCharged)}</span>
                 </div>
                 <div>
-                  <span className="text-muted-foreground block">Frequency</span>
+                  <span className="text-muted-foreground/70 block">Frequency</span>
                   <span className="font-medium capitalize">{suggestion.frequency}</span>
                 </div>
               </div>
@@ -1252,7 +1260,7 @@ function SmartSubscriptionForm({
         {/* Applied confirmation card */}
         {appliedSuggestion && (
           <div className="col-span-2">
-            <div className="rounded-lg border border-blue-200 dark:border-blue-800/40 bg-blue-50/50 dark:bg-blue-950/10 p-3">
+            <div className="rounded-xl border border-blue-200 dark:border-blue-800/40 bg-blue-50/50 dark:bg-blue-950/10 p-3">
               <div className="flex items-center gap-1.5">
                 <IconCheck className="h-3.5 w-3.5 text-blue-600 dark:text-blue-400" />
                 <span className="text-xs text-blue-700 dark:text-blue-400">
@@ -1479,15 +1487,15 @@ function SubscriptionTable({
       <Table>
         <TableHeader>
           <TableRow className="border-border/40 hover:bg-transparent">
-            <TableHead className="text-[11px] uppercase tracking-wider font-medium">Name</TableHead>
-            <TableHead className="text-right text-[11px] uppercase tracking-wider font-medium">Amount</TableHead>
-            <TableHead className="text-[11px] uppercase tracking-wider font-medium hidden sm:table-cell">Frequency</TableHead>
+            <TableHead className="text-[11px] uppercase tracking-widest font-medium">Name</TableHead>
+            <TableHead className="text-right text-[11px] uppercase tracking-widest font-medium">Amount</TableHead>
+            <TableHead className="text-[11px] uppercase tracking-widest font-medium hidden sm:table-cell">Frequency</TableHead>
             {showPaymentStatus && (
-              <TableHead className="text-[11px] uppercase tracking-wider font-medium hidden sm:table-cell">Status</TableHead>
+              <TableHead className="text-[11px] uppercase tracking-widest font-medium hidden sm:table-cell">Status</TableHead>
             )}
-            <TableHead className="text-[11px] uppercase tracking-wider font-medium hidden md:table-cell">Category</TableHead>
-            <TableHead className="text-[11px] uppercase tracking-wider font-medium hidden lg:table-cell">Last Charged</TableHead>
-            <TableHead className="text-[11px] uppercase tracking-wider font-medium">Next Expected</TableHead>
+            <TableHead className="text-[11px] uppercase tracking-widest font-medium hidden md:table-cell">Category</TableHead>
+            <TableHead className="text-[11px] uppercase tracking-widest font-medium hidden lg:table-cell">Last Charged</TableHead>
+            <TableHead className="text-[11px] uppercase tracking-widest font-medium">Next Expected</TableHead>
             <TableHead className="w-[140px]" />
           </TableRow>
         </TableHeader>
@@ -1516,13 +1524,13 @@ function SubscriptionTable({
                   </div>
                 </TableCell>
                 <TableCell className="text-right">
-                  <div className="text-sm font-semibold tabular-nums">
+                  <div className="text-sm font-black tracking-tight tabular-nums">
                     {formatINR(sub.amount)}
                   </div>
-                  <span className="text-[11px] text-muted-foreground">{frequencyLabel(sub.frequency)}</span>
+                  <span className="text-[11px] text-muted-foreground/70">{frequencyLabel(sub.frequency)}</span>
                 </TableCell>
                 <TableCell className="hidden sm:table-cell">
-                  <span className="text-xs text-muted-foreground capitalize">{sub.frequency}</span>
+                  <span className="text-xs text-muted-foreground/70 capitalize">{sub.frequency}</span>
                 </TableCell>
                 {showPaymentStatus && statusBadge && (
                   <TableCell className="hidden sm:table-cell">
@@ -1573,7 +1581,7 @@ function SubscriptionTable({
                       <Button
                         size="icon"
                         variant="ghost"
-                        className="h-7 w-7 text-muted-foreground hover:text-emerald-600"
+                        className="h-7 w-7 text-muted-foreground hover:text-lime-600"
                         onClick={() => onMarkPaid(sub)}
                         title="Mark as Paid"
                       >
@@ -1626,8 +1634,9 @@ function SubscriptionsLoadingSkeleton() {
       {/* Metric tiles skeleton – 4 tiles matching Active / Monthly / Yearly / Overdue */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="card-elevated rounded-xl bg-card p-4 flex items-center gap-4">
-            <Skeleton className="h-10 w-10 rounded-lg" />
+          <div key={i} className="rounded-2xl border border-border bg-card p-4 flex items-center gap-4 relative overflow-hidden">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+            <Skeleton className="h-10 w-10 rounded-xl" />
             <div className="space-y-2">
               <Skeleton className="h-3 w-20" />
               <Skeleton className="h-6 w-16" />
@@ -1638,7 +1647,8 @@ function SubscriptionsLoadingSkeleton() {
       </div>
 
       {/* Upcoming renewals / overdue card skeleton */}
-      <div className="card-elevated rounded-xl bg-card p-5 space-y-3">
+      <div className="rounded-2xl border border-border bg-card p-5 space-y-3 relative overflow-hidden">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
         <div className="flex items-center gap-2">
           <Skeleton className="h-4 w-4 rounded" />
           <Skeleton className="h-4 w-40" />
@@ -1646,13 +1656,14 @@ function SubscriptionsLoadingSkeleton() {
         <Skeleton className="h-3 w-56" />
         <div className="flex flex-wrap gap-2">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-10 w-44 rounded-lg" />
+            <Skeleton key={i} className="h-10 w-44 rounded-xl" />
           ))}
         </div>
       </div>
 
       {/* Subscriptions table card skeleton */}
-      <div className="card-elevated rounded-xl bg-card overflow-hidden">
+      <div className="rounded-2xl border border-border bg-card overflow-hidden relative">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
         {/* Card header with title + search */}
         <div className="px-5 pt-4 pb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <div className="space-y-1.5">
@@ -1663,7 +1674,7 @@ function SubscriptionsLoadingSkeleton() {
         </div>
         {/* Tabs skeleton */}
         <div className="px-5 pb-3">
-          <Skeleton className="h-8 w-56 rounded-lg" />
+          <Skeleton className="h-8 w-56 rounded-xl" />
         </div>
         {/* Table header */}
         <div className="flex items-center gap-4 px-5 py-2.5 border-b border-border/40">
@@ -1678,7 +1689,7 @@ function SubscriptionsLoadingSkeleton() {
         {/* Table rows */}
         {Array.from({ length: 6 }).map((_, i) => (
           <div key={i} className="flex items-center gap-4 px-5 py-3.5 border-b border-border/20">
-            <Skeleton className="h-8 w-8 rounded-lg" />
+            <Skeleton className="h-8 w-8 rounded-xl" />
             <div className="space-y-1.5 min-w-0">
               <Skeleton className="h-3.5 w-24" />
               <Skeleton className="h-2.5 w-16" />
