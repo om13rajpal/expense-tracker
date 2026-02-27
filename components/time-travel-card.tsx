@@ -121,7 +121,7 @@ export function TimeTravelCard() {
           <div className="flex items-center gap-2">
             <div className={cn(
               "flex items-center gap-1 text-sm font-semibold",
-              isUp ? "text-rose-600 dark:text-rose-400" : "text-emerald-600 dark:text-emerald-400"
+              isUp ? "text-destructive" : "text-lime-600 dark:text-lime-400"
             )}>
               {isUp ? (
                 <IconArrowUpRight className="h-4 w-4" />

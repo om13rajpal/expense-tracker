@@ -110,7 +110,7 @@ export function FeaturedSpotlight({ items, onQuickFund }: FeaturedSpotlightProps
               </div>
             )}
             {hasDeal && (
-              <Badge className="absolute top-2 right-2 bg-emerald-500 text-white text-[10px] px-1.5 py-0 gap-0.5 animate-pulse">
+              <Badge className="absolute top-2 right-2 bg-lime-500 text-white text-[10px] px-1.5 py-0 gap-0.5 animate-pulse">
                 <IconTag className="size-2.5" />
                 Deal!
               </Badge>
@@ -139,11 +139,11 @@ export function FeaturedSpotlight({ items, onQuickFund }: FeaturedSpotlightProps
                 <span className="text-muted-foreground">
                   {formatINR(featured.savedAmount)} of {formatINR(featured.targetAmount)}
                 </span>
-                <span className="font-bold">{progress}%</span>
+                <span className="font-black tracking-tight">{progress}%</span>
               </div>
               <div className="relative h-3 w-full overflow-hidden rounded-full bg-secondary/60">
                 <motion.div
-                  className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-blue-500 via-emerald-500 to-green-500"
+                  className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-primary via-lime-500 to-lime-400"
                   initial={{ width: 0 }}
                   animate={{ width: `${Math.max(progress, 2)}%` }}
                   transition={{ duration: 0.8, ease: [0.25, 0.1, 0.25, 1] }}

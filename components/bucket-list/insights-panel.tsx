@@ -134,7 +134,7 @@ export function InsightsPanel({ items }: InsightsPanelProps) {
         <Card className="py-4">
           <CardContent>
             <div className="flex items-center gap-2 mb-4">
-              <IconTrendingUp className="size-4 text-blue-500" />
+              <IconTrendingUp className="size-4 text-lime-600 dark:text-lime-400" />
               <h3 className="text-sm font-semibold">Savings Trajectory</h3>
             </div>
             <ResponsiveContainer width="100%" height={200}>
@@ -169,7 +169,7 @@ export function InsightsPanel({ items }: InsightsPanelProps) {
         <Card className="py-4">
           <CardContent>
             <div className="flex items-center gap-2 mb-4">
-              <IconChartPie className="size-4 text-purple-500" />
+              <IconChartPie className="size-4 text-foreground/70" />
               <h3 className="text-sm font-semibold">Category Distribution</h3>
             </div>
             <ResponsiveContainer width="100%" height={200}>
@@ -203,7 +203,7 @@ export function InsightsPanel({ items }: InsightsPanelProps) {
         <Card className="py-4">
           <CardContent>
             <div className="flex items-center gap-2 mb-4">
-              <IconChartLine className="size-4 text-emerald-500" />
+              <IconChartLine className="size-4 text-lime-600 dark:text-lime-400" />
               <h3 className="text-sm font-semibold">
                 Price History{priceHistoryData ? `: ${priceHistoryData.name}` : ""}
               </h3>

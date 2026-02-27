@@ -1304,7 +1304,7 @@ export default function TransactionsPage() {
                                 {isRecurring(transaction) && (
                                   <Badge
                                     variant="outline"
-                                    className="text-[11px] px-1.5 py-0 border-violet-500/30 text-violet-600 dark:text-violet-400 bg-violet-500/5"
+                                    className="text-[11px] px-1.5 py-0 border-primary/30 text-muted-foreground bg-primary/5"
                                   >
                                     Recurring
                                   </Badge>

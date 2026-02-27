@@ -62,7 +62,7 @@ export function PeriodBridge({
         </div>
         <Badge
           variant="outline"
-          className={isPositive ? "border-emerald-200 bg-emerald-500/10 text-emerald-700" : "border-rose-200 bg-rose-500/10 text-rose-700"}
+          className={isPositive ? "border-lime-200 bg-lime-500/10 text-lime-700 dark:border-lime-800 dark:text-lime-400" : "border-destructive/20 bg-destructive/10 text-destructive"}
         >
           {isPositive ? "+" : ""}{formatCurrency(netChange)}
         </Badge>
@@ -75,11 +75,11 @@ export function PeriodBridge({
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Inflow</p>
-            <p className="text-lg font-semibold text-emerald-600">{formatCurrency(inflow)}</p>
+            <p className="text-lg font-semibold text-lime-600 dark:text-lime-400">{formatCurrency(inflow)}</p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Outflow</p>
-            <p className="text-lg font-semibold text-rose-600">{formatCurrency(outflow)}</p>
+            <p className="text-lg font-semibold text-destructive">{formatCurrency(outflow)}</p>
           </div>
           <div>
             <p className="text-xs text-muted-foreground">Closing</p>

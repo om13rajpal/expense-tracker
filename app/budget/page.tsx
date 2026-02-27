@@ -989,7 +989,7 @@ export default function BudgetPage() {
                               ) : alert.level === "critical" ? (
                                 <IconAlertTriangle className="h-3 w-3 text-amber-500 shrink-0" />
                               ) : (
-                                <IconAlertTriangle className="h-3 w-3 text-blue-500 shrink-0" />
+                                <IconAlertTriangle className="h-3 w-3 text-muted-foreground shrink-0" />
                               )}
                               <span className="text-muted-foreground">{alert.message}</span>
                             </div>
@@ -1336,7 +1336,7 @@ export default function BudgetPage() {
                                   <IconAlertTriangle className="h-3.5 w-3.5 text-amber-500" />
                                 )}
                                 {catAlert?.level === "warning" && (
-                                  <IconAlertTriangle className="h-3.5 w-3.5 text-blue-500" />
+                                  <IconAlertTriangle className="h-3.5 w-3.5 text-muted-foreground" />
                                 )}
                               </div>
                               {isRollover && rolloverAmt > 0 && (

@@ -29,9 +29,9 @@ const STAT_CONFIG = [
     key: "completed",
     label: "Completed",
     icon: IconCircleCheck,
-    iconBg: "bg-emerald-500/10 dark:bg-emerald-500/15",
-    iconColor: "text-emerald-600 dark:text-emerald-400",
-    accent: "from-emerald-500/5",
+    iconBg: "bg-lime-500/10 dark:bg-lime-500/15",
+    iconColor: "text-lime-600 dark:text-lime-400",
+    accent: "from-lime-500/5",
   },
   {
     key: "saved",
@@ -45,9 +45,9 @@ const STAT_CONFIG = [
     key: "progress",
     label: "Overall Progress",
     icon: IconChartLine,
-    iconBg: "bg-violet-500/10 dark:bg-violet-500/15",
-    iconColor: "text-violet-600 dark:text-violet-400",
-    accent: "from-violet-500/5",
+    iconBg: "bg-muted/80 dark:bg-muted",
+    iconColor: "text-foreground/70",
+    accent: "from-muted/5",
   },
 ] as const
 
@@ -68,9 +68,9 @@ export function HeroSection({ summary }: HeroSectionProps) {
 
   const statValueColors = [
     "text-blue-600 dark:text-blue-400",
-    "text-emerald-600 dark:text-emerald-400",
+    "text-lime-600 dark:text-lime-400",
     "text-amber-600 dark:text-amber-400",
-    "text-violet-600 dark:text-violet-400",
+    "text-foreground/70",
   ]
 
   return (
@@ -86,11 +86,12 @@ export function HeroSection({ summary }: HeroSectionProps) {
           <motion.div
             key={stat.key}
             variants={fadeUpSmall}
-            className={`card-elevated rounded-xl bg-card relative overflow-hidden p-3 sm:p-4 flex items-start gap-2.5 sm:gap-3.5 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 hover:scale-[1.01]`}
+            className={`card-elevated rounded-2xl bg-card relative overflow-hidden p-3 sm:p-4 flex items-start gap-2.5 sm:gap-3.5 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 hover:scale-[1.01]`}
           >
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
             <div className={`absolute inset-0 bg-gradient-to-br ${stat.accent} to-transparent pointer-events-none`} />
-            <div className={`relative flex items-center justify-center h-8 w-8 sm:h-10 sm:w-10 rounded-xl ${stat.iconBg} shrink-0`}>
-              <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${stat.iconColor}`} strokeWidth={1.8} />
+            <div className={`relative flex items-center justify-center size-8 sm:size-9 rounded-xl ${stat.iconBg} shrink-0`}>
+              <Icon className={`size-4 sm:size-5 ${stat.iconColor}`} strokeWidth={1.8} />
             </div>
             <div className="relative min-w-0">
               <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-0.5">
@@ -98,7 +99,7 @@ export function HeroSection({ summary }: HeroSectionProps) {
               </p>
               <motion.p
                 variants={numberPop}
-                className={`text-base sm:text-xl font-bold tabular-nums truncate ${statValueColors[i]}`}
+                className={`text-base sm:text-xl font-black tracking-tight tabular-nums truncate ${statValueColors[i]}`}
               >
                 {statValues[i]}
                 {statSuffixes[i] && (

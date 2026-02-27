@@ -93,13 +93,13 @@ function PersonAvatar({
 
   const colors = [
     "bg-blue-500/15 text-blue-600 dark:text-blue-400",
-    "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
-    "bg-violet-500/15 text-violet-600 dark:text-violet-400",
+    "bg-lime-500/15 text-lime-600 dark:text-lime-400",
+    "bg-muted/80 dark:bg-muted text-foreground/70",
     "bg-amber-500/15 text-amber-600 dark:text-amber-400",
     "bg-pink-500/15 text-pink-600 dark:text-pink-400",
     "bg-cyan-500/15 text-cyan-600 dark:text-cyan-400",
     "bg-orange-500/15 text-orange-600 dark:text-orange-400",
-    "bg-rose-500/15 text-rose-600 dark:text-rose-400",
+    "bg-destructive/15 text-destructive",
   ]
   let hash = 0
   for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
@@ -231,8 +231,8 @@ function AddContactDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-1">
-            <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500/15 to-cyan-500/15">
-              <IconUserPlus className="h-5 w-5 text-blue-500" strokeWidth={1.8} />
+            <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-muted/80 dark:bg-muted">
+              <IconUserPlus className="h-5 w-5 text-muted-foreground" strokeWidth={1.8} />
             </div>
             <div>
               <DialogTitle>Add Contact</DialogTitle>
@@ -333,8 +333,8 @@ function CreateGroupDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-1">
-            <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br from-violet-500/15 to-pink-500/15">
-              <IconUsersGroup className="h-5 w-5 text-violet-500" strokeWidth={1.8} />
+            <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-muted/80 dark:bg-muted">
+              <IconUsersGroup className="h-5 w-5 text-foreground/70" strokeWidth={1.8} />
             </div>
             <div>
               <DialogTitle>Create Group</DialogTitle>
@@ -543,8 +543,8 @@ function AddExpenseDialog({
       <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-1">
-            <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br from-emerald-500/15 to-cyan-500/15">
-              <IconReceipt className="h-5 w-5 text-emerald-500" strokeWidth={1.8} />
+            <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br from-lime-500/15 to-cyan-500/15">
+              <IconReceipt className="h-5 w-5 text-lime-500" strokeWidth={1.8} />
             </div>
             <div>
               <DialogTitle>Add Expense</DialogTitle>
@@ -687,17 +687,17 @@ function AddExpenseDialog({
 
           {/* Notify via email */}
           {hasEmailContacts && (
-            <div className="flex items-center gap-2.5 rounded-lg border border-emerald-500/15 bg-emerald-500/5 px-3 py-2.5">
+            <div className="flex items-center gap-2.5 rounded-lg border border-lime-500/15 bg-lime-500/5 px-3 py-2.5">
               <Checkbox
                 id="notify-email"
                 checked={notifyEmail}
                 onCheckedChange={(v) => setNotifyEmail(v === true)}
               />
               <div className="flex items-center gap-1.5">
-                <IconMail className="h-3.5 w-3.5 text-emerald-600 dark:text-emerald-400" strokeWidth={1.8} />
+                <IconMail className="h-3.5 w-3.5 text-lime-600 dark:text-lime-400" strokeWidth={1.8} />
                 <Label
                   htmlFor="notify-email"
-                  className="text-sm font-medium cursor-pointer text-emerald-700 dark:text-emerald-300"
+                  className="text-sm font-medium cursor-pointer text-lime-700 dark:text-lime-300"
                 >
                   Notify via email
                 </Label>
@@ -927,7 +927,7 @@ function ShareDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-1">
-            <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br from-pink-500/15 to-rose-500/15">
+            <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br from-pink-500/15 to-pink-500/10">
               <IconShare className="h-5 w-5 text-pink-500" strokeWidth={1.8} />
             </div>
             <div>
@@ -1006,7 +1006,7 @@ function BalanceSummaryCard({
       className={cn(
         "card-elevated rounded-xl p-4 transition-all duration-300 hover:scale-[1.01]",
         isPositive
-          ? "bg-gradient-to-br from-emerald-500/5 to-emerald-500/[0.02] hover:shadow-emerald-500/10 hover:shadow-lg border border-emerald-500/10"
+          ? "bg-gradient-to-br from-lime-500/5 to-lime-500/[0.02] hover:shadow-lime-500/10 hover:shadow-lg border border-lime-500/10"
           : "bg-gradient-to-br from-red-500/5 to-red-500/[0.02] hover:shadow-red-500/10 hover:shadow-lg border border-red-500/10"
       )}
     >
@@ -1018,8 +1018,8 @@ function BalanceSummaryCard({
             className={cn(
               "text-xs font-medium",
               isPositive
-                ? "text-emerald-600 dark:text-emerald-400"
-                : "text-red-600 dark:text-red-400"
+                ? "text-lime-600 dark:text-lime-400"
+                : "text-destructive"
             )}
           >
             {isPositive ? "owes you" : "you owe"}
@@ -1029,10 +1029,10 @@ function BalanceSummaryCard({
           <div className="text-right">
             <p
               className={cn(
-                "text-lg font-bold tabular-nums",
+                "text-lg font-black tracking-tight tabular-nums",
                 isPositive
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-red-600 dark:text-red-400"
+                  ? "text-lime-600 dark:text-lime-400"
+                  : "text-destructive"
               )}
             >
               {formatINR(Math.abs(netBalance))}
@@ -1041,8 +1041,8 @@ function BalanceSummaryCard({
               className={cn(
                 "mt-0.5 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-medium",
                 isPositive
-                  ? "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                  : "bg-red-500/10 text-red-600 dark:text-red-400"
+                  ? "bg-lime-500/10 text-lime-600 dark:text-lime-400"
+                  : "bg-destructive/10 text-destructive"
               )}
             >
               {isPositive ? (
@@ -1072,7 +1072,7 @@ function BalanceSummaryCard({
               <Button
                 size="sm"
                 variant="outline"
-                className="h-8 text-xs gap-1.5 border-emerald-500/20 text-emerald-600 dark:text-emerald-400 hover:bg-emerald-500/10"
+                className="h-8 text-xs gap-1.5 border-lime-500/20 text-lime-600 dark:text-lime-400 hover:bg-lime-500/10"
                 disabled={isReminding}
                 onClick={(e) => {
                   e.stopPropagation()
@@ -1110,16 +1110,16 @@ function ActivityFeedItem({ item, index }: { item: ActivityItem; index: number }
             isAutoSettled
               ? "bg-gradient-to-br from-amber-500/15 to-yellow-500/15"
               : isExpense
-                ? "bg-gradient-to-br from-blue-500/15 to-indigo-500/15"
-                : "bg-gradient-to-br from-emerald-500/15 to-cyan-500/15"
+                ? "bg-muted/80 dark:bg-muted"
+                : "bg-gradient-to-br from-lime-500/15 to-cyan-500/15"
           )}
         >
           {isAutoSettled ? (
             <IconBolt className="h-4 w-4 text-amber-500" strokeWidth={1.8} />
           ) : isExpense ? (
-            <IconReceipt className="h-4 w-4 text-blue-500" strokeWidth={1.8} />
+            <IconReceipt className="h-4 w-4 text-muted-foreground" strokeWidth={1.8} />
           ) : (
-            <IconArrowsExchange className="h-4 w-4 text-emerald-500" strokeWidth={1.8} />
+            <IconArrowsExchange className="h-4 w-4 text-lime-500" strokeWidth={1.8} />
           )}
         </div>
       </div>
@@ -1146,8 +1146,8 @@ function ActivityFeedItem({ item, index }: { item: ActivityItem; index: number }
           </div>
           <span
             className={cn(
-              "text-sm font-bold tabular-nums shrink-0",
-              isExpense ? "text-foreground" : "text-emerald-600 dark:text-emerald-400"
+              "text-sm font-black tracking-tight tabular-nums shrink-0",
+              isExpense ? "text-foreground" : "text-lime-600 dark:text-lime-400"
             )}
           >
             {formatINR(item.amount)}
@@ -1241,8 +1241,8 @@ function GroupDetailView({
           <Button variant="ghost" size="icon" onClick={onBack} className="shrink-0 -ml-1">
             <IconChevronLeft className="h-5 w-5" />
           </Button>
-          <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br from-violet-500/15 to-pink-500/15 shrink-0">
-            <IconUsersGroup className="h-5 w-5 text-violet-500" strokeWidth={1.8} />
+          <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-muted/80 dark:bg-muted shrink-0">
+            <IconUsersGroup className="h-5 w-5 text-foreground/70" strokeWidth={1.8} />
           </div>
           <div className="flex-1 min-w-0">
             <h2 className="text-lg font-bold truncate">{group.name}</h2>
@@ -1302,8 +1302,8 @@ function GroupDetailView({
         <div className="space-y-3">
           <SectionHeading
             icon={IconScale}
-            iconBg="bg-gradient-to-br from-emerald-500/15 to-cyan-500/15"
-            iconColor="text-emerald-500"
+            iconBg="bg-gradient-to-br from-lime-500/15 to-cyan-500/15"
+            iconColor="text-lime-500"
             title="Balances"
             count={activeBalances.length}
           />
@@ -1342,8 +1342,8 @@ function GroupDetailView({
       <div className="space-y-3">
         <SectionHeading
           icon={IconReceipt}
-          iconBg="bg-gradient-to-br from-blue-500/15 to-indigo-500/15"
-          iconColor="text-blue-500"
+          iconBg="bg-muted/80 dark:bg-muted"
+          iconColor="text-muted-foreground"
           title="Expenses"
           count={expenses.length}
         />
@@ -1371,8 +1371,8 @@ function GroupDetailView({
                 className="card-elevated rounded-xl bg-card p-4 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5"
               >
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500/15 to-indigo-500/15">
-                    <IconReceipt className="h-4.5 w-4.5 text-blue-500" strokeWidth={1.8} />
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
+                    <IconReceipt className="h-4.5 w-4.5 text-muted-foreground" strokeWidth={1.8} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold truncate">{exp.description}</p>
@@ -1387,11 +1387,11 @@ function GroupDetailView({
                       })}
                     </p>
                   </div>
-                  <span className="text-sm font-bold tabular-nums">{formatINR(exp.amount)}</span>
+                  <span className="text-sm font-black tracking-tight tabular-nums">{formatINR(exp.amount)}</span>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 text-muted-foreground hover:text-red-500 hover:bg-red-500/10 shrink-0"
+                    className="size-8 rounded-xl text-muted-foreground hover:text-destructive hover:bg-destructive/10 shrink-0"
                     onClick={async () => {
                       try {
                         await deleteExpense(exp._id)
@@ -1575,16 +1575,16 @@ function OverviewTab() {
           value={formatINR(totalOwed)}
           tone="positive"
           icon={<IconArrowRight className="h-5 w-5 -rotate-45" />}
-          iconBg="bg-emerald-500/10 dark:bg-emerald-500/15"
-          iconColor="text-emerald-600 dark:text-emerald-400"
+          iconBg="bg-lime-500/10 dark:bg-lime-500/15"
+          iconColor="text-lime-600 dark:text-lime-400"
         />
         <MetricTile
           label="You owe"
           value={formatINR(totalOwing)}
           tone="negative"
           icon={<IconArrowRight className="h-5 w-5 rotate-45" />}
-          iconBg="bg-rose-500/10 dark:bg-rose-500/15"
-          iconColor="text-rose-600 dark:text-rose-400"
+          iconBg="bg-destructive/10 dark:bg-destructive/15"
+          iconColor="text-destructive"
         />
         <MetricTile
           label="Net Balance"
@@ -1592,8 +1592,8 @@ function OverviewTab() {
           tone={netBalance >= 0 ? "positive" : "negative"}
           trendLabel={netBalance >= 0 ? "in your favor" : "you need to settle"}
           icon={<IconScale className="h-5 w-5" />}
-          iconBg="bg-blue-500/10 dark:bg-blue-500/15"
-          iconColor="text-blue-600 dark:text-blue-400"
+          iconBg="bg-muted/80 dark:bg-muted"
+          iconColor="text-muted-foreground"
         />
       </motion.div>
 
@@ -1697,8 +1697,8 @@ function OverviewTab() {
         >
           <SectionHeading
             icon={IconScale}
-            iconBg="bg-gradient-to-br from-emerald-500/15 to-cyan-500/15"
-            iconColor="text-emerald-500"
+            iconBg="bg-gradient-to-br from-lime-500/15 to-cyan-500/15"
+            iconColor="text-lime-500"
             title="Balances"
             count={activeBalances.length}
           />
@@ -1840,8 +1840,8 @@ function GroupsTab() {
       >
         <SectionHeading
           icon={IconUsersGroup}
-          iconBg="bg-gradient-to-br from-violet-500/15 to-pink-500/15"
-          iconColor="text-violet-500"
+          iconBg="bg-muted/80 dark:bg-muted"
+          iconColor="text-foreground/70"
           title="Your Groups"
           count={activeGroups.length}
         />
@@ -1882,8 +1882,8 @@ function GroupsTab() {
                 className="card-elevated rounded-xl bg-card p-5 text-left transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 hover:scale-[1.01]"
               >
                 <div className="flex items-start gap-3">
-                  <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br from-violet-500/15 to-pink-500/15 shrink-0">
-                    <IconUsersGroup className="h-5 w-5 text-violet-500" strokeWidth={1.8} />
+                  <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-muted/80 dark:bg-muted shrink-0">
+                    <IconUsersGroup className="h-5 w-5 text-foreground/70" strokeWidth={1.8} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">

@@ -543,7 +543,7 @@ export function PlanAllocateView() {
                   const alloc = goalAllocations[goal.name] || 0
                   return (
                     <div key={goal.name} className="flex items-center gap-2">
-                      <IconTarget className="h-3.5 w-3.5 text-violet-500 shrink-0" />
+                      <IconTarget className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                       <span className="text-xs text-muted-foreground truncate flex-1 min-w-0">{goal.name}</span>
                       <div className="relative w-24 shrink-0">
                         <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground">₹</span>

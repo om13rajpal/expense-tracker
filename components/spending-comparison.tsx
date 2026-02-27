@@ -198,7 +198,7 @@ export function SpendingComparison({ transactions }: SpendingComparisonProps) {
           <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
             {currentLabel} Spending
           </p>
-          <p className="text-lg font-bold tabular-nums leading-tight">
+          <p className="text-lg font-black tracking-tight tabular-nums leading-tight">
             {formatCurrency(currentTotal)}
           </p>
         </div>
@@ -208,7 +208,7 @@ export function SpendingComparison({ transactions }: SpendingComparisonProps) {
           <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
             {prevLabel} Spending
           </p>
-          <p className="text-lg font-bold tabular-nums leading-tight text-muted-foreground">
+          <p className="text-lg font-black tracking-tight tabular-nums leading-tight text-muted-foreground">
             {formatCurrency(prevTotal)}
           </p>
         </div>
@@ -220,19 +220,19 @@ export function SpendingComparison({ transactions }: SpendingComparisonProps) {
           </p>
           <div className="flex items-center gap-2">
             <p
-              className={`text-lg font-bold tabular-nums leading-tight ${
+              className={`text-lg font-black tracking-tight tabular-nums leading-tight ${
                 totalChange <= 0
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-rose-600 dark:text-rose-400"
+                  ? "text-lime-600 dark:text-lime-400"
+                  : "text-destructive"
               }`}
             >
               {totalChange > 0 ? "+" : ""}
               {totalChange.toFixed(1)}%
             </p>
             {totalChange <= 0 ? (
-              <IconArrowDownRight className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
+              <IconArrowDownRight className="h-4 w-4 text-lime-600 dark:text-lime-400" />
             ) : (
-              <IconArrowUpRight className="h-4 w-4 text-rose-600 dark:text-rose-400" />
+              <IconArrowUpRight className="h-4 w-4 text-destructive" />
             )}
           </div>
         </div>
@@ -244,7 +244,7 @@ export function SpendingComparison({ transactions }: SpendingComparisonProps) {
           {biggestIncrease && biggestIncrease.changePercent > 0 && (
             <Badge
               variant="secondary"
-              className="text-xs font-medium px-3 py-1.5 bg-rose-100 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400"
+              className="text-xs font-medium px-3 py-1.5 bg-destructive/10 text-destructive"
             >
               <IconTrendingUp className="h-3 w-3 mr-1" />
               Biggest increase: {biggestIncrease.category} (+
@@ -254,7 +254,7 @@ export function SpendingComparison({ transactions }: SpendingComparisonProps) {
           {biggestDecrease && biggestDecrease.changePercent < 0 && (
             <Badge
               variant="secondary"
-              className="text-xs font-medium px-3 py-1.5 bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400"
+              className="text-xs font-medium px-3 py-1.5 bg-lime-500/10 text-lime-700 dark:text-lime-400"
             >
               <IconTrendingDown className="h-3 w-3 mr-1" />
               Biggest decrease: {biggestDecrease.category} (
@@ -387,9 +387,9 @@ export function SpendingComparison({ transactions }: SpendingComparisonProps) {
                 <span
                   className={`text-[12px] font-semibold tabular-nums text-right ${
                     isDecrease
-                      ? "text-emerald-600 dark:text-emerald-400"
+                      ? "text-lime-600 dark:text-lime-400"
                       : isIncrease
-                        ? "text-rose-600 dark:text-rose-400"
+                        ? "text-destructive"
                         : "text-muted-foreground"
                   }`}
                 >
@@ -406,17 +406,17 @@ export function SpendingComparison({ transactions }: SpendingComparisonProps) {
           {/* Summary Row */}
           <div className="grid grid-cols-[1fr_90px_90px_80px] gap-2 px-2 pt-2 mt-1 border-t border-border/40">
             <span className="text-[13px] font-bold">Total</span>
-            <span className="text-[13px] font-bold tabular-nums text-right">
+            <span className="text-[13px] font-black tracking-tight tabular-nums text-right">
               {formatCurrency(currentTotal)}
             </span>
-            <span className="text-[13px] font-bold tabular-nums text-right text-muted-foreground">
+            <span className="text-[13px] font-black tracking-tight tabular-nums text-right text-muted-foreground">
               {formatCurrency(prevTotal)}
             </span>
             <span
-              className={`text-[12px] font-bold tabular-nums text-right ${
+              className={`text-[12px] font-black tracking-tight tabular-nums text-right ${
                 totalChange <= 0
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-rose-600 dark:text-rose-400"
+                  ? "text-lime-600 dark:text-lime-400"
+                  : "text-destructive"
               }`}
             >
               {totalChange > 0 ? "+" : ""}

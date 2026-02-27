@@ -98,13 +98,13 @@ function PersonAvatar({
 
   const colors = [
     "bg-blue-500/15 text-blue-600 dark:text-blue-400",
-    "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
-    "bg-violet-500/15 text-violet-600 dark:text-violet-400",
+    "bg-lime-500/15 text-lime-600 dark:text-lime-400",
+    "bg-muted/80 dark:bg-muted text-foreground/70",
     "bg-amber-500/15 text-amber-600 dark:text-amber-400",
     "bg-pink-500/15 text-pink-600 dark:text-pink-400",
     "bg-cyan-500/15 text-cyan-600 dark:text-cyan-400",
     "bg-orange-500/15 text-orange-600 dark:text-orange-400",
-    "bg-rose-500/15 text-rose-600 dark:text-rose-400",
+    "bg-destructive/15 text-destructive",
   ]
   let hash = 0
   for (let i = 0; i < name.length; i++) hash = name.charCodeAt(i) + ((hash << 5) - hash)
@@ -237,8 +237,8 @@ function AddContactDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-1">
-            <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br from-blue-500/15 to-cyan-500/15">
-              <IconUserPlus className="h-5 w-5 text-blue-500" strokeWidth={1.8} />
+            <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-muted/80 dark:bg-muted">
+              <IconUserPlus className="h-5 w-5 text-muted-foreground" strokeWidth={1.8} />
             </div>
             <div>
               <DialogTitle>Add Contact</DialogTitle>
@@ -339,8 +339,8 @@ function CreateGroupDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-1">
-            <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br from-violet-500/15 to-pink-500/15">
-              <IconUsersGroup className="h-5 w-5 text-violet-500" strokeWidth={1.8} />
+            <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-muted/80 dark:bg-muted">
+              <IconUsersGroup className="h-5 w-5 text-foreground/70" strokeWidth={1.8} />
             </div>
             <div>
               <DialogTitle>Create Group</DialogTitle>
@@ -872,7 +872,7 @@ function ShareDialog({
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
           <div className="flex items-center gap-3 mb-1">
-            <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br from-pink-500/15 to-rose-500/15">
+            <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br from-pink-500/15 to-pink-500/10">
               <IconShare className="h-5 w-5 text-pink-500" strokeWidth={1.8} />
             </div>
             <div>
@@ -1127,8 +1127,8 @@ function GroupDetailView({
           <Button variant="ghost" size="icon" onClick={onBack} className="shrink-0 -ml-1">
             <IconChevronLeft className="h-5 w-5" />
           </Button>
-          <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-gradient-to-br from-violet-500/15 to-pink-500/15 shrink-0">
-            <IconUsersGroup className="h-5 w-5 text-violet-500" strokeWidth={1.8} />
+          <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-muted/80 dark:bg-muted shrink-0">
+            <IconUsersGroup className="h-5 w-5 text-foreground/70" strokeWidth={1.8} />
           </div>
           <div className="flex-1 min-w-0">
             <h2 className="text-lg font-black tracking-tight truncate">{group.name}</h2>
@@ -1681,8 +1681,8 @@ function GroupsTab() {
       >
         <SectionHeading
           icon={IconUsersGroup}
-          iconBg="bg-gradient-to-br from-violet-500/15 to-pink-500/15"
-          iconColor="text-violet-500"
+          iconBg="bg-muted/80 dark:bg-muted"
+          iconColor="text-foreground/70"
           title="Your Groups"
           count={activeGroups.length}
         />
@@ -1724,8 +1724,8 @@ function GroupsTab() {
               >
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                 <div className="flex items-start gap-3">
-                  <div className="flex items-center justify-center size-9 rounded-xl bg-gradient-to-br from-violet-500/15 to-pink-500/15 shrink-0">
-                    <IconUsersGroup className="h-5 w-5 text-violet-500" strokeWidth={1.8} />
+                  <div className="flex items-center justify-center size-9 rounded-xl bg-muted/80 dark:bg-muted shrink-0">
+                    <IconUsersGroup className="h-5 w-5 text-foreground/70" strokeWidth={1.8} />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">

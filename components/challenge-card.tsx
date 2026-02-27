@@ -49,17 +49,17 @@ const CHALLENGE_CONFIG: Record<string, {
   },
   save_20: {
     icon: IconPigMoney,
-    color: "text-emerald-600 dark:text-emerald-400",
-    ring: "stroke-emerald-500",
-    bg: "bg-emerald-500/10",
-    border: "border-emerald-500/20",
+    color: "text-lime-600 dark:text-lime-400",
+    ring: "stroke-lime-500",
+    bg: "bg-lime-500/10",
+    border: "border-lime-500/20",
   },
   under_budget: {
     icon: IconChartBar,
-    color: "text-violet-600 dark:text-violet-400",
-    ring: "stroke-violet-500",
-    bg: "bg-violet-500/10",
-    border: "border-violet-500/20",
+    color: "text-foreground/70",
+    ring: "stroke-muted-foreground",
+    bg: "bg-muted/80 dark:bg-muted",
+    border: "border-border",
   },
   no_impulse: {
     icon: IconShieldCheck,
@@ -84,10 +84,10 @@ const CHALLENGE_CONFIG: Record<string, {
   },
   invest_check: {
     icon: IconChartLine,
-    color: "text-teal-600 dark:text-teal-400",
-    ring: "stroke-teal-500",
-    bg: "bg-teal-500/10",
-    border: "border-teal-500/20",
+    color: "text-lime-600 dark:text-lime-400",
+    ring: "stroke-lime-500",
+    bg: "bg-lime-500/10",
+    border: "border-lime-500/20",
   },
   reduce_dining: {
     icon: IconToolsKitchen2,
@@ -169,7 +169,7 @@ function ProgressRing({
         />
       </svg>
       <div className="absolute flex flex-col items-center">
-        <span className="text-xs font-bold tabular-nums">{Math.round(clamped)}%</span>
+        <span className="text-xs font-black tracking-tight tabular-nums">{Math.round(clamped)}%</span>
       </div>
     </div>
   )
@@ -243,7 +243,7 @@ export function ChallengeCard({
       className={cn(
         "card-elevated rounded-xl bg-card overflow-hidden transition-all duration-300",
         isCompleted
-          ? "border border-emerald-500/20 hover:shadow-lg hover:shadow-emerald-500/5"
+          ? "border border-lime-500/20 hover:shadow-lg hover:shadow-lime-500/5"
           : joined
             ? "border border-border/60 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20"
             : "border border-dashed border-border/60 hover:border-border hover:shadow-md",
@@ -257,11 +257,11 @@ export function ChallengeCard({
             <div className={cn(
               "mt-0.5 rounded-lg p-2 border",
               isCompleted
-                ? "bg-emerald-500/10 border-emerald-500/20"
+                ? "bg-lime-500/10 border-lime-500/20"
                 : `${config.bg} ${config.border}`,
             )}>
               {isCompleted ? (
-                <IconCheck className="h-4 w-4 text-emerald-600 dark:text-emerald-400" stroke={2} />
+                <IconCheck className="h-4 w-4 text-lime-600 dark:text-lime-400" stroke={2} />
               ) : (
                 <ChallengeIcon className={cn("h-4 w-4", config.color)} />
               )}
@@ -272,7 +272,7 @@ export function ChallengeCard({
                 {isCompleted ? (
                   <Badge
                     variant="outline"
-                    className="text-[11px] px-2 py-0.5 font-medium border-emerald-200 bg-emerald-500/10 text-emerald-700 dark:border-emerald-800 dark:text-emerald-400"
+                    className="text-[11px] px-2 py-0.5 font-medium border-lime-200 bg-lime-500/10 text-lime-700 dark:border-lime-800 dark:text-lime-400"
                   >
                     <IconCheck className="mr-0.5 h-3 w-3" /> Completed
                   </Badge>
@@ -315,12 +315,12 @@ export function ChallengeCard({
               percent={clampedProgress}
               size={60}
               strokeWidth={5}
-              ringClass={isCompleted ? "stroke-emerald-500" : config.ring}
+              ringClass={isCompleted ? "stroke-lime-500" : config.ring}
               delay={0.1}
             />
             <div className="flex-1 min-w-0">
               <div className="flex items-baseline justify-between">
-                <span className="text-lg font-bold tabular-nums">
+                <span className="text-lg font-black tracking-tight tabular-nums">
                   {current}
                 </span>
                 <span className="text-xs text-muted-foreground tabular-nums">
@@ -334,7 +334,7 @@ export function ChallengeCard({
                   <motion.div
                     className={cn(
                       "h-2 rounded-full",
-                      isCompleted ? "bg-emerald-500" : "bg-primary",
+                      isCompleted ? "bg-lime-500" : "bg-primary",
                     )}
                     initial={{ width: 0 }}
                     animate={{ width: `${clampedProgress}%` }}

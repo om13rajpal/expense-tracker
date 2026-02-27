@@ -144,7 +144,7 @@ export function QuickAddTransaction({ open, onOpenChange }: QuickAddProps) {
               value={amount}
               onChange={(e) => setAmount(e.target.value)}
               autoFocus
-              className="text-lg font-bold tabular-nums"
+              className="text-lg font-black tracking-tight tabular-nums"
             />
           </div>
 

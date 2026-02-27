@@ -90,15 +90,16 @@ export function SpendVelocityTicker() {
       initial={{ opacity: 0, y: 6 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3 }}
-      className="card-elevated rounded-xl bg-card p-4 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5"
+      className="relative card-elevated rounded-2xl border border-border bg-card p-4 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5"
     >
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
       <div className="flex items-center gap-2">
-        <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-gradient-to-br from-orange-500/15 to-red-500/15">
+        <div className="flex items-center justify-center size-8 rounded-xl bg-gradient-to-br from-orange-500/15 to-red-500/15">
           <IconActivityHeartbeat className="h-4 w-4 text-orange-500" />
         </div>
         <div className="flex-1 min-w-0">
-          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Spend Velocity</p>
-          <p className="text-base font-bold tabular-nums font-mono">
+          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-widest">Spend Velocity</p>
+          <p className="text-base font-black tracking-tight tabular-nums font-mono">
             <span className="text-muted-foreground">Rs </span>
             <AnimatedNumber value={perHour} />
             <span className="text-xs text-muted-foreground font-sans">/hr flowing out</span>

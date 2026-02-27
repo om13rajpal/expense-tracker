@@ -59,7 +59,7 @@ const statusIcons: Record<string, typeof IconLoader2> = {
 const statusColors: Record<string, string> = {
   saving: "text-blue-500",
   wishlist: "text-pink-500",
-  completed: "text-emerald-500",
+  completed: "text-lime-500",
 }
 
 function SortableCard({
@@ -232,7 +232,7 @@ export function BucketListItemGrid({
                         <button
                           type="button"
                           onClick={onAddClick}
-                          className="w-full h-full min-h-[280px] rounded-xl border-2 border-dashed border-border/50 hover:border-primary/40 hover:bg-muted/20 flex flex-col items-center justify-center gap-3 transition-all duration-200 group/add"
+                          className="w-full h-full min-h-[280px] rounded-2xl border-2 border-dashed border-border/50 hover:border-primary/40 hover:bg-muted/20 flex flex-col items-center justify-center gap-3 transition-all duration-200 group/add"
                         >
                           <div className="flex items-center justify-center size-12 rounded-xl bg-muted/50 group-hover/add:bg-primary/10 transition-colors">
                             <IconPlus className="size-6 text-muted-foreground group-hover/add:text-primary transition-colors" />

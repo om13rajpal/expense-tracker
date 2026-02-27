@@ -115,10 +115,10 @@ function getActionLink(category: string, title: string): string {
 function HealthScoreBadge({ score }: { score: number }) {
   const color =
     score >= 70
-      ? "bg-emerald-500/15 text-emerald-700 dark:text-emerald-400 border-emerald-500/20"
+      ? "bg-lime-500/15 text-lime-700 dark:text-lime-400 border-lime-500/20"
       : score >= 40
         ? "bg-amber-500/15 text-amber-700 dark:text-amber-400 border-amber-500/20"
-        : "bg-rose-500/15 text-rose-700 dark:text-rose-400 border-rose-500/20"
+        : "bg-destructive/15 text-destructive border-destructive/20"
 
   const label =
     score >= 70 ? "Healthy" : score >= 40 ? "Needs Work" : "At Risk"
@@ -127,7 +127,7 @@ function HealthScoreBadge({ score }: { score: number }) {
     <span
       className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-semibold tabular-nums ${color}`}
     >
-      <span className="text-sm font-bold">{score}</span>
+      <span className="text-sm font-black tracking-tight">{score}</span>
       <span className="text-[10px] font-medium opacity-80">/100</span>
       <span className="mx-0.5 h-3 w-px bg-current opacity-20" />
       <span>{label}</span>
@@ -144,8 +144,8 @@ const TREND_ICONS = {
 
 /** Maps spending trend direction to its Tailwind text colour class. */
 const TREND_COLORS = {
-  up: "text-rose-500",
-  down: "text-emerald-500",
+  up: "text-destructive",
+  down: "text-lime-600 dark:text-lime-400",
   stable: "text-muted-foreground",
 } as const
 
@@ -180,9 +180,9 @@ function CategoryChip({
 
 /** Maps action item impact levels (high/medium/low) to Tailwind badge colour classes. */
 const IMPACT_STYLES = {
-  high: "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-500/15",
+  high: "bg-destructive/10 text-destructive border-destructive/15",
   medium: "bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/15",
-  low: "bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/15",
+  low: "bg-muted/80 text-muted-foreground border-border",
 } as const
 
 /** Maps alert types (warning/critical/positive) to background, icon, and icon-colour classes. */
@@ -193,14 +193,14 @@ const ALERT_STYLES = {
     iconColor: "text-amber-500",
   },
   critical: {
-    bg: "bg-rose-500/5 border-rose-500/15",
+    bg: "bg-destructive/5 border-destructive/15",
     icon: IconAlertTriangle,
-    iconColor: "text-rose-500",
+    iconColor: "text-destructive",
   },
   positive: {
-    bg: "bg-emerald-500/5 border-emerald-500/15",
+    bg: "bg-lime-500/5 border-lime-500/15",
     icon: IconCircleCheck,
-    iconColor: "text-emerald-500",
+    iconColor: "text-lime-600 dark:text-lime-400",
   },
 } as const
 
@@ -242,7 +242,7 @@ function ActionItemCard({
           {description}
         </p>
         {savingAmount > 0 && (
-          <p className="text-[11px] font-medium text-emerald-600 dark:text-emerald-400 mt-1">
+          <p className="text-[11px] font-medium text-lime-600 dark:text-lime-400 mt-1">
             Potential saving: {formatINR(savingAmount)}
           </p>
         )}
@@ -295,21 +295,21 @@ function StructuredInsightsView({
         <div className="flex items-center gap-3 flex-wrap text-xs">
           <span className="text-muted-foreground">
             Income{" "}
-            <strong className="text-emerald-600 dark:text-emerald-400">
+            <strong className="text-lime-600 dark:text-lime-400">
               {formatCompact(data.summary.income)}
             </strong>
           </span>
           <span className="h-3 w-px bg-border" />
           <span className="text-muted-foreground">
             Spent{" "}
-            <strong className="text-rose-600 dark:text-rose-400">
+            <strong className="text-destructive">
               {formatCompact(data.summary.expenses)}
             </strong>
           </span>
           <span className="h-3 w-px bg-border" />
           <span className="text-muted-foreground">
             Saved{" "}
-            <strong className="text-blue-600 dark:text-blue-400">
+            <strong className="text-foreground">
               {data.summary.savingsRate.toFixed(0)}%
             </strong>
           </span>
@@ -327,7 +327,7 @@ function StructuredInsightsView({
       {/* Top Categories - hidden in compact mode */}
       {!compact && categories && categories.length > 0 && (
         <div>
-          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mb-2">
             Top Categories
           </p>
           <div className="flex flex-wrap gap-1.5">
@@ -367,7 +367,7 @@ function StructuredInsightsView({
       {/* Action Items - compact shows title-only cards */}
       {actions && actions.length > 0 && (
         <div>
-          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider mb-2">
+          <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mb-2">
             Recommendations
           </p>
           <div className="space-y-2">
@@ -392,7 +392,7 @@ function StructuredInsightsView({
                         {action.impact}
                       </Badge>
                       {action.savingAmount > 0 && (
-                        <span className="text-[10px] sm:text-[11px] font-medium text-emerald-600 dark:text-emerald-400 tabular-nums shrink-0">
+                        <span className="text-[10px] sm:text-[11px] font-medium text-lime-600 dark:text-lime-400 tabular-nums shrink-0">
                           {formatCompact(action.savingAmount)}
                         </span>
                       )}
@@ -482,8 +482,8 @@ export function AiInsightsWidget({ compact = false }: AiInsightsWidgetProps) {
             <Skeleton className="h-4 w-2/3" />
           </div>
         ) : insight.error && !insight.content && !structuredData ? (
-          <div className="rounded-lg border border-rose-200 bg-rose-50 p-3 dark:border-rose-900 dark:bg-rose-950">
-            <p className="text-sm text-rose-700 dark:text-rose-300">{insight.error}</p>
+          <div className="rounded-lg border border-destructive/20 bg-destructive/5 p-3">
+            <p className="text-sm text-destructive">{insight.error}</p>
             <p className="mt-1 text-xs text-muted-foreground">
               Make sure OPENROUTER_API_KEY is configured in your .env.local
             </p>

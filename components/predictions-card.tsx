@@ -50,9 +50,9 @@ async function fetchPredictions(): Promise<PredictionsData> {
 
 /** Tailwind colour classes mapped to burn rate status levels. */
 const statusColors = {
-  safe: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border-emerald-500/20",
+  safe: "bg-lime-500/10 text-lime-600 dark:text-lime-400 border-lime-500/20",
   warning: "bg-amber-500/10 text-amber-600 dark:text-amber-400 border-amber-500/20",
-  critical: "bg-rose-500/10 text-rose-600 dark:text-rose-400 border-rose-500/20",
+  critical: "bg-destructive/10 text-destructive border-destructive/20",
 }
 
 /**
@@ -93,8 +93,8 @@ export function PredictionsCard() {
         {/* Budget Burn Rates */}
         <div className="card-elevated rounded-xl bg-card p-5 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
           <div className="flex items-center gap-2 mb-3">
-            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-gradient-to-br from-rose-500/15 to-amber-500/15">
-              <IconFlame className="h-4 w-4 text-rose-500" />
+            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-gradient-to-br from-destructive/15 to-amber-500/15">
+              <IconFlame className="h-4 w-4 text-destructive" />
             </div>
             <h3 className="text-sm font-semibold">Budget Burn Rates</h3>
             {criticalBudgets.length > 0 && (
@@ -140,8 +140,8 @@ export function PredictionsCard() {
         {/* Cash Flow Forecast */}
         <div className="card-elevated rounded-xl bg-card p-5 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
           <div className="flex items-center gap-2 mb-3">
-            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-gradient-to-br from-blue-500/15 to-cyan-500/15">
-              <IconTrendingUp className="h-4 w-4 text-blue-500" />
+            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-gradient-to-br from-muted to-muted/60">
+              <IconTrendingUp className="h-4 w-4 text-muted-foreground" />
             </div>
             <h3 className="text-sm font-semibold">Cash Flow Forecast</h3>
             <span className="ml-auto text-[11px] text-muted-foreground tabular-nums">
@@ -151,24 +151,24 @@ export function PredictionsCard() {
           <div className="space-y-3">
             <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/30">
               <p className="text-xs text-muted-foreground">Projected Expenses</p>
-              <p className="text-sm font-bold tabular-nums">{formatINR(cashFlow.projectedExpenses)}</p>
+              <p className="text-sm font-black tracking-tight tabular-nums">{formatINR(cashFlow.projectedExpenses)}</p>
             </div>
             <div className="flex items-center justify-between py-2 px-3 rounded-lg bg-muted/30">
               <p className="text-xs text-muted-foreground">Projected Income</p>
-              <p className="text-sm font-bold tabular-nums">{formatINR(cashFlow.projectedIncome)}</p>
+              <p className="text-sm font-black tracking-tight tabular-nums">{formatINR(cashFlow.projectedIncome)}</p>
             </div>
             <div className={cn(
               "flex items-center justify-between py-2.5 px-3 rounded-lg border",
               cashFlow.projectedSurplus >= 0
-                ? "bg-emerald-500/5 border-emerald-500/20"
-                : "bg-rose-500/5 border-rose-500/20"
+                ? "bg-lime-500/5 border-lime-500/20"
+                : "bg-destructive/5 border-destructive/20"
             )}>
               <p className="text-xs font-medium">Projected Surplus</p>
               <p className={cn(
-                "text-base font-bold tabular-nums",
+                "text-base font-black tracking-tight tabular-nums",
                 cashFlow.projectedSurplus >= 0
-                  ? "text-emerald-600 dark:text-emerald-400"
-                  : "text-rose-600 dark:text-rose-400"
+                  ? "text-lime-600 dark:text-lime-400"
+                  : "text-destructive"
               )}>
                 {cashFlow.projectedSurplus >= 0 ? "+" : ""}{formatINR(cashFlow.projectedSurplus)}
               </p>
@@ -181,8 +181,8 @@ export function PredictionsCard() {
       {hasGoals && (
         <div className="card-elevated rounded-xl bg-card p-5 transition-all duration-300 hover:shadow-lg hover:shadow-primary/5">
           <div className="flex items-center gap-2 mb-3">
-            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-gradient-to-br from-violet-500/15 to-pink-500/15">
-              <IconTarget className="h-4 w-4 text-violet-500" />
+            <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-muted/80 dark:bg-muted">
+              <IconTarget className="h-4 w-4 text-foreground/70" />
             </div>
             <h3 className="text-sm font-semibold">Goal Predictions</h3>
           </div>
@@ -207,7 +207,7 @@ export function PredictionsCard() {
                   className={cn(
                     "shrink-0 ml-3",
                     g.onTrack
-                      ? "text-emerald-600 dark:text-emerald-400 border-emerald-500/30"
+                      ? "text-lime-600 dark:text-lime-400 border-lime-500/30"
                       : "text-amber-600 dark:text-amber-400 border-amber-500/30"
                   )}
                 >

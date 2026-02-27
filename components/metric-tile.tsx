@@ -56,25 +56,26 @@ export function MetricTile({
   const isPositive = typeof change === "number" && change >= 0
   const badgeTone =
     tone === "positive"
-      ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800"
+      ? "bg-lime-500/10 text-lime-700 dark:text-lime-400 border-lime-200 dark:border-lime-800"
       : tone === "negative"
-        ? "bg-rose-500/10 text-rose-700 dark:text-rose-400 border-rose-200 dark:border-rose-800"
-        : "bg-slate-500/10 text-slate-700 dark:text-slate-400 border-slate-200 dark:border-slate-800"
+        ? "bg-destructive/10 text-destructive border-destructive/20"
+        : "bg-muted text-muted-foreground border-border"
 
   return (
-    <Card className="border border-border/70 bg-card/80 shadow-sm">
+    <Card className="rounded-2xl border border-border bg-card relative overflow-hidden shadow-sm">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
       <CardContent className="flex items-start gap-3.5 p-3.5">
         {icon && (
-          <div className={`mt-0.5 flex h-10 w-10 shrink-0 items-center justify-center rounded-xl ${iconBg || "bg-primary/10"} ${iconColor || "text-primary"}`}>
+          <div className={`mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-xl ${iconBg || "bg-muted/80 dark:bg-muted"} ${iconColor || "text-foreground/70"}`}>
             {icon}
           </div>
         )}
         <div className="min-w-0 space-y-1">
-          <p className="text-[11px] font-medium uppercase tracking-[0.1em] text-muted-foreground flex items-center gap-1">
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-muted-foreground/70 flex items-center gap-1">
             {label}
             {tooltip && <InfoTooltip text={tooltip} iconClassName="h-3 w-3" />}
           </p>
-          <p className="text-xl font-semibold tracking-tight text-foreground">
+          <p className="text-xl font-black tracking-tight text-foreground">
             {value}
           </p>
           {(typeof change === "number" || trendLabel) && (

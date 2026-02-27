@@ -119,21 +119,21 @@ function cleanNum(val: string | undefined): string {
 }
 
 const COLORS = {
-  indigo: "#6366f1",
+  lime: "#84cc16",
   amber: "#f59e0b",
-  emerald: "#10b981",
+  primary: "#84cc16",
   red: "#ef4444",
-  violet: "#8b5cf6",
+  muted: "#71717a",
   cyan: "#06b6d4",
   orange: "#f97316",
   pink: "#ec4899",
   sky: "#0ea5e9",
-  lime: "#84cc16",
+  emerald: "#10b981",
 }
 
 const PIE_COLORS = [
-  COLORS.indigo, COLORS.amber, COLORS.emerald, COLORS.red,
-  COLORS.violet, COLORS.cyan, COLORS.orange, COLORS.pink,
+  COLORS.lime, COLORS.amber, COLORS.muted, COLORS.orange,
+  COLORS.cyan, COLORS.pink, COLORS.sky, COLORS.emerald,
 ]
 
 const ISIN_TICKER_MAP: Record<string, { symbol: string; exchange: string }> = {
@@ -1932,7 +1932,7 @@ export default function InvestmentsPage() {
                               {s.expectedAnnualReturn && <div className="text-[11px] text-muted-foreground">Exp. {s.expectedAnnualReturn}% p.a.</div>}
                             </TableCell>
                             <TableCell className="text-muted-foreground text-sm">{s.provider}</TableCell>
-                            <TableCell className="text-right font-bold tabular-nums text-sm">{fmt(s.monthlyAmount)}</TableCell>
+                            <TableCell className="text-right font-black tracking-tight tabular-nums text-sm">{fmt(s.monthlyAmount)}</TableCell>
                             <TableCell className="text-muted-foreground text-sm">{s.startDate}</TableCell>
                             <TableCell>
                               <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-md ${s.status === "active" ? "text-lime-700 dark:text-lime-300 bg-lime-500/10" : s.status === "paused" ? "text-amber-700 dark:text-amber-300 bg-amber-500/10" : "text-destructive bg-destructive/10"}`}>
@@ -2053,7 +2053,7 @@ export default function InvestmentsPage() {
                                   <div className="text-[11px] text-muted-foreground mt-0.5">{m.bankTxn.date} - {m.bankTxn.description.slice(0, 40)}</div>
                                 </div>
                                 <div className="text-right flex items-center gap-2">
-                                  <div className="text-xs font-bold tabular-nums">{fmt(m.bankTxn.amount)}</div>
+                                  <div className="text-xs font-black tracking-tight tabular-nums">{fmt(m.bankTxn.amount)}</div>
                                   <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-md text-lime-700 dark:text-lime-300 bg-lime-500/15">
                                     matched
                                   </span>
@@ -2074,7 +2074,7 @@ export default function InvestmentsPage() {
                                   <div className="text-[11px] text-muted-foreground max-w-[300px] truncate mt-0.5">{txn.description}</div>
                                 </div>
                                 <div className="text-right flex items-center gap-2">
-                                  <div className="text-xs font-bold tabular-nums">{fmt(txn.amount)}</div>
+                                  <div className="text-xs font-black tracking-tight tabular-nums">{fmt(txn.amount)}</div>
                                   <span className="text-[9px] font-semibold px-1.5 py-0.5 rounded-md text-amber-700 dark:text-amber-300 bg-amber-500/15">
                                     unmatched
                                   </span>

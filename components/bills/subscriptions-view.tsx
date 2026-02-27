@@ -295,8 +295,8 @@ type PaymentStatus = "paid" | "due-soon" | "overdue" | "upcoming"
 const PAYMENT_STATUS_BADGE: Record<PaymentStatus, { label: string; class: string }> = {
   paid: { label: "Paid", class: "bg-lime-100 text-lime-700 dark:bg-lime-900/30 dark:text-lime-400" },
   "due-soon": { label: "Due Soon", class: "bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400" },
-  overdue: { label: "Overdue", class: "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" },
-  upcoming: { label: "Upcoming", class: "bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-400" },
+  overdue: { label: "Overdue", class: "bg-destructive/10 text-destructive" },
+  upcoming: { label: "Upcoming", class: "bg-muted text-muted-foreground" },
 }
 
 function getPaymentStatus(sub: Subscription): PaymentStatus {
@@ -871,7 +871,7 @@ export function SubscriptionsView() {
                   <div className="flex items-center justify-between">
                     <div>
                       <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                        <IconAlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
+                        <IconAlertTriangle className="h-4 w-4 text-destructive" />
                         Overdue Subscriptions
                       </CardTitle>
                       <CardDescription className="text-xs">
@@ -881,7 +881,7 @@ export function SubscriptionsView() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="h-7 text-xs gap-1 border-red-200 dark:border-red-800 text-red-700 dark:text-red-400 hover:bg-red-100 dark:hover:bg-red-900/20"
+                      className="h-7 text-xs gap-1 border-destructive/20 text-destructive hover:bg-destructive/10"
                       onClick={() => checkPaymentsMutation.mutate(undefined)}
                       disabled={checkPaymentsMutation.isPending}
                     >

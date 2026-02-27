@@ -346,7 +346,7 @@ export function DataAudit({ transactions }: { transactions: Transaction[] }) {
             {audit.topMerchantsByExpense.map(([merchant, total]) => (
               <div key={merchant} className="flex items-center justify-between text-sm">
                 <span className="truncate">{merchant}</span>
-                <span className="font-medium text-rose-600">{formatCurrency(total)}</span>
+                <span className="font-medium text-destructive">{formatCurrency(total)}</span>
               </div>
             ))}
           </CardContent>
@@ -359,7 +359,7 @@ export function DataAudit({ transactions }: { transactions: Transaction[] }) {
             {audit.topMerchantsByIncome.map(([merchant, total]) => (
               <div key={merchant} className="flex items-center justify-between text-sm">
                 <span className="truncate">{merchant}</span>
-                <span className="font-medium text-emerald-600">{formatCurrency(total)}</span>
+                <span className="font-medium text-lime-600 dark:text-lime-400">{formatCurrency(total)}</span>
               </div>
             ))}
           </CardContent>
@@ -426,8 +426,8 @@ export function DataAudit({ transactions }: { transactions: Transaction[] }) {
                 <TableRow key={row.date}>
                   <TableCell>{row.date}</TableCell>
                   <TableCell>{row.count}</TableCell>
-                  <TableCell className="text-rose-600">{formatCurrency(row.debit)}</TableCell>
-                  <TableCell className="text-emerald-600">{formatCurrency(row.credit)}</TableCell>
+                  <TableCell className="text-destructive">{formatCurrency(row.debit)}</TableCell>
+                  <TableCell className="text-lime-600 dark:text-lime-400">{formatCurrency(row.credit)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -454,8 +454,8 @@ export function DataAudit({ transactions }: { transactions: Transaction[] }) {
                 <TableRow key={row.week}>
                   <TableCell>{row.week}</TableCell>
                   <TableCell>{row.count}</TableCell>
-                  <TableCell className="text-rose-600">{formatCurrency(row.debit)}</TableCell>
-                  <TableCell className="text-emerald-600">{formatCurrency(row.credit)}</TableCell>
+                  <TableCell className="text-destructive">{formatCurrency(row.debit)}</TableCell>
+                  <TableCell className="text-lime-600 dark:text-lime-400">{formatCurrency(row.credit)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -482,8 +482,8 @@ export function DataAudit({ transactions }: { transactions: Transaction[] }) {
                 <TableRow key={row.month}>
                   <TableCell>{row.month}</TableCell>
                   <TableCell>{row.count}</TableCell>
-                  <TableCell className="text-rose-600">{formatCurrency(row.debit)}</TableCell>
-                  <TableCell className="text-emerald-600">{formatCurrency(row.credit)}</TableCell>
+                  <TableCell className="text-destructive">{formatCurrency(row.debit)}</TableCell>
+                  <TableCell className="text-lime-600 dark:text-lime-400">{formatCurrency(row.credit)}</TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -518,7 +518,7 @@ export function DataAudit({ transactions }: { transactions: Transaction[] }) {
                       <TableCell>{item.date}</TableCell>
                       <TableCell>{formatCurrency(item.expected)}</TableCell>
                       <TableCell>{formatCurrency(item.actual)}</TableCell>
-                      <TableCell className={item.delta >= 0 ? "text-emerald-600" : "text-rose-600"}>
+                      <TableCell className={item.delta >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}>
                         {formatCurrency(item.delta)}
                       </TableCell>
                       <TableCell className="max-w-[300px] truncate">{item.description}</TableCell>

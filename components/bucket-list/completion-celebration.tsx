@@ -66,7 +66,7 @@ export function CompletionCelebration({ itemName, onDismiss }: CompletionCelebra
             )}
             <h2 className="text-xl font-black mb-1">Dream Achieved!</h2>
             <p className="text-sm text-muted-foreground mb-3">{itemName}</p>
-            <div className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1.5 text-sm font-semibold text-emerald-600 dark:text-emerald-400">
+            <div className="inline-flex items-center gap-1.5 rounded-full bg-lime-500/10 px-3 py-1.5 text-sm font-semibold text-lime-600 dark:text-lime-400">
               <IconTrophy className="size-4" />
               +50 XP Earned
             </div>

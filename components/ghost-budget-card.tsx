@@ -84,7 +84,7 @@ export function GhostBudgetCard() {
     >
       <div className="flex items-center gap-2 mb-3">
         <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-gradient-to-br from-purple-500/15 to-violet-500/15">
-          <IconGhost className="h-4 w-4 text-purple-500" />
+          <IconGhost className="h-4 w-4 text-foreground/70" />
         </div>
         <h3 className="text-sm font-semibold">Ghost Budget</h3>
       </div>
@@ -93,7 +93,7 @@ export function GhostBudgetCard() {
         {cumulative > 0 ? (
           <div>
             <p className="text-xs text-muted-foreground mb-1">Your ghost self has</p>
-            <p className="text-2xl font-bold tabular-nums text-purple-600 dark:text-purple-400">
+            <p className="text-2xl font-bold tabular-nums text-foreground/70">
               {formatINR(cumulative)}
             </p>
             <p className="text-xs text-muted-foreground">more than you right now</p>
@@ -109,7 +109,7 @@ export function GhostBudgetCard() {
         {currentGap > 0 && (
           <div className="rounded-lg bg-purple-500/5 border border-purple-500/10 p-3">
             <p className="text-xs text-muted-foreground">This month&apos;s overspend</p>
-            <p className="text-sm font-semibold tabular-nums text-purple-600 dark:text-purple-400">
+            <p className="text-sm font-semibold tabular-nums text-foreground/70">
               {formatINR(currentGap)}
             </p>
           </div>
@@ -120,7 +120,7 @@ export function GhostBudgetCard() {
             {topOverspend.map(c => (
               <div key={c.category} className="flex items-center justify-between text-xs">
                 <span className="text-muted-foreground truncate">{c.category}</span>
-                <span className="tabular-nums text-purple-600 dark:text-purple-400 font-medium shrink-0 ml-2">
+                <span className="tabular-nums text-foreground/70 font-medium shrink-0 ml-2">
                   +{formatINR(c.gap)}
                 </span>
               </div>
@@ -136,7 +136,7 @@ export function GhostBudgetCard() {
               return (
                 <div
                   key={h.month}
-                  className="flex-1 rounded-sm bg-purple-500/30"
+                  className="flex-1 rounded-sm bg-primary/30"
                   style={{ height: `${height}px` }}
                   title={`${h.month}: ${formatINR(h.ghostSavings)}`}
                 />

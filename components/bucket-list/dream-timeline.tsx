@@ -112,7 +112,7 @@ function TimelineEntry({ item }: { item: BucketListItem }) {
       <div className="rounded-lg border border-border/40 bg-card p-3 hover:border-border/70 transition-colors">
         <div className="flex items-center justify-between gap-2 mb-1.5">
           <h4 className="text-sm font-medium truncate">{item.name}</h4>
-          <span className="text-xs font-bold tabular-nums shrink-0">{progress}%</span>
+          <span className="text-xs font-black tracking-tight tabular-nums shrink-0">{progress}%</span>
         </div>
         {/* Progress bar */}
         <div className="h-1.5 w-full overflow-hidden rounded-full bg-secondary/50 mb-1.5">

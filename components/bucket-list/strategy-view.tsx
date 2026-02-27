@@ -59,15 +59,15 @@ function parseStrategy(strategy: string): AiStrategyData | null {
 }
 
 const confidenceColors: Record<string, string> = {
-  high: "border-emerald-200 bg-emerald-500/10 text-emerald-700 dark:border-emerald-800 dark:text-emerald-400",
+  high: "border-lime-200 bg-lime-500/10 text-lime-700 dark:border-lime-800 dark:text-lime-400",
   medium: "border-amber-200 bg-amber-500/10 text-amber-700 dark:border-amber-800 dark:text-amber-400",
-  low: "border-rose-200 bg-rose-500/10 text-rose-700 dark:border-rose-800 dark:text-rose-400",
+  low: "border-destructive/20 bg-destructive/10 text-destructive",
 }
 
 const riskColors: Record<string, string> = {
-  low: "border-emerald-200 bg-emerald-500/10 text-emerald-700 dark:border-emerald-800 dark:text-emerald-400",
+  low: "border-lime-200 bg-lime-500/10 text-lime-700 dark:border-lime-800 dark:text-lime-400",
   medium: "border-amber-200 bg-amber-500/10 text-amber-700 dark:border-amber-800 dark:text-amber-400",
-  high: "border-rose-200 bg-rose-500/10 text-rose-700 dark:border-rose-800 dark:text-rose-400",
+  high: "border-destructive/20 bg-destructive/10 text-destructive",
 }
 
 /**
@@ -93,7 +93,7 @@ export function StrategyView({ strategy, savedAmount, targetAmount }: StrategyVi
   return (
     <div className="space-y-3">
       {/* Summary Card */}
-      <div className="rounded-lg bg-gradient-to-r from-primary/5 via-blue-500/5 to-violet-500/5 border border-border/40 px-3 py-2.5">
+      <div className="rounded-lg bg-gradient-to-r from-primary/5 via-primary/5 to-muted/5 border border-border/40 px-3 py-2.5">
         <div className="flex items-start gap-2">
           <IconFlame className="size-3.5 text-amber-500 mt-0.5 shrink-0" />
           <div className="min-w-0 flex-1">
@@ -120,12 +120,12 @@ export function StrategyView({ strategy, savedAmount, targetAmount }: StrategyVi
       {/* Monthly Plan */}
       <div className="rounded-lg border border-border/40 bg-muted/30 px-3 py-2.5">
         <div className="flex items-center gap-1.5 mb-1.5">
-          <IconCalendar className="size-3 text-blue-500" />
+          <IconCalendar className="size-3 text-primary" />
           <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Monthly Plan</p>
         </div>
         <p className="text-xs font-medium">
           Save{" "}
-          <span className="text-primary font-bold">{formatINR(data.monthlyPlan.amount)}</span>/mo for{" "}
+          <span className="text-primary font-black tracking-tight">{formatINR(data.monthlyPlan.amount)}</span>/mo for{" "}
           <span className="font-semibold">{data.monthlyPlan.duration}</span>{" "}
           starting <span className="font-semibold">{data.monthlyPlan.startDate}</span>
         </p>
@@ -140,9 +140,9 @@ export function StrategyView({ strategy, savedAmount, targetAmount }: StrategyVi
                   <div
                     className={`h-full rounded-full transition-all duration-500 ${
                       isReached
-                        ? "bg-emerald-500"
+                        ? "bg-lime-500"
                         : progressPercent > milestonePercent - 25
-                          ? "bg-blue-500"
+                          ? "bg-primary"
                           : ""
                     }`}
                     style={{
@@ -156,7 +156,7 @@ export function StrategyView({ strategy, savedAmount, targetAmount }: StrategyVi
                 </div>
                 <div
                   className={`size-1.5 rounded-full shrink-0 ${
-                    isReached ? "bg-emerald-500" : "bg-border"
+                    isReached ? "bg-lime-500" : "bg-border"
                   }`}
                 />
               </div>
@@ -168,7 +168,7 @@ export function StrategyView({ strategy, savedAmount, targetAmount }: StrategyVi
       {/* Milestones */}
       <div className="rounded-lg border border-border/40 px-3 py-2.5">
         <div className="flex items-center gap-1.5 mb-2">
-          <IconTrendingUp className="size-3 text-violet-500" />
+          <IconTrendingUp className="size-3 text-muted-foreground" />
           <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Milestones</p>
         </div>
         <div className="relative">
@@ -184,7 +184,7 @@ export function StrategyView({ strategy, savedAmount, targetAmount }: StrategyVi
                   <div
                     className={`size-[15px] rounded-full border-2 shrink-0 flex items-center justify-center z-10 ${
                       isCompleted
-                        ? "bg-emerald-500 border-emerald-500"
+                        ? "bg-lime-500 border-lime-500"
                         : "bg-card border-border"
                     }`}
                   >
@@ -193,11 +193,11 @@ export function StrategyView({ strategy, savedAmount, targetAmount }: StrategyVi
                   {/* Content */}
                   <div className="flex-1 min-w-0 -mt-0.5">
                     <div className="flex items-center justify-between">
-                      <span className={`text-[11px] font-bold tabular-nums ${isCompleted ? "text-emerald-600 dark:text-emerald-400" : ""}`}>
+                      <span className={`text-[11px] font-black tracking-tight tabular-nums ${isCompleted ? "text-lime-600 dark:text-lime-400" : ""}`}>
                         {milestone.percent}% -- {formatINR(milestone.amount)}
                       </span>
                       {isCompleted && (
-                        <Badge variant="outline" className="text-[8px] px-1 py-0 border-emerald-200 bg-emerald-500/10 text-emerald-700 dark:border-emerald-800 dark:text-emerald-400">
+                        <Badge variant="outline" className="text-[8px] px-1 py-0 border-lime-200 bg-lime-500/10 text-lime-700 dark:border-lime-800 dark:text-lime-400">
                           Done
                         </Badge>
                       )}
@@ -215,7 +215,7 @@ export function StrategyView({ strategy, savedAmount, targetAmount }: StrategyVi
       {data.savingTips && data.savingTips.length > 0 && (
         <div className="space-y-1.5">
           <div className="flex items-center gap-1.5 px-0.5">
-            <IconPigMoney className="size-3 text-emerald-500" />
+            <IconPigMoney className="size-3 text-lime-500" />
             <p className="text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">Saving Tips</p>
           </div>
           <div className="grid gap-1.5">
@@ -228,7 +228,7 @@ export function StrategyView({ strategy, savedAmount, targetAmount }: StrategyVi
                   </div>
                   <Badge
                     variant="outline"
-                    className="text-[9px] px-1.5 py-0 font-bold border-emerald-200 bg-emerald-500/10 text-emerald-700 dark:border-emerald-800 dark:text-emerald-400 shrink-0 whitespace-nowrap"
+                    className="text-[9px] px-1.5 py-0 font-bold border-lime-200 bg-lime-500/10 text-lime-700 dark:border-lime-800 dark:text-lime-400 shrink-0 whitespace-nowrap"
                   >
                     <IconCoin className="mr-0.5 size-2.5" />
                     {formatINR(tip.potentialSaving)}
@@ -261,7 +261,7 @@ export function StrategyView({ strategy, savedAmount, targetAmount }: StrategyVi
             </div>
             <div>
               <p className="text-[10px] text-muted-foreground/70 uppercase tracking-wider">Discount</p>
-              <p className="text-[11px] font-bold text-emerald-600 dark:text-emerald-400 mt-0.5">
+              <p className="text-[11px] font-black tracking-tight text-lime-600 dark:text-lime-400 mt-0.5">
                 {data.priceOptimization.estimatedDiscount}
               </p>
             </div>

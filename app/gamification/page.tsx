@@ -125,21 +125,21 @@ const CATEGORY_THEME: Record<BadgeCategory, {
   },
   behavioral: {
     label: "Good Habits",
-    gradient: "from-emerald-500 to-teal-500",
-    iconBg: "bg-gradient-to-br from-emerald-500/15 to-teal-500/15",
-    iconColor: "text-emerald-500",
-    glowColor: "shadow-emerald-500/20",
-    ringColor: "ring-emerald-500/25",
-    accentBg: "bg-emerald-500/8",
+    gradient: "from-lime-500 to-lime-600",
+    iconBg: "bg-gradient-to-br from-lime-500/15 to-lime-600/15",
+    iconColor: "text-lime-500",
+    glowColor: "shadow-lime-500/20",
+    ringColor: "ring-lime-500/25",
+    accentBg: "bg-lime-500/8",
   },
   skill: {
     label: "Skill Mastery",
-    gradient: "from-violet-500 to-purple-500",
-    iconBg: "bg-gradient-to-br from-violet-500/15 to-purple-500/15",
-    iconColor: "text-violet-500",
-    glowColor: "shadow-violet-500/20",
-    ringColor: "ring-violet-500/25",
-    accentBg: "bg-violet-500/8",
+    gradient: "from-slate-500 to-slate-600",
+    iconBg: "bg-muted/80 dark:bg-muted",
+    iconColor: "text-foreground/70",
+    glowColor: "shadow-muted-foreground/20",
+    ringColor: "ring-border",
+    accentBg: "bg-muted/50",
   },
 }
 
@@ -330,8 +330,8 @@ function BadgeCard({
         "absolute inset-0 pointer-events-none bg-gradient-to-br to-transparent",
         theme.gradient.includes("blue") ? "from-blue-500/5" :
         theme.gradient.includes("amber") ? "from-amber-500/5" :
-        theme.gradient.includes("emerald") ? "from-emerald-500/5" :
-        "from-violet-500/5",
+        theme.gradient.includes("lime") ? "from-lime-500/5" :
+        "from-muted/5",
       )} />
 
       <div className="relative">
@@ -883,11 +883,11 @@ export default function GamificationPage() {
                         <IconFlame className="size-3.5" stroke={2} />
                         {streak?.currentStreak ?? 0}
                       </span>
-                      <span className="inline-flex items-center gap-1 rounded-full bg-violet-500/10 text-violet-600 dark:text-violet-400 px-2.5 py-1 text-xs font-medium">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-muted/80 dark:bg-muted text-foreground/70 px-2.5 py-1 text-xs font-medium">
                         <IconTrophy className="size-3.5" stroke={2} />
                         {unlockedBadges.length}/{totalBadges}
                       </span>
-                      <span className="inline-flex items-center gap-1 rounded-full bg-blue-500/10 text-blue-600 dark:text-blue-400 px-2.5 py-1 text-xs font-medium">
+                      <span className="inline-flex items-center gap-1 rounded-full bg-muted/80 dark:bg-muted text-foreground/70 px-2.5 py-1 text-xs font-medium">
                         <IconSnowflake className="size-3.5" stroke={2} />
                         {streak?.freezeTokens ?? 0}
                         {(streak?.freezeTokens ?? 0) > 0 && (
@@ -950,7 +950,7 @@ export default function GamificationPage() {
                                     "absolute inset-y-0 left-0 rounded-full",
                                     challenge.status === "completed"
                                       ? "bg-lime-500"
-                                      : "bg-gradient-to-r from-blue-500 to-indigo-500",
+                                      : "bg-gradient-to-r from-primary to-primary/80",
                                   )}
                                   initial={{ width: 0 }}
                                   animate={{ width: `${Math.min(challenge.progress, 100)}%` }}
@@ -971,7 +971,7 @@ export default function GamificationPage() {
                                     <button
                                       onClick={() => joinMutation.mutate(challenge.challengeId)}
                                       disabled={joinMutation.isPending}
-                                      className="text-[10px] font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                                      className="text-[10px] font-semibold text-primary hover:underline"
                                     >
                                       Join
                                     </button>

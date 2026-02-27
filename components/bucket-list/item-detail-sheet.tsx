@@ -68,7 +68,7 @@ const priorityConfig: Record<string, { label: string; color: string; bg: string 
 const statusConfig: Record<string, { label: string; bg: string }> = {
   wishlist: { label: "Wishlist", bg: "bg-pink-500/10 text-pink-600 dark:text-pink-400" },
   saving: { label: "Saving", bg: "bg-blue-500/10 text-blue-600 dark:text-blue-400" },
-  completed: { label: "Completed", bg: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400" },
+  completed: { label: "Completed", bg: "bg-lime-500/10 text-lime-600 dark:text-lime-400" },
 }
 
 const FUND_PRESETS = [500, 1000, 2000, 5000]
@@ -316,7 +316,7 @@ export function ItemDetailSheet({
           {/* ─── Progress Ring ─────────────────────── */}
           <div className="flex flex-col items-center gap-3">
             <ProgressRing progress={progress}>
-              <span className="text-2xl font-bold tabular-nums">
+              <span className="text-2xl font-black tracking-tight tabular-nums">
                 {progress}%
               </span>
               <span className="text-[10px] text-muted-foreground uppercase tracking-wider">
@@ -324,11 +324,11 @@ export function ItemDetailSheet({
               </span>
             </ProgressRing>
             <p className="text-sm text-muted-foreground">
-              <span className="font-semibold text-foreground">
+              <span className="font-black tracking-tight text-foreground">
                 {formatCurrency(item.savedAmount)}
               </span>{" "}
               of{" "}
-              <span className="font-semibold text-foreground">
+              <span className="font-black tracking-tight text-foreground">
                 {formatCurrency(item.targetAmount)}
               </span>{" "}
               saved
@@ -346,7 +346,7 @@ export function ItemDetailSheet({
           {!isCompleted && remaining > 0 && (
             <div className="space-y-3">
               <div className="flex items-center gap-2">
-                <div className="flex items-center justify-center size-7 rounded-lg bg-amber-500/10">
+                <div className="flex items-center justify-center size-8 rounded-xl bg-amber-500/10">
                   <IconCoin className="size-3.5 text-amber-500" />
                 </div>
                 <h3 className="text-sm font-semibold">Quick Fund</h3>
@@ -358,8 +358,8 @@ export function ItemDetailSheet({
                   animate={{ scale: 1, opacity: 1 }}
                   className="flex flex-col items-center gap-2 py-4"
                 >
-                  <div className="size-10 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                    <IconCheck className="size-5 text-emerald-500" />
+                  <div className="size-10 rounded-full bg-lime-500/10 flex items-center justify-center">
+                    <IconCheck className="size-5 text-lime-500" />
                   </div>
                   <p className="text-xs font-semibold">Funds Added!</p>
                 </motion.div>
@@ -466,7 +466,7 @@ export function ItemDetailSheet({
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="flex items-center justify-center size-7 rounded-lg bg-blue-500/10">
+                <div className="flex items-center justify-center size-8 rounded-xl bg-blue-500/10">
                   <IconSearch className="size-3.5 text-blue-500" />
                 </div>
                 <h3 className="text-sm font-semibold">Price Comparison</h3>
@@ -493,10 +493,10 @@ export function ItemDetailSheet({
                 {item.dealAlerts.map((deal, i) => (
                   <div
                     key={i}
-                    className="flex items-center justify-between rounded-lg bg-emerald-500/10 px-3 py-2 text-xs"
+                    className="flex items-center justify-between rounded-lg bg-lime-500/10 px-3 py-2 text-xs"
                   >
                     <div className="flex items-center gap-2 min-w-0">
-                      <Badge className="bg-emerald-500 text-white text-[10px] px-1.5 py-0 shrink-0">
+                      <Badge className="bg-lime-500 text-white text-[10px] px-1.5 py-0 shrink-0">
                         {deal.discountPercent
                           ? `${deal.discountPercent}% off`
                           : "Deal"}
@@ -504,7 +504,7 @@ export function ItemDetailSheet({
                       <span className="truncate font-medium">{deal.title}</span>
                     </div>
                     <div className="flex items-center gap-2 shrink-0 ml-2">
-                      <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                      <span className="font-semibold text-lime-600 dark:text-lime-400">
                         {formatCurrency(deal.price)}
                       </span>
                       {deal.url && (
@@ -583,7 +583,7 @@ export function ItemDetailSheet({
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
-                <div className="flex items-center justify-center size-7 rounded-lg bg-amber-500/10">
+                <div className="flex items-center justify-center size-8 rounded-xl bg-amber-500/10">
                   <IconBulb className="size-3.5 text-amber-500" />
                 </div>
                 <h3 className="text-sm font-semibold">AI Strategy</h3>
@@ -657,7 +657,7 @@ export function ItemDetailSheet({
               size="sm"
               className={`flex-1 h-9 gap-1.5 text-xs ${
                 !isCompleted
-                  ? "bg-emerald-600 hover:bg-emerald-700 text-white"
+                  ? "bg-lime-600 hover:bg-lime-700 text-white"
                   : ""
               }`}
               onClick={() => onToggleComplete(item)}

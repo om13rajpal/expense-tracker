@@ -64,7 +64,7 @@ export function QuickFundSheet({ open, onOpenChange, item, onFund, isPending }: 
 
           <SheetHeader className="px-6 pt-3 pb-2">
             <SheetTitle className="flex items-center gap-2 text-base">
-              <div className="flex items-center justify-center size-8 rounded-lg bg-amber-500/10">
+              <div className="flex items-center justify-center size-8 rounded-xl bg-amber-500/10">
                 <IconCoin className="size-4 text-amber-500" />
               </div>
               Quick Fund
@@ -74,16 +74,16 @@ export function QuickFundSheet({ open, onOpenChange, item, onFund, isPending }: 
 
           <div className="px-6 pb-8 pt-2 space-y-5">
             {/* Current progress */}
-            <div className="rounded-xl bg-muted/30 p-4 space-y-2.5">
+            <div className="rounded-2xl bg-muted/30 p-4 space-y-2.5">
               <div className="flex items-center justify-between text-sm">
                 <span className="text-muted-foreground">
                   {formatINR(item.savedAmount)} <span className="text-muted-foreground/50">of</span> {formatINR(item.targetAmount)}
                 </span>
-                <span className="font-bold tabular-nums">{progress}%</span>
+                <span className="font-black tracking-tight tabular-nums">{progress}%</span>
               </div>
               <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-secondary/60">
                 <motion.div
-                  className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-blue-500 via-emerald-500 to-green-500"
+                  className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-primary via-lime-500 to-lime-400"
                   animate={{ width: `${Math.max(progress, 2)}%` }}
                   transition={{ duration: 0.5, ease: [0.25, 0.1, 0.25, 1] }}
                 />
@@ -99,8 +99,8 @@ export function QuickFundSheet({ open, onOpenChange, item, onFund, isPending }: 
                 animate={{ scale: 1, opacity: 1 }}
                 className="flex flex-col items-center gap-2 py-8"
               >
-                <div className="size-14 rounded-full bg-emerald-500/10 flex items-center justify-center">
-                  <IconCheck className="size-7 text-emerald-500" />
+                <div className="size-14 rounded-full bg-lime-500/10 flex items-center justify-center">
+                  <IconCheck className="size-7 text-lime-500" />
                 </div>
                 <p className="text-sm font-semibold">Funds Added!</p>
               </motion.div>

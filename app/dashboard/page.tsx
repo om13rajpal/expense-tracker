@@ -362,21 +362,21 @@ export default function DashboardPage() {
                           <div className="size-2 rounded-full bg-lime-600 dark:bg-lime-400" />
                           <span className="text-[11px] text-muted-foreground font-medium">Income</span>
                         </div>
-                        <p className="text-base font-bold tabular-nums text-lime-600 dark:text-lime-400">{formatCurrency(animatedIncome)}</p>
+                        <p className="text-base font-black tracking-tight tabular-nums text-lime-600 dark:text-lime-400">{formatCurrency(animatedIncome)}</p>
                       </div>
                       <div>
                         <div className="flex items-center gap-1.5 mb-0.5">
                           <div className="size-2 rounded-full bg-zinc-400 dark:bg-zinc-500" />
                           <span className="text-[11px] text-muted-foreground font-medium">Expenses</span>
                         </div>
-                        <p className="text-base font-bold tabular-nums text-foreground/70">{formatCurrency(animatedExpenses)}</p>
+                        <p className="text-base font-black tracking-tight tabular-nums text-foreground/70">{formatCurrency(animatedExpenses)}</p>
                       </div>
                       <div>
                         <div className="flex items-center gap-1.5 mb-0.5">
                           <div className="size-2 rounded-full bg-lime-500 dark:bg-lime-300" />
                           <span className="text-[11px] text-muted-foreground font-medium">Saved</span>
                         </div>
-                        <p className={`text-base font-bold tabular-nums ${netSaved >= 0 ? "text-lime-600 dark:text-lime-400" : "text-red-500 dark:text-red-400"}`}>
+                        <p className={`text-base font-black tracking-tight tabular-nums ${netSaved >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
                           {formatCurrency(netSaved)}
                         </p>
                       </div>
@@ -461,7 +461,7 @@ export default function DashboardPage() {
                     <div className="mt-auto">
                       <div className="flex items-center justify-between">
                         <span className="text-[11px] text-muted-foreground font-medium">Savings Rate</span>
-                        <span className={`text-lg font-black tabular-nums ${dailySummary.savingsRate >= 0 ? "text-lime-600 dark:text-lime-400" : "text-red-500 dark:text-red-400"}`}>
+                        <span className={`text-lg font-black tabular-nums ${dailySummary.savingsRate >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
                           {dailySummary.savingsRate}%
                         </span>
                       </div>
@@ -551,7 +551,7 @@ export default function DashboardPage() {
                           <div key={cat.category} className="flex items-center gap-3">
                             <span className={`size-2 rounded-full ${CATEGORY_COLORS[i % CATEGORY_COLORS.length]} shrink-0`} />
                             <span className="text-sm font-medium text-foreground/80 flex-1 min-w-0 truncate">{cat.category}</span>
-                            <span className="text-xs font-bold tabular-nums shrink-0">{formatCurrency(cat.amount)}</span>
+                            <span className="text-xs font-black tracking-tight tabular-nums shrink-0">{formatCurrency(cat.amount)}</span>
                             <div className="w-16 h-2 rounded-full bg-muted overflow-hidden shrink-0">
                               <motion.div
                                 className={`h-full rounded-full bg-gradient-to-r ${CATEGORY_BAR_GRADIENTS[i % CATEGORY_BAR_GRADIENTS.length]}`}
@@ -642,7 +642,7 @@ function CrossFeatureWidgets() {
       label: "Renewals",
       content: subs ? (
         <>
-          <p className="text-sm font-bold truncate">{subs.dueCount > 0 ? `${subs.dueCount} due` : "None"}</p>
+          <p className="text-sm font-black tracking-tight truncate">{subs.dueCount > 0 ? `${subs.dueCount} due` : "None"}</p>
           {subs.nearest && <p className="text-[10px] text-muted-foreground truncate">{subs.nearest.name}</p>}
         </>
       ) : <Skeleton className="h-4 w-16" />,
@@ -657,7 +657,7 @@ function CrossFeatureWidgets() {
       label: "Bucket List",
       content: bucket ? (
         <>
-          <p className="text-sm font-bold tabular-nums truncate">{fmt(bucket.monthlyAllocation)}/mo</p>
+          <p className="text-sm font-black tracking-tight tabular-nums truncate">{fmt(bucket.monthlyAllocation)}/mo</p>
           <p className="text-[10px] text-muted-foreground">{bucket.count} item{bucket.count !== 1 ? "s" : ""}</p>
         </>
       ) : <Skeleton className="h-4 w-16" />,
@@ -672,7 +672,7 @@ function CrossFeatureWidgets() {
       label: "Streak",
       content: gamification ? (
         <>
-          <p className="text-sm font-bold truncate">{gamification.levelName}</p>
+          <p className="text-sm font-black tracking-tight truncate">{gamification.levelName}</p>
           <p className="text-[10px] text-muted-foreground">{gamification.streak > 0 ? `${gamification.streak}-day` : "No streak"}</p>
         </>
       ) : <Skeleton className="h-4 w-16" />,
@@ -687,7 +687,7 @@ function CrossFeatureWidgets() {
       label: "Splits",
       content: splits ? (
         <>
-          <p className={`text-sm font-bold tabular-nums truncate ${splits.net >= 0 ? "text-lime-600 dark:text-lime-400" : "text-red-500 dark:text-red-400"}`}>
+          <p className={`text-sm font-black tracking-tight tabular-nums truncate ${splits.net >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
             {splits.net >= 0 ? `+${fmt(splits.net)}` : fmt(splits.net)}
           </p>
           <p className="text-[10px] text-muted-foreground">{splits.net >= 0 ? "Owed to you" : "You owe"}</p>

@@ -31,34 +31,34 @@ import { stagger, fadeUp, fadeUpSmall, scaleIn, numberPop, listItem } from "@/li
 
 /** Returns a Tailwind text colour class based on the health score tier (green/amber/orange/red). */
 function getScoreColor(score: number): string {
-  if (score >= 75) return "text-emerald-600"
+  if (score >= 75) return "text-lime-600 dark:text-lime-400"
   if (score >= 50) return "text-amber-500"
   if (score >= 25) return "text-orange-500"
-  return "text-rose-600"
+  return "text-destructive"
 }
 
 /** Returns a hex stroke colour for the SVG score ring based on the score tier. */
 function getScoreRingColor(score: number): string {
-  if (score >= 75) return "#10b981"
+  if (score >= 75) return "#84cc16"
   if (score >= 50) return "#f59e0b"
   if (score >= 25) return "#f97316"
-  return "#f43f5e"
+  return "hsl(var(--destructive))"
 }
 
 /** Returns an RGBA glow colour for the drop-shadow around the score ring. */
 function getScoreGlowColor(score: number): string {
-  if (score >= 75) return "rgba(16, 185, 129, 0.25)"
+  if (score >= 75) return "rgba(132, 204, 22, 0.25)"
   if (score >= 50) return "rgba(245, 158, 11, 0.2)"
   if (score >= 25) return "rgba(249, 115, 22, 0.2)"
-  return "rgba(244, 63, 94, 0.2)"
+  return "rgba(220, 38, 38, 0.2)"
 }
 
 /** Returns Tailwind badge classes (bg + text) for the score label pill. */
 function getScoreBadgeBg(score: number): string {
-  if (score >= 75) return "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400"
+  if (score >= 75) return "bg-lime-500/10 text-lime-600 dark:bg-lime-500/15 dark:text-lime-400"
   if (score >= 50) return "bg-amber-500/10 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400"
   if (score >= 25) return "bg-orange-500/10 text-orange-600 dark:bg-orange-500/15 dark:text-orange-400"
-  return "bg-rose-500/10 text-rose-600 dark:bg-rose-500/15 dark:text-rose-400"
+  return "bg-destructive/10 text-destructive dark:bg-destructive/15"
 }
 
 /** Maps a numeric score to a human-readable label (Excellent/Good/Needs Work/Critical). */
@@ -71,10 +71,10 @@ function getScoreLabel(score: number): string {
 
 /** Returns hex gradient endpoints for a breakdown bar based on its fill percentage. */
 function getBarGradient(pct: number): { from: string; to: string } {
-  if (pct >= 75) return { from: "#34d399", to: "#10b981" }
+  if (pct >= 75) return { from: "#a3e635", to: "#84cc16" }
   if (pct >= 50) return { from: "#fbbf24", to: "#f59e0b" }
   if (pct >= 25) return { from: "#fb923c", to: "#f97316" }
-  return { from: "#fb7185", to: "#f43f5e" }
+  return { from: "#f87171", to: "#dc2626" }
 }
 
 // ---------------------------------------------------------------------------
@@ -140,7 +140,7 @@ function ScoreRing({ score, size = 140 }: { score: number; size?: number }) {
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         <motion.span
           variants={numberPop}
-          className={`text-3xl font-extrabold tracking-tight tabular-nums ${getScoreColor(score)}`}
+          className={`text-3xl font-black tracking-tight tabular-nums ${getScoreColor(score)}`}
         >
           {Math.round(score)}
         </motion.span>

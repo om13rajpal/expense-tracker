@@ -72,7 +72,7 @@ const severityConfig: Record<
   critical: { icon: IconAlertCircle, className: "text-red-500" },
   warning: { icon: IconAlertTriangle, className: "text-amber-500" },
   info: { icon: IconInfoCircle, className: "text-blue-500" },
-  success: { icon: IconCircleCheck, className: "text-emerald-500" },
+  success: { icon: IconCircleCheck, className: "text-lime-500" },
 }
 
 /**
@@ -169,8 +169,8 @@ function NotificationItem({
 function EmptyState() {
   return (
     <div className="flex flex-col items-center justify-center gap-3 py-8 text-center px-4">
-      <div className="rounded-full bg-emerald-500/10 p-3">
-        <IconBellCheck className="size-5 text-emerald-500" />
+      <div className="rounded-full bg-lime-500/10 p-3">
+        <IconBellCheck className="size-5 text-lime-500" />
       </div>
       <div className="space-y-1">
         <p className="text-sm font-semibold text-foreground">

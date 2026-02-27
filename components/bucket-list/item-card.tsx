@@ -154,9 +154,9 @@ export function BucketListItemCard({
     >
       <Card
         onClick={handleCardClick}
-        className={`card-elevated overflow-hidden rounded-xl transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 group cursor-pointer ${
+        className={`card-elevated overflow-hidden rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 group cursor-pointer ${
           isCompleted
-            ? "border-emerald-500/30 bg-gradient-to-br from-emerald-500/5 to-transparent"
+            ? "border-lime-500/30 bg-gradient-to-br from-lime-500/5 to-transparent"
             : ""
         }`}
       >
@@ -196,7 +196,7 @@ export function BucketListItemCard({
 
           {/* Completed overlay */}
           {isCompleted && (
-            <div className="absolute inset-0 bg-emerald-500/15" />
+            <div className="absolute inset-0 bg-lime-500/15" />
           )}
 
           {/* Gradient overlay at bottom */}
@@ -217,7 +217,7 @@ export function BucketListItemCard({
           {/* Top-right: priority dot */}
           <div className="absolute top-2.5 right-2.5 z-[5]">
             {isCompleted ? (
-              <Badge className="bg-emerald-500 text-white text-[10px] px-1.5 py-0 gap-0.5">
+              <Badge className="bg-lime-500 text-white text-[10px] px-1.5 py-0 gap-0.5">
                 <IconCheck className="size-2.5" />
                 Done
               </Badge>
@@ -263,7 +263,7 @@ export function BucketListItemCard({
                 {formatINR(item.targetAmount)}
               </span>
               <span
-                className={`font-bold tabular-nums ml-2 shrink-0 ${progressTextColor(
+                className={`font-black tracking-tight tabular-nums ml-2 shrink-0 ${progressTextColor(
                   progress
                 )}`}
               >

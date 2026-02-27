@@ -54,18 +54,18 @@ function getStatusColor(status: PatternStatus) {
   switch (status) {
     case "active":
       return {
-        dot: "bg-emerald-500",
-        badge: "bg-emerald-100/70 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400",
+        dot: "bg-lime-500",
+        badge: "bg-lime-500/10 text-lime-700 dark:text-lime-400",
       }
     case "changed":
       return {
         dot: "bg-amber-500",
-        badge: "bg-amber-100/70 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400",
+        badge: "bg-amber-500/10 text-amber-700 dark:text-amber-400",
       }
     case "overdue":
       return {
-        dot: "bg-rose-500",
-        badge: "bg-rose-100/70 text-rose-700 dark:bg-rose-900/30 dark:text-rose-400",
+        dot: "bg-destructive",
+        badge: "bg-destructive/10 text-destructive",
       }
   }
 }
@@ -171,8 +171,8 @@ export function RecurringTransactions({ compact = false }: RecurringTransactions
       {/* Header */}
       <motion.div variants={fadeUpSmall} className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2.5">
-          <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-violet-500/10">
-            <IconRepeat className="h-4 w-4 text-violet-600 dark:text-violet-400" />
+          <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-muted/80 dark:bg-muted">
+            <IconRepeat className="h-4 w-4 text-foreground/70" />
           </div>
           <h3 className="text-sm font-semibold">Recurring Transactions</h3>
         </div>
@@ -185,16 +185,16 @@ export function RecurringTransactions({ compact = false }: RecurringTransactions
       {upcomingCount > 0 && (
         <motion.div
           variants={fadeUpSmall}
-          className="rounded-lg bg-violet-500/5 border border-violet-500/10 px-3.5 py-2.5 mb-4"
+          className="rounded-lg bg-primary/5 border border-primary/10 px-3.5 py-2.5 mb-4"
         >
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <IconCalendarDue className="h-4 w-4 text-violet-600 dark:text-violet-400" />
-              <span className="text-xs font-medium text-violet-700 dark:text-violet-300">
+              <IconCalendarDue className="h-4 w-4 text-foreground/70" />
+              <span className="text-xs font-medium text-foreground/70">
                 {upcomingCount} upcoming in next 7 days
               </span>
             </div>
-            <span className="text-sm font-bold tabular-nums text-violet-700 dark:text-violet-300">
+            <span className="text-sm font-black tracking-tight tabular-nums text-foreground/70">
               {formatCurrency(upcomingTotal)}
             </span>
           </div>
@@ -229,7 +229,7 @@ export function RecurringTransactions({ compact = false }: RecurringTransactions
                     {pattern.isSubscription && (
                       <Badge
                         variant="outline"
-                        className="text-[9px] px-1 py-0 border-violet-500/30 text-violet-600 dark:text-violet-400"
+                        className="text-[9px] px-1 py-0 border-primary/30 text-muted-foreground"
                       >
                         Sub
                       </Badge>
@@ -279,7 +279,7 @@ export function RecurringTransactions({ compact = false }: RecurringTransactions
           <span className="text-xs text-muted-foreground">
             Total recurring monthly estimate
           </span>
-          <span className="text-sm font-bold tabular-nums">
+          <span className="text-sm font-black tracking-tight tabular-nums">
             {formatCurrency(
               patterns.reduce((sum, p) => {
                 // Normalize to monthly

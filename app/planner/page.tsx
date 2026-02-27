@@ -773,7 +773,7 @@ export default function PlannerPage() {
                       const alloc = goalAllocations[goal.name] || 0
                       return (
                         <div key={goal.name} className="flex items-center gap-2">
-                          <IconTarget className="h-3.5 w-3.5 text-violet-500 shrink-0" />
+                          <IconTarget className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
                           <span className="text-xs text-muted-foreground truncate flex-1 min-w-0">{goal.name}</span>
                           <div className="relative w-24 shrink-0">
                             <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[11px] text-muted-foreground">₹</span>
@@ -1340,7 +1340,7 @@ function PlannerAiSection() {
   const allocBuckets = [
     { label: "Needs", pct: data.allocationReview.needsPct, target: 50, color: "bg-blue-500", trackColor: "bg-blue-100 dark:bg-blue-900/30", textColor: "text-blue-600 dark:text-blue-400" },
     { label: "Wants", pct: data.allocationReview.wantsPct, target: 30, color: "bg-amber-500", trackColor: "bg-amber-100 dark:bg-amber-900/30", textColor: "text-amber-600 dark:text-amber-400" },
-    { label: "Investments", pct: data.allocationReview.investmentsPct, target: 12, color: "bg-indigo-500", trackColor: "bg-indigo-100 dark:bg-indigo-900/30", textColor: "text-indigo-600 dark:text-indigo-400" },
+    { label: "Investments", pct: data.allocationReview.investmentsPct, target: 12, color: "bg-primary", trackColor: "bg-primary/10 dark:bg-primary/20", textColor: "text-foreground/70" },
     { label: "Savings", pct: data.allocationReview.savingsPct, target: 8, color: "bg-lime-500", trackColor: "bg-lime-100 dark:bg-lime-900/30", textColor: "text-lime-600 dark:text-lime-400" },
   ]
 

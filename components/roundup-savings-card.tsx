@@ -74,7 +74,7 @@ export function RoundupSavingsCard() {
     >
       <div className="flex items-center gap-2 mb-3">
         <div className="flex items-center justify-center h-7 w-7 rounded-lg bg-gradient-to-br from-emerald-500/15 to-teal-500/15">
-          <IconCoinRupee className="h-4 w-4 text-emerald-500" />
+          <IconCoinRupee className="h-4 w-4 text-lime-500" />
         </div>
         <h3 className="text-sm font-semibold">Smart Roundup Savings</h3>
       </div>
@@ -82,7 +82,7 @@ export function RoundupSavingsCard() {
       <div className="space-y-3">
         <div>
           <p className="text-xs text-muted-foreground mb-1">If you rounded up every expense to the nearest 100</p>
-          <p className="text-2xl font-bold tabular-nums text-emerald-600 dark:text-emerald-400">
+          <p className="text-2xl font-bold tabular-nums text-lime-600 dark:text-lime-400">
             {formatINR(data.totalRoundup)}
           </p>
           <p className="text-xs text-muted-foreground">
@@ -96,7 +96,7 @@ export function RoundupSavingsCard() {
             {data.topRoundups.slice(0, 3).map((r, i) => (
               <div key={i} className="flex items-center justify-between text-xs">
                 <span className="text-muted-foreground truncate">{r.description}</span>
-                <span className="tabular-nums text-emerald-600 dark:text-emerald-400 font-medium shrink-0 ml-2">
+                <span className="tabular-nums text-lime-600 dark:text-lime-400 font-medium shrink-0 ml-2">
                   +{formatINR(r.roundup)}
                 </span>
               </div>

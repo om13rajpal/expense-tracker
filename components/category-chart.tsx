@@ -142,7 +142,7 @@ export function CategoryChart({ data = [] }: { data?: CategoryData[] }) {
                 className="flex items-center gap-2 rounded-md p-1.5"
               >
                 <div
-                  className="h-2.5 w-2.5 rounded-sm shrink-0"
+                  className="size-2.5 rounded-full shrink-0"
                   style={{ backgroundColor: COLORS[index % COLORS.length] }}
                 />
                 <div className="flex-1 truncate">

@@ -20,8 +20,8 @@ import { cn } from "@/lib/utils"
 const variantStyles = {
   info: "border-blue-200 bg-blue-50/80 text-blue-800 dark:border-blue-900 dark:bg-blue-950/40 dark:text-blue-300",
   warning: "border-amber-200 bg-amber-50/80 text-amber-800 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-300",
-  success: "border-emerald-200 bg-emerald-50/80 text-emerald-800 dark:border-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300",
-  error: "border-rose-200 bg-rose-50/80 text-rose-800 dark:border-rose-900 dark:bg-rose-950/40 dark:text-rose-300",
+  success: "border-lime-200 bg-lime-50/80 text-lime-800 dark:border-lime-900 dark:bg-lime-950/40 dark:text-lime-300",
+  error: "border-destructive/20 bg-destructive/5 text-destructive dark:border-destructive/30 dark:bg-destructive/10",
 }
 
 /** Maps each banner variant to its default Tabler icon component. */

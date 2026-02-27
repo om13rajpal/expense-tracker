@@ -3,7 +3,7 @@
  *
  * Displays real-time pricing data fetched from web searches via Perplexity Sonar.
  * The panel shows:
- * - **Deal alerts** — highlighted in emerald with discount percentages and external links
+ * - **Deal alerts** — highlighted in lime with discount percentages and external links
  * - **Price comparisons** — list of prices from various retailers with source links
  * - **Freshness indicator** — shows when prices were last checked (e.g., "2h ago")
  * - **Refresh button** — triggers a new price search
@@ -59,7 +59,7 @@ function timeAgo(dateStr: string): string {
 /**
  * Renders a price comparison panel within a bucket list item card.
  *
- * Shows deal alerts prominently with emerald highlighting, followed by a list
+ * Shows deal alerts prominently with lime highlighting, followed by a list
  * of prices from different sources. Each entry can link to the original retailer page.
  * Returns null when there is no price data to display.
  *
@@ -107,10 +107,10 @@ export function PricePanel({
           {deals.map((deal, i) => (
             <div
               key={i}
-              className="flex items-center justify-between rounded-md bg-emerald-500/10 px-2.5 py-1.5 text-xs"
+              className="flex items-center justify-between rounded-md bg-lime-500/10 px-2.5 py-1.5 text-xs"
             >
               <div className="flex items-center gap-2 min-w-0">
-                <Badge className="bg-emerald-500 text-white text-[10px] px-1.5 py-0">
+                <Badge className="bg-lime-500 text-white text-[10px] px-1.5 py-0">
                   {deal.discountPercent
                     ? `${deal.discountPercent}% off`
                     : "Deal"}
@@ -118,7 +118,7 @@ export function PricePanel({
                 <span className="truncate font-medium">{deal.title}</span>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                <span className="font-semibold text-lime-600 dark:text-lime-400">
                   {formatINR(deal.price)}
                 </span>
                 {deal.url && (

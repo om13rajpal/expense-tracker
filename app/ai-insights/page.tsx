@@ -483,8 +483,8 @@ function SpendingDashboard({
           <div className="grid flex-1 grid-cols-2 gap-3">
             <StatTile label="Income" value={data.summary.income} color="text-lime-600 dark:text-lime-400" />
             <StatTile label="Expenses" value={data.summary.expenses} color="text-destructive" />
-            <StatTile label="Savings" value={data.summary.savings} color="text-blue-600 dark:text-blue-400" />
-            <StatTile label="Savings Rate" value={data.summary.savingsRate} isPercent color="text-purple-600 dark:text-purple-400" />
+            <StatTile label="Savings" value={data.summary.savings} color="text-lime-600 dark:text-lime-400" />
+            <StatTile label="Savings Rate" value={data.summary.savingsRate} isPercent color="text-foreground/70" />
           </div>
         </div>
         {data.summary.verdict && (
@@ -795,7 +795,7 @@ function WeeklyBudgetDashboard({
         <div className="mt-3 grid grid-cols-1 sm:grid-cols-3 gap-3">
           <StatTile label="Remaining" value={data.remaining} color={data.remaining >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"} />
           <StatTile label="Daily Limit" value={data.dailyLimit} color="text-blue-600 dark:text-blue-400" />
-          <StatTile label="Days Left" value={data.daysRemaining} color="text-purple-600 dark:text-purple-400" isRaw />
+          <StatTile label="Days Left" value={data.daysRemaining} color="text-foreground/70" isRaw />
         </div>
       </div>
 

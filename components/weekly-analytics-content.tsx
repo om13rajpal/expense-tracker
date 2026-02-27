@@ -159,7 +159,7 @@ export function WeeklyAnalyticsContent({ transactions }: WeeklyAnalyticsContentP
 
   if (availableWeeks.length === 0) {
     return (
-      <div className="rounded-xl border border-border/60 bg-card p-10 text-center text-sm text-muted-foreground">
+      <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-10 text-center text-sm text-muted-foreground">
         No weekly data available yet. Add transactions to see weekly analytics.
       </div>
     )
@@ -169,7 +169,7 @@ export function WeeklyAnalyticsContent({ transactions }: WeeklyAnalyticsContentP
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h2 className="text-lg font-semibold">{weeklyMetrics.weekLabel}</h2>
+          <h2 className="text-lg font-black tracking-tight">{weeklyMetrics.weekLabel}</h2>
           <p className="text-xs text-muted-foreground">
             {formatWeekDateRange(selectedWeek.year, selectedWeek.weekNumber)}
           </p>
@@ -227,39 +227,40 @@ export function WeeklyAnalyticsContent({ transactions }: WeeklyAnalyticsContentP
       />
 
       {/* Unified stat bar */}
-      <div className="rounded-xl border border-border/60 bg-card divide-x divide-border/40 grid grid-cols-4">
+      <div className="rounded-2xl border border-border bg-card relative overflow-hidden divide-x divide-border/40 grid grid-cols-4">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
         <div className="px-5 py-3">
-          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Income</p>
-          <p className="text-lg font-semibold text-primary tabular-nums mt-0.5">
+          <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">Income</p>
+          <p className="text-lg font-black tracking-tight text-lime-600 dark:text-lime-400 tabular-nums mt-0.5">
             {formatCurrency(weeklyMetrics.totalIncome)}
           </p>
-          <p className="text-[10px] text-muted-foreground">{weeklyMetrics.incomeTransactionCount} entries</p>
+          <p className="text-[10px] text-muted-foreground/70">{weeklyMetrics.incomeTransactionCount} entries</p>
         </div>
         <div className="px-5 py-3">
-          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Expenses</p>
-          <p className="text-lg font-semibold tabular-nums mt-0.5">
+          <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">Expenses</p>
+          <p className="text-lg font-black tracking-tight tabular-nums mt-0.5">
             {formatCurrency(weeklyMetrics.totalExpenses)}
           </p>
-          <p className="text-[10px] text-muted-foreground">{weeklyMetrics.expenseTransactionCount} entries</p>
+          <p className="text-[10px] text-muted-foreground/70">{weeklyMetrics.expenseTransactionCount} entries</p>
         </div>
         <div className="px-5 py-3">
-          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Net Change</p>
-          <p className={`text-lg font-semibold tabular-nums mt-0.5 ${(weeklyMetrics.totalIncome - weeklyMetrics.totalExpenses) >= 0 ? "text-primary" : "text-destructive"}`}>
+          <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">Net Change</p>
+          <p className={`text-lg font-black tracking-tight tabular-nums mt-0.5 ${(weeklyMetrics.totalIncome - weeklyMetrics.totalExpenses) >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
             {(weeklyMetrics.totalIncome - weeklyMetrics.totalExpenses) >= 0 ? "+" : ""}{formatCurrency(weeklyMetrics.totalIncome - weeklyMetrics.totalExpenses)}
           </p>
-          <p className="text-[10px] text-muted-foreground">Balance change this week</p>
+          <p className="text-[10px] text-muted-foreground/70">Balance change this week</p>
         </div>
         <div className="px-5 py-3">
-          <p className="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Avg Daily</p>
-          <p className="text-lg font-semibold tabular-nums mt-0.5">
+          <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">Avg Daily</p>
+          <p className="text-lg font-black tracking-tight tabular-nums mt-0.5">
             {formatCurrency(weeklyMetrics.averageDailySpend)}
           </p>
-          <p className="text-[10px] text-muted-foreground">{weeklyMetrics.daysInWeek} active days</p>
+          <p className="text-[10px] text-muted-foreground/70">{weeklyMetrics.daysInWeek} active days</p>
         </div>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-2">
-        <div className="rounded-xl border border-border/60 bg-card p-5">
+        <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5">
           <div className="mb-4">
             <h3 className="text-sm font-semibold">Daily Breakdown</h3>
             <p className="text-xs text-muted-foreground">Income vs expenses by day</p>
@@ -277,11 +278,13 @@ export function WeeklyAnalyticsContent({ transactions }: WeeklyAnalyticsContentP
               <Tooltip
                 formatter={(value: number) => formatCurrency(value)}
                 contentStyle={{
-                  borderRadius: 10,
+                  borderRadius: 16,
                   fontSize: 12,
                   border: "1px solid var(--border)",
                   background: "var(--card)",
                   color: "var(--card-foreground)",
+                  backdropFilter: "blur(24px)",
+                  boxShadow: "0 8px 32px rgba(0,0,0,0.12)",
                 }}
                 cursor={{ fill: "var(--muted)", opacity: 0.3 }}
               />
@@ -291,16 +294,16 @@ export function WeeklyAnalyticsContent({ transactions }: WeeklyAnalyticsContentP
           </ResponsiveContainer>
           <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border/30">
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <div className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: CHART_INCOME }} />
+              <div className="size-2.5 rounded-full" style={{ backgroundColor: CHART_INCOME }} />
               Income
             </div>
             <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <div className="h-2.5 w-2.5 rounded-sm" style={{ backgroundColor: CHART_EXPENSE }} />
+              <div className="size-2.5 rounded-full" style={{ backgroundColor: CHART_EXPENSE }} />
               Expenses
             </div>
           </div>
         </div>
-        <div className="rounded-xl border border-border/60 bg-card p-5">
+        <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5">
           <div className="mb-4">
             <h3 className="text-sm font-semibold">Top Categories</h3>
             <p className="text-xs text-muted-foreground">Highest weekly spend areas</p>
@@ -310,7 +313,7 @@ export function WeeklyAnalyticsContent({ transactions }: WeeklyAnalyticsContentP
               categoryBreakdown.map((item) => (
                 <div key={item.category} className="flex items-center justify-between">
                   <span className="text-sm">{item.category}</span>
-                  <span className="text-sm font-semibold tabular-nums">{formatCurrency(item.amount)}</span>
+                  <span className="text-sm font-black tracking-tight tabular-nums">{formatCurrency(item.amount)}</span>
                 </div>
               ))
             ) : (
@@ -320,7 +323,7 @@ export function WeeklyAnalyticsContent({ transactions }: WeeklyAnalyticsContentP
         </div>
       </div>
 
-      <div className="rounded-xl border border-border/60 bg-card p-5">
+      <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5">
         <div className="mb-4">
           <h3 className="text-sm font-semibold">Top Expenses</h3>
           <p className="text-xs text-muted-foreground">Largest transactions this week</p>
@@ -335,7 +338,7 @@ export function WeeklyAnalyticsContent({ transactions }: WeeklyAnalyticsContentP
                     {txn.merchant} · {txn.category}
                   </p>
                 </div>
-                <span className="text-sm font-semibold tabular-nums">
+                <span className="text-sm font-black tracking-tight tabular-nums">
                   {formatCurrency(txn.amount)}
                 </span>
               </div>

@@ -133,8 +133,8 @@ export default function SharePage() {
                     className={cn(
                       "rounded-xl border p-4",
                       isPositive
-                        ? "border-emerald-500/20 bg-emerald-500/5"
-                        : "border-red-500/20 bg-red-500/5"
+                        ? "border-lime-500/20 bg-lime-500/5"
+                        : "border-destructive/20 bg-destructive/5"
                     )}
                   >
                     <div className="flex items-center justify-between">
@@ -143,8 +143,8 @@ export default function SharePage() {
                         className={cn(
                           "text-sm font-semibold",
                           isPositive
-                            ? "text-emerald-600 dark:text-emerald-400"
-                            : "text-red-600 dark:text-red-400"
+                            ? "text-lime-600 dark:text-lime-400"
+                            : "text-destructive"
                         )}
                       >
                         {isPositive
@@ -176,8 +176,8 @@ export default function SharePage() {
                       className={cn(
                         "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
                         isExpense
-                          ? "bg-blue-500/10 text-blue-600 dark:text-blue-400"
-                          : "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
+                          ? "bg-muted/80 dark:bg-muted text-muted-foreground"
+                          : "bg-lime-500/10 text-lime-600 dark:text-lime-400"
                       )}
                     >
                       {isExpense ? (

@@ -313,10 +313,10 @@ const CATEGORY_CONFIG: Record<string, { color: string; ring: string; bg: string;
     icon: IconPlane,
   },
   House: {
-    color: "text-violet-600 dark:text-violet-400",
-    ring: "stroke-violet-500",
-    bg: "bg-violet-500/10",
-    border: "border-violet-500/20",
+    color: "text-primary",
+    ring: "stroke-primary",
+    bg: "bg-primary/10",
+    border: "border-primary/20",
     icon: IconHomeDollar,
   },
   Education: {
@@ -393,7 +393,7 @@ function ProgressRing({
         />
       </svg>
       <div className="absolute flex flex-col items-center">
-        <span className="text-xs font-bold tabular-nums">{Math.round(clamped)}%</span>
+        <span className="text-xs font-black tracking-tight tabular-nums">{Math.round(clamped)}%</span>
       </div>
     </div>
   )
@@ -945,12 +945,12 @@ export default function GoalsPage() {
                         <motion.div
                           initial={{ opacity: 0, y: -8 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="rounded-xl border border-blue-500/20 bg-gradient-to-r from-blue-500/5 via-indigo-500/5 to-violet-500/5 px-4 py-3"
+                          className="rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/5 via-lime-500/5 to-primary/5 px-4 py-3"
                         >
                           <div className="flex items-center justify-between gap-3">
                             <div className="flex items-center gap-2.5">
-                              <div className="flex items-center justify-center size-8 rounded-lg bg-blue-500/10">
-                                <IconLink className="size-4 text-blue-500" />
+                              <div className="flex items-center justify-center size-8 rounded-xl bg-lime-500/10">
+                                <IconLink className="size-4 text-lime-600 dark:text-lime-400" />
                               </div>
                               <div>
                                 <p className="text-sm font-semibold">
@@ -1034,7 +1034,7 @@ export default function GoalsPage() {
                                         className={`text-[9px] px-1.5 py-0 font-medium ${
                                           goal.onTrack
                                             ? "border-lime-200 bg-lime-500/10 text-lime-700 dark:border-lime-800 dark:text-lime-400"
-                                            : "border-rose-200 bg-rose-500/10 text-rose-700 dark:border-rose-800 dark:text-rose-400"
+                                            : "border-destructive/20 bg-destructive/10 text-destructive"
                                         }`}
                                       >
                                         {goal.onTrack ? "On Track" : "Behind"}
@@ -1096,12 +1096,12 @@ export default function GoalsPage() {
                         <motion.div
                           initial={{ opacity: 0, y: -8 }}
                           animate={{ opacity: 1, y: 0 }}
-                          className="rounded-xl border border-blue-500/20 bg-gradient-to-r from-blue-500/5 via-indigo-500/5 to-violet-500/5 px-4 py-3"
+                          className="rounded-2xl border border-primary/20 bg-gradient-to-r from-primary/5 via-lime-500/5 to-primary/5 px-4 py-3"
                         >
                           <div className="flex items-center justify-between gap-3">
                             <div className="flex items-center gap-2.5">
-                              <div className="flex items-center justify-center size-8 rounded-lg bg-blue-500/10">
-                                <IconLink className="size-4 text-blue-500" />
+                              <div className="flex items-center justify-center size-8 rounded-xl bg-lime-500/10">
+                                <IconLink className="size-4 text-lime-600 dark:text-lime-400" />
                               </div>
                               <div>
                                 <p className="text-sm font-semibold">
@@ -1127,7 +1127,7 @@ export default function GoalsPage() {
                       {goals.length === 0 ? (
                         <div className="rounded-2xl border border-border bg-card relative overflow-hidden">
                           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-                          <div className="bg-gradient-to-br from-primary/5 via-blue-500/5 to-violet-500/5">
+                          <div className="bg-gradient-to-br from-primary/5 via-lime-500/5 to-primary/5">
                             <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
                               <div className="relative mb-6">
                                 <div className="absolute inset-0 rounded-full bg-primary/10 blur-xl scale-150" />
@@ -1135,7 +1135,7 @@ export default function GoalsPage() {
                                   <IconTarget className="h-10 w-10 text-primary" />
                                 </div>
                               </div>
-                              <h3 className="text-lg font-bold text-foreground">
+                              <h3 className="text-lg font-black tracking-tight text-foreground">
                                 Set Your First Savings Goal
                               </h3>
                               <p className="mt-2 text-sm text-muted-foreground max-w-sm leading-relaxed">
@@ -1212,7 +1212,7 @@ export default function GoalsPage() {
                                             className={`text-[11px] px-2 py-0.5 font-medium ${
                                               goal.onTrack
                                                 ? "border-lime-200 bg-lime-500/10 text-lime-700 dark:border-lime-800 dark:text-lime-400"
-                                                : "border-rose-200 bg-rose-500/10 text-rose-700 dark:border-rose-800 dark:text-rose-400"
+                                                : "border-destructive/20 bg-destructive/10 text-destructive"
                                             }`}
                                           >
                                             {goal.onTrack ? (
@@ -1224,7 +1224,7 @@ export default function GoalsPage() {
                                           {hasLinkedConfig && (
                                             <Badge
                                               variant="outline"
-                                              className="text-[11px] px-1.5 py-0.5 font-medium border-blue-200 bg-blue-500/10 text-blue-700 dark:border-blue-800 dark:text-blue-400"
+                                              className="text-[11px] px-1.5 py-0.5 font-medium border-lime-200 bg-lime-500/10 text-lime-700 dark:border-lime-800 dark:text-lime-400"
                                             >
                                               <IconLink className="mr-0.5 h-3 w-3" /> Linked
                                             </Badge>
@@ -1288,7 +1288,7 @@ export default function GoalsPage() {
                                             <span>Manual: {formatCurrency(goal.currentAmount)}</span>
                                           </div>
                                           <div className="flex items-center gap-1">
-                                            <IconLink className="h-3 w-3 shrink-0 text-blue-500" />
+                                            <IconLink className="h-3 w-3 shrink-0 text-lime-600 dark:text-lime-400" />
                                             <span>Auto-linked: {formatCurrency(autoLinked)}</span>
                                           </div>
                                         </div>
@@ -1384,7 +1384,7 @@ export default function GoalsPage() {
                                         onClick={() => toggleExpandedGoal(goal.id)}
                                         className="flex items-center gap-1.5 text-[11px] font-medium text-muted-foreground hover:text-foreground transition-colors w-full"
                                       >
-                                        <IconLink className="h-3 w-3 text-blue-500" />
+                                        <IconLink className="h-3 w-3 text-lime-600 dark:text-lime-400" />
                                         <span>
                                           {isExpanded ? "Hide" : "Show"} {linkedTxns.length} linked transaction{linkedTxns.length !== 1 ? "s" : ""}
                                         </span>
@@ -1424,7 +1424,7 @@ export default function GoalsPage() {
                                                         </span>
                                                         <Badge
                                                           variant="outline"
-                                                          className="text-[9px] px-1 py-0 font-normal border-blue-200/50 text-blue-600 dark:text-blue-400"
+                                                          className="text-[9px] px-1 py-0 font-normal border-lime-200/50 text-lime-600 dark:text-lime-400"
                                                         >
                                                           {txn.matchReason}
                                                         </Badge>
@@ -1505,7 +1505,7 @@ export default function GoalsPage() {
                             </div>
                             <div className="px-5 py-4 max-sm:border-t max-sm:border-border">
                               <div className="flex items-center gap-1.5 mb-1">
-                                <IconCalendarEvent className="h-3.5 w-3.5 text-blue-500" />
+                                <IconCalendarEvent className="h-3.5 w-3.5 text-muted-foreground" />
                                 <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest">Years to Goal</p>
                               </div>
                               <p className="text-lg font-black tracking-tight tabular-nums">
@@ -1517,7 +1517,7 @@ export default function GoalsPage() {
                             </div>
                             <div className="px-5 py-4 max-sm:border-t max-sm:border-border">
                               <div className="flex items-center gap-1.5 mb-1">
-                                <IconCash className="h-3.5 w-3.5 text-violet-500" />
+                                <IconCash className="h-3.5 w-3.5 text-muted-foreground" />
                                 <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest">Monthly Required</p>
                               </div>
                               <p className="text-lg font-black tracking-tight tabular-nums">{formatCompact(projections.fire.monthlyRequired)}</p>
@@ -2116,7 +2116,7 @@ export default function GoalsPage() {
                 {formData.targetDate && (
                   <p className={`text-[11px] font-medium ${
                     formatTimeline(formData.targetDate) === "Date is in the past"
-                      ? "text-rose-500"
+                      ? "text-destructive"
                       : "text-muted-foreground"
                   }`}>
                     <IconClockHour4 className="inline h-3 w-3 mr-0.5 -mt-px" />
@@ -2250,7 +2250,7 @@ export default function GoalsPage() {
                 {formData.targetDate && (
                   <p className={`text-[11px] font-medium ${
                     formatTimeline(formData.targetDate) === "Date is in the past"
-                      ? "text-rose-500"
+                      ? "text-destructive"
                       : "text-muted-foreground"
                   }`}>
                     <IconClockHour4 className="inline h-3 w-3 mr-0.5 -mt-px" />
@@ -2431,8 +2431,8 @@ export default function GoalsPage() {
             </Button>
 
             {(linkCategories.length > 0 || linkKeywords.trim().length > 0) && (
-              <div className="rounded-lg bg-blue-500/5 border border-blue-500/20 px-3 py-2">
-                <p className="text-[11px] font-medium text-blue-600 dark:text-blue-400 mb-1">
+              <div className="rounded-lg bg-lime-500/5 border border-lime-500/20 px-3 py-2">
+                <p className="text-[11px] font-medium text-lime-600 dark:text-lime-400 mb-1">
                   Current linking config
                 </p>
                 {linkCategories.length > 0 && (
@@ -2493,7 +2493,7 @@ export default function GoalsPage() {
         <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
-              <IconLink className="h-4 w-4 text-blue-500" />
+              <IconLink className="h-4 w-4 text-lime-600 dark:text-lime-400" />
               Review Transaction Links
             </DialogTitle>
             <DialogDescription>
@@ -2540,7 +2540,7 @@ export default function GoalsPage() {
                             </Badge>
                             <Badge
                               variant="outline"
-                              className="text-[9px] px-1 py-0 font-normal border-blue-200/50 text-blue-600 dark:text-blue-400"
+                              className="text-[9px] px-1 py-0 font-normal border-lime-200/50 text-lime-600 dark:text-lime-400"
                             >
                               {suggestion.matchReason}
                             </Badge>

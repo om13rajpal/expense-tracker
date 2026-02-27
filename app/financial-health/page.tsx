@@ -192,13 +192,13 @@ const EMPTY_DEBT_FORM = {
 /**
  * Returns a Tailwind text color class based on the financial health score tier.
  * @param score - Financial health score from 0 to 100.
- * @returns Tailwind color class string (red for poor, amber for fair, emerald for good).
+ * @returns Tailwind color class string (destructive for poor, amber for fair, lime for good).
  */
 function getScoreColor(score: number): string {
-  if (score >= 75) return "text-emerald-600"
+  if (score >= 75) return "text-lime-600 dark:text-lime-400"
   if (score >= 50) return "text-amber-500"
   if (score >= 25) return "text-orange-500"
-  return "text-rose-600"
+  return "text-destructive"
 }
 
 /**
@@ -207,7 +207,7 @@ function getScoreColor(score: number): string {
  * @returns CSS color string for the SVG ring stroke.
  */
 function getScoreRingColor(score: number): string {
-  if (score >= 75) return "#10b981"
+  if (score >= 75) return "#84cc16"
   if (score >= 50) return "#f59e0b"
   if (score >= 25) return "#f97316"
   return "#f43f5e"
@@ -219,7 +219,7 @@ function getScoreRingColor(score: number): string {
  * @returns CSS rgba color string for the glow effect.
  */
 function getScoreGlowColor(score: number): string {
-  if (score >= 75) return "rgba(16, 185, 129, 0.25)"
+  if (score >= 75) return "rgba(132, 204, 22, 0.25)"
   if (score >= 50) return "rgba(245, 158, 11, 0.2)"
   if (score >= 25) return "rgba(249, 115, 22, 0.2)"
   return "rgba(244, 63, 94, 0.2)"
@@ -231,10 +231,10 @@ function getScoreGlowColor(score: number): string {
  * @returns Tailwind background color class string.
  */
 function getScoreBadgeBg(score: number): string {
-  if (score >= 75) return "bg-emerald-500/10 text-emerald-600 dark:bg-emerald-500/15 dark:text-emerald-400"
+  if (score >= 75) return "bg-lime-500/10 text-lime-600 dark:bg-lime-500/15 dark:text-lime-400"
   if (score >= 50) return "bg-amber-500/10 text-amber-600 dark:bg-amber-500/15 dark:text-amber-400"
   if (score >= 25) return "bg-orange-500/10 text-orange-600 dark:bg-orange-500/15 dark:text-orange-400"
-  return "bg-rose-500/10 text-rose-600 dark:bg-rose-500/15 dark:text-rose-400"
+  return "bg-destructive/10 text-destructive dark:bg-destructive/15"
 }
 
 /**
@@ -255,10 +255,10 @@ function getScoreLabel(score: number): string {
  * @returns Object with `from`, `to` hex colors and a Tailwind `className` for the gradient.
  */
 function getBarGradient(pct: number): { from: string; to: string; className: string } {
-  if (pct >= 75) return { from: "#34d399", to: "#10b981", className: "emerald" }
+  if (pct >= 75) return { from: "#84cc16", to: "#65a30d", className: "lime" }
   if (pct >= 50) return { from: "#fbbf24", to: "#f59e0b", className: "amber" }
   if (pct >= 25) return { from: "#fb923c", to: "#f97316", className: "orange" }
-  return { from: "#fb7185", to: "#f43f5e", className: "rose" }
+  return { from: "#fb7185", to: "#f43f5e", className: "destructive" }
 }
 
 /**
@@ -1787,10 +1787,10 @@ export default function FinancialHealthPage() {
                         <span className="font-medium text-foreground/90">Consistency</span>
                         <span className={`text-sm font-black tracking-tight tabular-nums ${
                           stabilityPercent >= 70
-                            ? "text-emerald-600"
+                            ? "text-lime-600 dark:text-lime-400"
                             : stabilityPercent >= 40
                               ? "text-amber-600"
-                              : "text-rose-600"
+                              : "text-destructive"
                         }`}>
                           {stabilityPercent}%
                         </span>
@@ -1802,14 +1802,14 @@ export default function FinancialHealthPage() {
                               <stop
                                 offset="0%"
                                 stopColor={
-                                  stabilityPercent >= 70 ? "#34d399" : stabilityPercent >= 40 ? "#fbbf24" : "#fb7185"
+                                  stabilityPercent >= 70 ? "#a3e635" : stabilityPercent >= 40 ? "#fbbf24" : "#fb7185"
                                 }
                                 stopOpacity={0.7}
                               />
                               <stop
                                 offset="100%"
                                 stopColor={
-                                  stabilityPercent >= 70 ? "#10b981" : stabilityPercent >= 40 ? "#f59e0b" : "#f43f5e"
+                                  stabilityPercent >= 70 ? "#84cc16" : stabilityPercent >= 40 ? "#f59e0b" : "#f43f5e"
                                 }
                               />
                             </linearGradient>
@@ -2012,10 +2012,10 @@ export default function FinancialHealthPage() {
                       <span className="text-xs font-medium text-muted-foreground">Progress</span>
                       <span className={`text-xs font-black tracking-tight tabular-nums ${
                         metrics.emergencyFundMonths >= metrics.emergencyFundTarget
-                          ? "text-emerald-600"
+                          ? "text-lime-600 dark:text-lime-400"
                           : metrics.emergencyFundMonths >= 3
                             ? "text-amber-600"
-                            : "text-rose-600"
+                            : "text-destructive"
                       }`}>
                         {Math.min(
                           Math.round((metrics.emergencyFundMonths / metrics.emergencyFundTarget) * 100),
@@ -2031,7 +2031,7 @@ export default function FinancialHealthPage() {
                               offset="0%"
                               stopColor={
                                 metrics.emergencyFundMonths >= metrics.emergencyFundTarget
-                                  ? "#34d399"
+                                  ? "#a3e635"
                                   : metrics.emergencyFundMonths >= 3
                                     ? "#fbbf24"
                                     : "#fb7185"
@@ -2042,7 +2042,7 @@ export default function FinancialHealthPage() {
                               offset="100%"
                               stopColor={
                                 metrics.emergencyFundMonths >= metrics.emergencyFundTarget
-                                  ? "#10b981"
+                                  ? "#84cc16"
                                   : metrics.emergencyFundMonths >= 3
                                     ? "#f59e0b"
                                     : "#f43f5e"
