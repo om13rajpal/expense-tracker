@@ -86,7 +86,7 @@ export function WidgetPicker({ activeWidgetIds, onAdd }: WidgetPickerProps) {
             if (widgets.length === 0) return null
             return (
               <div key={cat}>
-                <h3 className="text-[11px] font-semibold text-muted-foreground uppercase tracking-widest mb-3">
+                <h3 className="text-[13px] font-medium text-neutral-500 mb-3">
                   {CATEGORY_LABELS[cat]}
                 </h3>
                 <div className="space-y-2">
@@ -105,8 +105,8 @@ export function WidgetPicker({ activeWidgetIds, onAdd }: WidgetPickerProps) {
                               : "border-border hover:border-primary/20 hover:bg-muted/30"
                         }`}
                       >
-                        <div className="flex items-center justify-center size-9 rounded-lg bg-lime-500/10 shrink-0">
-                          <Icon className="size-4 text-lime-600 dark:text-lime-300" />
+                        <div className="flex items-center justify-center size-9 rounded-lg bg-neutral-100 shrink-0">
+                          <Icon className="size-4 text-neutral-600" />
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium truncate">{w.name}</p>

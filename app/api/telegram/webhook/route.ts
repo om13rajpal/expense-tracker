@@ -103,6 +103,14 @@ async function handleLink(chatId: number, code: string, username?: string) {
     return;
   }
 
+  // Explicit expiry check — MongoDB TTL can lag ~60s behind actual expiry
+  const TEN_MINUTES_MS = 10 * 60 * 1000;
+  if (new Date(tokenDoc.createdAt as string).getTime() < Date.now() - TEN_MINUTES_MS) {
+    await db.collection('telegram_link_tokens').deleteOne({ _id: tokenDoc._id });
+    await sendMessage(chatId, 'Code expired. Please generate a new one from Settings.');
+    return;
+  }
+
   const userId = tokenDoc.userId as string;
 
   // Save chatId in user_settings
@@ -935,9 +943,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET(request: NextRequest) {
-  if (!verifySecret(request)) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-  }
-  return NextResponse.json({ status: 'ok' }, { status: 200 });
+export async function GET() {
+  // Public health-check endpoint — verifies webhook route is reachable
+  return NextResponse.json({ status: 'ok', timestamp: new Date().toISOString() });
 }

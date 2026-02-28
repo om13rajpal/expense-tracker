@@ -60,8 +60,8 @@ export default function QuickExpenseWidget({}: WidgetComponentProps) {
   }
 
   return (
-    <div className="p-5 h-full flex flex-col bg-gradient-to-br from-lime-500/[0.04] to-transparent">
-      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-3">Quick Expense</p>
+    <div className="p-5 h-full flex flex-col">
+      <p className="text-[13px] font-medium text-neutral-500 mb-3">Quick Expense</p>
 
       <div className="space-y-2 flex-1">
         <Input
@@ -86,7 +86,7 @@ export default function QuickExpenseWidget({}: WidgetComponentProps) {
 
       <Button
         size="sm"
-        className="w-full mt-2 gap-1.5"
+        className="w-full mt-2 gap-1.5 bg-neutral-900 text-white hover:bg-neutral-800"
         onClick={handleSubmit}
         disabled={status === "loading" || !amount}
       >

@@ -72,7 +72,7 @@ export default function InvestmentsSnapshotWidget({}: WidgetComponentProps) {
   if (!data || data.totalValue === 0) {
     return (
       <Link href="/investments" className="block p-6 h-full">
-        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-2">Investments</p>
+        <p className="text-[13px] font-medium text-neutral-500 mb-2">Investments</p>
         <p className="text-sm text-muted-foreground">No portfolio data. Add your holdings →</p>
       </Link>
     )
@@ -82,11 +82,11 @@ export default function InvestmentsSnapshotWidget({}: WidgetComponentProps) {
 
   return (
     <Link href="/investments" className="block p-6 h-full">
-      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1">Portfolio Value</p>
-      <p className="text-2xl font-black tracking-tight tabular-nums">{formatINR(data.totalValue)}</p>
+      <p className="text-[13px] font-medium text-neutral-500 mb-1">Portfolio Value</p>
+      <p className="text-2xl font-black tracking-tight tabular-nums text-neutral-900">{formatINR(data.totalValue)}</p>
       <div className="flex items-center gap-1.5 mt-1 mb-4">
-        {isPositive ? <IconTrendingUp className="size-3.5 text-lime-600 dark:text-lime-400" /> : <IconTrendingDown className="size-3.5 text-destructive" />}
-        <span className={`text-xs font-semibold tabular-nums ${isPositive ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
+        {isPositive ? <IconTrendingUp className="size-3.5 text-emerald-600" /> : <IconTrendingDown className="size-3.5 text-red-500" />}
+        <span className={`text-xs font-semibold tabular-nums ${isPositive ? "text-emerald-600" : "text-red-500"}`}>
           {isPositive ? "+" : ""}{formatCompact(data.pnl)} ({data.pnlPct.toFixed(1)}%)
         </span>
       </div>
@@ -96,7 +96,7 @@ export default function InvestmentsSnapshotWidget({}: WidgetComponentProps) {
           {data.topHoldings.map((h, i) => (
             <div key={i} className="flex items-center justify-between text-xs">
               <span className="text-muted-foreground truncate mr-2">{h.name}</span>
-              <span className={`font-semibold tabular-nums shrink-0 ${h.change >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
+              <span className={`font-semibold tabular-nums shrink-0 ${h.change >= 0 ? "text-emerald-600" : "text-red-500"}`}>
                 {h.change >= 0 ? "+" : ""}{h.change.toFixed(1)}%
               </span>
             </div>

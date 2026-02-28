@@ -20,10 +20,10 @@ export default function DailyBudgetWidget({}: WidgetComponentProps) {
   const ringColor = spentPct >= 100 ? "#f43f5e" : spentPct >= 80 ? "#fb923c" : "#a3e635"
 
   return (
-    <div className="p-6 flex flex-col items-center justify-center h-full text-center bg-gradient-to-br from-lime-500/[0.04] to-transparent">
+    <div className="p-6 flex flex-col items-center justify-center h-full text-center">
       <div className="relative mb-3" style={{ width: ringSize, height: ringSize }}>
         <svg width={ringSize} height={ringSize} viewBox={`0 0 ${ringSize} ${ringSize}`}>
-          <circle cx={ringSize / 2} cy={ringSize / 2} r={radius} fill="none" stroke="currentColor" className="text-muted/60" strokeWidth={strokeWidth} />
+          <circle cx={ringSize / 2} cy={ringSize / 2} r={radius} fill="none" stroke="currentColor" className="text-neutral-100" strokeWidth={strokeWidth} />
           <motion.circle
             cx={ringSize / 2} cy={ringSize / 2} r={radius} fill="none"
             stroke={ringColor} strokeWidth={strokeWidth} strokeLinecap="round"
@@ -38,9 +38,9 @@ export default function DailyBudgetWidget({}: WidgetComponentProps) {
           <span className="text-xl font-black tabular-nums" style={{ color: ringColor }}>{Math.round(spentPct)}%</span>
         </div>
       </div>
-      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1">Daily Budget</p>
-      <p className="text-lg font-black tabular-nums text-lime-600 dark:text-lime-400">{formatCurrency(Math.max(0, dailySummary.dailyBudget))}</p>
-      <p className="text-[10px] text-muted-foreground font-medium mt-0.5">per day remaining</p>
+      <p className="text-[13px] font-medium text-neutral-500 mb-1">Daily Budget</p>
+      <p className="text-lg font-black tabular-nums text-neutral-900">{formatCurrency(Math.max(0, dailySummary.dailyBudget))}</p>
+      <p className="text-[11px] text-neutral-400 font-medium mt-0.5">per day remaining</p>
     </div>
   )
 }

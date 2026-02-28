@@ -19,11 +19,11 @@ export default function StreakWidget({}: WidgetComponentProps) {
   }, [])
 
   return (
-    <Link href="/gamification" className="block p-5 h-full bg-gradient-to-br from-lime-500/[0.04] to-transparent">
-      <div className="flex items-center justify-center size-9 rounded-lg bg-lime-500/10 shadow-[0_0_12px_-2px_rgba(163,230,53,0.15)] mb-2">
-        <IconFlame className="size-4 text-lime-600 dark:text-lime-300" />
+    <Link href="/gamification" className="block p-5 h-full">
+      <div className="flex items-center justify-center size-9 rounded-lg bg-orange-100 mb-2">
+        <IconFlame className="size-4 text-orange-500" />
       </div>
-      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1">Streak</p>
+      <p className="text-[13px] font-medium text-neutral-500 mb-1">Streak</p>
       {gamification ? (
         <>
           <p className="text-sm font-black tracking-tight truncate">{gamification.levelName}</p>

@@ -54,7 +54,7 @@ export function WidgetWrapper({
 
   if (!def || !LazyWidget) {
     return (
-      <div className="h-full rounded-2xl border border-border bg-card flex items-center justify-center text-sm text-muted-foreground">
+      <div className="h-full rounded-3xl bg-white widget-apple flex items-center justify-center text-sm text-muted-foreground">
         Unknown widget
       </div>
     )
@@ -63,22 +63,19 @@ export function WidgetWrapper({
   return (
     <div
       className={`
-        group/tile relative rounded-2xl h-full
-        border bg-card card-elevated
-        transition-[border-color,box-shadow,opacity] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
+        group/tile relative rounded-3xl h-full
+        bg-white widget-apple
+        transition-[box-shadow,opacity,transform] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
         ${isEditing
-          ? "widget-jiggle border-primary/15 shadow-[0_0_0_1px_oklch(0.72_0.19_135/12%)]"
-          : "border-border hover:-translate-y-0.5 hover:border-primary/20"
+          ? "widget-jiggle ring-1 ring-primary/15"
+          : ""
         }
       `}
     >
-      {/* Top edge light line — dark mode only */}
-      <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-white/[0.06] to-transparent pointer-events-none hidden dark:block rounded-t-2xl" />
-
       {/* ── Edit chrome: remove, drag, resize ── */}
       {/* Always rendered, animated via opacity/scale for smooth enter/exit */}
       <div
-        className="absolute inset-0 z-20 pointer-events-none rounded-2xl transition-opacity duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
+        className="absolute inset-0 z-20 pointer-events-none rounded-3xl transition-opacity duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
         style={{ opacity: isEditing ? 1 : 0 }}
       >
         {/* Remove button — Apple-style minus badge */}
@@ -106,12 +103,12 @@ export function WidgetWrapper({
             widget-drag-handle absolute top-0 inset-x-0 z-[50]
             flex items-center justify-center h-9
             cursor-grab active:cursor-grabbing
-            rounded-t-2xl
+            rounded-t-3xl
             transition-all duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]
             ${isEditing ? "pointer-events-auto opacity-100" : "pointer-events-none opacity-0"}
           `}
         >
-          <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-foreground/[0.07] backdrop-blur-sm transition-colors duration-150 hover:bg-foreground/[0.12]">
+          <div className="flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-black/[0.05] backdrop-blur-sm transition-colors duration-150 hover:bg-black/[0.1]">
             <IconGripHorizontal className="size-3.5 text-muted-foreground/70" />
           </div>
         </div>
@@ -159,7 +156,7 @@ export function WidgetWrapper({
 
       {/* Widget content — smooth dim during edit */}
       <div
-        className="relative h-full overflow-hidden rounded-2xl transition-[opacity,filter] duration-400 ease-[cubic-bezier(0.32,0.72,0,1)]"
+        className="relative h-full overflow-hidden rounded-3xl transition-[opacity,filter] duration-400 ease-[cubic-bezier(0.32,0.72,0,1)]"
         style={{
           opacity: isEditing ? 0.55 : 1,
           filter: isEditing ? "saturate(0.7)" : "none",

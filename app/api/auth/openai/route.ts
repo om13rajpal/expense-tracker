@@ -36,6 +36,7 @@ export async function POST(request: NextRequest) {
           deviceAuthId: deviceCode.deviceAuthId,
           userCode: deviceCode.userCode,
           userId: user.userId,
+          interval: deviceCode.interval,
           createdAt: new Date(),
           expiresAt: new Date(Date.now() + deviceCode.expiresIn * 1000),
         })
@@ -53,6 +54,7 @@ export async function POST(request: NextRequest) {
             userCode: deviceCode.userCode,
             verificationUrl: deviceCode.verificationUrl,
             expiresIn: deviceCode.expiresIn,
+            interval: deviceCode.interval,
           },
           { headers: corsHeaders() }
         )

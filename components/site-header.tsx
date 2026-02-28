@@ -7,7 +7,6 @@
 
 import * as React from "react"
 
-import { AnimatedThemeToggler } from "@/components/ui/animated-theme-toggler"
 import { Spotlight } from "@/components/spotlight"
 import { NotificationCenter } from "@/components/notification-center"
 import { StreakCounter } from "@/components/streak-counter"
@@ -73,7 +72,6 @@ export function SiteHeader({
             {actions}
             <span className="hidden sm:inline-flex"><StreakCounter linkTo="/gamification" /></span>
             <NotificationCenter />
-            <AnimatedThemeToggler className="inline-flex items-center justify-center size-8 rounded-md text-muted-foreground hover:text-foreground hover:bg-accent transition-colors cursor-pointer [&_svg]:size-4" />
           </div>
         </div>
       </div>

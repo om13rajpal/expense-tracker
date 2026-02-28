@@ -20,14 +20,14 @@ export default function SplitsWidget({}: WidgetComponentProps) {
   const fmt = (v: number) => new Intl.NumberFormat("en-IN", { style: "currency", currency: "INR", maximumFractionDigits: 0 }).format(v)
 
   return (
-    <Link href="/bills?tab=splits" className="block p-5 h-full bg-gradient-to-br from-lime-500/[0.04] to-transparent">
-      <div className="flex items-center justify-center size-9 rounded-lg bg-lime-500/10 shadow-[0_0_12px_-2px_rgba(163,230,53,0.15)] mb-2">
-        <IconUsers className="size-4 text-lime-600 dark:text-lime-300" />
+    <Link href="/bills?tab=splits" className="block p-5 h-full">
+      <div className="flex items-center justify-center size-9 rounded-lg bg-neutral-100 mb-2">
+        <IconUsers className="size-4 text-neutral-600" />
       </div>
-      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1">Splits</p>
+      <p className="text-[13px] font-medium text-neutral-500 mb-1">Splits</p>
       {splits ? (
         <>
-          <p className={`text-sm font-black tracking-tight tabular-nums truncate ${splits.net >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
+          <p className={`text-sm font-black tracking-tight tabular-nums truncate ${splits.net >= 0 ? "text-emerald-600" : "text-red-500"}`}>
             {splits.net >= 0 ? `+${fmt(splits.net)}` : fmt(splits.net)}
           </p>
           <p className="text-[10px] text-muted-foreground">{splits.net >= 0 ? "Owed to you" : "You owe"}</p>

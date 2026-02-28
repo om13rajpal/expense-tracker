@@ -28,10 +28,6 @@ import {
   IconArrowRight,
   IconUser,
   IconPuzzle,
-  IconPalette,
-  IconMoon,
-  IconSun,
-  IconDeviceDesktop,
   IconSettings,
   IconChevronRight,
   IconBrain,
@@ -76,7 +72,6 @@ const NAV_SECTIONS = [
   { id: "profile", label: "Profile", icon: IconUser },
   { id: "integrations", label: "Integrations", icon: IconBrandTelegram },
   { id: "features", label: "Features", icon: IconPuzzle },
-  { id: "appearance", label: "Appearance", icon: IconPalette },
 ] as const
 
 type SectionId = (typeof NAV_SECTIONS)[number]["id"]
@@ -97,7 +92,9 @@ function ChatGPTCard() {
   const [showManualKey, setShowManualKey] = useState(false)
   const [apiKeyInput, setApiKeyInput] = useState("")
   const [deviceCode, setDeviceCode] = useState<{ userCode: string; verificationUrl: string } | null>(null)
+  const [pollError, setPollError] = useState<string | null>(null)
   const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+  const errorCountRef = useRef(0)
 
   // Handle OAuth callback redirect params
   useEffect(() => {
@@ -135,11 +132,21 @@ function ChatGPTCard() {
     return () => { if (pollRef.current) clearInterval(pollRef.current) }
   }, [])
 
-  // Re-check connection status when the user switches back to this tab
-  // (handles case where they completed auth in another tab)
+  // Re-check connection when user switches back to this tab.
+  // If device code flow is active, do an immediate poll instead of waiting.
   useEffect(() => {
     function handleFocus() {
       if (connected) return
+      if (deviceCode && pollRef.current) {
+        // Immediate extra poll — don't wait for next interval
+        fetch("/api/auth/openai/poll", { method: "POST", credentials: "include" })
+          .then(res => res.json())
+          .then(pollData => {
+            if (pollData.status === "connected") onPollConnected(pollData)
+          })
+          .catch(() => {})
+        return
+      }
       fetch("/api/auth/openai/status", { credentials: "include" })
         .then(res => res.json())
         .then(data => {
@@ -160,7 +167,7 @@ function ChatGPTCard() {
     }
     window.addEventListener("focus", handleFocus)
     return () => window.removeEventListener("focus", handleFocus)
-  }, [connected])
+  }, [connected, deviceCode])
 
   /** Handle poll success — update all state and clean up. */
   function onPollConnected(pollData: { email?: string; planType?: string }) {
@@ -177,6 +184,8 @@ function ChatGPTCard() {
 
   async function handleOAuthConnect() {
     setConnecting(true)
+    setPollError(null)
+    errorCountRef.current = 0
     try {
       const res = await fetch("/api/auth/openai", {
         method: "POST",
@@ -190,7 +199,9 @@ function ChatGPTCard() {
         // Open verification page in new tab
         window.open(data.verificationUrl, "_blank", "noopener")
 
-        // Start polling every 5 seconds
+        // Use interval from server (default 5s) for adaptive polling
+        const pollIntervalMs = (data.interval || 5) * 1000
+
         pollRef.current = setInterval(async () => {
           try {
             const pollRes = await fetch("/api/auth/openai/poll", {
@@ -200,7 +211,15 @@ function ChatGPTCard() {
             const pollData = await pollRes.json()
 
             if (pollData.status === "connected") {
+              errorCountRef.current = 0
               onPollConnected(pollData)
+            } else if (pollData.status === "exchange_failed") {
+              // Auth code was consumed but token exchange failed — can't retry
+              if (pollRef.current) clearInterval(pollRef.current)
+              setDeviceCode(null)
+              setConnecting(false)
+              setPollError(pollData.message || "Token exchange failed")
+              toast.error(pollData.message || "Token exchange failed. Try again or use a manual API key.")
             } else if (pollData.status === "expired" || pollData.status === "no_session") {
               // no_session could mean exchange succeeded on a prev poll but
               // the response was lost — check status to be sure
@@ -217,15 +236,30 @@ function ChatGPTCard() {
                 }
               }
             } else if (pollData.status === "error") {
-              // Server-side exchange error — show it but keep polling
-              // (the session is still intact, next poll will retry)
+              errorCountRef.current++
               console.warn("OpenAI poll error:", pollData.message)
+              if (errorCountRef.current >= 3) {
+                if (pollRef.current) clearInterval(pollRef.current)
+                setDeviceCode(null)
+                setConnecting(false)
+                setPollError(pollData.message || "Repeated polling errors")
+                toast.error("Connection failed after multiple attempts. Please try again.")
+              }
+            } else if (pollData.status === "pending") {
+              // Reset error counter on successful pending response
+              errorCountRef.current = 0
             }
-            // "pending" — do nothing, keep polling
           } catch {
-            // Ignore transient network errors, keep polling
+            errorCountRef.current++
+            if (errorCountRef.current >= 3) {
+              if (pollRef.current) clearInterval(pollRef.current)
+              setDeviceCode(null)
+              setConnecting(false)
+              setPollError("Network error — could not reach server")
+              toast.error("Connection lost. Please check your network and try again.")
+            }
           }
-        }, 5000)
+        }, pollIntervalMs)
       } else {
         toast.error(data.message || "Failed to start authentication")
         setConnecting(false)
@@ -240,6 +274,8 @@ function ChatGPTCard() {
     if (pollRef.current) clearInterval(pollRef.current)
     setDeviceCode(null)
     setConnecting(false)
+    setPollError(null)
+    errorCountRef.current = 0
   }
 
   async function handleManualKeyConnect() {
@@ -382,6 +418,29 @@ function ChatGPTCard() {
                 <Button variant="ghost" size="sm" className="w-full text-muted-foreground" onClick={handleCancelDeviceCode}>
                   Cancel
                 </Button>
+              </div>
+            ) : pollError ? (
+              <div className="space-y-3">
+                <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-center space-y-3">
+                  <p className="text-xs font-medium text-destructive">Connection failed</p>
+                  <p className="text-xs text-muted-foreground">{pollError}</p>
+                </div>
+                <Button
+                  onClick={() => { setPollError(null); handleOAuthConnect() }}
+                  className="w-full bg-[#10a37f] hover:bg-[#0d8c6c] text-white"
+                  size="lg"
+                >
+                  <IconBrandOpenai className="h-4 w-4 mr-2" />
+                  Try Again
+                  <IconArrowRight className="h-4 w-4 ml-auto" />
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => { setPollError(null); setShowManualKey(true) }}
+                  className="w-full text-[11px] text-muted-foreground hover:text-foreground transition-colors text-center"
+                >
+                  Or enter an API key manually instead
+                </button>
               </div>
             ) : (
               <>
@@ -743,16 +802,12 @@ export default function SettingsPage() {
   // Ghost Budget state
   const [ghostEnabled, setGhostEnabled] = useState(false)
 
-  // Appearance state
-  const [theme, setTheme] = useState<"light" | "dark" | "system">("system")
-
   // Active section for nav highlighting
   const [activeSection, setActiveSection] = useState<SectionId>("profile")
   const sectionRefs = useRef<Record<SectionId, HTMLDivElement | null>>({
     profile: null,
     integrations: null,
     features: null,
-    appearance: null,
   })
 
   useEffect(() => {
@@ -776,18 +831,6 @@ export default function SettingsPage() {
       .catch(() => {})
       .finally(() => setLoading(false))
   }, [isAuthenticated])
-
-  // Read theme from document class on mount
-  useEffect(() => {
-    const html = document.documentElement
-    if (html.classList.contains("dark")) {
-      setTheme("dark")
-    } else if (html.classList.contains("light")) {
-      setTheme("light")
-    } else {
-      setTheme("system")
-    }
-  }, [])
 
   // Intersection observer for active section tracking
   useEffect(() => {
@@ -840,18 +883,6 @@ export default function SettingsPage() {
 
   function scrollToSection(id: SectionId) {
     sectionRefs.current[id]?.scrollIntoView({ behavior: "smooth", block: "start" })
-  }
-
-  function handleThemeChange(newTheme: "light" | "dark" | "system") {
-    setTheme(newTheme)
-    const html = document.documentElement
-    html.classList.remove("light", "dark")
-    if (newTheme === "system") {
-      const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches
-      html.classList.add(prefersDark ? "dark" : "light")
-    } else {
-      html.classList.add(newTheme)
-    }
   }
 
   if (authLoading) {
@@ -1111,46 +1142,6 @@ export default function SettingsPage() {
                       </div>
                     </motion.div>
 
-                    {/* ═══ Appearance ═══ */}
-                    <motion.div
-                      variants={fadeUp}
-                      id="appearance"
-                      ref={(el) => { sectionRefs.current.appearance = el }}
-                    >
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="flex items-center justify-center size-8 rounded-xl bg-muted/80 dark:bg-muted">
-                          <IconPalette className="h-4 w-4 text-foreground/70" />
-                        </div>
-                        <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground/70">
-                          Appearance
-                        </h3>
-                      </div>
-
-                      <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden px-5 py-4">
-                        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-                        <p className="text-sm font-medium mb-3">Theme</p>
-                        <div className="grid grid-cols-3 gap-2">
-                          {([
-                            { value: "light" as const, icon: IconSun, label: "Light" },
-                            { value: "dark" as const, icon: IconMoon, label: "Dark" },
-                            { value: "system" as const, icon: IconDeviceDesktop, label: "System" },
-                          ]).map(({ value, icon: Icon, label }) => (
-                            <button
-                              key={value}
-                              onClick={() => handleThemeChange(value)}
-                              className={`flex flex-col items-center gap-2 rounded-xl border p-4 text-sm font-medium transition-all duration-150 ${
-                                theme === value
-                                  ? "bg-primary/10 border-primary/20 text-primary"
-                                  : "bg-muted/20 border-border/40 text-muted-foreground hover:bg-muted/40 hover:text-foreground"
-                              }`}
-                            >
-                              <Icon className="h-5 w-5" />
-                              <span className="text-xs">{label}</span>
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    </motion.div>
                   </div>
                 </div>
               </motion.div>

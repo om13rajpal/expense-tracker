@@ -25,44 +25,44 @@ export default function CashFlowForecastWidget({}: WidgetComponentProps) {
 
   return (
     <div className="p-6 h-full flex flex-col">
-      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-3">Cash Flow Forecast</p>
+      <p className="text-[13px] font-medium text-neutral-500 mb-3">Cash Flow Forecast</p>
 
       <div className="flex items-baseline gap-2 mb-4">
-        <span className="text-2xl font-black tracking-tight tabular-nums">{formatINR(forecast.projectedBalance30d)}</span>
-        <span className="text-[11px] text-muted-foreground font-medium">in 30 days</span>
+        <span className="text-2xl font-black tracking-tight tabular-nums text-neutral-900">{formatINR(forecast.projectedBalance30d)}</span>
+        <span className="text-[11px] text-neutral-400 font-medium">in 30 days</span>
       </div>
 
       <div className="space-y-3 flex-1">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            <IconArrowUpRight className="size-3.5 text-lime-600 dark:text-lime-400" />
-            <span className="text-xs text-muted-foreground">Avg. Monthly Income</span>
+            <IconArrowUpRight className="size-3.5 text-emerald-600" />
+            <span className="text-xs text-neutral-500">Avg. Monthly Income</span>
           </div>
-          <span className="text-xs font-black tabular-nums text-lime-600 dark:text-lime-400">{formatCompact(forecast.monthlyEarn)}</span>
+          <span className="text-xs font-black tabular-nums text-emerald-600">{formatCompact(forecast.monthlyEarn)}</span>
         </div>
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            <IconArrowDownRight className="size-3.5 text-foreground/60" />
-            <span className="text-xs text-muted-foreground">Avg. Monthly Expenses</span>
+            <IconArrowDownRight className="size-3.5 text-neutral-400" />
+            <span className="text-xs text-neutral-500">Avg. Monthly Expenses</span>
           </div>
-          <span className="text-xs font-black tabular-nums text-foreground/70">{formatCompact(forecast.monthlyBurn)}</span>
+          <span className="text-xs font-black tabular-nums text-neutral-700">{formatCompact(forecast.monthlyBurn)}</span>
         </div>
-        <div className="h-px bg-border" />
+        <div className="h-px bg-neutral-100" />
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5">
-            {isPositiveFlow ? <IconTrendingUp className="size-3.5 text-lime-600 dark:text-lime-400" /> : <IconTrendingDown className="size-3.5 text-destructive" />}
-            <span className="text-xs text-muted-foreground">Net Daily Flow</span>
+            {isPositiveFlow ? <IconTrendingUp className="size-3.5 text-emerald-600" /> : <IconTrendingDown className="size-3.5 text-red-500" />}
+            <span className="text-xs text-neutral-500">Net Daily Flow</span>
           </div>
-          <span className={`text-xs font-black tabular-nums ${isPositiveFlow ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
+          <span className={`text-xs font-black tabular-nums ${isPositiveFlow ? "text-emerald-600" : "text-red-500"}`}>
             {isPositiveFlow ? "+" : ""}{formatCompact(forecast.netDailyFlow)}/day
           </span>
         </div>
       </div>
 
-      <div className="mt-auto pt-3 border-t border-border">
+      <div className="mt-auto pt-3 border-t border-neutral-100">
         <div className="flex items-center justify-between">
-          <span className="text-[11px] text-muted-foreground font-medium">Runway</span>
-          <span className={`text-sm font-black tabular-nums ${forecast.runwayDays > 60 ? "text-lime-600 dark:text-lime-400" : forecast.runwayDays > 30 ? "text-amber-600 dark:text-amber-400" : "text-destructive"}`}>
+          <span className="text-[11px] text-neutral-500 font-medium">Runway</span>
+          <span className={`text-sm font-black tabular-nums ${forecast.runwayDays > 60 ? "text-emerald-600" : forecast.runwayDays > 30 ? "text-amber-600" : "text-red-500"}`}>
             {forecast.runwayDays > 365 ? "1y+" : `${forecast.runwayDays}d`}
           </span>
         </div>

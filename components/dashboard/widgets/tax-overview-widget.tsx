@@ -54,8 +54,8 @@ export default function TaxOverviewWidget({}: WidgetComponentProps) {
 
   return (
     <Link href="/bills?tab=tax" className="block p-6 h-full">
-      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1">Tax Overview</p>
-      <p className="text-[11px] text-muted-foreground mb-3">New Regime (projected)</p>
+      <p className="text-[13px] font-medium text-neutral-500 mb-1">Tax Overview</p>
+      <p className="text-[11px] text-neutral-400 mb-3">New Regime (projected)</p>
 
       <div className="space-y-3">
         <div className="flex items-center justify-between">
@@ -64,16 +64,16 @@ export default function TaxOverviewWidget({}: WidgetComponentProps) {
         </div>
         <div className="flex items-center justify-between">
           <span className="text-xs text-muted-foreground">Est. Tax Liability</span>
-          <span className="text-xs font-black tabular-nums text-destructive">{formatCompact(taxData.tax)}</span>
+          <span className="text-xs font-black tabular-nums text-red-500">{formatCompact(taxData.tax)}</span>
         </div>
-        <div className="h-px bg-border" />
+        <div className="h-px bg-neutral-100" />
         <div className="flex items-center justify-between">
-          <span className="text-xs text-muted-foreground">Tax Bracket</span>
-          <span className="text-sm font-black tabular-nums">{taxData.bracket}</span>
+          <span className="text-xs text-neutral-500">Tax Bracket</span>
+          <span className="text-lg font-black tabular-nums text-neutral-900">{taxData.bracket}</span>
         </div>
         <div className="flex items-center justify-between">
-          <span className="text-xs text-muted-foreground">Effective Rate</span>
-          <span className="text-sm font-black tabular-nums">{taxData.effectiveRate.toFixed(1)}%</span>
+          <span className="text-xs text-neutral-500">Effective Rate</span>
+          <span className="text-sm font-black tabular-nums text-neutral-900">{taxData.effectiveRate.toFixed(1)}%</span>
         </div>
       </div>
     </Link>

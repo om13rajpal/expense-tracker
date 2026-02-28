@@ -48,8 +48,10 @@ export default function UpcomingBillsWidget({}: WidgetComponentProps) {
   return (
     <Link href="/bills" className="block p-6 h-full">
       <div className="flex items-center gap-2 mb-4">
-        <IconReceipt2 className="size-4 text-lime-600 dark:text-lime-300" />
-        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Upcoming Bills</p>
+        <div className="flex items-center justify-center size-7 rounded-lg bg-neutral-100">
+          <IconReceipt2 className="size-3.5 text-neutral-600" />
+        </div>
+        <p className="text-[13px] font-medium text-neutral-500">Upcoming Bills</p>
       </div>
 
       {bills.length === 0 ? (
@@ -63,9 +65,9 @@ export default function UpcomingBillsWidget({}: WidgetComponentProps) {
               </div>
               <span className="text-xs font-black tabular-nums shrink-0">{formatINR(bill.amount)}</span>
               <span className={`text-[10px] font-semibold tabular-nums shrink-0 px-1.5 py-0.5 rounded-full ${
-                bill.daysUntil <= 2 ? "bg-destructive/10 text-destructive" :
-                bill.daysUntil <= 7 ? "bg-amber-500/10 text-amber-600 dark:text-amber-400" :
-                "bg-muted text-muted-foreground"
+                bill.daysUntil <= 2 ? "bg-red-50 text-red-600" :
+                bill.daysUntil <= 7 ? "bg-amber-50 text-amber-600" :
+                "bg-neutral-100 text-neutral-500"
               }`}>
                 {bill.daysUntil === 0 ? "Today" : bill.daysUntil === 1 ? "1d" : `${bill.daysUntil}d`}
               </span>

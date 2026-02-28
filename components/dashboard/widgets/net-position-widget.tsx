@@ -64,26 +64,19 @@ function BalanceSparkline({ data }: { data: { balance: number }[] }) {
   const areaPath = `${linePath} L${w},${h} L0,${h} Z`
 
   const trend = values[values.length - 1] >= values[0]
-  const color = trend ? "#a3e635" : "#fb923c"
+  const color = trend ? "#10b981" : "#f59e0b"
 
   return (
     <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{ height: h }} preserveAspectRatio="none">
       <defs>
         <linearGradient id="sparkArea" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.35" />
+          <stop offset="0%" stopColor={color} stopOpacity="0.2" />
           <stop offset="100%" stopColor={color} stopOpacity="0" />
         </linearGradient>
-        <filter id="sparkGlow">
-          <feGaussianBlur stdDeviation="4" result="blur" />
-          <feMerge>
-            <feMergeNode in="blur" />
-            <feMergeNode in="SourceGraphic" />
-          </feMerge>
-        </filter>
       </defs>
       <path d={areaPath} fill="url(#sparkArea)" />
-      <path d={linePath} fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" filter="url(#sparkGlow)" />
-      <circle cx={points[points.length - 1].x} cy={points[points.length - 1].y} r="3.5" fill={color} filter="url(#sparkGlow)" />
+      <path d={linePath} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+      <circle cx={points[points.length - 1].x} cy={points[points.length - 1].y} r="3" fill={color} />
     </svg>
   )
 }
@@ -96,26 +89,25 @@ export default function NetPositionWidget({}: WidgetComponentProps) {
   const animatedExpenses = useAnimatedValue(totalExpenses)
 
   return (
-    <div className="p-6 sm:p-7 flex flex-col h-full bg-gradient-to-br from-lime-500/[0.07] via-lime-500/[0.02] to-transparent">
+    <div className="p-6 sm:p-7 flex flex-col h-full">
       <div className="flex items-center justify-between mb-4">
-        <p className="text-base font-semibold text-muted-foreground">
-          {getGreeting()}, <span className="text-primary">Om</span>
+        <p className="text-base font-semibold text-neutral-500">
+          {getGreeting()}, <span className="text-neutral-900 font-bold">Om</span>
         </p>
-        <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">
+        <span className="text-[11px] font-medium text-neutral-400">
           {new Date().toLocaleDateString("en-US", { month: "short", year: "numeric" })}
         </span>
       </div>
 
       <div className="flex-1 flex flex-col justify-center -mt-2">
-        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1.5">
+        <p className="text-[13px] font-medium text-neutral-500 mb-1.5">
           Current Balance
         </p>
         <motion.p
           variants={numberPop}
           initial="hidden"
           animate="show"
-          className="text-5xl sm:text-6xl font-black tracking-tight tabular-nums"
-          style={{ filter: "drop-shadow(0 0 50px rgba(163,230,53,0.15))" }}
+          className="text-5xl sm:text-6xl font-black tracking-tight tabular-nums text-neutral-900"
         >
           {formatCurrency(animatedBalance)}
         </motion.p>
@@ -125,27 +117,27 @@ export default function NetPositionWidget({}: WidgetComponentProps) {
         </div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 pt-4 mt-auto border-t border-border">
+      <div className="grid grid-cols-3 gap-4 pt-4 mt-auto border-t border-neutral-100">
         <div>
           <div className="flex items-center gap-1.5 mb-0.5">
-            <div className="size-2 rounded-full bg-lime-600 dark:bg-lime-400" />
-            <span className="text-[11px] text-muted-foreground font-medium">Income</span>
+            <div className="size-2 rounded-full bg-emerald-500" />
+            <span className="text-[11px] text-neutral-500 font-medium">Income</span>
           </div>
-          <p className="text-base font-black tracking-tight tabular-nums text-lime-600 dark:text-lime-400">{formatCurrency(animatedIncome)}</p>
+          <p className="text-base font-black tracking-tight tabular-nums text-emerald-600">{formatCurrency(animatedIncome)}</p>
         </div>
         <div>
           <div className="flex items-center gap-1.5 mb-0.5">
-            <div className="size-2 rounded-full bg-zinc-400 dark:bg-zinc-500" />
-            <span className="text-[11px] text-muted-foreground font-medium">Expenses</span>
+            <div className="size-2 rounded-full bg-neutral-300" />
+            <span className="text-[11px] text-neutral-500 font-medium">Expenses</span>
           </div>
-          <p className="text-base font-black tracking-tight tabular-nums text-foreground/70">{formatCurrency(animatedExpenses)}</p>
+          <p className="text-base font-black tracking-tight tabular-nums text-neutral-700">{formatCurrency(animatedExpenses)}</p>
         </div>
         <div>
           <div className="flex items-center gap-1.5 mb-0.5">
-            <div className="size-2 rounded-full bg-lime-500 dark:bg-lime-300" />
-            <span className="text-[11px] text-muted-foreground font-medium">Saved</span>
+            <div className="size-2 rounded-full bg-emerald-400" />
+            <span className="text-[11px] text-neutral-500 font-medium">Saved</span>
           </div>
-          <p className={`text-base font-black tracking-tight tabular-nums ${netSaved >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
+          <p className={`text-base font-black tracking-tight tabular-nums ${netSaved >= 0 ? "text-emerald-600" : "text-red-500"}`}>
             {formatCurrency(netSaved)}
           </p>
         </div>

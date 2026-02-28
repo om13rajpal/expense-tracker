@@ -36,16 +36,16 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning className="dark">
+    <html lang="en" suppressHydrationWarning>
       <body className={`${sora.variable} ${jetbrainsMono.variable} antialiased`}>
-        <ThemeProvider attribute="class" defaultTheme="dark" forcedTheme="dark" disableTransitionOnChange>
+        <ThemeProvider attribute="class" defaultTheme="light" forcedTheme="light" disableTransitionOnChange>
           <QueryProvider>
             <KeyboardShortcutsProvider>
               <PageTransitionWrapper>
                 {children}
               </PageTransitionWrapper>
             </KeyboardShortcutsProvider>
-            <Toaster position="bottom-right" richColors closeButton theme="dark" />
+            <Toaster position="bottom-right" richColors closeButton theme="light" />
           </QueryProvider>
         </ThemeProvider>
       </body>

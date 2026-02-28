@@ -24,11 +24,11 @@ export default function RenewalsWidget({}: WidgetComponentProps) {
   }, [])
 
   return (
-    <Link href="/bills" className="block p-5 h-full bg-gradient-to-br from-lime-500/[0.04] to-transparent">
-      <div className="flex items-center justify-center size-9 rounded-lg bg-lime-500/10 shadow-[0_0_12px_-2px_rgba(163,230,53,0.15)] mb-2">
-        <IconRepeat className="size-4 text-lime-600 dark:text-lime-300" />
+    <Link href="/bills" className="block p-5 h-full">
+      <div className="flex items-center justify-center size-9 rounded-lg bg-neutral-100 mb-2">
+        <IconRepeat className="size-4 text-neutral-600" />
       </div>
-      <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-1">Renewals</p>
+      <p className="text-[13px] font-medium text-neutral-500 mb-1">Renewals</p>
       {subs ? (
         <>
           <p className="text-sm font-black tracking-tight truncate">{subs.dueCount > 0 ? `${subs.dueCount} due` : "None"}</p>

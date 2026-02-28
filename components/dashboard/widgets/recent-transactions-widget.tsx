@@ -30,8 +30,10 @@ export default function RecentTransactionsWidget({}: WidgetComponentProps) {
   return (
     <Link href="/money" className="block p-6 h-full">
       <div className="flex items-center gap-2 mb-4">
-        <IconReceipt2 className="size-4 text-lime-600 dark:text-lime-300" />
-        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest">Recent Transactions</p>
+        <div className="flex items-center justify-center size-7 rounded-lg bg-neutral-100">
+          <IconReceipt2 className="size-3.5 text-neutral-600" />
+        </div>
+        <p className="text-[13px] font-medium text-neutral-500">Recent Transactions</p>
       </div>
 
       {recent.length === 0 ? (
@@ -47,7 +49,7 @@ export default function RecentTransactionsWidget({}: WidgetComponentProps) {
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{t.merchant || t.description}</p>
                 </div>
-                <span className={`text-xs font-black tabular-nums shrink-0 ${isExpense ? "text-foreground/70" : "text-lime-600 dark:text-lime-400"}`}>
+                <span className={`text-xs font-black tabular-nums shrink-0 ${isExpense ? "text-neutral-900" : "text-emerald-600"}`}>
                   {isExpense ? "-" : "+"}{formatINR(t.amount)}
                 </span>
               </div>

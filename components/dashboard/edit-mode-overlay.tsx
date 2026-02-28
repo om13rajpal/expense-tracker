@@ -59,7 +59,7 @@ export function EditModeOverlay({
         transform: visible ? "translateY(0)" : "translateY(-8px)",
       }}
     >
-      <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-xl bg-card/80 backdrop-blur-xl border border-primary/20 shadow-lg">
+      <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-2xl bg-white/80 backdrop-blur-xl border border-neutral-200 shadow-lg">
         <div className="flex items-center gap-2">
           <div className="size-2 rounded-full bg-primary animate-pulse" />
           <span className="text-sm font-medium text-foreground">Editing Dashboard</span>

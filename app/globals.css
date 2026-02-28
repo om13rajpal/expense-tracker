@@ -192,23 +192,6 @@
     @apply bg-background text-foreground overflow-x-hidden;
   }
 
-  .dark body {
-    /* Pure black background */
-    background-color: oklch(0.05 0.005 150);
-  }
-
-  .dark body::after {
-    content: "";
-    position: fixed;
-    inset: 0;
-    z-index: 1;
-    pointer-events: none;
-    /* Ultra-premium mathematically generated noise layer */
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
-    opacity: 0.04;
-    mix-blend-mode: overlay;
-  }
-
   /* Scrollbar — thin, matches theme */
   ::-webkit-scrollbar {
     width: 6px;
@@ -224,19 +207,9 @@
   ::-webkit-scrollbar-thumb:hover {
     background: oklch(0.6 0.01 85);
   }
-  .dark ::-webkit-scrollbar-thumb {
-    background: oklch(0.35 0.01 85);
-  }
-  .dark ::-webkit-scrollbar-thumb:hover {
-    background: oklch(0.4 0.01 85);
-  }
-
   /* Selection */
   ::selection {
     background: oklch(0.45 0.1 145 / 25%);
-  }
-  .dark ::selection {
-    background: oklch(0.55 0.1 145 / 30%);
   }
 }
 
@@ -248,14 +221,6 @@
     0 1px 2px oklch(0 0 0 / 3%),
     0 4px 16px oklch(0 0 0 / 2%);
 }
-.dark .card-elevated {
-  background: var(--card);
-  box-shadow:
-    0 0 0 1px oklch(0.18 0.01 150),
-    0 4px 24px -4px oklch(0 0 0 / 50%),
-    inset 0 1px 0 oklch(1 1 1 / 5%);
-}
-
 /* Subtle hover lift for interactive cards */
 .card-interactive {
   transition:
@@ -270,27 +235,13 @@
     0 8px 30px oklch(0 0 0 / 6%),
     0 2px 8px oklch(0 0 0 / 4%);
 }
-.dark .card-interactive:hover {
-  background: oklch(0.2 0.025 150);
-  box-shadow:
-    0 0 0 1px oklch(0.3 0.015 150),
-    0 8px 32px -4px oklch(0 0 0 / 40%),
-    inset 0 1px 0 oklch(1 1 1 / 5%);
-}
-
 /* ─── Semantic finance colors ─── */
 
 .text-income {
   color: oklch(0.55 0.17 155);
 }
-.dark .text-income {
-  color: oklch(0.68 0.17 155);
-}
 .text-expense {
   color: oklch(0.58 0.19 15);
-}
-.dark .text-expense {
-  color: oklch(0.68 0.17 15);
 }
 
 /* ─── Prose refinements for AI content ─── */
@@ -321,6 +272,22 @@
   @apply rounded-md bg-muted px-1.5 py-0.5 text-xs font-medium;
 }
 
+/* ─── Apple Widget Card ─── */
+
+.widget-apple {
+  background: white;
+  border-radius: 1.5rem;
+  border: none;
+  box-shadow: 0 0.5px 1px rgba(0,0,0,0.02), 0 4px 12px rgba(0,0,0,0.04), 0 12px 32px rgba(0,0,0,0.05);
+  transition:
+    transform 0.4s cubic-bezier(0.32, 0.72, 0, 1),
+    box-shadow 0.4s cubic-bezier(0.32, 0.72, 0, 1);
+}
+.widget-apple:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 0.5px 1px rgba(0,0,0,0.02), 0 6px 16px rgba(0,0,0,0.06), 0 16px 40px rgba(0,0,0,0.07);
+}
+
 /* ─── Widget Grid (react-grid-layout) ─── */
 
 .react-grid-layout {
@@ -347,7 +314,7 @@
   transition: box-shadow 200ms ease, filter 200ms ease !important;
   will-change: transform;
   filter: brightness(1.05);
-  box-shadow: 0 20px 60px -12px oklch(0 0 0 / 30%), 0 0 0 1px oklch(0.72 0.19 135 / 20%);
+  box-shadow: 0 20px 60px -12px rgba(0,0,0,0.15);
 }
 
 .react-grid-item.react-draggable-dragging > * {
@@ -359,13 +326,12 @@
   display: none; /* We use preset sizes, not freeform resize */
 }
 
-/* Drop placeholder — soft glow */
+/* Drop placeholder */
 .react-grid-placeholder {
-  background: oklch(0.72 0.19 135 / 10%);
-  border-radius: 1rem;
-  border: 2px dashed oklch(0.72 0.19 135 / 25%);
+  background: oklch(0.45 0.1 145 / 8%);
+  border-radius: 1.5rem;
+  border: 2px dashed oklch(0.45 0.1 145 / 20%);
   transition: all 350ms cubic-bezier(0.32, 0.72, 0, 1);
-  box-shadow: inset 0 0 20px oklch(0.72 0.19 135 / 8%);
 }
 
 /* ─── Widget Jiggle (Apple-style edit mode) ─── */
