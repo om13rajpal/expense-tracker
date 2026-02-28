@@ -46,6 +46,8 @@ export type StockHolding = {
   averageCost: number
   /** Expected annual return percentage. */
   expectedAnnualReturn?: number
+  /** ISO date string when the stock was purchased. */
+  buyDate?: string
   /** User notes. */
   notes?: string
   /** ISO timestamp of document creation. */

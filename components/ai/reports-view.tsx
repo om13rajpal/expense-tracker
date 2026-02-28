@@ -56,7 +56,7 @@ interface InsightMeta {
   type: AiInsightType
   title: string
   description: string
-  icon: React.ComponentType<{ className?: string }>
+  icon: React.ComponentType<any>
   iconBg: string
   iconColor: string
 }
@@ -120,7 +120,7 @@ function relativeTime(iso: string): string {
 }
 
 /** Tailwind theme tokens (border, bg, icon, badge) for each insight severity level. */
-const severityStyles: Record<string, { border: string; bg: string; icon: React.ComponentType<{ className?: string }>; iconColor: string; badge: string; badgeText: string }> = {
+const severityStyles: Record<string, { border: string; bg: string; icon: React.ComponentType<any>; iconColor: string; badge: string; badgeText: string }> = {
   positive: {
     border: "border-lime-200/70 dark:border-lime-800/50",
     bg: "bg-lime-50/50 dark:bg-lime-950/20",
@@ -994,7 +994,7 @@ function DashboardHeader({
   meta: InsightMeta
   insight: InsightHookReturn
   isWorking: boolean
-  Icon: React.ComponentType<{ className?: string }>
+  Icon: React.ComponentType<any>
 }) {
   return (
     <div className="flex items-center justify-between gap-3">

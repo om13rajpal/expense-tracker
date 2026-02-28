@@ -1377,7 +1377,7 @@ export default function TransactionsPage() {
                                 <p className="text-sm font-medium text-foreground">No transactions yet</p>
                                 <p className="text-xs text-muted-foreground">Connect your Google Sheets to import bank data.</p>
                               </div>
-                              <Button variant="outline" size="sm" onClick={() => syncFromSheets()} disabled={isSyncing} className="mt-1">
+                              <Button variant="outline" size="sm" onClick={() => syncFromSheets(true)} disabled={isSyncing} className="mt-1">
                                 <IconRefresh className={`mr-2 h-4 w-4 ${isSyncing ? "animate-spin" : ""}`} />
                                 {isSyncing ? "Syncing..." : "Sync Now"}
                               </Button>

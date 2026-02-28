@@ -34,7 +34,7 @@ import { cn } from "@/lib/utils"
  * stroke, background, and border.
  */
 const CHALLENGE_CONFIG: Record<string, {
-  icon: React.ElementType
+  icon: React.ComponentType<any>
   color: string
   ring: string
   bg: string

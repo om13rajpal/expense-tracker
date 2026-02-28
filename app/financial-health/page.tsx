@@ -386,7 +386,7 @@ function StatItem({
   colorClass,
   index,
 }: {
-  icon: React.ElementType
+  icon: React.ComponentType<any>
   label: string
   value: string
   suffix?: string
@@ -442,7 +442,7 @@ function BreakdownBar({
   maxScore: number
   tooltip?: string
   index: number
-  icon: React.ElementType
+  icon: React.ComponentType<any>
 }) {
   const percentage = maxScore > 0 ? (score / maxScore) * 100 : 0
   const gradientId = `bar-gradient-${index}`
@@ -1247,7 +1247,7 @@ function DebtTrackerSection() {
 interface CtaAction {
   label: string
   href: string
-  icon: React.ElementType
+  icon: React.ComponentType<any>
   variant: "default" | "outline"
 }
 

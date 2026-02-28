@@ -12,6 +12,7 @@ import { ObjectId } from "mongodb"
 
 import { getMongoDb } from "@/lib/mongodb"
 import { corsHeaders, handleOptions, isValidObjectId, withAuth } from "@/lib/middleware"
+import { createSplitsGroupForSubscription, createRecurringSplitExpense, notifySubscriptionMembers, type SharedMember } from "@/lib/subscription-splits"
 
 function toResponse(doc: Record<string, unknown>) {
   return {
@@ -95,8 +96,26 @@ export async function POST(request: NextRequest) {
       // Optional paymentHistory pass-through (from auto-detection)
       const paymentHistory = Array.isArray(body.paymentHistory) ? body.paymentHistory : undefined
 
+      // Shared subscription fields
+      const isShared = body.isShared === true
+      const totalMembers = typeof body.totalMembers === "number" ? body.totalMembers : 1
+      const userShare = typeof body.userShare === "number" ? body.userShare : amount
+      const paidByUser = body.paidByUser !== false // default true
+      const sharedWith: SharedMember[] = Array.isArray(body.sharedWith)
+        ? body.sharedWith.map((m: SharedMember) => ({
+            name: typeof m.name === "string" ? m.name.trim() : "",
+            email: typeof m.email === "string" ? m.email.trim() : "",
+            phone: typeof m.phone === "string" ? m.phone.trim() : "",
+            telegramChatId: typeof m.telegramChatId === "number" ? m.telegramChatId : null,
+            share: typeof m.share === "number" ? m.share : 0,
+            status: "pending" as const,
+            lastPaidDate: null,
+          }))
+        : []
+      const autoCreateSplitExpense = body.autoCreateSplitExpense === true
+
       const now = new Date().toISOString()
-      const doc = {
+      const doc: Record<string, unknown> = {
         userId: user.userId,
         name,
         amount,
@@ -109,15 +128,40 @@ export async function POST(request: NextRequest) {
         ...(merchantPattern && { merchantPattern }),
         ...(notes && { notes }),
         ...(paymentHistory && { paymentHistory }),
+        // Shared subscription fields
+        isShared,
+        ...(isShared && {
+          totalMembers,
+          userShare,
+          paidByUser,
+          sharedWith,
+          autoCreateSplitExpense,
+        }),
         createdAt: now,
         updatedAt: now,
       }
 
       const db = await getMongoDb()
       const result = await db.collection("subscriptions").insertOne(doc)
+      const insertedId = result.insertedId.toString()
+
+      // If shared, create a splits group and link it
+      if (isShared && sharedWith.length > 0) {
+        try {
+          const groupId = await createSplitsGroupForSubscription(
+            user.userId,
+            insertedId,
+            name,
+            sharedWith
+          )
+          doc.splitGroupId = groupId
+        } catch (err) {
+          console.error("Failed to create splits group:", err)
+        }
+      }
 
       return NextResponse.json(
-        { success: true, subscription: { ...doc, _id: result.insertedId.toString() } },
+        { success: true, subscription: { ...doc, _id: insertedId } },
         { status: 201, headers: corsHeaders() }
       )
     } catch (error) {
@@ -180,6 +224,34 @@ export async function PATCH(request: NextRequest) {
           }
         )
 
+        // If shared subscription with autoCreateSplitExpense, create a split expense and notify
+        if (existing.isShared && existing.autoCreateSplitExpense && Array.isArray(existing.sharedWith) && existing.sharedWith.length > 0) {
+          try {
+            await createRecurringSplitExpense(user.userId, {
+              _id: id,
+              name: existing.name,
+              amount: existing.amount,
+              sharedWith: existing.sharedWith,
+              userShare: existing.userShare || existing.amount,
+              paidByUser: existing.paidByUser !== false,
+            })
+            // Notify members about the new billing cycle
+            await notifySubscriptionMembers(
+              user.userId,
+              {
+                name: existing.name,
+                amount: existing.amount,
+                frequency: existing.frequency,
+                nextExpected,
+                sharedWith: existing.sharedWith,
+              },
+              'payment_due'
+            ).catch((err) => console.error("Notification error:", err))
+          } catch (err) {
+            console.error("Failed to create recurring split expense:", err)
+          }
+        }
+
         const updated = await db.collection("subscriptions").findOne({ _id: new ObjectId(id) })
         return NextResponse.json(
           { success: true, subscription: updated ? toResponse(updated as Record<string, unknown>) : null },
@@ -202,6 +274,31 @@ export async function PATCH(request: NextRequest) {
       if (VALID_STATUSES.includes(body.status)) updates.status = body.status
       if (typeof body.merchantPattern === "string") updates.merchantPattern = body.merchantPattern.trim()
       if (typeof body.notes === "string") updates.notes = body.notes.trim()
+
+      // Shared subscription fields
+      if (typeof body.isShared === "boolean") updates.isShared = body.isShared
+      if (typeof body.userShare === "number") updates.userShare = body.userShare
+      if (typeof body.paidByUser === "boolean") updates.paidByUser = body.paidByUser
+      if (typeof body.autoCreateSplitExpense === "boolean") updates.autoCreateSplitExpense = body.autoCreateSplitExpense
+      if (Array.isArray(body.sharedWith)) {
+        updates.sharedWith = body.sharedWith.map((m: SharedMember) => ({
+          name: typeof m.name === "string" ? m.name.trim() : "",
+          email: typeof m.email === "string" ? m.email.trim() : "",
+          phone: typeof m.phone === "string" ? m.phone.trim() : "",
+          telegramChatId: typeof m.telegramChatId === "number" ? m.telegramChatId : null,
+          share: typeof m.share === "number" ? m.share : 0,
+          status: (["pending", "paid", "overdue"] as const).includes(m.status) ? m.status : "pending",
+          lastPaidDate: typeof m.lastPaidDate === "string" ? m.lastPaidDate : null,
+        }))
+        updates.totalMembers = body.sharedWith.length + 1
+      }
+      // Clean up shared fields if toggled off
+      if (body.isShared === false) {
+        updates.sharedWith = []
+        updates.totalMembers = 1
+        updates.splitGroupId = null
+        updates.autoCreateSplitExpense = false
+      }
 
       if (Object.keys(updates).length === 0) {
         return NextResponse.json(

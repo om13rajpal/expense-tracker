@@ -106,6 +106,7 @@ export async function POST(request: NextRequest) {
             ? undefined
             : Number(item.expectedAnnualReturn)
           const notes = typeof item.notes === "string" ? item.notes.trim() : undefined
+          const buyDate = typeof item.buyDate === "string" && item.buyDate.trim() ? item.buyDate.trim() : undefined
 
           if (!symbol || !exchange || !Number.isFinite(shares) || shares <= 0 || !Number.isFinite(averageCost) || averageCost <= 0) {
             errors.push({ index, message: "Missing or invalid fields" })
@@ -124,6 +125,7 @@ export async function POST(request: NextRequest) {
             shares,
             averageCost,
             expectedAnnualReturn,
+            buyDate,
             notes,
             createdAt: now,
             updatedAt: now,
@@ -151,6 +153,7 @@ export async function POST(request: NextRequest) {
         ? undefined
         : Number(body.expectedAnnualReturn)
       const notes = typeof body.notes === "string" ? body.notes.trim() : undefined
+      const buyDate = typeof body.buyDate === "string" && body.buyDate.trim() ? body.buyDate.trim() : undefined
 
       if (!symbol || !exchange || !Number.isFinite(shares) || shares <= 0 || !Number.isFinite(averageCost) || averageCost <= 0) {
         return NextResponse.json(
@@ -174,6 +177,7 @@ export async function POST(request: NextRequest) {
         shares,
         averageCost,
         expectedAnnualReturn,
+        buyDate,
         notes,
         createdAt: now,
         updatedAt: now,
@@ -242,6 +246,12 @@ export async function PUT(request: NextRequest) {
           ? undefined
           : Number(body.expectedAnnualReturn)
         if (ear === undefined || Number.isFinite(ear)) updates.expectedAnnualReturn = ear
+      }
+      if (body.buyDate !== undefined) {
+        updates.buyDate = typeof body.buyDate === "string" && body.buyDate.trim() ? body.buyDate.trim() : undefined
+      }
+      if (body.notes !== undefined) {
+        updates.notes = typeof body.notes === "string" ? body.notes.trim() : undefined
       }
 
       if (Object.keys(updates).length === 0) {

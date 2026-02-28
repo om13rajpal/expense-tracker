@@ -26,6 +26,8 @@ const SHEET_NAME = 'Sheet1'; // Adjust if your sheet has a different name
 // In-memory cache for transactions
 let cachedTransactions: Transaction[] | null = null;
 let lastSyncTime: string | null = null;
+let cacheTimestamp: number | null = null;
+const CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
 /**
  * Check if Google Sheets authentication is configured
@@ -397,6 +399,7 @@ export async function fetchTransactionsFromSheet(sheetId?: string): Promise<{
 
     cachedTransactions = transactions;
     lastSyncTime = new Date().toISOString();
+    cacheTimestamp = Date.now();
 
     return {
       transactions,
@@ -428,6 +431,7 @@ export async function fetchTransactionsFromSheet(sheetId?: string): Promise<{
 
       cachedTransactions = transactions;
       lastSyncTime = new Date().toISOString();
+      cacheTimestamp = Date.now();
 
       return {
         transactions,
@@ -444,6 +448,7 @@ export async function fetchTransactionsFromSheet(sheetId?: string): Promise<{
   const demoTransactions = generateDemoTransactions();
   cachedTransactions = demoTransactions;
   lastSyncTime = new Date().toISOString();
+  cacheTimestamp = Date.now();
 
   return {
     transactions: demoTransactions,
@@ -459,6 +464,12 @@ export function getCachedTransactions(): {
   transactions: Transaction[] | null;
   lastSync: string | null;
 } {
+  // Auto-invalidate if cache is older than TTL
+  if (cachedTransactions && cacheTimestamp && Date.now() - cacheTimestamp > CACHE_TTL_MS) {
+    cachedTransactions = null;
+    lastSyncTime = null;
+    cacheTimestamp = null;
+  }
   return {
     transactions: cachedTransactions,
     lastSync: lastSyncTime,
@@ -471,6 +482,7 @@ export function getCachedTransactions(): {
 export function clearCache(): void {
   cachedTransactions = null;
   lastSyncTime = null;
+  cacheTimestamp = null;
 }
 
 /**

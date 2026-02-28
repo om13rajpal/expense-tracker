@@ -9,8 +9,7 @@ import { IconArrowRight, IconChevronDown } from "@tabler/icons-react"
 import { DollarSign, Activity, TrendingUp } from "lucide-react"
 import Lottie from "lottie-react"
 import { LineShadowText } from "@/components/ui/line-shadow-text"
-import { Particles } from "@/components/ui/particles"
-import { ParticleDollar } from "@/components/particle-dollar"
+import { MorphingParticleBlobs } from "@/components/landing/morphing-particle-blobs"
 import { FloatingNode } from "@/components/floating-node"
 import { AuroraBackground } from "@/components/aurora-background"
 import { LightRays } from "@/components/ui/light-rays"
@@ -22,9 +21,25 @@ import { StatsGlobe } from "@/components/landing/stats-globe"
 import { CTASection } from "@/components/landing/cta-section"
 import { AnimatedFooter } from "@/components/landing/animated-footer"
 import { AnimatedShinyText } from "@/components/ui/animated-shiny-text"
-import { InlineMorphingText } from "@/components/ui/inline-morphing-text"
+import { AuroraText } from "@/components/ui/aurora-text"
+import { MaskContainer } from "@/components/ui/svg-mask-effect"
 
 gsap.registerPlugin(ScrollTrigger)
+
+/* Reusable gradient fade divider — no hard borders between sections */
+function SectionFade({ direction = "down", className = "" }: { direction?: "down" | "up"; className?: string }) {
+  return (
+    <div
+      className={`relative w-full h-32 md:h-48 pointer-events-none ${className}`}
+      style={{
+        background:
+          direction === "down"
+            ? "linear-gradient(to bottom, transparent, black)"
+            : "linear-gradient(to top, transparent, black)",
+      }}
+    />
+  )
+}
 
 export default function LandingPage() {
   const { isAuthenticated } = useAuth()
@@ -43,28 +58,24 @@ export default function LandingPage() {
 
   useEffect(() => {
     const ctx = gsap.context(() => {
-      // Title reveal
       gsap.fromTo(
         titleRef.current,
         { y: 100, opacity: 0, rotationX: -90 },
         { y: 0, opacity: 1, rotationX: 0, duration: 1.5, ease: "power4.out", delay: 0.2 }
       )
 
-      // Subtitle
       gsap.fromTo(
         subtitleRef.current,
         { y: 30, opacity: 0 },
         { y: 0, opacity: 1, duration: 1, ease: "power3.out", delay: 0.8 }
       )
 
-      // Buttons
       gsap.fromTo(
         ".hero-btn",
         { y: 20, opacity: 0 },
         { y: 0, opacity: 1, duration: 0.8, ease: "back.out(1.7)", delay: 1, stagger: 0.1 }
       )
 
-      // Scroll chevron fade in then fade out on scroll
       if (chevronRef.current) {
         gsap.fromTo(
           chevronRef.current,
@@ -94,7 +105,6 @@ export default function LandingPage() {
         ref={heroRef}
         className="relative h-screen flex flex-col items-center justify-center text-center px-6 pt-20 overflow-hidden z-10"
       >
-        {/* Light rays effect */}
         <LightRays
           count={6}
           color="rgba(163, 230, 53, 0.12)"
@@ -105,7 +115,6 @@ export default function LandingPage() {
         />
 
         <div className="relative z-10 max-w-5xl mx-auto mt-16" style={{ perspective: "1000px" }}>
-          {/* Ambient depth glow */}
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-white/[0.04] blur-[120px] rounded-full pointer-events-none" />
 
           <FloatingNode
@@ -168,16 +177,18 @@ export default function LandingPage() {
           </div>
         </div>
 
-        {/* Scroll chevron */}
         <div ref={chevronRef} className="absolute bottom-10 left-1/2 -translate-x-1/2 z-30">
           <IconChevronDown className="size-6 text-white/30 animate-bounce" />
         </div>
       </section>
 
+      {/* ─── Fade hero → social proof ─── */}
+      <SectionFade direction="down" className="-mt-32 relative z-20" />
+
       {/* ─── 2. SOCIAL PROOF ─── */}
       <SocialProofMarquee />
 
-      {/* ─── 3. TEXT REVEAL + SCROLL-BOUND LOTTIE ─── */}
+      {/* ─── 3. TEXT REVEAL ─── */}
       <GsapTextReveal
         text="We built Finova because managing money should feel powerful not painful. Every dollar tracked. Every goal visualized. Every insight actionable. This is finance redesigned for people who refuse to settle."
         lottieUrl="/animations/text-reveal-lottie.json"
@@ -186,28 +197,24 @@ export default function LandingPage() {
       {/* ─── 4. APP SHOWCASE BENTO ─── */}
       <AppShowcase />
 
-      {/* ─── 5. PARTICLE + MASCOT (interactive $ formation on hover) ─── */}
-      <section className="relative isolate h-[55vh] md:h-[60vh] flex flex-col items-center justify-center overflow-hidden">
-        {/* Interactive particle canvas — contained within this section only */}
+      {/* ─── Fade into mascot section ─── */}
+      <SectionFade direction="down" className="-mb-32 relative z-10" />
+
+      {/* ─── 5. PARTICLE + MASCOT ─── */}
+      <section className="relative isolate z-20 h-[65vh] md:h-[75vh] flex flex-col items-center justify-center overflow-hidden">
         <div className="absolute inset-0 overflow-hidden pointer-events-auto z-10">
-          <ParticleDollar />
+          <MorphingParticleBlobs />
         </div>
 
-        {/* Lottie fire mascot — shifted up, smaller */}
         {mascotData && (
-          <div className="absolute top-[28%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] h-[200px] md:w-[260px] md:h-[260px] pointer-events-none z-30">
+          <div className="absolute top-[30%] left-1/2 -translate-x-1/2 -translate-y-1/2 w-[200px] h-[200px] md:w-[260px] md:h-[260px] pointer-events-none z-30">
             <Lottie animationData={mascotData} loop autoplay className="w-full h-full drop-shadow-[0_0_40px_rgba(163,230,53,0.25)]" />
           </div>
         )}
 
-        {/* Text content — sits below mascot, in front of particles */}
-        <div className="absolute bottom-[12%] left-1/2 -translate-x-1/2 z-30 pointer-events-none text-center w-full max-w-2xl px-6">
+        <div className="absolute bottom-[10%] left-1/2 -translate-x-1/2 z-30 pointer-events-none text-center w-full max-w-2xl px-6">
           <p className="text-2xl md:text-3xl font-bold text-white tracking-tight">
-            Every dollar has a{" "}
-            <span className="text-lime-400 inline-block">
-              <InlineMorphingText texts={["purpose", "story", "plan", "future", "mission"]} />
-            </span>
-            .
+            Every dollar has a <AuroraText>purpose</AuroraText>.
           </p>
           <p className="mt-2 text-sm md:text-base text-white/40 font-medium">
             Hover near the mascot to see your money come alive.
@@ -228,13 +235,32 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* ─── 6. GLOBE + STATS ─── */}
+      {/* ─── 6. SVG MASK REVEAL ─── */}
+      <section className="relative overflow-hidden">
+        <MaskContainer
+          revealText={
+            <p className="mx-auto max-w-4xl text-center text-3xl md:text-5xl font-black tracking-tight text-white">
+              The financial cockpit you never knew you needed.{" "}
+              <span className="text-lime-400">Until now.</span>
+            </p>
+          }
+          className="h-[50vh] md:h-[60vh] border-0 bg-black text-white/30"
+          revealSize={500}
+        >
+          <span className="text-2xl md:text-4xl font-bold">
+            See what&apos;s <span className="text-lime-400">hidden</span> in your finances.
+            Move your cursor to <span className="text-lime-400">reveal</span> the truth.
+          </span>
+        </MaskContainer>
+      </section>
+
+      {/* ─── 7. GLOBE + STATS ─── */}
       <StatsGlobe />
 
-      {/* ─── 7. CTA ─── */}
+      {/* ─── 8. CTA ─── */}
       <CTASection />
 
-      {/* ─── 8. ANIMATED FOOTER ─── */}
+      {/* ─── 9. FOOTER ─── */}
       <AnimatedFooter />
     </div>
   )

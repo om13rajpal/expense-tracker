@@ -247,6 +247,109 @@ export function formatDailySummaryMessage(data: {
   return lines.join('\n');
 }
 
+// ─── Extended formatters (for /budget, /goals, /investments, /ask) ──
+
+/**
+ * Build a Unicode progress bar string (10 segments).
+ *
+ * @param percent - Usage percentage (0–100+).
+ * @returns Bar like "▓▓▓▓▓░░░░░ 52%".
+ */
+function buildProgressBar(percent: number): string {
+  const clamped = Math.max(0, Math.min(100, percent));
+  const filled = Math.round(clamped / 10);
+  return '\u{2593}'.repeat(filled) + '\u{2591}'.repeat(10 - filled);
+}
+
+/**
+ * Format budget status with Unicode progress bars for each category.
+ *
+ * @param budgets - Array of budget categories with spent and limit amounts.
+ * @returns Markdown-formatted budget status string.
+ */
+export function formatBudgetStatus(
+  budgets: { category: string; spent: number; limit: number }[]
+): string {
+  if (budgets.length === 0) return 'No budget categories found.';
+
+  const lines: string[] = ['💰 *Budget Status*\n'];
+
+  for (const b of budgets) {
+    const pct = b.limit > 0 ? Math.round((b.spent / b.limit) * 100) : 0;
+    const bar = buildProgressBar(pct);
+    const remaining = b.limit - b.spent;
+    const warn = pct >= 100 ? ' 🚨' : pct >= 80 ? ' ⚠️' : '';
+    lines.push(
+      `*${b.category}*`,
+      `${bar} ${pct}%${warn}`,
+      `${formatINR(b.spent)} / ${formatINR(b.limit)} (${formatINR(remaining)} left)`,
+      ''
+    );
+  }
+
+  return lines.join('\n');
+}
+
+/**
+ * Format goals progress with completion percentages and deadlines.
+ *
+ * @param goals - Array of savings goals with current amount, target, and deadline.
+ * @returns Markdown-formatted goals progress string.
+ */
+export function formatGoalsProgress(
+  goals: { name: string; current: number; target: number; deadline: string }[]
+): string {
+  if (goals.length === 0) return 'No savings goals found.';
+
+  const lines: string[] = ['🎯 *Goals Progress*\n'];
+
+  for (const goal of goals) {
+    const pct = goal.target > 0 ? Math.round((goal.current / goal.target) * 100) : 0;
+    const bar = buildProgressBar(pct);
+    lines.push(
+      `*${goal.name}*`,
+      `${bar} ${pct}%`,
+      `${formatINR(goal.current)} / ${formatINR(goal.target)} • Deadline: ${goal.deadline}`,
+      ''
+    );
+  }
+
+  return lines.join('\n');
+}
+
+/**
+ * Format an investment portfolio overview.
+ *
+ * @param portfolio - Portfolio totals including invested, current value, and returns.
+ * @returns Markdown-formatted portfolio summary string.
+ */
+export function formatInvestmentSummary(portfolio: {
+  totalInvested: number;
+  totalCurrent: number;
+  returnsPercent: number;
+}): string {
+  const returns = portfolio.totalCurrent - portfolio.totalInvested;
+  const emoji = returns >= 0 ? '📈' : '📉';
+  return [
+    '💼 *Investment Portfolio*\n',
+    `Invested: ${formatINR(portfolio.totalInvested)}`,
+    `Current: ${formatINR(portfolio.totalCurrent)}`,
+    `${emoji} Returns: ${formatINR(returns)} (${returns >= 0 ? '+' : ''}${portfolio.returnsPercent.toFixed(1)}%)`,
+  ].join('\n');
+}
+
+/**
+ * Format an AI response, truncating if it exceeds Telegram's 4096 char limit.
+ *
+ * @param response - The AI-generated response text.
+ * @returns Formatted response string safe for Telegram.
+ */
+export function formatAiResponse(response: string): string {
+  const maxLen = 4000; // leave room for wrapper text
+  if (response.length <= maxLen) return response;
+  return response.slice(0, maxLen) + '\n\n_...response truncated due to length_';
+}
+
 // ─── File download helper (for receipt photos) ──────────────────────
 
 /**

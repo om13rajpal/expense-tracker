@@ -20,7 +20,7 @@ import { getMongoDb } from './mongodb';
 import { calculateAnalytics, separateOneTimeExpenses } from './analytics';
 import { calculateAccountSummary } from './balance-utils';
 import { calculateMonthlyMetrics, getCurrentMonth } from './monthly-utils';
-import { chatCompletion, buildFinancialContext, buildInvestmentContext } from './openrouter';
+import { chatCompletion, buildFinancialContext, buildInvestmentContext } from './ai-client';
 import { getSystemPrompt, buildUserMessage } from './ai-prompts';
 import { searchMarketContext } from './ai-search';
 import { calculateTax, getDefaultTaxConfig } from '@/lib/tax';

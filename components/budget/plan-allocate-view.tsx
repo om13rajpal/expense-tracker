@@ -737,7 +737,7 @@ export function PlanAllocateView() {
 // ── Sub-components ──
 
 function StatCard({ icon: Icon, iconBg, iconColor, label, value, sub }: {
-  icon: React.ElementType; iconBg: string; iconColor: string; label: string; value: string; sub: string
+  icon: React.ComponentType<any>; iconBg: string; iconColor: string; label: string; value: string; sub: string
 }) {
   return (
     <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-3">
@@ -757,7 +757,7 @@ function StatCard({ icon: Icon, iconBg, iconColor, label, value, sub }: {
 }
 
 interface AllocationCardProps {
-  icon: React.ElementType; iconBg: string; iconColor: string; label: string; hint: string
+  icon: React.ComponentType<any>; iconBg: string; iconColor: string; label: string; hint: string
   value: number; onChange: (v: number) => void; pctStr?: string; badgeColor: string
   budgetPct?: number
 }

@@ -75,7 +75,28 @@
   0%, 90%, 100% {
     background-position: calc(-100% - var(--shiny-width)) 0;}
   30%, 60% {
-    background-position: calc(100% + var(--shiny-width)) 0;}}}
+    background-position: calc(100% + var(--shiny-width)) 0;}}
+  --animate-aurora: aurora 8s ease-in-out infinite alternate;
+  @keyframes aurora {
+  0% {
+    background-position: 0% 50%;
+    transform: rotate(-5deg) scale(0.9);}
+  25% {
+    background-position: 50% 100%;
+    transform: rotate(5deg) scale(1.1);}
+  50% {
+    background-position: 100% 50%;
+    transform: rotate(-3deg) scale(0.95);}
+  75% {
+    background-position: 50% 0%;
+    transform: rotate(3deg) scale(1.05);}
+  100% {
+    background-position: 0% 50%;
+    transform: rotate(-5deg) scale(0.9);}}
+  --animate-spin-blob: spinBlob 8s linear infinite;
+  @keyframes spinBlob {
+  0% { transform: rotate(0deg) scale(2); }
+  100% { transform: rotate(360deg) scale(2); }}}
 
 :root {
   --radius: 0.75rem;
@@ -180,7 +201,7 @@
     content: "";
     position: fixed;
     inset: 0;
-    z-index: 9999;
+    z-index: 1;
     pointer-events: none;
     /* Ultra-premium mathematically generated noise layer */
     background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
@@ -300,31 +321,87 @@
   @apply rounded-md bg-muted px-1.5 py-0.5 text-xs font-medium;
 }
 
-/* ─── Footer FINOVA shimmer ─── */
+/* ─── Widget Grid (react-grid-layout) ─── */
 
-.finova-shimmer {
-  background: linear-gradient(
-    90deg,
-    rgba(255, 255, 255, 0.04) 0%,
-    rgba(255, 255, 255, 0.04) 30%,
-    rgba(163, 230, 53, 0.18) 50%,
-    rgba(255, 255, 255, 0.04) 70%,
-    rgba(255, 255, 255, 0.04) 100%
-  );
-  background-size: 250% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  animation: finova-sweep 8s ease-in-out infinite;
+.react-grid-layout {
+  position: relative;
+  transition: height 400ms cubic-bezier(0.32, 0.72, 0, 1);
 }
 
-@keyframes finova-sweep {
-  0%, 100% {
-    background-position: 100% 0;
-  }
-  50% {
-    background-position: 0% 0;
-  }
+.react-grid-item {
+  transition: all 350ms cubic-bezier(0.32, 0.72, 0, 1);
+  transition-property: left, top, width, height;
+  overflow: visible !important;
+}
+
+.react-grid-item.cssTransforms {
+  transition-property: transform, width, height;
+  transition-duration: 350ms;
+  transition-timing-function: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+/* Dragging state — lift + subtle scale, no jitter */
+.react-grid-item.react-draggable-dragging {
+  z-index: 50;
+  opacity: 1;
+  transition: box-shadow 200ms ease, filter 200ms ease !important;
+  will-change: transform;
+  filter: brightness(1.05);
+  box-shadow: 0 20px 60px -12px oklch(0 0 0 / 30%), 0 0 0 1px oklch(0.72 0.19 135 / 20%);
+}
+
+.react-grid-item.react-draggable-dragging > * {
+  transform: scale(1.02);
+  transition: transform 200ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.react-grid-item > .react-resizable-handle {
+  display: none; /* We use preset sizes, not freeform resize */
+}
+
+/* Drop placeholder — soft glow */
+.react-grid-placeholder {
+  background: oklch(0.72 0.19 135 / 10%);
+  border-radius: 1rem;
+  border: 2px dashed oklch(0.72 0.19 135 / 25%);
+  transition: all 350ms cubic-bezier(0.32, 0.72, 0, 1);
+  box-shadow: inset 0 0 20px oklch(0.72 0.19 135 / 8%);
+}
+
+/* ─── Widget Jiggle (Apple-style edit mode) ─── */
+
+@keyframes widget-jiggle {
+  0%   { transform: rotate(-0.4deg); }
+  50%  { transform: rotate(0.4deg); }
+  100% { transform: rotate(-0.4deg); }
+}
+
+.widget-jiggle {
+  animation: widget-jiggle 0.4s ease-in-out infinite;
+}
+
+/* Stagger jiggle for organic feel — wider spread */
+.react-grid-item:nth-child(2n) .widget-jiggle {
+  animation-delay: 0.07s;
+  animation-duration: 0.42s;
+}
+.react-grid-item:nth-child(3n) .widget-jiggle {
+  animation-delay: 0.13s;
+  animation-duration: 0.38s;
+}
+.react-grid-item:nth-child(4n) .widget-jiggle {
+  animation-delay: 0.19s;
+  animation-duration: 0.44s;
+}
+.react-grid-item:nth-child(5n) .widget-jiggle {
+  animation-delay: 0.03s;
+  animation-duration: 0.36s;
+}
+
+/* Pause jiggle while actively dragging */
+.react-grid-item.react-draggable-dragging .widget-jiggle {
+  animation-play-state: paused;
+  transform: rotate(0deg);
 }
 
 ::view-transition-old(root),

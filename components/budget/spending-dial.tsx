@@ -34,7 +34,7 @@ const BUCKET_META: Record<
   {
     label: string
     desc: string
-    icon: React.ComponentType<{ className?: string }>
+    icon: React.ComponentType<any>
     /** Tailwind text color class for the label dot / accent */
     ringColor: string
     /** Raw hex/hsl for SVG stroke */

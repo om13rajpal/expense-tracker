@@ -3,8 +3,8 @@
  *
  * POST /api/agent/chat
  * Streams an AI-powered financial advisor response using the user's complete
- * financial data as context. Fetches all relevant MongoDB collections and builds
- * a comprehensive context for the LLM on each request.
+ * financial data as context. Routes through OpenAI (ChatGPT) if the user has
+ * a connected account, otherwise falls back to OpenRouter (Claude).
  *
  * Request body:
  *   { message: string, threadId?: string, history?: { role: "user"|"assistant", content: string }[] }
@@ -20,16 +20,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { corsHeaders, handleOptions, withAuth } from '@/lib/middleware'
 import { getMongoDb } from '@/lib/mongodb'
 import { fetchAllFinancialData, buildFinancialContext } from '@/lib/financial-context'
+import { chatCompletionStream } from '@/lib/ai-client'
 import { checkRateLimit } from '@/lib/rate-limit'
 
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
 
-/** @constant OpenRouter API endpoint for chat completions. */
-const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1/chat/completions'
-/** @constant AI model identifier used for chat responses (Claude Sonnet 4.5). */
-const MODEL = 'anthropic/claude-sonnet-4.5'
 /** @constant Maximum tokens for AI response generation. */
 const MAX_TOKENS = 4096
 /** @constant Temperature for AI response (0.4 = focused but not deterministic). */
@@ -69,7 +66,7 @@ function getErrorMessage(error: unknown): string {
 }
 
 // ---------------------------------------------------------------------------
-// SSE stream parser — reads OpenRouter streaming response, forwards text,
+// SSE stream parser — reads upstream streaming response, forwards text,
 // and collects the full response for thread persistence.
 // ---------------------------------------------------------------------------
 
@@ -79,7 +76,7 @@ interface StreamResult {
   fullText: Promise<string>
 }
 
-function createStreamingResponse(openRouterResponse: Response): StreamResult {
+function createStreamingResponse(upstreamResponse: Response): StreamResult {
   const encoder = new TextEncoder()
   const decoder = new TextDecoder()
   let fullTextResolve: (value: string) => void
@@ -91,7 +88,7 @@ function createStreamingResponse(openRouterResponse: Response): StreamResult {
 
   const stream = new ReadableStream({
     async start(controller) {
-      const reader = openRouterResponse.body?.getReader()
+      const reader = upstreamResponse.body?.getReader()
       if (!reader) {
         controller.enqueue(encoder.encode('Error: No response body from AI service.'))
         controller.close()
@@ -190,16 +187,7 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // 2. Validate OpenRouter API key
-      const apiKey = process.env.OPENROUTER_API_KEY
-      if (!apiKey) {
-        return NextResponse.json(
-          { success: false, message: 'AI service not configured.' },
-          { status: 500, headers: corsHeaders() }
-        )
-      }
-
-      // 3. Fetch all financial data from MongoDB
+      // 2. Validate at least one AI service is available
       const db = await getMongoDb()
 
       // 2.5. Rate limit: max 20 messages per hour per user
@@ -219,6 +207,8 @@ export async function POST(request: NextRequest) {
           { status: 503, headers: corsHeaders() }
         )
       }
+
+      // 3. Fetch all financial data from MongoDB
       const financialData = await fetchAllFinancialData(db, user.userId)
 
       // 4. Build the comprehensive context
@@ -265,53 +255,27 @@ export async function POST(request: NextRequest) {
       // Add the current user message
       messages.push({ role: 'user', content: message })
 
-      // 6. Call OpenRouter with streaming enabled (30s timeout)
-      const controller = new AbortController()
-      const timeout = setTimeout(() => controller.abort(), 30_000)
-
-      let openRouterResponse: Response
+      // 6. Call the unified AI client with streaming (routes to OpenAI or OpenRouter)
+      let upstreamResponse: Response
       try {
-        openRouterResponse = await fetch(OPENROUTER_API_URL, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-            'HTTP-Referer': 'https://finova.local',
-            'X-Title': 'Finova AI Agent',
-          },
-          body: JSON.stringify({
-            model: MODEL,
-            messages,
-            max_tokens: MAX_TOKENS,
-            temperature: TEMPERATURE,
-            stream: true,
-          }),
-          signal: controller.signal,
+        const result = await chatCompletionStream(messages, {
+          maxTokens: MAX_TOKENS,
+          temperature: TEMPERATURE,
+          userId: user.userId,
         })
+        upstreamResponse = result.response
       } catch (err: unknown) {
-        clearTimeout(timeout)
-        if (err instanceof DOMException && err.name === 'AbortError') {
+        if (err instanceof Error && err.message.includes('timed out')) {
           return NextResponse.json(
             { success: false, message: 'AI analysis timed out. Please try again.' },
             { status: 504, headers: corsHeaders() }
           )
         }
         throw err
-      } finally {
-        clearTimeout(timeout)
-      }
-
-      if (!openRouterResponse.ok) {
-        const errorText = await openRouterResponse.text()
-        console.error('OpenRouter API error:', openRouterResponse.status, errorText)
-        return NextResponse.json(
-          { success: false, message: `AI service error (${openRouterResponse.status}). Please try again.` },
-          { status: 500, headers: corsHeaders() }
-        )
       }
 
       // 7. Stream the response back to the client and collect full text
-      const { stream, fullText } = createStreamingResponse(openRouterResponse)
+      const { stream, fullText } = createStreamingResponse(upstreamResponse)
 
       // Determine the threadId — reuse existing or create new
       const threadId =

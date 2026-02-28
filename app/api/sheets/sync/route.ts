@@ -14,11 +14,12 @@ import { NextRequest, NextResponse } from "next/server"
 
 import {
   fetchTransactionsFromSheet,
-  getCachedTransactions,
   clearCache,
 } from "@/lib/sheets"
 import { corsHeaders, handleOptions, withAuth } from "@/lib/middleware"
 import { persistTransactions } from "@/lib/persist-transactions"
+import { getMongoDb } from "@/lib/mongodb"
+import { checkSubscriptionPayments } from "@/lib/check-subscription-payments"
 
 function getErrorMessage(error: unknown) {
   return error instanceof Error ? error.message : "Unknown error"
@@ -31,39 +32,31 @@ function getErrorMessage(error: unknown) {
 export async function GET(request: NextRequest) {
   return withAuth(async (req, { user }) => {
     try {
-      const searchParams = req.nextUrl.searchParams
-      const force = searchParams.get("force") === "true"
-
-      // Check if we have cached data and force refresh is not requested
-      const cached = getCachedTransactions()
-      if (!force && cached.transactions && cached.lastSync) {
-        // Still persist to MongoDB in case it's empty
-        const persisted = await persistTransactions(user.userId, cached.transactions)
-
-        return NextResponse.json(
-          {
-            success: true,
-            message: "Using cached data",
-            transactions: cached.transactions,
-            lastSync: cached.lastSync,
-            count: cached.transactions.length,
-            persisted,
-            cached: true,
-          },
-          { status: 200, headers: corsHeaders() }
-        )
-      }
-
-      // Clear cache if force refresh
-      if (force) {
-        clearCache()
-      }
+      // Always clear cache and fetch fresh data on manual sync
+      clearCache()
 
       // Fetch fresh data from Google Sheets
       const { transactions, lastSync } = await fetchTransactionsFromSheet()
 
       // Persist to MongoDB
       const persisted = await persistTransactions(user.userId, transactions)
+
+      // Persist sync timestamp to user_settings for display purposes
+      let subscriptionMatches = 0
+      try {
+        const db = await getMongoDb()
+        await db.collection("user_settings").updateOne(
+          { userId: user.userId },
+          { $set: { lastSheetSync: lastSync, updatedAt: new Date().toISOString() } },
+          { upsert: true }
+        )
+
+        // Auto-detect subscription payments from newly synced transactions
+        const { summary } = await checkSubscriptionPayments(db, user.userId)
+        subscriptionMatches = summary.matched
+      } catch {
+        // Non-critical, don't fail the sync
+      }
 
       return NextResponse.json(
         {
@@ -74,6 +67,7 @@ export async function GET(request: NextRequest) {
           count: transactions.length,
           persisted,
           cached: false,
+          subscriptionMatches,
         },
         { status: 200, headers: corsHeaders() }
       )

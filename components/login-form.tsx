@@ -113,12 +113,14 @@ export function LoginForm() {
             </div>
           </div>
 
-          {/* ChatGPT Connect */}
+          {/* ChatGPT Connect — directs to Settings after login */}
           <Button
             type="button"
             variant="outline"
             onClick={() => {
-              toast.info("Log in first, then connect ChatGPT from Settings")
+              toast.info("Log in first, then connect ChatGPT from Settings", {
+                description: "Your ChatGPT Plus/Pro subscription can power all AI features.",
+              })
             }}
             className="w-full h-12 rounded-xl border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white font-medium tracking-wide transition-all"
           >

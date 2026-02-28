@@ -144,7 +144,8 @@ export function SyncButton({
 export function SyncButtonCompact({
   onSync,
   className,
-}: Pick<SyncButtonProps, "onSync" | "className">) {
+  lastSync,
+}: Pick<SyncButtonProps, "onSync" | "className"> & { lastSync?: string | null }) {
   const [isSyncing, setIsSyncing] = React.useState(false)
 
   const handleSync = async () => {
@@ -167,6 +168,17 @@ export function SyncButtonCompact({
     }
   }
 
+  const formatLastSync = (iso: string | null | undefined): string => {
+    if (!iso) return "Never synced"
+    const diff = Date.now() - new Date(iso).getTime()
+    const mins = Math.floor(diff / 60000)
+    const hours = Math.floor(diff / 3600000)
+    if (mins < 1) return "Just now"
+    if (mins < 60) return `${mins}m ago`
+    if (hours < 24) return `${hours}h ago`
+    return new Date(iso).toLocaleDateString()
+  }
+
   return (
     <TooltipProvider>
       <Tooltip>
@@ -185,7 +197,12 @@ export function SyncButtonCompact({
           </Button>
         </TooltipTrigger>
         <TooltipContent>
-          <div>Sync transactions from Google Sheets</div>
+          <div className="flex flex-col gap-1">
+            <div className="font-medium">Sync with Google Sheets</div>
+            <div className="text-xs text-muted-foreground">
+              Last sync: {formatLastSync(lastSync)}
+            </div>
+          </div>
         </TooltipContent>
       </Tooltip>
     </TooltipProvider>

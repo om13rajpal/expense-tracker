@@ -255,3 +255,218 @@ export async function sendSplitReminder(params: {
     return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
   }
 }
+
+/**
+ * Send an email notification when someone is added to a shared subscription.
+ */
+export async function sendSubscriptionShareNotification(params: {
+  to: string
+  fromName: string
+  subscriptionName: string
+  shareAmount: number
+  totalAmount: number
+  frequency: string
+  nextExpected: string
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { to, fromName, subscriptionName, shareAmount, totalAmount, frequency, nextExpected } = params
+
+    const formattedShare = new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0,
+    }).format(shareAmount)
+
+    const formattedTotal = new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0,
+    }).format(totalAmount)
+
+    const freqLabel = frequency === 'yearly' ? 'year' : frequency === 'weekly' ? 'week' : 'month'
+    const formattedDate = new Date(nextExpected).toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    })
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="margin:0;padding:0;background-color:#f9fafb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f9fafb;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+          <!-- Header -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#10b981,#059669);padding:28px 32px;">
+              <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.3px;">Finova</h1>
+              <p style="margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:13px;">Shared Subscription</p>
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td style="padding:32px;">
+              <p style="margin:0 0 20px;color:#111827;font-size:15px;line-height:1.6;">
+                <strong>${fromName}</strong> added you to a shared <strong>${subscriptionName}</strong> subscription.
+              </p>
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:20px;margin-bottom:20px;">
+                <tr>
+                  <td>
+                    <p style="margin:0 0 4px;color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">Your Share</p>
+                    <p style="margin:0;color:#059669;font-size:28px;font-weight:700;">${formattedShare}</p>
+                    <p style="margin:8px 0 0;color:#6b7280;font-size:13px;">out of ${formattedTotal} total per ${freqLabel}</p>
+                  </td>
+                </tr>
+              </table>
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px;margin-bottom:20px;">
+                <tr>
+                  <td>
+                    <p style="margin:0 0 4px;color:#6b7280;font-size:12px;">Next Payment Due</p>
+                    <p style="margin:0;color:#111827;font-size:14px;font-weight:600;">${formattedDate}</p>
+                    <p style="margin:4px 0 0;color:#6b7280;font-size:12px;">Billed ${frequency}</p>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin:0;color:#9ca3af;font-size:12px;">
+                You can settle your share directly with ${fromName}.
+              </p>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="padding:20px 32px;border-top:1px solid #f3f4f6;">
+              <p style="margin:0;color:#9ca3af;font-size:11px;text-align:center;">Sent via Finova</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+
+    const { error } = await getResendClient().emails.send({
+      from: FROM_ADDRESS,
+      to,
+      subject: `${fromName} shared "${subscriptionName}" with you - ${formattedShare}/${freqLabel}`,
+      html,
+    })
+
+    if (error) {
+      console.error('Resend send error:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true }
+  } catch (err) {
+    console.error('sendSubscriptionShareNotification error:', err)
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
+  }
+}
+
+/**
+ * Send a renewal reminder email for a shared subscription.
+ */
+export async function sendSubscriptionRenewalReminder(params: {
+  to: string
+  fromName: string
+  subscriptionName: string
+  shareAmount: number
+  renewalDate: string
+  upiId?: string
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    const { to, fromName, subscriptionName, shareAmount, renewalDate, upiId } = params
+
+    const formattedShare = new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR',
+      maximumFractionDigits: 0,
+    }).format(shareAmount)
+
+    const formattedDate = new Date(renewalDate).toLocaleDateString('en-IN', {
+      day: 'numeric',
+      month: 'short',
+      year: 'numeric',
+    })
+
+    const html = `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8" /></head>
+<body style="margin:0;padding:0;background-color:#f9fafb;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Oxygen,Ubuntu,sans-serif;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f9fafb;padding:32px 16px;">
+    <tr>
+      <td align="center">
+        <table width="100%" cellpadding="0" cellspacing="0" style="max-width:520px;background-color:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
+          <!-- Header -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#10b981,#059669);padding:28px 32px;">
+              <h1 style="margin:0;color:#ffffff;font-size:20px;font-weight:700;letter-spacing:-0.3px;">Finova</h1>
+              <p style="margin:6px 0 0;color:rgba(255,255,255,0.85);font-size:13px;">Subscription Renewal Reminder</p>
+            </td>
+          </tr>
+          <!-- Body -->
+          <tr>
+            <td style="padding:32px;">
+              <p style="margin:0 0 20px;color:#111827;font-size:15px;line-height:1.6;">
+                Hi! <strong>${fromName}</strong> is reminding you about an upcoming subscription renewal.
+              </p>
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#fffbeb;border:1px solid #fde68a;border-radius:8px;padding:20px;margin-bottom:20px;">
+                <tr>
+                  <td>
+                    <p style="margin:0 0 4px;color:#6b7280;font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">${subscriptionName}</p>
+                    <p style="margin:0;color:#d97706;font-size:28px;font-weight:700;">${formattedShare}</p>
+                    <p style="margin:8px 0 0;color:#6b7280;font-size:13px;">Renewing on ${formattedDate}</p>
+                  </td>
+                </tr>
+              </table>
+              ${upiId ? `
+              <table width="100%" cellpadding="0" cellspacing="0" style="background-color:#f9fafb;border:1px solid #e5e7eb;border-radius:8px;padding:16px;margin-bottom:20px;">
+                <tr>
+                  <td>
+                    <p style="margin:0 0 4px;color:#6b7280;font-size:12px;">Pay via UPI</p>
+                    <p style="margin:0;color:#111827;font-size:14px;font-weight:600;font-family:monospace;">${upiId}</p>
+                  </td>
+                </tr>
+              </table>
+              ` : ''}
+              <p style="margin:0;color:#9ca3af;font-size:12px;">
+                Please settle your share with ${fromName} before the renewal date.
+              </p>
+            </td>
+          </tr>
+          <!-- Footer -->
+          <tr>
+            <td style="padding:20px 32px;border-top:1px solid #f3f4f6;">
+              <p style="margin:0;color:#9ca3af;font-size:11px;text-align:center;">Sent via Finova</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`
+
+    const { error } = await getResendClient().emails.send({
+      from: FROM_ADDRESS,
+      to,
+      subject: `Reminder: ${subscriptionName} renewal - ${formattedShare} due ${formattedDate}`,
+      html,
+    })
+
+    if (error) {
+      console.error('Resend send error:', error)
+      return { success: false, error: error.message }
+    }
+
+    return { success: true }
+  } catch (err) {
+    console.error('sendSubscriptionRenewalReminder error:', err)
+    return { success: false, error: err instanceof Error ? err.message : 'Unknown error' }
+  }
+}

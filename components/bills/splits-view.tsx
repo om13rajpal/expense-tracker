@@ -135,7 +135,7 @@ function SectionHeading({
   count,
   action,
 }: {
-  icon: React.ElementType
+  icon: React.ComponentType<any>
   iconBg: string
   iconColor: string
   title: string
@@ -172,7 +172,7 @@ function EmptyState({
   description,
   action,
 }: {
-  icon: React.ElementType
+  icon: React.ComponentType<any>
   title: string
   description: string
   action?: React.ReactNode

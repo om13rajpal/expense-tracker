@@ -290,7 +290,7 @@ function formatTimeline(dateStr: string): string | null {
 }
 
 // Category color + icon mapping
-const CATEGORY_CONFIG: Record<string, { color: string; ring: string; bg: string; icon: React.ElementType; border: string }> = {
+const CATEGORY_CONFIG: Record<string, { color: string; ring: string; bg: string; icon: React.ComponentType<any>; border: string }> = {
   "Emergency Fund": {
     color: "text-lime-600 dark:text-lime-400",
     ring: "stroke-lime-500",

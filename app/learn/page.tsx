@@ -69,7 +69,7 @@ import type { LearnProgress, QuizQuestion } from "@/lib/learn-types"
 
 /* ─── Icon map ─── */
 
-const ICON_MAP: Record<string, React.ElementType> = {
+const ICON_MAP: Record<string, React.ComponentType<any>> = {
   IconSchool,
   IconBulb,
   IconShieldCheck,
@@ -88,7 +88,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
   IconScale,
 }
 
-function getIcon(name: string): React.ElementType {
+function getIcon(name: string): React.ComponentType<any> {
   return ICON_MAP[name] || IconBulb
 }
 
@@ -141,7 +141,7 @@ function statusBadge(status: ProgressStatus) {
 
 /* ─── Progress motivational copy ─── */
 
-function getMotivationalCopy(percent: number, readCount: number): { text: string; icon: React.ElementType } {
+function getMotivationalCopy(percent: number, readCount: number): { text: string; icon: React.ComponentType<any> } {
   if (readCount === 0) return { text: "Begin your journey to financial mastery", icon: IconRocket }
   if (percent === 100) return { text: "You have mastered every topic. Brilliant.", icon: IconTrophy }
   if (percent >= 75) return { text: "Almost there! Just a few topics left to conquer", icon: IconSparkles }

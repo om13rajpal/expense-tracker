@@ -20,9 +20,19 @@ import {
   getFileUrl,
   callTelegramAPI,
   resolveCategoryIndex,
+  formatBudgetStatus,
+  formatAiResponse,
 } from '@/lib/telegram';
 import { parseExpenseMessage } from '@/lib/telegram-parser';
 import { processReceiptImage } from '@/lib/telegram-receipt';
+import {
+  sendAiResponse,
+  sendMonthlyReport,
+  sendGoalsProgress,
+  sendInvestmentSummary,
+} from '@/lib/telegram-notifications';
+import { fetchAllFinancialData, buildFinancialContext } from '@/lib/financial-context';
+import { chatCompletion } from '@/lib/openrouter';
 
 // ─── Dedup: track processed update_ids to reject Telegram retries ───
 
@@ -148,11 +158,22 @@ async function handleUnlink(chatId: number) {
 async function handleHelp(chatId: number) {
   const text = [
     '*Available Commands:*\n',
+    '*Account:*',
     '/start - Welcome message',
     '/link `<code>` - Link your account',
     '/unlink - Unlink your account',
-    '/summary - Today\'s expense summary',
     '/help - Show this message\n',
+    '*Finance:*',
+    '/summary - Today\'s expense summary',
+    '/report - Monthly financial report',
+    '/budget - Budget status with progress bars',
+    '/goals - Savings goals progress',
+    '/investments - Portfolio summary\n',
+    '*AI:*',
+    '/ask `<question>` - Ask about your finances',
+    '  _e.g. /ask How much did I spend on food?_\n',
+    '*Settings:*',
+    '/alerts `on|off` - Toggle proactive alerts\n',
     '*Quick Entry:*',
     '`Coffee 250` - Log an expense',
     '`250 Coffee` - Also works',
@@ -223,6 +244,353 @@ async function handleSummary(chatId: number) {
   });
 
   await sendMessage(chatId, message);
+}
+
+// ─── /ask <question> — AI Financial Query ───────────────────────────
+
+const AI_RATE_LIMIT_PER_HOUR = 10;
+
+async function checkAiRateLimit(userId: string): Promise<boolean> {
+  const db = await getMongoDb();
+  const oneHourAgo = new Date(Date.now() - 60 * 60 * 1000).toISOString();
+  const count = await db.collection('ai_rate_limits').countDocuments({
+    userId,
+    createdAt: { $gte: oneHourAgo },
+  });
+  return count < AI_RATE_LIMIT_PER_HOUR;
+}
+
+async function recordAiQuery(userId: string): Promise<void> {
+  const db = await getMongoDb();
+  await db.collection('ai_rate_limits').insertOne({
+    userId,
+    createdAt: new Date().toISOString(),
+  });
+}
+
+async function handleAsk(chatId: number, question: string) {
+  if (!question.trim()) {
+    await sendMessage(chatId, 'Please provide a question.\nUsage: `/ask How much did I spend on food this month?`');
+    return;
+  }
+
+  const userId = await getUserIdByChatId(chatId);
+  if (!userId) {
+    await sendMessage(chatId, 'Account not linked. Use /link to connect your account.');
+    return;
+  }
+
+  const allowed = await checkAiRateLimit(userId);
+  if (!allowed) {
+    await sendMessage(chatId, `Rate limit reached (${AI_RATE_LIMIT_PER_HOUR} AI queries/hour). Please try again later.`);
+    return;
+  }
+
+  await sendMessage(chatId, 'Thinking... 🧠');
+
+  try {
+    const db = await getMongoDb();
+    const financialData = await fetchAllFinancialData(db, userId);
+    const context = buildFinancialContext(financialData);
+
+    const response = await chatCompletion([
+      {
+        role: 'system',
+        content: [
+          'You are Finova AI, a personal financial advisor. The user is asking about their finances via Telegram.',
+          'Answer concisely (under 2000 characters). Use INR currency. Be specific with numbers from their data.',
+          'Format for Telegram Markdown: use *bold* for emphasis, `code` for numbers.',
+          '',
+          '--- USER FINANCIAL DATA ---',
+          context,
+        ].join('\n'),
+      },
+      {
+        role: 'user',
+        content: question,
+      },
+    ], { maxTokens: 1500 });
+
+    await recordAiQuery(userId);
+    const formatted = formatAiResponse(response);
+    await sendAiResponse(chatId, question, formatted);
+  } catch (error) {
+    console.error('AI query error:', error);
+    await sendMessage(chatId, 'Sorry, I could not process your question right now. Please try again later.');
+  }
+}
+
+// ─── /report — Current Month Financial Report ───────────────────────
+
+async function handleReport(chatId: number) {
+  const userId = await getUserIdByChatId(chatId);
+  if (!userId) {
+    await sendMessage(chatId, 'Account not linked. Use /link to connect your account.');
+    return;
+  }
+
+  const db = await getMongoDb();
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+  const monthLabel = now.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+
+  // Current month transactions
+  const transactions = await db
+    .collection('transactions')
+    .find({ userId, date: { $gte: monthStart } })
+    .toArray();
+
+  if (transactions.length === 0) {
+    await sendMessage(chatId, `No transactions found for ${monthLabel}.`);
+    return;
+  }
+
+  let totalIncome = 0;
+  let totalExpenses = 0;
+  const categorySpend: Record<string, number> = {};
+
+  for (const txn of transactions) {
+    const amount = Math.abs(txn.amount as number);
+    if (txn.type === 'income' || txn.type === 'refund') {
+      totalIncome += amount;
+    } else if (txn.type === 'expense') {
+      totalExpenses += amount;
+      const cat = (txn.category as string) || 'Uncategorized';
+      categorySpend[cat] = (categorySpend[cat] || 0) + amount;
+    }
+  }
+
+  const savingsRate = totalIncome > 0
+    ? ((totalIncome - totalExpenses) / totalIncome) * 100
+    : 0;
+
+  const topCategories = Object.entries(categorySpend)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 5)
+    .map(([name, amount]) => ({ name, amount }));
+
+  // Previous month for comparison
+  const prevMonthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
+  const prevMonthEnd = monthStart;
+
+  const prevTxns = await db
+    .collection('transactions')
+    .find({ userId, date: { $gte: prevMonthStart, $lt: prevMonthEnd } })
+    .toArray();
+
+  let prevIncome = 0;
+  let prevExpenses = 0;
+  for (const txn of prevTxns) {
+    const amount = Math.abs(txn.amount as number);
+    if (txn.type === 'income' || txn.type === 'refund') prevIncome += amount;
+    else if (txn.type === 'expense') prevExpenses += amount;
+  }
+
+  const incomeChange = prevIncome > 0 ? ((totalIncome - prevIncome) / prevIncome) * 100 : 0;
+  const expenseChange = prevExpenses > 0 ? ((totalExpenses - prevExpenses) / prevExpenses) * 100 : 0;
+
+  await sendMonthlyReport(chatId, {
+    month: monthLabel,
+    totalIncome,
+    totalExpenses,
+    savingsRate,
+    topCategories,
+    comparedToPrevMonth: { incomeChange, expenseChange },
+  });
+}
+
+// ─── /budget — Current Budget Status ────────────────────────────────
+
+async function handleBudget(chatId: number) {
+  const userId = await getUserIdByChatId(chatId);
+  if (!userId) {
+    await sendMessage(chatId, 'Account not linked. Use /link to connect your account.');
+    return;
+  }
+
+  const db = await getMongoDb();
+
+  const budgetDocs = await db
+    .collection('budget_categories')
+    .find({ userId })
+    .toArray();
+
+  if (budgetDocs.length === 0) {
+    await sendMessage(chatId, 'No budget categories set up. Create budgets in the app first.');
+    return;
+  }
+
+  const now = new Date();
+  const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+
+  const expenses = await db
+    .collection('transactions')
+    .find({ userId, date: { $gte: monthStart }, type: 'expense' })
+    .toArray();
+
+  const categorySpend: Record<string, number> = {};
+  for (const txn of expenses) {
+    const cat = (txn.category as string) || 'Uncategorized';
+    categorySpend[cat] = (categorySpend[cat] || 0) + Math.abs(txn.amount as number);
+  }
+
+  const budgets = budgetDocs
+    .map((b) => {
+      const cat = (b.name as string) || (b.category as string) || 'Unknown';
+      const limit = Number(b.budgetAmount) || Number(b.limit) || 0;
+      const spent = categorySpend[cat] || 0;
+      return { category: cat, spent, limit };
+    })
+    .filter((b) => b.limit > 0);
+
+  const message = formatBudgetStatus(budgets);
+  await sendMessage(chatId, message);
+}
+
+// ─── /goals — Savings Goals Progress ────────────────────────────────
+
+async function handleGoals(chatId: number) {
+  const userId = await getUserIdByChatId(chatId);
+  if (!userId) {
+    await sendMessage(chatId, 'Account not linked. Use /link to connect your account.');
+    return;
+  }
+
+  const db = await getMongoDb();
+  const goals = await db
+    .collection('savings_goals')
+    .find({ userId })
+    .toArray();
+
+  if (goals.length === 0) {
+    await sendMessage(chatId, 'No savings goals found. Create goals in the app to track them here.');
+    return;
+  }
+
+  const goalData = goals.map((g) => ({
+    name: (g.name as string) || 'Unnamed Goal',
+    current: Number(g.currentAmount) || 0,
+    target: Number(g.targetAmount) || 0,
+    deadline: g.targetDate
+      ? new Date(g.targetDate as string).toLocaleDateString('en-IN', {
+          day: 'numeric',
+          month: 'short',
+          year: 'numeric',
+        })
+      : 'No deadline',
+  }));
+
+  await sendGoalsProgress(chatId, goalData);
+}
+
+// ─── /investments — Portfolio Summary ───────────────────────────────
+
+async function handleInvestments(chatId: number) {
+  const userId = await getUserIdByChatId(chatId);
+  if (!userId) {
+    await sendMessage(chatId, 'Account not linked. Use /link to connect your account.');
+    return;
+  }
+
+  const db = await getMongoDb();
+
+  const [stocks, mutualFunds, sips] = await Promise.all([
+    db.collection('stocks').find({ userId }).toArray(),
+    db.collection('mutual_funds').find({ userId }).toArray(),
+    db.collection('sips').find({ userId, status: 'active' }).toArray(),
+  ]);
+
+  if (stocks.length === 0 && mutualFunds.length === 0 && sips.length === 0) {
+    await sendMessage(chatId, 'No investments found. Add stocks, mutual funds, or SIPs in the app.');
+    return;
+  }
+
+  let totalInvested = 0;
+  let totalCurrent = 0;
+
+  const stockData = stocks.map((s) => {
+    const shares = Number(s.shares) || 0;
+    const avgCost = Number(s.averageCost) || 0;
+    const currentPrice = Number(s.currentPrice) || avgCost;
+    const invested = shares * avgCost;
+    const current = shares * currentPrice;
+    totalInvested += invested;
+    totalCurrent += current;
+    return {
+      symbol: s.symbol as string,
+      value: current,
+      returns: current - invested,
+    };
+  });
+
+  const mfData = mutualFunds.map((mf) => {
+    const invested = Number(mf.totalInvested) || (Number(mf.units) || 0) * (Number(mf.averageNAV) || 0);
+    const current = Number(mf.currentValue) || (Number(mf.units) || 0) * (Number(mf.currentNAV) || Number(mf.averageNAV) || 0);
+    totalInvested += invested;
+    totalCurrent += current;
+    return {
+      name: (mf.name as string) || (mf.fundName as string) || 'Unknown Fund',
+      value: current,
+      returns: current - invested,
+    };
+  });
+
+  const sipData = sips.map((s) => ({
+    name: s.name as string,
+    monthly: Number(s.monthlyAmount) || 0,
+  }));
+
+  const totalReturns = totalCurrent - totalInvested;
+
+  await sendInvestmentSummary(chatId, {
+    totalInvested,
+    totalCurrent,
+    totalReturns,
+    stocks: stockData,
+    mutualFunds: mfData,
+    sips: sipData,
+  });
+}
+
+// ─── /alerts on|off — Toggle Proactive Alerts ───────────────────────
+
+async function handleAlerts(chatId: number, arg: string) {
+  const userId = await getUserIdByChatId(chatId);
+  if (!userId) {
+    await sendMessage(chatId, 'Account not linked. Use /link to connect your account.');
+    return;
+  }
+
+  const normalizedArg = arg.trim().toLowerCase();
+
+  if (normalizedArg !== 'on' && normalizedArg !== 'off') {
+    await sendMessage(chatId, 'Usage: `/alerts on` or `/alerts off`\n\nThis toggles all proactive notifications (budget alerts, weekly digest, renewal reminders, etc.).');
+    return;
+  }
+
+  const enabled = normalizedArg === 'on';
+  const db = await getMongoDb();
+
+  await db.collection('user_settings').updateOne(
+    { userId },
+    {
+      $set: {
+        telegramNotifications: {
+          budgetBreach: enabled,
+          weeklyDigest: enabled,
+          renewalAlert: enabled,
+          aiInsights: enabled,
+          dailySummary: enabled,
+        },
+      },
+    }
+  );
+
+  const statusEmoji = enabled ? '✅' : '🔕';
+  await sendMessage(
+    chatId,
+    `${statusEmoji} Proactive alerts have been turned *${normalizedArg}*.\n\nYou ${enabled ? 'will' : 'will not'} receive budget alerts, weekly digests, renewal reminders, and daily summaries.`
+  );
 }
 
 // ─── Text Message Handler (Expense entry) ───────────────────────────
@@ -536,6 +904,20 @@ export async function POST(request: NextRequest) {
       await handleHelp(chatId);
     } else if (text.startsWith('/summary')) {
       await handleSummary(chatId);
+    } else if (text.startsWith('/ask')) {
+      const question = text.replace(/^\/ask(@\w+)?/, '').trim();
+      await handleAsk(chatId, question);
+    } else if (text.startsWith('/report')) {
+      await handleReport(chatId);
+    } else if (text.startsWith('/budget')) {
+      await handleBudget(chatId);
+    } else if (text.startsWith('/goals')) {
+      await handleGoals(chatId);
+    } else if (text.startsWith('/investments')) {
+      await handleInvestments(chatId);
+    } else if (text.startsWith('/alerts')) {
+      const arg = text.replace(/^\/alerts(@\w+)?/, '').trim();
+      await handleAlerts(chatId, arg);
     } else if (message.photo && message.photo.length > 0) {
       // Use the largest photo (last in the array)
       // Fire-and-forget: respond 200 immediately, process receipt in background

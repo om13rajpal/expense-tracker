@@ -62,6 +62,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Skeleton } from "@/components/ui/skeleton"
 import { Badge } from "@/components/ui/badge"
+import { StockSearchCombobox } from "@/components/stock-search-combobox"
 import { Progress } from "@/components/ui/progress"
 import {
   Table,
@@ -231,7 +232,7 @@ export default function InvestmentsPage() {
 
   // Edit dialogs
   const [editingStock, setEditingStock] = useState<StockHolding | null>(null)
-  const [editStockForm, setEditStockForm] = useState({ symbol: "", exchange: "", shares: "", averageCost: "", expectedAnnualReturn: "" })
+  const [editStockForm, setEditStockForm] = useState({ symbol: "", exchange: "", shares: "", averageCost: "", expectedAnnualReturn: "", buyDate: "", notes: "" })
   const [editingFund, setEditingFund] = useState<MutualFundHolding | null>(null)
   const [editFundForm, setEditFundForm] = useState({ schemeName: "", amc: "", category: "", units: "", investedValue: "", currentValue: "" })
   const [editingSip, setEditingSip] = useState<SipEntry | null>(null)
@@ -240,7 +241,7 @@ export default function InvestmentsPage() {
 
   // Add stock form
   const [showAddStock, setShowAddStock] = useState(false)
-  const [stockForm, setStockForm] = useState({ symbol: "", exchange: "NSE", shares: "", averageCost: "", expectedAnnualReturn: "" })
+  const [stockForm, setStockForm] = useState({ symbol: "", exchange: "NSE", shares: "", averageCost: "", expectedAnnualReturn: "", buyDate: "", notes: "" })
 
   // Add SIP form
   const [showAddSip, setShowAddSip] = useState(false)
@@ -729,14 +730,14 @@ export default function InvestmentsPage() {
 
   const openEditStock = (s: StockHolding) => {
     setEditingStock(s)
-    setEditStockForm({ symbol: s.symbol, exchange: s.exchange, shares: s.shares.toString(), averageCost: s.averageCost.toString(), expectedAnnualReturn: s.expectedAnnualReturn?.toString() || "" })
+    setEditStockForm({ symbol: s.symbol, exchange: s.exchange, shares: s.shares.toString(), averageCost: s.averageCost.toString(), expectedAnnualReturn: s.expectedAnnualReturn?.toString() || "", buyDate: s.buyDate || "", notes: s.notes || "" })
   }
   const saveEditStock = async () => {
     if (!editingStock?._id) return
     setIsSavingEdit(true)
     setCrudError(null)
     try {
-      const res = await fetch(`/api/stocks?id=${editingStock._id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ symbol: editStockForm.symbol, exchange: editStockForm.exchange, shares: editStockForm.shares, averageCost: editStockForm.averageCost, expectedAnnualReturn: editStockForm.expectedAnnualReturn || null }) })
+      const res = await fetch(`/api/stocks?id=${editingStock._id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ symbol: editStockForm.symbol, exchange: editStockForm.exchange, shares: editStockForm.shares, averageCost: editStockForm.averageCost, expectedAnnualReturn: editStockForm.expectedAnnualReturn || null, buyDate: editStockForm.buyDate || null, notes: editStockForm.notes || null }) })
       if (res.ok) { setEditingStock(null); loadAll(); toast.success("Stock updated") }
       else { const d = await res.json().catch(() => null); setCrudError(d?.message || "Failed to update stock.") }
     } catch { setCrudError("Network error updating stock.") }
@@ -781,7 +782,7 @@ export default function InvestmentsPage() {
     setCrudError(null)
     try {
       const res = await fetch("/api/stocks", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(stockForm) })
-      if (res.ok) { setStockForm({ symbol: "", exchange: "NSE", shares: "", averageCost: "", expectedAnnualReturn: "" }); setShowAddStock(false); loadAll(); toast.success("Stock added") }
+      if (res.ok) { setStockForm({ symbol: "", exchange: "NSE", shares: "", averageCost: "", expectedAnnualReturn: "", buyDate: "", notes: "" }); setShowAddStock(false); loadAll(); toast.success("Stock added") }
       else { const d = await res.json().catch(() => null); setCrudError(d?.message || "Failed to add stock. Check all fields are valid.") }
     } catch { setCrudError("Network error adding stock.") }
   }
@@ -1428,14 +1429,14 @@ export default function InvestmentsPage() {
                 {showAddStock && (
                   <Card className="card-elevated">
                     <CardContent className="pt-4 space-y-3">
-                      <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 md:grid-cols-5">
-                        <div className="space-y-1"><Label className="text-xs">Symbol</Label><Input placeholder="e.g. RELIANCE" value={stockForm.symbol} onChange={(e) => setStockForm({ ...stockForm, symbol: e.target.value })} /></div>
-                        <div className="space-y-1"><Label className="text-xs">Exchange</Label>
-                          <Select value={stockForm.exchange} onValueChange={(v) => setStockForm({ ...stockForm, exchange: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="NSE">NSE</SelectItem><SelectItem value="BSE">BSE</SelectItem><SelectItem value="NASDAQ">NASDAQ</SelectItem><SelectItem value="NYSE">NYSE</SelectItem></SelectContent></Select>
-                        </div>
+                      <div className="grid gap-3 grid-cols-2 sm:grid-cols-4">
+                        <div className="space-y-1 col-span-2"><Label className="text-xs">Stock</Label><StockSearchCombobox value={{ symbol: stockForm.symbol, exchange: stockForm.exchange }} onSelect={(s) => setStockForm({ ...stockForm, symbol: s.symbol, exchange: s.exchange })} /></div>
                         <div className="space-y-1"><Label className="text-xs">Shares</Label><Input type="number" value={stockForm.shares} onChange={(e) => setStockForm({ ...stockForm, shares: e.target.value })} /></div>
-                        <div className="space-y-1"><Label className="text-xs">Avg Cost</Label><Input type="number" value={stockForm.averageCost} onChange={(e) => setStockForm({ ...stockForm, averageCost: e.target.value })} /></div>
-                        <div className="space-y-1"><Label className="text-xs">Exp. Return %</Label><Input type="number" value={stockForm.expectedAnnualReturn} onChange={(e) => setStockForm({ ...stockForm, expectedAnnualReturn: e.target.value })} /></div>
+                        <div className="space-y-1"><Label className="text-xs">Buy Price</Label><Input type="number" placeholder="per share" value={stockForm.averageCost} onChange={(e) => setStockForm({ ...stockForm, averageCost: e.target.value })} /></div>
+                      </div>
+                      <div className="grid gap-3 grid-cols-2">
+                        <div className="space-y-1"><Label className="text-xs">Buy Date</Label><Input type="date" value={stockForm.buyDate} onChange={(e) => setStockForm({ ...stockForm, buyDate: e.target.value })} /></div>
+                        <div className="space-y-1"><Label className="text-xs">Notes</Label><Input placeholder="Optional" value={stockForm.notes} onChange={(e) => setStockForm({ ...stockForm, notes: e.target.value })} /></div>
                       </div>
                       <Button size="sm" className="rounded-lg" onClick={handleAddStock}><IconPlus className="mr-1 size-4" /> Add</Button>
                     </CardContent>
@@ -1471,6 +1472,7 @@ export default function InvestmentsPage() {
                           <TableHead className="text-right font-semibold text-xs">Current</TableHead>
                           <TableHead className="text-right font-semibold text-xs">P&L</TableHead>
                           <TableHead className="text-right font-semibold text-xs hidden sm:table-cell">Change</TableHead>
+                          <TableHead className="text-right font-semibold text-xs hidden lg:table-cell">Buy Date</TableHead>
                           <TableHead className="w-[80px]" />
                         </TableRow>
                       </TableHeader>
@@ -1504,6 +1506,9 @@ export default function InvestmentsPage() {
                                     {q.changePercent >= 0 ? "+" : ""}{q.changePercent.toFixed(2)}%
                                   </span>
                                 ) : null}
+                              </TableCell>
+                              <TableCell className="text-right text-xs text-muted-foreground hidden lg:table-cell">
+                                {s.buyDate ? new Date(s.buyDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
                               </TableCell>
                               <TableCell>
                                 <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -2102,16 +2107,14 @@ export default function InvestmentsPage() {
             <DialogDescription>Update holding details for {editStockForm.symbol}</DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
+            <div className="space-y-1.5"><Label className="text-xs font-medium">Stock</Label><StockSearchCombobox value={{ symbol: editStockForm.symbol, exchange: editStockForm.exchange }} onSelect={(s) => setEditStockForm({ ...editStockForm, symbol: s.symbol, exchange: s.exchange })} /></div>
             <div className="grid gap-3 sm:grid-cols-2">
-              <div className="space-y-1.5"><Label className="text-xs font-medium">Symbol</Label><Input value={editStockForm.symbol} onChange={(e) => setEditStockForm({ ...editStockForm, symbol: e.target.value })} /></div>
-              <div className="space-y-1.5"><Label className="text-xs font-medium">Exchange</Label>
-                <Select value={editStockForm.exchange} onValueChange={(v) => setEditStockForm({ ...editStockForm, exchange: v })}><SelectTrigger><SelectValue /></SelectTrigger><SelectContent><SelectItem value="NSE">NSE</SelectItem><SelectItem value="BSE">BSE</SelectItem><SelectItem value="NASDAQ">NASDAQ</SelectItem><SelectItem value="NYSE">NYSE</SelectItem></SelectContent></Select>
-              </div>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-3">
               <div className="space-y-1.5"><Label className="text-xs font-medium">Shares</Label><Input type="number" value={editStockForm.shares} onChange={(e) => setEditStockForm({ ...editStockForm, shares: e.target.value })} /></div>
-              <div className="space-y-1.5"><Label className="text-xs font-medium">Avg Cost</Label><Input type="number" value={editStockForm.averageCost} onChange={(e) => setEditStockForm({ ...editStockForm, averageCost: e.target.value })} /></div>
-              <div className="space-y-1.5"><Label className="text-xs font-medium">Exp. Return %</Label><Input type="number" value={editStockForm.expectedAnnualReturn} onChange={(e) => setEditStockForm({ ...editStockForm, expectedAnnualReturn: e.target.value })} /></div>
+              <div className="space-y-1.5"><Label className="text-xs font-medium">Buy Price</Label><Input type="number" placeholder="per share" value={editStockForm.averageCost} onChange={(e) => setEditStockForm({ ...editStockForm, averageCost: e.target.value })} /></div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-2">
+              <div className="space-y-1.5"><Label className="text-xs font-medium">Buy Date</Label><Input type="date" value={editStockForm.buyDate} onChange={(e) => setEditStockForm({ ...editStockForm, buyDate: e.target.value })} /></div>
+              <div className="space-y-1.5"><Label className="text-xs font-medium">Notes</Label><Input placeholder="Optional notes" value={editStockForm.notes} onChange={(e) => setEditStockForm({ ...editStockForm, notes: e.target.value })} /></div>
             </div>
           </div>
           <DialogFooter className="gap-2"><Button variant="outline" className="rounded-lg" onClick={() => setEditingStock(null)}>Cancel</Button><Button className="rounded-lg" onClick={saveEditStock} disabled={isSavingEdit}>{isSavingEdit ? "Saving..." : "Save Changes"}</Button></DialogFooter>

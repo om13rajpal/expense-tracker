@@ -64,7 +64,7 @@ import {
 import type { LearnProgress, QuizQuestion } from "@/lib/learn-types"
 
 /** Maps Tabler icon string names to their component references for dynamic resolution. */
-const ICON_MAP: Record<string, React.ElementType> = {
+const ICON_MAP: Record<string, React.ComponentType<any>> = {
   IconSchool,
   IconBulb,
   IconShieldCheck,
@@ -87,7 +87,7 @@ const ICON_MAP: Record<string, React.ElementType> = {
  * Resolves a Tabler icon component by its string name.
  * Falls back to {@link IconBulb} for unknown names.
  */
-function getIcon(name: string): React.ElementType {
+function getIcon(name: string): React.ComponentType<any> {
   return ICON_MAP[name] || IconBulb
 }
 
@@ -190,7 +190,7 @@ function statusBadge(status: ProgressStatus) {
  * @param percent   - Completion percentage across all topics (0-100).
  * @param readCount - Total number of topics read.
  */
-function getMotivationalCopy(percent: number, readCount: number): { text: string; icon: React.ElementType } {
+function getMotivationalCopy(percent: number, readCount: number): { text: string; icon: React.ComponentType<any> } {
   if (readCount === 0) return { text: "Begin your journey to financial mastery", icon: IconRocket }
   if (percent === 100) return { text: "You have mastered every topic. Brilliant.", icon: IconTrophy }
   if (percent >= 75) return { text: "Almost there! Just a few topics left to conquer", icon: IconSparkles }

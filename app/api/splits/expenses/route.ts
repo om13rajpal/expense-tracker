@@ -59,6 +59,8 @@ export async function GET(request: NextRequest) {
             splits: e.splits,
             date: e.date,
             category: e.category || "",
+            source: e.source || "manual",
+            subscriptionId: e.subscriptionId || null,
             createdAt: e.createdAt,
           })),
         },
@@ -190,6 +192,8 @@ export async function POST(request: NextRequest) {
         splits,
         date,
         category: typeof body.category === "string" ? body.category.trim() : "",
+        source: typeof body.source === "string" ? body.source.trim() : "manual",
+        ...(typeof body.subscriptionId === "string" && body.subscriptionId.trim() && { subscriptionId: body.subscriptionId.trim() }),
         createdAt: now,
       }
 

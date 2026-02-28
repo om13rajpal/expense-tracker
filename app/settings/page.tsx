@@ -11,7 +11,7 @@
 "use client"
 
 import * as React from "react"
-import { useState, useEffect, useRef } from "react"
+import { Suspense, useState, useEffect, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { motion, AnimatePresence } from "motion/react"
 import { toast } from "sonner"
@@ -86,10 +86,32 @@ type SectionId = (typeof NAV_SECTIONS)[number]["id"]
 function ChatGPTCard() {
   const searchParams = useSearchParams()
   const [connected, setConnected] = useState(false)
+  const [maskedKey, setMaskedKey] = useState<string | null>(null)
   const [email, setEmail] = useState<string | null>(null)
+  const [planType, setPlanType] = useState<string | null>(null)
+  const [authMethod, setAuthMethod] = useState<string | null>(null)
   const [connectedAt, setConnectedAt] = useState<string | null>(null)
   const [statusLoading, setStatusLoading] = useState(true)
   const [disconnecting, setDisconnecting] = useState(false)
+  const [connecting, setConnecting] = useState(false)
+  const [showManualKey, setShowManualKey] = useState(false)
+  const [apiKeyInput, setApiKeyInput] = useState("")
+  const [deviceCode, setDeviceCode] = useState<{ userCode: string; verificationUrl: string } | null>(null)
+  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null)
+
+  // Handle OAuth callback redirect params
+  useEffect(() => {
+    if (searchParams.get("openai_connected") === "true") {
+      toast.success("ChatGPT account connected!")
+      // Clean up URL params
+      window.history.replaceState({}, "", "/settings")
+    }
+    const oauthError = searchParams.get("openai_error")
+    if (oauthError) {
+      toast.error(`ChatGPT connection failed: ${oauthError}`)
+      window.history.replaceState({}, "", "/settings")
+    }
+  }, [searchParams])
 
   useEffect(() => {
     fetch("/api/auth/openai/status", { credentials: "include" })
@@ -97,36 +119,116 @@ function ChatGPTCard() {
       .then(data => {
         if (data.success && data.connected) {
           setConnected(true)
+          setMaskedKey(data.maskedKey || null)
           setEmail(data.email || null)
+          setPlanType(data.planType || null)
+          setAuthMethod(data.authMethod || null)
           setConnectedAt(data.connectedAt || null)
         }
       })
       .catch(() => {})
       .finally(() => setStatusLoading(false))
-  }, [])
-
-  useEffect(() => {
-    const openaiParam = searchParams.get("openai")
-    if (openaiParam === "connected") {
-      toast.success("ChatGPT connected successfully!")
-      setConnected(true)
-      fetch("/api/auth/openai/status", { credentials: "include" })
-        .then(res => res.json())
-        .then(data => {
-          if (data.success && data.connected) {
-            setEmail(data.email || null)
-            setConnectedAt(data.connectedAt || null)
-          }
-        })
-        .catch(() => {})
-    } else if (openaiParam === "error") {
-      const reason = searchParams.get("reason") || "Connection failed"
-      toast.error("ChatGPT: " + reason)
-    }
   }, [searchParams])
 
-  function handleConnect() {
-    window.location.href = "/api/auth/openai"
+  // Clean up polling on unmount
+  useEffect(() => {
+    return () => { if (pollRef.current) clearInterval(pollRef.current) }
+  }, [])
+
+  async function handleOAuthConnect() {
+    setConnecting(true)
+    try {
+      const res = await fetch("/api/auth/openai", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ mode: "device-code" }),
+      })
+      const data = await res.json()
+      if (data.success && data.flow === "device-code") {
+        setDeviceCode({ userCode: data.userCode, verificationUrl: data.verificationUrl })
+        // Open verification page in new tab
+        window.open(data.verificationUrl, "_blank", "noopener")
+
+        // Start polling every 5 seconds
+        pollRef.current = setInterval(async () => {
+          try {
+            const pollRes = await fetch("/api/auth/openai/poll", {
+              method: "POST",
+              credentials: "include",
+            })
+            const pollData = await pollRes.json()
+
+            if (pollData.status === "connected") {
+              if (pollRef.current) clearInterval(pollRef.current)
+              setDeviceCode(null)
+              setConnecting(false)
+              setConnected(true)
+              setEmail(pollData.email || null)
+              setPlanType(pollData.planType || null)
+              setAuthMethod("oauth-device")
+              setConnectedAt(new Date().toISOString())
+              toast.success("ChatGPT account connected!")
+            } else if (pollData.status === "expired") {
+              if (pollRef.current) clearInterval(pollRef.current)
+              setDeviceCode(null)
+              setConnecting(false)
+              toast.error("Code expired. Please try again.")
+            }
+          } catch {
+            // Ignore transient poll errors, keep polling
+          }
+        }, 5000)
+      } else {
+        toast.error(data.message || "Failed to start authentication")
+        setConnecting(false)
+      }
+    } catch {
+      toast.error("Failed to start authentication")
+      setConnecting(false)
+    }
+  }
+
+  function handleCancelDeviceCode() {
+    if (pollRef.current) clearInterval(pollRef.current)
+    setDeviceCode(null)
+    setConnecting(false)
+  }
+
+  async function handleManualKeyConnect() {
+    if (!apiKeyInput.trim()) {
+      toast.error("Please enter your OpenAI API key")
+      return
+    }
+    setConnecting(true)
+    try {
+      const res = await fetch("/api/auth/openai", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ apiKey: apiKeyInput.trim() }),
+      })
+      const data = await res.json()
+      if (data.success) {
+        setConnected(true)
+        setApiKeyInput("")
+        setShowManualKey(false)
+        setAuthMethod("api-key")
+        toast.success("OpenAI API key connected!")
+        const statusRes = await fetch("/api/auth/openai/status", { credentials: "include" })
+        const statusData = await statusRes.json()
+        if (statusData.success && statusData.connected) {
+          setMaskedKey(statusData.maskedKey || null)
+          setConnectedAt(statusData.connectedAt || null)
+        }
+      } else {
+        toast.error(data.message || "Failed to connect API key")
+      }
+    } catch {
+      toast.error("Failed to connect API key")
+    } finally {
+      setConnecting(false)
+    }
   }
 
   async function handleDisconnect() {
@@ -136,14 +238,17 @@ function ChatGPTCard() {
       const data = await res.json()
       if (data.success) {
         setConnected(false)
+        setMaskedKey(null)
         setEmail(null)
+        setPlanType(null)
+        setAuthMethod(null)
         setConnectedAt(null)
         toast.success("ChatGPT disconnected")
       } else {
-        toast.error("Failed to disconnect ChatGPT")
+        toast.error("Failed to disconnect")
       }
     } catch {
-      toast.error("Failed to disconnect ChatGPT")
+      toast.error("Failed to disconnect")
     } finally {
       setDisconnecting(false)
     }
@@ -152,6 +257,8 @@ function ChatGPTCard() {
   if (statusLoading) {
     return <Skeleton className="h-48 w-full rounded-2xl border border-border" />
   }
+
+  const planLabel = planType ? planType.charAt(0).toUpperCase() + planType.slice(1) : null
 
   return (
     <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
@@ -163,7 +270,7 @@ function ChatGPTCard() {
           </div>
           <div className="flex-1 min-w-0">
             <h4 className="text-sm font-semibold">ChatGPT</h4>
-            <p className="text-xs text-muted-foreground mt-0.5">Use your ChatGPT account for AI-powered insights</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Sign in with your ChatGPT subscription for AI features</p>
           </div>
           {connected ? (
             <span className="flex items-center gap-1.5 rounded-full bg-lime-500/10 border border-lime-500/15 px-3 py-1 text-xs font-medium text-lime-600 dark:text-lime-400">
@@ -183,8 +290,8 @@ function ChatGPTCard() {
           <div className="space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {[
-                { text: "Route AI through your own ChatGPT", step: "Connect" },
-                { text: "Uses GPT-4o for financial analysis", step: "Analyze" },
+                { text: "Uses your ChatGPT Plus/Pro subscription", step: "Free" },
+                { text: "GPT-4o for financial analysis & chat", step: "Powerful" },
                 { text: "Falls back to Claude if disconnected", step: "Flexible" },
               ].map(({ text, step }) => (
                 <div key={step} className="rounded-xl border border-border bg-card p-3 text-center">
@@ -193,24 +300,126 @@ function ChatGPTCard() {
                 </div>
               ))}
             </div>
-            <Button onClick={handleConnect} className="w-full bg-[#10a37f] hover:bg-[#0d8c6c] text-white" size="lg">
-              <IconBrandOpenai className="h-4 w-4 mr-2" />
-              Connect ChatGPT
-              <IconArrowRight className="h-4 w-4 ml-auto" />
-            </Button>
+
+            {/* Primary: Device Code OAuth sign-in */}
+            {deviceCode ? (
+              <div className="space-y-3">
+                <div className="rounded-xl border border-primary/20 bg-primary/5 p-4 text-center space-y-3">
+                  <p className="text-xs text-muted-foreground">Enter this code on the OpenAI page that opened:</p>
+                  <div className="flex items-center justify-center gap-2">
+                    <code className="text-2xl font-mono font-bold tracking-[0.3em] text-foreground bg-muted px-4 py-2 rounded-lg border border-border">
+                      {deviceCode.userCode}
+                    </code>
+                    <button
+                      type="button"
+                      onClick={() => { navigator.clipboard.writeText(deviceCode.userCode); toast.success("Code copied!") }}
+                      className="p-2 rounded-lg hover:bg-muted transition-colors"
+                    >
+                      <IconCopy className="h-4 w-4 text-muted-foreground" />
+                    </button>
+                  </div>
+                  <div className="flex items-center justify-center gap-1.5 text-xs text-muted-foreground">
+                    <span className="inline-block h-2 w-2 rounded-full bg-primary animate-pulse" />
+                    Waiting for you to sign in...
+                  </div>
+                  <a
+                    href={deviceCode.verificationUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 text-xs text-primary hover:underline"
+                  >
+                    Didn&apos;t open? Click here
+                    <IconArrowRight className="h-3 w-3" />
+                  </a>
+                </div>
+                <Button variant="ghost" size="sm" className="w-full text-muted-foreground" onClick={handleCancelDeviceCode}>
+                  Cancel
+                </Button>
+              </div>
+            ) : (
+              <>
+                <Button
+                  onClick={handleOAuthConnect}
+                  disabled={connecting}
+                  className="w-full bg-[#10a37f] hover:bg-[#0d8c6c] text-white"
+                  size="lg"
+                >
+                  <IconBrandOpenai className="h-4 w-4 mr-2" />
+                  {connecting ? "Connecting..." : "Sign in with ChatGPT"}
+                  <IconArrowRight className="h-4 w-4 ml-auto" />
+                </Button>
+                <p className="text-[11px] text-muted-foreground text-center">
+                  Uses your existing ChatGPT Plus, Pro, or Max subscription. No extra cost.
+                </p>
+              </>
+            )}
+
+            {/* Secondary: Manual API key */}
+            <div className="border-t border-border pt-3">
+              <button
+                type="button"
+                onClick={() => setShowManualKey(!showManualKey)}
+                className="text-[11px] text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+              >
+                <IconChevronRight className={`h-3 w-3 transition-transform ${showManualKey ? "rotate-90" : ""}`} />
+                Or enter an API key manually
+              </button>
+              {showManualKey && (
+                <div className="mt-3 space-y-3">
+                  <div>
+                    <input
+                      type="password"
+                      value={apiKeyInput}
+                      onChange={e => setApiKeyInput(e.target.value)}
+                      placeholder="sk-..."
+                      className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-ring placeholder:text-muted-foreground/40"
+                      onKeyDown={e => { if (e.key === "Enter") handleManualKeyConnect() }}
+                    />
+                    <p className="text-[11px] text-muted-foreground mt-1.5">
+                      Get your key from{" "}
+                      <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                        platform.openai.com/api-keys
+                      </a>
+                    </p>
+                  </div>
+                  <Button
+                    onClick={handleManualKeyConnect}
+                    disabled={connecting || !apiKeyInput.trim()}
+                    variant="outline"
+                    className="w-full"
+                    size="sm"
+                  >
+                    {connecting ? "Validating..." : "Connect API Key"}
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         ) : (
           <div className="space-y-4">
             <div className="flex items-center justify-between rounded-xl border border-border bg-card p-4">
               <div>
-                <p className="text-sm font-medium text-foreground">{email ? "Connected as " + email : "Connected"}</p>
+                {(authMethod === "oauth" || authMethod === "oauth-device") && email ? (
+                  <>
+                    <p className="text-sm font-medium text-foreground">{email}</p>
+                    {planLabel && (
+                      <p className="text-xs text-muted-foreground mt-0.5">
+                        ChatGPT {planLabel} subscription
+                      </p>
+                    )}
+                  </>
+                ) : (
+                  <p className="text-sm font-medium text-foreground">
+                    Key: <code className="text-xs font-mono bg-muted px-1.5 py-0.5 rounded">{maskedKey || "Connected"}</code>
+                  </p>
+                )}
                 {connectedAt && (
                   <p className="text-xs text-muted-foreground mt-0.5">Connected since {new Date(connectedAt).toLocaleDateString()}</p>
                 )}
               </div>
               <Button size="sm" variant="ghost" className="text-destructive hover:text-destructive hover:bg-destructive/10" onClick={handleDisconnect} disabled={disconnecting}>
                 <IconLinkOff className="h-4 w-4 mr-1.5" />
-                {disconnecting ? "Disconnecting..." : "Disconnect"}
+                {disconnecting ? "..." : "Disconnect"}
               </Button>
             </div>
             <div className="rounded-xl border border-border bg-card p-4">
@@ -218,8 +427,12 @@ function ChatGPTCard() {
                 <IconBrain className="h-4 w-4 text-lime-600 dark:text-lime-400" />
                 <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">Active AI Model</p>
               </div>
-              <p className="text-sm font-medium text-foreground">Using GPT-4o (ChatGPT)</p>
-              <p className="text-xs text-muted-foreground mt-0.5">Your AI insights, chat, and reports are powered by your ChatGPT account</p>
+              <p className="text-sm font-medium text-foreground">Using GPT-4o (OpenAI)</p>
+              <p className="text-xs text-muted-foreground mt-0.5">
+                {authMethod === "oauth" || authMethod === "oauth-device"
+                  ? "Billed against your ChatGPT subscription"
+                  : "Powered by your OpenAI API key"}
+              </p>
             </div>
           </div>
         )}
@@ -710,7 +923,9 @@ export default function SettingsPage() {
                         </h3>
                       </div>
                       <div className="flex flex-col gap-3">
-                        <ChatGPTCard />
+                        <Suspense fallback={<Skeleton className="h-48 w-full rounded-2xl border border-border" />}>
+                          <ChatGPTCard />
+                        </Suspense>
                         <TelegramCard />
                       </div>
                     </motion.div>

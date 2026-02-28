@@ -171,7 +171,7 @@ export function useTransactions(initialQuery?: Partial<TransactionQuery>) {
         // Refresh transactions after sync
         await fetchTransactions(queryRef.current);
 
-        return { success: true, count: data.count };
+        return { success: true, count: data.count, subscriptionMatches: data.subscriptionMatches || 0 };
       } else {
         setSyncState({
           isSyncing: false,

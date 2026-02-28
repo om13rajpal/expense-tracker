@@ -23,6 +23,13 @@ import {
 import { telegramDailySummary } from '@/inngest/telegram-daily-summary';
 import { ghostBudgetSnapshot } from '@/inngest/ghost-budget';
 import { subscriptionPaymentCheck } from '@/inngest/subscription-payment-check';
+import {
+  telegramWeeklyDigest,
+  telegramMonthlyReport,
+  telegramSubscriptionReminders,
+  telegramBudgetCheck,
+  telegramSpendingAnomaly,
+} from '@/inngest/telegram-notifications';
 
 export const { GET, POST, PUT } = serve({
   client: inngest,
@@ -43,5 +50,10 @@ export const { GET, POST, PUT } = serve({
     telegramDailySummary,
     ghostBudgetSnapshot,
     subscriptionPaymentCheck,
+    telegramWeeklyDigest,
+    telegramMonthlyReport,
+    telegramSubscriptionReminders,
+    telegramBudgetCheck,
+    telegramSpendingAnomaly,
   ],
 });
