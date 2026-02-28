@@ -35,6 +35,20 @@ export async function POST(request: NextRequest) {
       })
 
       if (!session) {
+        // Session gone — could mean it expired OR the exchange already succeeded
+        // on a previous poll but the response was lost. Check if already connected.
+        const settings = await db.collection('user_settings').findOne({ userId: user.userId })
+        if (settings?.openaiApiKey && settings?.openaiAuthMethod === 'oauth-device') {
+          return NextResponse.json(
+            {
+              success: true,
+              status: 'connected',
+              email: (settings.openaiEmail as string) || null,
+              planType: (settings.openaiPlanType as string) || null,
+            },
+            { headers: corsHeaders() }
+          )
+        }
         return NextResponse.json(
           { success: false, status: 'no_session', message: 'No active device code session found.' },
           { status: 404, headers: corsHeaders() }
@@ -74,10 +88,13 @@ export async function POST(request: NextRequest) {
       }
 
       // Step 1: Exchange device auth code for OAuth tokens
+      console.log('[OpenAI Poll] User authorized — exchanging device code for tokens...')
       const tokens = await exchangeDeviceCodeForTokens(authorizationCode, codeVerifier)
+      console.log('[OpenAI Poll] Got tokens, exchanging id_token for API key...')
 
       // Step 2: Exchange id_token for API key
       const apiKey = await exchangeTokenForApiKey(tokens.idToken)
+      console.log('[OpenAI Poll] Got API key, storing in user settings...')
 
       // Step 3: Extract claims from id_token
       const claims = parseJWTClaims(tokens.idToken)

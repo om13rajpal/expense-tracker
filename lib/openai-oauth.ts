@@ -261,9 +261,9 @@ export async function requestDeviceCode(): Promise<DeviceCodeResponse> {
 
   return {
     deviceAuthId: data.device_auth_id,
-    userCode: data.user_code,
+    userCode: data.user_code || data.usercode, // OpenAI sends either field name
     verificationUrl: OPENAI_DEVICE_VERIFICATION_URL,
-    expiresIn: data.expires_in || 600,
+    expiresIn: typeof data.interval === 'string' ? parseInt(data.interval, 10) * 60 : (data.expires_in || 600),
   }
 }
 
@@ -295,8 +295,8 @@ export async function pollDeviceToken(
     }),
   })
 
-  // 403 = user hasn't authorized yet
-  if (response.status === 403) {
+  // 403 or 404 = user hasn't authorized yet (official Codex CLI handles both)
+  if (response.status === 403 || response.status === 404) {
     return { status: 'pending' }
   }
 
@@ -307,8 +307,8 @@ export async function pollDeviceToken(
 
   if (!response.ok) {
     const errorText = await response.text()
+    console.warn(`[pollDeviceToken] Unexpected (${response.status}): ${errorText}`)
     // Treat unexpected errors as pending to allow retry
-    console.warn(`Device token poll unexpected response (${response.status}): ${errorText}`)
     return { status: 'pending' }
   }
 

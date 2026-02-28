@@ -135,6 +135,46 @@ function ChatGPTCard() {
     return () => { if (pollRef.current) clearInterval(pollRef.current) }
   }, [])
 
+  // Re-check connection status when the user switches back to this tab
+  // (handles case where they completed auth in another tab)
+  useEffect(() => {
+    function handleFocus() {
+      if (connected) return
+      fetch("/api/auth/openai/status", { credentials: "include" })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success && data.connected) {
+            if (pollRef.current) clearInterval(pollRef.current)
+            setDeviceCode(null)
+            setConnecting(false)
+            setConnected(true)
+            setMaskedKey(data.maskedKey || null)
+            setEmail(data.email || null)
+            setPlanType(data.planType || null)
+            setAuthMethod(data.authMethod || null)
+            setConnectedAt(data.connectedAt || null)
+            toast.success("ChatGPT account connected!")
+          }
+        })
+        .catch(() => {})
+    }
+    window.addEventListener("focus", handleFocus)
+    return () => window.removeEventListener("focus", handleFocus)
+  }, [connected])
+
+  /** Handle poll success — update all state and clean up. */
+  function onPollConnected(pollData: { email?: string; planType?: string }) {
+    if (pollRef.current) clearInterval(pollRef.current)
+    setDeviceCode(null)
+    setConnecting(false)
+    setConnected(true)
+    setEmail(pollData.email || null)
+    setPlanType(pollData.planType || null)
+    setAuthMethod("oauth-device")
+    setConnectedAt(new Date().toISOString())
+    toast.success("ChatGPT account connected!")
+  }
+
   async function handleOAuthConnect() {
     setConnecting(true)
     try {
@@ -160,23 +200,30 @@ function ChatGPTCard() {
             const pollData = await pollRes.json()
 
             if (pollData.status === "connected") {
-              if (pollRef.current) clearInterval(pollRef.current)
-              setDeviceCode(null)
-              setConnecting(false)
-              setConnected(true)
-              setEmail(pollData.email || null)
-              setPlanType(pollData.planType || null)
-              setAuthMethod("oauth-device")
-              setConnectedAt(new Date().toISOString())
-              toast.success("ChatGPT account connected!")
-            } else if (pollData.status === "expired") {
-              if (pollRef.current) clearInterval(pollRef.current)
-              setDeviceCode(null)
-              setConnecting(false)
-              toast.error("Code expired. Please try again.")
+              onPollConnected(pollData)
+            } else if (pollData.status === "expired" || pollData.status === "no_session") {
+              // no_session could mean exchange succeeded on a prev poll but
+              // the response was lost — check status to be sure
+              const statusRes = await fetch("/api/auth/openai/status", { credentials: "include" })
+              const statusData = await statusRes.json()
+              if (statusData.success && statusData.connected) {
+                onPollConnected(statusData)
+              } else {
+                if (pollRef.current) clearInterval(pollRef.current)
+                setDeviceCode(null)
+                setConnecting(false)
+                if (pollData.status === "expired") {
+                  toast.error("Code expired. Please try again.")
+                }
+              }
+            } else if (pollData.status === "error") {
+              // Server-side exchange error — show it but keep polling
+              // (the session is still intact, next poll will retry)
+              console.warn("OpenAI poll error:", pollData.message)
             }
+            // "pending" — do nothing, keep polling
           } catch {
-            // Ignore transient poll errors, keep polling
+            // Ignore transient network errors, keep polling
           }
         }, 5000)
       } else {
