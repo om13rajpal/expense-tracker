@@ -6,9 +6,9 @@
  * The client calls this repeatedly (every 5s) after initiating the device code flow.
  * When the user completes authentication on auth.openai.com, this endpoint:
  * 1. Detects the authorization via the device token poll.
- * 2. Exchanges the authorization code for OAuth tokens.
- * 3. Exchanges the id_token for an OpenAI API key (RFC 8693).
- * 4. Stores the API key + metadata in MongoDB.
+ * 2. Atomically claims the session (prevents race conditions with concurrent polls).
+ * 3. Exchanges the authorization code for OAuth tokens.
+ * 4. Stores the access_token directly (no RFC 8693 exchange — matching Codex CLI).
  *
  * @module app/api/auth/openai/poll/route
  */
@@ -19,8 +19,7 @@ import { getMongoDb } from '@/lib/mongodb'
 import {
   pollDeviceToken,
   exchangeDeviceCodeForTokens,
-  exchangeTokenForApiKey,
-  parseJWTClaims,
+  parseOpenAIAuthClaims,
 } from '@/lib/openai-oauth'
 
 export async function POST(request: NextRequest) {
@@ -87,51 +86,86 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      // Step 1: Exchange device auth code for OAuth tokens
-      console.log('[OpenAI Poll] User authorized — exchanging device code for tokens...')
-      const tokens = await exchangeDeviceCodeForTokens(authorizationCode, codeVerifier)
-      console.log('[OpenAI Poll] Got tokens, exchanging id_token for API key...')
+      // ── CRITICAL: Atomically claim the session to prevent race conditions ──
+      // Two concurrent polls can both see the session; findOneAndDelete ensures
+      // only one request wins. The loser gets null and checks if already connected.
+      const claimed = await db.collection('openai_oauth_states').findOneAndDelete({ _id: session._id })
+      if (!claimed) {
+        // Another poll request already claimed this session
+        const settings = await db.collection('user_settings').findOne({ userId: user.userId })
+        if (settings?.openaiApiKey && settings?.openaiAuthMethod === 'oauth-device') {
+          return NextResponse.json(
+            {
+              success: true,
+              status: 'connected',
+              email: (settings.openaiEmail as string) || null,
+              planType: (settings.openaiPlanType as string) || null,
+            },
+            { headers: corsHeaders() }
+          )
+        }
+        return NextResponse.json(
+          { success: true, status: 'pending' },
+          { headers: corsHeaders() }
+        )
+      }
 
-      // Step 2: Exchange id_token for API key
-      const apiKey = await exchangeTokenForApiKey(tokens.idToken)
-      console.log('[OpenAI Poll] Got API key, storing in user settings...')
+      try {
+        // Step 1: Exchange device auth code for OAuth tokens
+        console.log('[OpenAI Poll] User authorized — exchanging device code for tokens...')
+        const tokens = await exchangeDeviceCodeForTokens(authorizationCode, codeVerifier)
 
-      // Step 3: Extract claims from id_token
-      const claims = parseJWTClaims(tokens.idToken)
-      const expiresAt = new Date(Date.now() + tokens.expiresIn * 1000).toISOString()
+        // Step 2: Extract claims from the nested JWT structure
+        // OpenAI nests auth claims under "https://api.openai.com/auth"
+        const claims = parseOpenAIAuthClaims(tokens.idToken)
+        const expiresAt = new Date(Date.now() + tokens.expiresIn * 1000).toISOString()
 
-      // Step 4: Store in user_settings
-      await db.collection('user_settings').updateOne(
-        { userId: user.userId },
-        {
-          $set: {
-            openaiApiKey: apiKey,
-            openaiRefreshToken: tokens.refreshToken,
-            openaiIdToken: tokens.idToken,
-            openaiTokenExpires: expiresAt,
-            openaiAccountId: (claims.chatgpt_account_id as string) || null,
-            openaiEmail: (claims.email as string) || null,
-            openaiPlanType: (claims.chatgpt_plan_type as string) || null,
-            openaiConnectedAt: new Date().toISOString(),
-            openaiAuthMethod: 'oauth-device',
+        // Step 3: Store access_token directly (no RFC 8693 id_token→API key exchange).
+        // The device code flow doesn't produce an id_token with organization_id,
+        // so the exchange would fail. The official Codex CLI also uses access_token
+        // directly as a Bearer token for API calls.
+        console.log('[OpenAI Poll] Got tokens, storing access_token in user settings...')
+        await db.collection('user_settings').updateOne(
+          { userId: user.userId },
+          {
+            $set: {
+              openaiApiKey: tokens.accessToken,
+              openaiAccessToken: tokens.accessToken,
+              openaiRefreshToken: tokens.refreshToken,
+              openaiIdToken: tokens.idToken,
+              openaiTokenExpires: expiresAt,
+              openaiAccountId: (claims.chatgpt_account_id as string) || null,
+              openaiEmail: (claims.email as string) || null,
+              openaiPlanType: (claims.chatgpt_plan_type as string) || null,
+              openaiConnectedAt: new Date().toISOString(),
+              openaiAuthMethod: 'oauth-device',
+            },
+            $setOnInsert: { userId: user.userId, createdAt: new Date().toISOString() },
           },
-          $setOnInsert: { userId: user.userId, createdAt: new Date().toISOString() },
-        },
-        { upsert: true }
-      )
+          { upsert: true }
+        )
 
-      // Clean up the device code session
-      await db.collection('openai_oauth_states').deleteOne({ _id: session._id })
-
-      return NextResponse.json(
-        {
-          success: true,
-          status: 'connected',
-          email: (claims.email as string) || null,
-          planType: (claims.chatgpt_plan_type as string) || null,
-        },
-        { headers: corsHeaders() }
-      )
+        return NextResponse.json(
+          {
+            success: true,
+            status: 'connected',
+            email: (claims.email as string) || null,
+            planType: (claims.chatgpt_plan_type as string) || null,
+          },
+          { headers: corsHeaders() }
+        )
+      } catch (exchangeError) {
+        // Exchange failed — session already deleted, can't retry (auth code is consumed)
+        console.error('[OpenAI Poll] Exchange chain failed:', exchangeError)
+        return NextResponse.json(
+          {
+            success: false,
+            status: 'exchange_failed',
+            message: exchangeError instanceof Error ? exchangeError.message : 'Token exchange failed. Please try again.',
+          },
+          { headers: corsHeaders() }
+        )
+      }
     } catch (error) {
       console.error('OpenAI device poll error:', error)
       return NextResponse.json(

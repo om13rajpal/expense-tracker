@@ -236,6 +236,7 @@ export interface DeviceCodeResponse {
   userCode: string
   verificationUrl: string
   expiresIn: number
+  interval: number
 }
 
 /**
@@ -263,7 +264,8 @@ export async function requestDeviceCode(): Promise<DeviceCodeResponse> {
     deviceAuthId: data.device_auth_id,
     userCode: data.user_code || data.usercode, // OpenAI sends either field name
     verificationUrl: OPENAI_DEVICE_VERIFICATION_URL,
-    expiresIn: typeof data.interval === 'string' ? parseInt(data.interval, 10) * 60 : (data.expires_in || 600),
+    expiresIn: data.expires_in || 900, // 15 min default (matching official Codex CLI)
+    interval: typeof data.interval === 'string' ? parseInt(data.interval, 10) : (data.interval || 5),
   }
 }
 
@@ -378,6 +380,23 @@ export function parseJWTClaims(token: string): Record<string, unknown> {
   } catch {
     return {}
   }
+}
+
+/**
+ * Parse OpenAI auth claims from a JWT, extracting nested auth claims.
+ *
+ * OpenAI nests auth-specific claims (chatgpt_account_id, chatgpt_plan_type, etc.)
+ * under the `https://api.openai.com/auth` key in the JWT payload. This helper
+ * merges those nested claims into the top level for easy access, matching how
+ * the official Codex CLI reads them.
+ */
+export function parseOpenAIAuthClaims(token: string): Record<string, unknown> {
+  const claims = parseJWTClaims(token)
+  const nested = claims['https://api.openai.com/auth']
+  if (nested && typeof nested === 'object') {
+    return { ...claims, ...(nested as Record<string, unknown>) }
+  }
+  return claims
 }
 
 // ---------------------------------------------------------------------------

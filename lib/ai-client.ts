@@ -44,6 +44,7 @@ const OPENAI_MODEL = 'gpt-4o'
 interface OpenAICredentials {
   apiKey: string
   model: string
+  accountId?: string | null
 }
 
 /**
@@ -61,8 +62,10 @@ async function resolveOpenAICredentials(userId: string): Promise<OpenAICredentia
     return null
   }
 
-  // If connected via OAuth, check if token needs refresh
-  if (settings.openaiAuthMethod === 'oauth' && settings.openaiRefreshToken) {
+  const authMethod = settings.openaiAuthMethod as string | undefined
+
+  // If connected via OAuth (browser or device code), check if token needs refresh
+  if ((authMethod === 'oauth' || authMethod === 'oauth-device') && settings.openaiRefreshToken) {
     const expiresAt = settings.openaiTokenExpires
       ? new Date(settings.openaiTokenExpires as string).getTime()
       : 0
@@ -71,14 +74,23 @@ async function resolveOpenAICredentials(userId: string): Promise<OpenAICredentia
     if (Date.now() > expiresAt - 5 * 60 * 1000) {
       try {
         const newTokens = await refreshOAuthTokens(settings.openaiRefreshToken as string)
-        const newApiKey = await exchangeTokenForApiKey(newTokens.idToken)
         const newExpires = new Date(Date.now() + newTokens.expiresIn * 1000).toISOString()
+
+        let newApiKey: string
+        if (authMethod === 'oauth-device') {
+          // Device code flow: use access_token directly (no RFC 8693 exchange)
+          newApiKey = newTokens.accessToken
+        } else {
+          // Browser OAuth: exchange id_token for API key
+          newApiKey = await exchangeTokenForApiKey(newTokens.idToken)
+        }
 
         await db.collection('user_settings').updateOne(
           { userId },
           {
             $set: {
               openaiApiKey: newApiKey,
+              ...(authMethod === 'oauth-device' ? { openaiAccessToken: newApiKey } : {}),
               openaiRefreshToken: newTokens.refreshToken,
               openaiIdToken: newTokens.idToken,
               openaiTokenExpires: newExpires,
@@ -86,7 +98,11 @@ async function resolveOpenAICredentials(userId: string): Promise<OpenAICredentia
           }
         )
 
-        return { apiKey: newApiKey, model: OPENAI_MODEL }
+        return {
+          apiKey: newApiKey,
+          model: OPENAI_MODEL,
+          accountId: (settings.openaiAccountId as string) || null,
+        }
       } catch (err) {
         console.error('OpenAI token refresh failed:', err)
         // Try the existing key anyway — it might still work
@@ -94,7 +110,11 @@ async function resolveOpenAICredentials(userId: string): Promise<OpenAICredentia
     }
   }
 
-  return { apiKey: settings.openaiApiKey as string, model: OPENAI_MODEL }
+  return {
+    apiKey: settings.openaiApiKey as string,
+    model: OPENAI_MODEL,
+    accountId: (settings.openaiAccountId as string) || null,
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -121,6 +141,7 @@ export async function chatCompletion(
         model: options.model || creds.model,
         maxTokens: options.maxTokens,
         temperature: options.temperature,
+        accountId: creds.accountId,
       })
     }
   }
@@ -139,7 +160,7 @@ export async function chatCompletion(
 async function callOpenAI(
   apiKey: string,
   messages: OpenRouterMessage[],
-  options: { model: string; maxTokens?: number; temperature?: number }
+  options: { model: string; maxTokens?: number; temperature?: number; accountId?: string | null }
 ): Promise<string> {
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), 30_000)
@@ -151,6 +172,7 @@ async function callOpenAI(
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
+        ...(options.accountId ? { 'ChatGPT-Account-ID': options.accountId } : {}),
       },
       body: JSON.stringify({
         model: options.model,
@@ -212,6 +234,7 @@ export async function chatCompletionStream(
           headers: {
             'Authorization': `Bearer ${creds.apiKey}`,
             'Content-Type': 'application/json',
+            ...(creds.accountId ? { 'ChatGPT-Account-ID': creds.accountId } : {}),
           },
           body: JSON.stringify({
             model: options.model || creds.model,
