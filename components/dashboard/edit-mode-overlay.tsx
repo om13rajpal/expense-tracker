@@ -59,10 +59,10 @@ export function EditModeOverlay({
         transform: visible ? "translateY(0)" : "translateY(-8px)",
       }}
     >
-      <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-2xl bg-white/80 backdrop-blur-xl border border-neutral-200 shadow-lg">
-        <div className="flex items-center gap-2">
-          <div className="size-2 rounded-full bg-primary animate-pulse" />
-          <span className="text-sm font-medium text-foreground">Editing Dashboard</span>
+      <div className="flex items-center justify-between gap-3 px-4 py-2.5 rounded-2xl bg-card/80 dark:bg-card/90 backdrop-blur-xl border border-border/50 shadow-lg dark:shadow-black/30">
+        <div className="flex items-center gap-2.5">
+          <div className="size-2 rounded-full bg-primary animate-pulse shadow-[0_0_8px] shadow-primary/50" />
+          <span className="text-sm font-semibold text-foreground">Editing Dashboard</span>
           {isSaving && (
             <span className="flex items-center gap-1 text-[11px] text-muted-foreground ml-1">
               <IconLoader2 className="size-3 animate-spin" /> Saving...
@@ -75,7 +75,7 @@ export function EditModeOverlay({
             variant="ghost"
             size="sm"
             onClick={onReset}
-            className="text-muted-foreground hover:text-foreground transition-colors duration-150"
+            className="rounded-full text-muted-foreground hover:text-foreground hover:bg-muted transition-colors duration-150"
           >
             <IconArrowBackUp className="size-4 mr-1" />
             Reset
@@ -83,7 +83,7 @@ export function EditModeOverlay({
           <Button
             size="sm"
             onClick={onDone}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 transition-colors duration-150"
+            className="rounded-full bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm transition-colors duration-150"
           >
             <IconCheck className="size-4 mr-1" />
             Done

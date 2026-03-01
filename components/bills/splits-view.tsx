@@ -1004,12 +1004,16 @@ function BalanceSummaryCard({
     <motion.div
       {...listItem(index)}
       className={cn(
-        "card-elevated rounded-xl p-4 transition-all duration-300 hover:scale-[1.01]",
+        "rounded-2xl p-4 backdrop-blur-xl transition-all duration-300 hover:scale-[1.01] relative overflow-hidden",
         isPositive
-          ? "bg-gradient-to-br from-lime-500/5 to-lime-500/[0.02] hover:shadow-lime-500/10 hover:shadow-lg border border-lime-500/10"
-          : "bg-gradient-to-br from-red-500/5 to-red-500/[0.02] hover:shadow-red-500/10 hover:shadow-lg border border-red-500/10"
+          ? "bg-card/80 border border-lime-500/15 hover:shadow-lime-500/10 hover:shadow-lg"
+          : "bg-card/80 border border-destructive/15 hover:shadow-destructive/10 hover:shadow-lg"
       )}
     >
+      <div className={cn(
+        "pointer-events-none absolute -top-8 -right-8 w-20 h-20 rounded-full blur-2xl",
+        isPositive ? "bg-lime-500/10" : "bg-destructive/10"
+      )} />
       <div className="flex items-center gap-3">
         <PersonAvatar name={person} />
         <div className="flex-1 min-w-0">
@@ -1236,7 +1240,7 @@ function GroupDetailView({
       className="flex flex-col gap-5"
     >
       {/* Header card */}
-      <div className="card-elevated rounded-xl bg-card p-5">
+      <div className="glass-card p-5">
         <div className="flex items-center gap-3">
           <Button variant="ghost" size="icon" onClick={onBack} className="shrink-0 -ml-1">
             <IconChevronLeft className="h-5 w-5" />
@@ -1307,7 +1311,7 @@ function GroupDetailView({
             title="Balances"
             count={activeBalances.length}
           />
-          <div className="grid gap-2.5 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {activeBalances.map((b, i) => (
               <BalanceSummaryCard
                 key={b.person}
@@ -1323,7 +1327,7 @@ function GroupDetailView({
           </div>
         </div>
       ) : balances.length > 0 ? (
-        <div className="card-elevated rounded-xl bg-card overflow-hidden">
+        <div className="glass-card overflow-hidden">
           <div className="bg-gradient-to-b from-primary/[0.04] to-transparent">
             <div className="flex flex-col items-center justify-center py-8 px-6 text-center">
               <div className="flex items-center justify-center h-12 w-12 rounded-2xl bg-primary/[0.08] border border-primary/10 mb-3">
@@ -1568,7 +1572,7 @@ function OverviewTab() {
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={spring.smooth}
-        className="grid grid-cols-1 sm:grid-cols-3 gap-3"
+        className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-4"
       >
         <MetricTile
           label="You are owed"
@@ -1586,6 +1590,7 @@ function OverviewTab() {
           iconBg="bg-destructive/10 dark:bg-destructive/15"
           iconColor="text-destructive"
         />
+        <div className="col-span-2 sm:col-span-1">
         <MetricTile
           label="Net Balance"
           value={`${netBalance >= 0 ? "+" : ""}${formatINR(netBalance)}`}
@@ -1595,6 +1600,7 @@ function OverviewTab() {
           iconBg="bg-muted/80 dark:bg-muted"
           iconColor="text-muted-foreground"
         />
+        </div>
       </motion.div>
 
       {/* Auto-settle banner */}
@@ -1702,7 +1708,7 @@ function OverviewTab() {
             title="Balances"
             count={activeBalances.length}
           />
-          <div className="grid gap-2.5 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {activeBalances.map((b, i) => (
               <BalanceSummaryCard
                 key={b.person}
@@ -1873,13 +1879,13 @@ function GroupsTab() {
         </motion.div>
       ) : (
         <>
-          <div className="grid gap-3 sm:grid-cols-2">
+          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
             {activeGroups.map((g, i) => (
               <motion.button
                 key={g._id}
                 {...listItem(i)}
                 onClick={() => setSelectedGroup(g)}
-                className="card-elevated rounded-xl bg-card p-5 text-left transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 hover:scale-[1.01]"
+                className="glass-card p-5 text-left transition-all duration-300 hover:shadow-lg hover:shadow-primary/5 hover:border-primary/20 hover:scale-[1.01]"
               >
                 <div className="flex items-start gap-3">
                   <div className="flex items-center justify-center h-10 w-10 rounded-xl bg-muted/80 dark:bg-muted shrink-0">
@@ -2035,22 +2041,28 @@ function ActivityTab() {
 export function SplitsView() {
   return (
     <div className="flex flex-1 flex-col">
-      <div className="@container/main flex flex-1 flex-col gap-5 p-4 md:p-6">
+      <div className="page-content pt-4">
+        <div>
+          <h2 className="text-lg font-bold tracking-tight sm:text-xl">Split Expenses</h2>
+          <p className="text-[13px] text-muted-foreground mt-0.5">Track shared expenses and settle up with friends</p>
+        </div>
         <Tabs defaultValue="overview" className="w-full">
-          <TabsList className="mb-1">
-            <TabsTrigger value="overview" className="gap-2">
-              <IconWallet className="h-4 w-4" />
-              Overview
-            </TabsTrigger>
-            <TabsTrigger value="groups" className="gap-2">
-              <IconUsersGroup className="h-4 w-4" />
-              Groups
-            </TabsTrigger>
-            <TabsTrigger value="activity" className="gap-2">
-              <IconReceipt className="h-4 w-4" />
-              Activity
-            </TabsTrigger>
-          </TabsList>
+          <div className="tab-scroll">
+            <TabsList className="h-9">
+              <TabsTrigger value="overview" className="gap-2 rounded-lg text-xs">
+                <IconWallet className="h-4 w-4" />
+                Overview
+              </TabsTrigger>
+              <TabsTrigger value="groups" className="gap-2 rounded-lg text-xs">
+                <IconUsersGroup className="h-4 w-4" />
+                Groups
+              </TabsTrigger>
+              <TabsTrigger value="activity" className="gap-2 rounded-lg text-xs">
+                <IconReceipt className="h-4 w-4" />
+                Activity
+              </TabsTrigger>
+            </TabsList>
+          </div>
 
           <TabsContent value="overview" className="mt-4">
             <OverviewTab />

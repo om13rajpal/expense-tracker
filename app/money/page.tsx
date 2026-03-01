@@ -75,13 +75,13 @@ export default function MoneyPage() {
       <SidebarInset>
         <SiteHeader title="Money" />
         <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto min-h-0 relative">
-          {/* Ambient background glow orbs — cinematic aurora (dark only) */}
+          {/* Ambient background glow orbs -- cinematic aurora (dark only) */}
           <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden hidden dark:block">
             <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-lime-500/[0.05] blur-[200px]" />
             <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] rounded-full bg-cyan-500/[0.04] blur-[180px]" />
           </div>
           <Tabs value={tab} onValueChange={handleTabChange} className="flex flex-1 flex-col relative z-[1]">
-            <div className="border-b border-border px-4 md:px-6">
+            <div className="border-b border-border/50 bg-card/60 backdrop-blur-xl px-4 md:px-6">
               <TabsList variant="line" className="h-10">
                 <TabsTrigger value="transactions">
                   Transactions

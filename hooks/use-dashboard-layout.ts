@@ -9,11 +9,32 @@
 import { useState, useCallback, useEffect, useRef } from "react"
 import {
   DEFAULT_DASHBOARD_LAYOUT,
+  WIDGET_REGISTRY,
   WIDGET_SIZES,
   type DashboardLayout,
   type WidgetLayoutItem,
   type WidgetSize,
 } from "@/lib/widget-registry"
+
+/** Validate loaded layout against current registry — drop unknown widgets, ensure valid positions */
+function validateLayout(widgets: WidgetLayoutItem[]): WidgetLayoutItem[] | null {
+  const registryIds = new Set(WIDGET_REGISTRY.map(w => w.id))
+  const valid = widgets.filter(w => registryIds.has(w.i) && w.w > 0 && w.h > 0)
+  // If more than half the default widgets are missing, layout is stale — reset
+  const defaultIds = new Set(DEFAULT_DASHBOARD_LAYOUT.map(w => w.i))
+  const matchCount = valid.filter(w => defaultIds.has(w.i)).length
+  if (valid.length < 3 || matchCount < defaultIds.size * 0.4) return null
+
+  // Detect layout saved from md/sm breakpoint (6-col grid): if 5+ widgets but
+  // none are positioned in the right third of a 12-col grid (x >= 7), the layout
+  // was likely saved from a narrower breakpoint. Reset to defaults.
+  // In a proper 12-col layout, small widgets like daily-budget (x=6,w=3) and
+  // month-progress (x=9,w=3) use positions beyond column 6.
+  const usesRightThird = valid.some(w => w.x >= 7)
+  if (valid.length >= 5 && !usesRightThird) return null
+
+  return valid
+}
 
 interface LayoutState {
   widgets: WidgetLayoutItem[]
@@ -39,7 +60,14 @@ export function useDashboardLayout() {
       .then(r => r.ok ? r.json() : null)
       .then(data => {
         if (data?.success && data.layout?.widgets?.length > 0) {
-          setState(prev => ({ ...prev, widgets: data.layout.widgets, isLoading: false }))
+          const validated = validateLayout(data.layout.widgets)
+          if (validated) {
+            setState(prev => ({ ...prev, widgets: validated, isLoading: false }))
+          } else {
+            // Stale layout — reset to defaults and save
+            setState(prev => ({ ...prev, widgets: DEFAULT_DASHBOARD_LAYOUT, isLoading: false }))
+            saveLayout(DEFAULT_DASHBOARD_LAYOUT)
+          }
         } else {
           setState(prev => ({ ...prev, isLoading: false }))
         }

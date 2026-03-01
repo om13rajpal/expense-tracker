@@ -54,7 +54,7 @@ export function WidgetWrapper({
 
   if (!def || !LazyWidget) {
     return (
-      <div className="h-full rounded-3xl bg-white widget-apple flex items-center justify-center text-sm text-muted-foreground">
+      <div className="h-full rounded-[1.75rem] widget-apple flex items-center justify-center text-sm text-muted-foreground">
         Unknown widget
       </div>
     )
@@ -63,8 +63,8 @@ export function WidgetWrapper({
   return (
     <div
       className={`
-        group/tile relative rounded-3xl h-full
-        bg-white widget-apple
+        group/tile relative rounded-[1.75rem] h-full
+        widget-apple
         transition-[box-shadow,opacity,transform] duration-500 ease-[cubic-bezier(0.32,0.72,0,1)]
         ${isEditing
           ? "widget-jiggle ring-1 ring-primary/15"
@@ -75,7 +75,7 @@ export function WidgetWrapper({
       {/* ── Edit chrome: remove, drag, resize ── */}
       {/* Always rendered, animated via opacity/scale for smooth enter/exit */}
       <div
-        className="absolute inset-0 z-20 pointer-events-none rounded-3xl transition-opacity duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
+        className="absolute inset-0 z-20 pointer-events-none rounded-[1.75rem] transition-opacity duration-300 ease-[cubic-bezier(0.32,0.72,0,1)]"
         style={{ opacity: isEditing ? 1 : 0 }}
       >
         {/* Remove button — Apple-style minus badge */}
@@ -156,7 +156,7 @@ export function WidgetWrapper({
 
       {/* Widget content — smooth dim during edit */}
       <div
-        className="relative h-full overflow-hidden rounded-3xl transition-[opacity,filter] duration-400 ease-[cubic-bezier(0.32,0.72,0,1)]"
+        className="relative h-full overflow-hidden rounded-[1.75rem] transition-[opacity,filter] duration-400 ease-[cubic-bezier(0.32,0.72,0,1)]"
         style={{
           opacity: isEditing ? 0.55 : 1,
           filter: isEditing ? "saturate(0.7)" : "none",

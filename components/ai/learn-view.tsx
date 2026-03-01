@@ -110,11 +110,11 @@ function difficultyColor(d: Difficulty) {
 function difficultyIconBg(d: Difficulty) {
   switch (d) {
     case "beginner":
-      return "bg-muted/80 dark:bg-muted text-foreground/70"
+      return "bg-lime-500/15 text-lime-600 dark:text-lime-400"
     case "intermediate":
-      return "bg-muted/80 dark:bg-muted text-foreground/70"
+      return "bg-blue-500/15 text-blue-600 dark:text-blue-400"
     case "advanced":
-      return "bg-muted/80 dark:bg-muted text-foreground/70"
+      return "bg-amber-500/15 text-amber-600 dark:text-amber-400"
   }
 }
 
@@ -179,7 +179,7 @@ function statusBadge(status: ProgressStatus) {
     case "quizzed":
       return { label: "Quizzed", className: "bg-blue-500/10 text-blue-600 dark:text-blue-400 border-blue-500/20", icon: IconBrain }
     case "read":
-      return { label: "Read", className: "bg-muted/80 dark:bg-muted text-foreground/70 border-border", icon: IconCheck }
+      return { label: "Read", className: "bg-muted/60 dark:bg-muted/40 text-foreground/70 border-border", icon: IconCheck }
     default:
       return null
   }
@@ -705,7 +705,7 @@ function TopicDetailView({
       <div className="flex items-center gap-3">
         <button
           onClick={onBack}
-          className="flex size-9 items-center justify-center rounded-xl border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent transition-all"
+          className="flex size-9 items-center justify-center rounded-xl border border-border/50 bg-card/80 backdrop-blur-xl text-muted-foreground hover:text-foreground hover:bg-accent transition-all"
         >
           <IconArrowLeft className="h-4 w-4" />
         </button>
@@ -873,7 +873,7 @@ function TopicGridCard({
       onClick={onClick}
       whileHover={{ scale: 1.02, y: -2 }}
       transition={{ duration: 0.2 }}
-      className="group relative text-left rounded-2xl border border-border bg-card hover:border-border hover:shadow-lg hover:shadow-black/5 dark:hover:shadow-black/20 transition-all duration-200 overflow-hidden"
+      className="group relative text-left rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl hover:border-border/70 hover:shadow-lg hover:shadow-black/5 dark:hover:shadow-black/20 transition-all duration-200 overflow-hidden"
     >
       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
       {/* Completion overlay checkmark */}
@@ -964,7 +964,7 @@ function RecommendedSection({
         </div>
         <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
           {[0, 1, 2].map((i) => (
-            <div key={i} className="rounded-2xl border border-border bg-card p-4 animate-pulse">
+            <div key={i} className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl p-4 animate-pulse">
               <div className="flex items-center gap-3 mb-3">
                 <div className="size-9 rounded-xl bg-muted/60" />
                 <div className="flex-1 space-y-2">
@@ -1314,7 +1314,7 @@ export function LearnView() {
               {/* Hero / Progress Section */}
               <motion.div variants={fadeUp} className="relative">
                 <div className="absolute -inset-2 rounded-3xl bg-gradient-to-br from-primary/10 via-cyan-500/8 to-lime-500/10 blur-2xl opacity-50 pointer-events-none" />
-                <div className="relative rounded-2xl border border-border bg-card overflow-hidden">
+                <div className="relative rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl overflow-hidden">
                   <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <div className="h-1 bg-gradient-to-r from-primary/60 via-cyan-500/60 to-lime-500/60" />
                   <div className="absolute inset-0 pointer-events-none opacity-[0.02]">
@@ -1517,7 +1517,7 @@ export function LearnView() {
               <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-3">
                 <div className="relative group/search flex-1">
                   <div className="absolute -inset-px rounded-2xl bg-gradient-to-r from-primary/10 via-transparent to-primary/10 opacity-0 group-focus-within/search:opacity-100 transition-opacity duration-300 pointer-events-none" />
-                  <div className="relative flex items-center rounded-xl border border-border bg-card transition-all duration-200 focus-within:border-primary/30 focus-within:ring-1 focus-within:ring-primary/15">
+                  <div className="relative flex items-center rounded-xl border border-border/50 bg-card/80 backdrop-blur-xl transition-all duration-200 focus-within:border-primary/30 focus-within:ring-1 focus-within:ring-primary/15">
                     <IconSearch className="ml-4 h-[18px] w-[18px] text-muted-foreground/50 shrink-0" />
                     <input
                       ref={searchRef}
@@ -1542,7 +1542,7 @@ export function LearnView() {
                 </div>
 
                 {/* Difficulty filter */}
-                <div className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-2 h-12">
+                <div className="flex items-center gap-1.5 rounded-xl border border-border/50 bg-card/80 backdrop-blur-xl px-2 h-12">
                   <IconFilter className="h-4 w-4 text-muted-foreground/50 shrink-0" />
                   {(["all", "beginner", "intermediate", "advanced"] as const).map((d) => (
                     <button
@@ -1630,7 +1630,7 @@ export function LearnView() {
                   className="relative overflow-hidden"
                 >
                   <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-amber-500/8 via-orange-500/5 to-rose-500/8 blur-xl opacity-50 pointer-events-none" />
-                  <div className="relative rounded-2xl border border-border bg-card overflow-hidden">
+                  <div className="relative rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl overflow-hidden">
                     <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <div className="h-[2px] bg-gradient-to-r from-transparent via-amber-500/40 to-transparent" />
                     <div className="p-6">

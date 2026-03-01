@@ -120,10 +120,10 @@ export default function DashboardPage() {
           }
         />
         <div className="flex flex-1 flex-col overflow-x-hidden overflow-y-auto min-h-0 relative">
-          {/* Light ambient background */}
+          {/* Ambient background glow */}
           <div className="pointer-events-none fixed inset-0 z-0 overflow-hidden">
-            <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-lime-200/20 blur-[200px]" />
-            <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] rounded-full bg-sky-200/15 blur-[180px]" />
+            <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-primary/10 dark:bg-primary/5 blur-[200px]" />
+            <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] rounded-full bg-sky-300/10 dark:bg-sky-500/5 blur-[180px]" />
           </div>
 
           <div className="flex flex-1 flex-col p-3 md:p-4 relative z-[1]">

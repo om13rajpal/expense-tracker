@@ -46,28 +46,28 @@ export function SiteHeader({
           orientation="vertical"
           className="mx-2 data-[orientation=vertical]:h-4 opacity-50"
         />
-        <div className="flex flex-1 items-center justify-between gap-4">
-          <div className="min-w-0">
-            <div className="flex items-baseline gap-2">
-              <h1 className="text-base lg:text-lg font-semibold tracking-tight text-foreground truncate">
+        <div className="flex flex-1 items-center justify-between gap-2 sm:gap-4 min-w-0">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-baseline gap-2 min-w-0">
+              <h1 className="text-sm sm:text-base lg:text-lg font-semibold tracking-tight text-foreground truncate">
                 {title}
               </h1>
               {subtitle && (
                 <>
                   <span className="hidden sm:inline text-muted-foreground/40 text-sm select-none" aria-hidden="true">&middot;</span>
-                  <span className="hidden sm:inline text-xs font-normal text-muted-foreground/70 truncate">
+                  <span className="hidden sm:inline text-xs font-normal text-muted-foreground/70 truncate max-w-[200px]">
                     {subtitle}
                   </span>
                 </>
               )}
             </div>
             {subtitle && (
-              <span className="block sm:hidden text-[11px] font-normal text-muted-foreground/60 truncate">
+              <span className="block sm:hidden text-[11px] font-normal text-muted-foreground/60 truncate max-w-[180px]">
                 {subtitle}
               </span>
             )}
           </div>
-          <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
+          <div className="flex items-center gap-1 sm:gap-2 lg:gap-3 shrink-0">
             <Spotlight />
             {actions}
             <span className="hidden sm:inline-flex"><StreakCounter linkTo="/gamification" /></span>

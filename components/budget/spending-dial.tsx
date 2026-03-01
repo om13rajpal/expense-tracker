@@ -187,9 +187,9 @@ export function SpendingDial({
 
   return (
     <motion.div initial={fadeUp.hidden} animate={fadeUp.show}>
-      <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-5">
+      <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl relative overflow-hidden p-4 sm:p-5">
         {/* Top edge light line */}
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
         {/* Header */}
         <div className="flex items-center justify-between mb-5">
           <div className="flex items-center gap-1.5">
@@ -349,8 +349,8 @@ export function SpendingDial({
               return (
                 <div
                   key={key}
-                  className={`rounded-xl border border-border bg-card p-3 space-y-2 transition-all duration-200 ${
-                    hoveredBucket === key ? "border-primary/20 -translate-y-0.5 shadow-sm" : ""
+                  className={`rounded-xl border border-border/50 bg-card/60 backdrop-blur-lg p-3 space-y-2 transition-all duration-200 ${
+                    hoveredBucket === key ? "border-primary/30 -translate-y-0.5 shadow-sm bg-card/80" : ""
                   }`}
                   onMouseEnter={() => setHoveredBucket(key)}
                   onMouseLeave={() => setHoveredBucket(null)}

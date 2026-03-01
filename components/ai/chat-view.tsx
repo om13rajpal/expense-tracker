@@ -98,48 +98,48 @@ const quickActions = [
     label: "Spending summary",
     prompt:
       "Give me a summary of my spending patterns this month. What are my top expense categories and how do they compare to my budget?",
-    color: "text-foreground/70",
-    bg: "bg-muted/80 dark:bg-muted",
+    color: "text-lime-600 dark:text-lime-400",
+    bg: "bg-lime-500/10",
   },
   {
     icon: IconChartLine,
     label: "Investment review",
     prompt:
       "Review my investment portfolio. How are my stocks, mutual funds, and SIPs performing? Any recommendations?",
-    color: "text-foreground/70",
-    bg: "bg-muted/80 dark:bg-muted",
+    color: "text-blue-600 dark:text-blue-400",
+    bg: "bg-blue-500/10",
   },
   {
     icon: IconTarget,
     label: "FIRE progress",
     prompt:
       "Based on my current savings rate and investments, how am I progressing toward financial independence? What's my estimated FIRE number and years to reach it?",
-    color: "text-foreground/70",
-    bg: "bg-muted/80 dark:bg-muted",
+    color: "text-orange-600 dark:text-orange-400",
+    bg: "bg-orange-500/10",
   },
   {
     icon: IconReceipt,
     label: "Budget check",
     prompt:
       "Am I on track with my budgets this month? Which categories am I overspending in and where can I save more?",
-    color: "text-foreground/70",
-    bg: "bg-muted/80 dark:bg-muted",
+    color: "text-violet-600 dark:text-violet-400",
+    bg: "bg-violet-500/10",
   },
   {
     icon: IconBulb,
     label: "Save more tips",
     prompt:
       "Analyze my spending and give me 5 specific, actionable tips to save more money based on my actual transaction patterns.",
-    color: "text-foreground/70",
-    bg: "bg-muted/80 dark:bg-muted",
+    color: "text-amber-600 dark:text-amber-400",
+    bg: "bg-amber-500/10",
   },
   {
     icon: IconHeartbeat,
     label: "Financial health",
     prompt:
       "Give me an honest assessment of my financial health. Cover emergency fund, savings rate, investment rate, and what I should prioritize improving.",
-    color: "text-foreground/70",
-    bg: "bg-muted/80 dark:bg-muted",
+    color: "text-pink-600 dark:text-pink-400",
+    bg: "bg-pink-500/10",
   },
 ]
 
@@ -278,8 +278,8 @@ const ChatBubble = memo(function ChatBubble({
       <div
         className={`max-w-[90%] sm:max-w-[80%] md:max-w-[75%] rounded-2xl px-3 py-2.5 sm:px-4 sm:py-3 overflow-x-auto ${
           isUser
-            ? "bg-primary text-primary-foreground rounded-br-md"
-            : "border border-border bg-card rounded-bl-md relative overflow-hidden"
+            ? "bg-primary text-primary-foreground rounded-br-md shadow-sm"
+            : "border border-border/50 bg-card/80 backdrop-blur-xl rounded-bl-md relative overflow-hidden shadow-sm"
         }`}
       >
         {!isUser && (
@@ -796,7 +796,7 @@ export function ChatView() {
             animate={{ width: 260, opacity: 1 }}
             exit={{ width: 0, opacity: 0 }}
             transition={{ duration: 0.2, ease: "easeInOut" }}
-            className="hidden md:flex flex-col border-r border-border bg-card overflow-hidden shrink-0"
+            className="hidden md:flex flex-col border-r border-border/50 bg-card/80 backdrop-blur-xl overflow-hidden shrink-0"
           >
             <div className="flex items-center justify-between px-3 py-2 border-b border-border">
               <div className="flex items-center gap-1.5">
@@ -931,7 +931,7 @@ export function ChatView() {
                     <button
                       key={prompt}
                       onClick={() => sendMessage(prompt)}
-                      className={`rounded-full border border-border bg-card px-2.5 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-[11px] text-muted-foreground transition-all hover:border-primary/30 hover:bg-accent hover:text-foreground ${idx >= 4 ? "hidden sm:inline-flex" : ""}`}
+                      className={`rounded-full border border-border/50 bg-card/80 backdrop-blur-sm px-2.5 sm:px-3 py-1 sm:py-1.5 text-[10px] sm:text-[11px] text-muted-foreground transition-all hover:border-primary/30 hover:bg-accent/80 hover:text-foreground hover:shadow-sm ${idx >= 4 ? "hidden sm:inline-flex" : ""}`}
                     >
                       {prompt}
                     </button>
@@ -944,10 +944,10 @@ export function ChatView() {
                     <button
                       key={action.label}
                       onClick={() => sendMessage(action.prompt)}
-                      className="group flex items-center gap-2 sm:gap-2.5 rounded-xl border border-border bg-card px-2.5 sm:px-3 py-2 sm:py-2.5 text-left transition-all hover:border-primary/20 hover:bg-accent hover:shadow-sm"
+                      className="group flex items-center gap-2 sm:gap-2.5 rounded-xl border border-border/50 bg-card/80 backdrop-blur-xl px-2.5 sm:px-3 py-2 sm:py-2.5 text-left transition-all hover:border-primary/30 hover:bg-accent/80 hover:shadow-md"
                     >
                       <div
-                        className={`flex h-6 w-6 sm:size-8 shrink-0 items-center justify-center rounded-xl ${action.bg} ${action.color} transition-colors`}
+                        className={`flex size-7 sm:size-9 shrink-0 items-center justify-center rounded-xl ${action.bg} ${action.color} transition-colors`}
                       >
                         <action.icon className="h-3 w-3 sm:h-3.5 sm:w-3.5" />
                       </div>
@@ -963,7 +963,7 @@ export function ChatView() {
             {/* Input area - pinned to bottom */}
             <div className="shrink-0 px-3 pb-3 pt-2 sm:px-4 sm:pb-4 md:px-6">
               <form onSubmit={handleSubmit} className="mx-auto max-w-xl">
-                <div className="relative rounded-2xl border border-border bg-card shadow-sm transition-all focus-within:border-primary/40 focus-within:shadow-md focus-within:shadow-primary/5 overflow-hidden">
+                <div className="relative rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl shadow-sm transition-all focus-within:border-primary/40 focus-within:shadow-lg focus-within:shadow-primary/5 overflow-hidden">
                   <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <textarea
                     ref={textareaRef}
@@ -998,7 +998,7 @@ export function ChatView() {
           /* CHAT STATE */
           <div className="flex flex-1 flex-col min-h-0">
             {/* Chat header bar */}
-            <div className="flex items-center justify-between border-b border-border bg-card px-3 py-2 sm:px-4 md:px-6 shrink-0">
+            <div className="flex items-center justify-between border-b border-border/50 bg-card/80 backdrop-blur-xl px-3 py-2 sm:px-4 md:px-6 shrink-0">
               <div className="flex items-center gap-2 sm:gap-2.5 min-w-0">
                 {/* Mobile: thread panel trigger */}
                 <Sheet open={threadPanelOpen} onOpenChange={setThreadPanelOpen}>
@@ -1112,7 +1112,7 @@ export function ChatView() {
                   onSubmit={handleSubmit}
                   className="mx-auto flex max-w-3xl items-end gap-1.5 sm:gap-2"
                 >
-                  <div className="flex-1 relative rounded-full border border-border bg-background shadow-lg ring-1 ring-border transition-all focus-within:border-primary/50 focus-within:shadow-primary/10 focus-within:ring-primary/10">
+                  <div className="flex-1 relative rounded-full border border-border/50 bg-background/80 backdrop-blur-xl shadow-lg ring-1 ring-border/30 transition-all focus-within:border-primary/50 focus-within:shadow-primary/10 focus-within:ring-primary/20">
                     <textarea
                       ref={textareaRef}
                       value={input}

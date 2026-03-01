@@ -68,32 +68,32 @@ const insightConfig: InsightMeta[] = [
     title: "Spending Analysis",
     description: "AI-powered analysis of your spending patterns and financial health",
     icon: IconReportAnalytics,
-    iconBg: "bg-muted/80 dark:bg-muted",
-    iconColor: "text-foreground/70",
+    iconBg: "bg-lime-500/15",
+    iconColor: "text-lime-600 dark:text-lime-400",
   },
   {
     type: "monthly_budget",
     title: "Monthly Budget",
     description: "Personalized budget allocation for the upcoming month",
     icon: IconTargetArrow,
-    iconBg: "bg-muted/80 dark:bg-muted",
-    iconColor: "text-foreground/70",
+    iconBg: "bg-blue-500/15",
+    iconColor: "text-blue-600 dark:text-blue-400",
   },
   {
     type: "weekly_budget",
     title: "Weekly Budget",
     description: "Short-term spending targets for the coming week",
     icon: IconTargetArrow,
-    iconBg: "bg-muted/80 dark:bg-muted",
-    iconColor: "text-foreground/70",
+    iconBg: "bg-violet-500/15",
+    iconColor: "text-violet-600 dark:text-violet-400",
   },
   {
     type: "investment_insights",
     title: "Investment Insights",
     description: "AI analysis of your SIPs, stocks, and mutual fund portfolio",
     icon: IconChartPie,
-    iconBg: "bg-muted/80 dark:bg-muted",
-    iconColor: "text-foreground/70",
+    iconBg: "bg-amber-500/15",
+    iconColor: "text-amber-600 dark:text-amber-400",
   },
 ]
 
@@ -356,7 +356,7 @@ function SpendingDashboard({
   return (
     <DashboardShell meta={meta} insight={insight}>
       {/* 1. Health Score + Summary */}
-      <div className="rounded-2xl border border-border bg-card p-5 relative overflow-hidden">
+      <div className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl p-5 relative overflow-hidden">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
         <div className="flex flex-col items-center gap-5 sm:flex-row sm:items-start">
           <div className="flex shrink-0 items-center justify-center">
@@ -376,7 +376,7 @@ function SpendingDashboard({
 
       {/* 2. Top Categories */}
       {data.topCategories && data.topCategories.length > 0 && (
-        <div className="rounded-2xl border border-border bg-card p-5 relative overflow-hidden">
+        <div className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl p-5 relative overflow-hidden">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
           <h4 className="mb-3 text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">
             Top Spending Categories
@@ -435,7 +435,7 @@ function SpendingDashboard({
             {data.actionItems.map((item, i) => {
               const impact = priorityColors[item.impact] || priorityColors.low
               return (
-                <div key={i} className="relative rounded-2xl border border-border bg-card p-4 overflow-hidden">
+                <div key={i} className="relative rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl p-4 overflow-hidden">
                   <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <div className="absolute right-3 top-3 flex items-center gap-1">
                     <span className={`h-1.5 w-1.5 rounded-full ${impact.dot}`} />
@@ -486,7 +486,7 @@ function SpendingDashboard({
 
       {/* 5. Key Insight Callout */}
       {data.keyInsight && (
-        <div className="rounded-2xl border border-border bg-card p-4 relative overflow-hidden">
+        <div className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl p-4 relative overflow-hidden">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
           <div className="flex items-start gap-3">
             <IconSparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
@@ -541,7 +541,7 @@ function MonthlyBudgetDashboard({
         {buckets.map((bucket) => {
           const pct = bucket.data.percentage
           return (
-            <div key={bucket.label} className="rounded-2xl border border-border bg-card p-4 relative overflow-hidden">
+            <div key={bucket.label} className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl p-4 relative overflow-hidden">
               <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
               <div className="flex items-center justify-between">
                 <h4 className="text-sm font-semibold">{bucket.label}</h4>
@@ -591,7 +591,7 @@ function MonthlyBudgetDashboard({
           </h4>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
             {data.savingsOpportunities.map((opp, i) => (
-              <div key={i} className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4 relative overflow-hidden">
+              <div key={i} className="flex items-start gap-3 rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl p-4 relative overflow-hidden">
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                 <div className="flex size-8 shrink-0 items-center justify-center rounded-xl bg-lime-500/10">
                   <IconBulb className="h-4 w-4 text-lime-600 dark:text-lime-400" />
@@ -664,7 +664,7 @@ function WeeklyBudgetDashboard({
   return (
     <DashboardShell meta={meta} insight={insight}>
       {/* 1. Overview stat tiles + on-track indicator */}
-      <div className="rounded-2xl border border-border bg-card p-5 relative overflow-hidden">
+      <div className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl p-5 relative overflow-hidden">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
@@ -695,7 +695,7 @@ function WeeklyBudgetDashboard({
 
       {/* 2. Category progress */}
       {data.categories && data.categories.length > 0 && (
-        <div className="rounded-2xl border border-border bg-card p-5 relative overflow-hidden">
+        <div className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl p-5 relative overflow-hidden">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
           <h4 className="mb-3 text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">
             Category Budgets
@@ -740,7 +740,7 @@ function WeeklyBudgetDashboard({
           </h4>
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
             {data.quickWins.map((qw, i) => (
-              <div key={i} className="flex items-start gap-3 rounded-2xl border border-border bg-card p-4 relative overflow-hidden">
+              <div key={i} className="flex items-start gap-3 rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl p-4 relative overflow-hidden">
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                 <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-lime-500/10 text-xs font-bold text-lime-600 dark:text-lime-400">
                   {i + 1}
@@ -777,7 +777,7 @@ function WeeklyBudgetDashboard({
 
       {/* 5. Weekly rule callout */}
       {data.weeklyRule && (
-        <div className="rounded-2xl border border-border bg-card p-4 relative overflow-hidden">
+        <div className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl p-4 relative overflow-hidden">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
           <div className="flex items-start gap-3">
             <IconSparkles className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
@@ -820,7 +820,7 @@ function InvestmentDashboard({
   return (
     <DashboardShell meta={meta} insight={insight}>
       {/* 1. Portfolio overview */}
-      <div className="rounded-2xl border border-border bg-card p-5 relative overflow-hidden">
+      <div className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl p-5 relative overflow-hidden">
         <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
         <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
           <StatTile label="Portfolio Value" value={data.portfolioValue} color="text-foreground" />
@@ -835,7 +835,7 @@ function InvestmentDashboard({
 
       {/* 2. Stock holdings */}
       {data.stocks && data.stocks.length > 0 && (
-        <div className="rounded-2xl border border-border bg-card p-5 relative overflow-hidden">
+        <div className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl p-5 relative overflow-hidden">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
           <h4 className="mb-3 text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">
             Stock Holdings
@@ -845,7 +845,7 @@ function InvestmentDashboard({
               const retColor = stock.returns >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"
               const RetIcon = stock.returns >= 0 ? IconTrendingUp : IconTrendingDown
               return (
-                <div key={stock.symbol} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-3">
+                <div key={stock.symbol} className="flex items-center justify-between gap-3 rounded-xl border border-border/50 bg-card/80 backdrop-blur-xl p-3">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2">
                       <span className="text-sm font-semibold">{stock.symbol}</span>
@@ -873,7 +873,7 @@ function InvestmentDashboard({
 
       {/* 3. Mutual fund holdings */}
       {data.mutualFunds && data.mutualFunds.length > 0 && (
-        <div className="rounded-2xl border border-border bg-card p-5 relative overflow-hidden">
+        <div className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl p-5 relative overflow-hidden">
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
           <h4 className="mb-3 text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">
             Mutual Funds
@@ -883,7 +883,7 @@ function InvestmentDashboard({
               const retColor = fund.returns >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"
               const RetIcon = fund.returns >= 0 ? IconTrendingUp : IconTrendingDown
               return (
-                <div key={i} className="flex items-center justify-between gap-3 rounded-xl border border-border bg-card p-3">
+                <div key={i} className="flex items-center justify-between gap-3 rounded-xl border border-border/50 bg-card/80 backdrop-blur-xl p-3">
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-semibold">{fund.name}</p>
                     <div className="mt-0.5 flex items-center gap-2">
@@ -948,7 +948,7 @@ function InvestmentDashboard({
             {data.actionItems.map((item, i) => {
               const prio = priorityColors[item.priority] || priorityColors.low
               return (
-                <div key={i} className="relative rounded-2xl border border-border bg-card p-4 overflow-hidden">
+                <div key={i} className="relative rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl p-4 overflow-hidden">
                   <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <div className="absolute right-3 top-3 flex items-center gap-1">
                     <span className={`h-1.5 w-1.5 rounded-full ${prio.dot}`} />
@@ -966,7 +966,7 @@ function InvestmentDashboard({
       {/* 6. Market context + Goal alignment */}
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {data.marketContext && (
-          <div className="rounded-2xl border border-border bg-card p-4 relative overflow-hidden">
+          <div className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl p-4 relative overflow-hidden">
             <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
             <p className="text-xs font-semibold text-muted-foreground/70 uppercase tracking-widest">Market Context</p>
             <p className="mt-2 text-sm leading-relaxed text-foreground/90">{data.marketContext}</p>
@@ -1068,7 +1068,7 @@ function StatTile({
   isRaw?: boolean
 }) {
   return (
-    <div className="rounded-xl border border-border bg-card p-3">
+    <div className="rounded-xl border border-border/50 bg-card/80 backdrop-blur-xl p-3">
       <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest">{label}</p>
       <p className={`mt-0.5 text-lg font-black tracking-tight tabular-nums ${color}`}>
         {isRaw ? value : isPercent ? `${value.toFixed(1)}%` : formatCurrency(value)}
@@ -1436,7 +1436,7 @@ export function ReportsView() {
             transition={{ duration: 0.3, ease: [0.25, 0.1, 0.25, 1] }}
             className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between"
           >
-            <TabsList className="h-auto w-full justify-start gap-1 bg-muted/50 p-1 sm:w-auto">
+            <TabsList className="h-auto w-full justify-start gap-1 bg-card/80 backdrop-blur-xl border border-border/50 p-1 sm:w-auto">
               {insightConfig.map((config) => {
                 const Icon = config.icon
                 return (

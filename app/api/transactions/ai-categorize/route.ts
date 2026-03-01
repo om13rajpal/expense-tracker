@@ -175,7 +175,7 @@ export async function POST(request: NextRequest) {
           date: t.date,
         }));
 
-        const batchResults = await aiCategorizeBatch(aiInput, VALID_CATEGORIES);
+        const batchResults = await aiCategorizeBatch(aiInput, VALID_CATEGORIES, user.userId);
         const resultMap = new Map(batchResults.map((r) => [r.id, r]));
 
         const txnBulkOps: Array<{ updateOne: { filter: Record<string, unknown>; update: Record<string, unknown> } }> = [];

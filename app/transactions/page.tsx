@@ -125,7 +125,7 @@ type CatRule = {
 
 import { formatINR as formatCurrency } from "@/lib/format"
 import { isOneTimePurchase, isOutlierTransaction } from "@/lib/edge-cases"
-import { isSimilarMerchant } from "@/lib/categorizer"
+import { isSimilarMerchant } from "@/lib/merchant-match"
 
 // Category color mapping for rich badges
 const CATEGORY_COLORS: Record<string, { bg: string; text: string; dot: string }> = {

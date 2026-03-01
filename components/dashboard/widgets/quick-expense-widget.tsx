@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef } from "react"
+import { motion, useInView, AnimatePresence } from "motion/react"
 import { IconPlus, IconCheck, IconLoader2 } from "@tabler/icons-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -27,6 +28,8 @@ export default function QuickExpenseWidget({}: WidgetComponentProps) {
   const [amount, setAmount] = useState("")
   const [category, setCategory] = useState("Food & Dining")
   const [status, setStatus] = useState<"idle" | "loading" | "success">("idle")
+  const ref = useRef<HTMLDivElement>(null)
+  const isInView = useInView(ref, { once: true, margin: "-20px" })
 
   const handleSubmit = async () => {
     const num = parseFloat(amount)
@@ -60,20 +63,39 @@ export default function QuickExpenseWidget({}: WidgetComponentProps) {
   }
 
   return (
-    <div className="p-5 h-full flex flex-col">
-      <p className="text-[13px] font-medium text-neutral-500 mb-3">Quick Expense</p>
+    <motion.div
+      ref={ref}
+      className="p-5 h-full flex flex-col relative overflow-hidden"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: isInView ? 1 : 0 }}
+      transition={{ duration: 0.4 }}
+    >
+      {/* Success flash overlay */}
+      <AnimatePresence>
+        {status === "success" && (
+          <motion.div
+            className="absolute inset-0 bg-emerald-500/5 dark:bg-emerald-500/10 pointer-events-none rounded-[1.75rem]"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.3 }}
+          />
+        )}
+      </AnimatePresence>
 
-      <div className="space-y-2 flex-1">
+      <p className="text-[13px] font-medium text-muted-foreground mb-3">Quick Expense</p>
+
+      <div className="space-y-2.5 flex-1">
         <Input
           type="number"
           placeholder="₹ Amount"
           value={amount}
           onChange={e => setAmount(e.target.value)}
-          className="h-9 text-sm font-semibold tabular-nums"
+          className="h-11 text-lg font-bold tabular-nums rounded-xl border-border bg-muted/40 placeholder:text-muted-foreground/40 focus:bg-muted/60 transition-colors"
           onKeyDown={e => e.key === "Enter" && handleSubmit()}
         />
         <Select value={category} onValueChange={setCategory}>
-          <SelectTrigger className="h-8 text-xs">
+          <SelectTrigger className="h-9 text-xs rounded-lg border-border/60">
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -86,15 +108,31 @@ export default function QuickExpenseWidget({}: WidgetComponentProps) {
 
       <Button
         size="sm"
-        className="w-full mt-2 gap-1.5 bg-neutral-900 text-white hover:bg-neutral-800"
+        className={`w-full mt-3 gap-1.5 rounded-xl font-semibold transition-all duration-300 ${
+          status === "success"
+            ? "bg-emerald-500 text-white scale-[1.02] shadow-[0_0_16px_oklch(0.7_0.17_155/30%)]"
+            : "bg-emerald-500/90 dark:bg-emerald-500/80 text-white hover:bg-emerald-500 dark:hover:bg-emerald-500 dark:shadow-[0_0_8px_oklch(0.7_0.17_155/15%)]"
+        }`}
         onClick={handleSubmit}
         disabled={status === "loading" || !amount}
       >
-        {status === "loading" ? <IconLoader2 className="size-3.5 animate-spin" /> :
-         status === "success" ? <IconCheck className="size-3.5" /> :
-         <IconPlus className="size-3.5" />}
+        <AnimatePresence mode="wait">
+          {status === "loading" ? (
+            <motion.span key="loading" initial={{ opacity: 0, scale: 0.8 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }}>
+              <IconLoader2 className="size-3.5 animate-spin" />
+            </motion.span>
+          ) : status === "success" ? (
+            <motion.span key="success" initial={{ opacity: 0, scale: 0.5 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }} transition={{ type: "spring", stiffness: 400 }}>
+              <IconCheck className="size-4" />
+            </motion.span>
+          ) : (
+            <motion.span key="idle" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+              <IconPlus className="size-3.5" />
+            </motion.span>
+          )}
+        </AnimatePresence>
         {status === "success" ? "Added!" : "Add Expense"}
       </Button>
-    </div>
+    </motion.div>
   )
 }

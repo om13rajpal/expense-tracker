@@ -1052,60 +1052,64 @@ export default function InvestmentsPage() {
             <motion.div variants={stagger} initial="hidden" animate="show" className="grid gap-4 @[640px]/main:grid-cols-2 @[1200px]/main:grid-cols-12">
               {/* Main portfolio card - spans wider */}
               <motion.div variants={fadeUp} className="@[1200px]/main:col-span-4">
-                <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden @[1200px]/main:h-full bg-gradient-to-br from-background via-background to-primary/[0.03] dark:to-primary/[0.06]">
-                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-                  <CardContent className="p-5">
-                    <div className="flex items-center gap-2 mb-3">
-                      <div className="flex size-9 items-center justify-center rounded-xl bg-primary/10">
-                        <IconWallet className="size-4 text-primary" />
+                <div className="relative @[1200px]/main:h-full">
+                  {/* Ambient glow behind hero card */}
+                  <div className="pointer-events-none absolute -inset-3 rounded-3xl bg-primary/[0.06] dark:bg-primary/[0.08] blur-2xl" />
+                  <Card className="relative bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 overflow-hidden @[1200px]/main:h-full bg-gradient-to-br from-background via-background to-primary/[0.03] dark:to-primary/[0.06]">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/30 to-transparent" />
+                    <CardContent className="p-5">
+                      <div className="flex items-center gap-2 mb-3">
+                        <div className="flex size-9 items-center justify-center rounded-xl bg-primary/15">
+                          <IconWallet className="size-4 text-primary" />
+                        </div>
+                        <span className="text-[13px] font-semibold uppercase tracking-widest text-muted-foreground">Total Portfolio</span>
                       </div>
-                      <span className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">Total Portfolio</span>
-                    </div>
-                    <div className="text-3xl font-black tabular-nums tracking-tight">{fmt(portfolioTotal.current)}</div>
-                    <div className="mt-1.5 flex items-center gap-2">
-                      <span className={`flex items-center gap-0.5 text-sm font-semibold ${portfolioTotal.pl >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
-                        {portfolioTotal.pl >= 0 ? <IconArrowUp className="size-3.5" /> : <IconArrowDown className="size-3.5" />}
-                        {fmt(portfolioTotal.pl)}
-                      </span>
-                      <Badge variant="outline" className={`text-[11px] font-semibold ${portfolioTotal.plPercent >= 0 ? "text-lime-600 dark:text-lime-400 border-lime-200 dark:border-lime-800 bg-lime-500/5" : "text-destructive border-destructive/30 bg-destructive/5"}`}>
-                        {portfolioTotal.plPercent >= 0 ? "+" : ""}{portfolioTotal.plPercent.toFixed(2)}%
-                      </Badge>
-                    </div>
-                    <div className="mt-4 grid grid-cols-2 sm:grid-cols-3 gap-3 border-t border-border pt-3">
-                      <div>
-                        <div className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">Invested</div>
-                        <div className="text-sm font-black tabular-nums tracking-tight">{fmt(portfolioTotal.invested)}</div>
+                      <div className="text-3xl sm:text-4xl font-black tabular-nums tracking-tight">{fmt(portfolioTotal.current)}</div>
+                      <div className="mt-1.5 flex items-center gap-2">
+                        <span className={`flex items-center gap-0.5 text-sm font-semibold ${portfolioTotal.pl >= 0 ? "text-emerald-500" : "text-red-500"}`}>
+                          {portfolioTotal.pl >= 0 ? <IconArrowUp className="size-3.5" /> : <IconArrowDown className="size-3.5" />}
+                          {fmt(portfolioTotal.pl)}
+                        </span>
+                        <Badge variant="outline" className={`text-[11px] font-semibold ${portfolioTotal.plPercent >= 0 ? "text-emerald-500 border-emerald-200 dark:border-emerald-800 bg-emerald-500/5" : "text-red-500 border-red-300 dark:border-red-800 bg-red-500/5"}`}>
+                          {portfolioTotal.plPercent >= 0 ? "+" : ""}{portfolioTotal.plPercent.toFixed(2)}%
+                        </Badge>
                       </div>
-                      <div>
-                        <div className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">Day Change</div>
-                        <div className={`text-sm font-black tabular-nums tracking-tight ${dayChange >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
-                          {dayChange >= 0 ? "+" : ""}{fmt(dayChange)}
+                      <div className="mt-4 grid grid-cols-3 gap-3 border-t border-border/50 pt-3">
+                        <div>
+                          <div className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Invested</div>
+                          <div className="text-sm font-black tabular-nums tracking-tight">{fmt(portfolioTotal.invested)}</div>
+                        </div>
+                        <div>
+                          <div className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">Day Change</div>
+                          <div className={`text-sm font-black tabular-nums tracking-tight ${dayChange >= 0 ? "text-emerald-500" : "text-red-500"}`}>
+                            {dayChange >= 0 ? "+" : ""}{fmt(dayChange)}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground">XIRR</div>
+                          <div className={`text-sm font-black tabular-nums tracking-tight ${(portfolioXIRR || 0) >= 0 ? "text-emerald-500" : "text-red-500"}`}>
+                            {portfolioXIRR !== null ? `${portfolioXIRR >= 0 ? "+" : ""}${portfolioXIRR.toFixed(1)}%` : <span className="text-muted-foreground text-xs">N/A</span>}
+                          </div>
                         </div>
                       </div>
-                      <div>
-                        <div className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">XIRR</div>
-                        <div className={`text-sm font-black tabular-nums tracking-tight ${(portfolioXIRR || 0) >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
-                          {portfolioXIRR !== null ? `${portfolioXIRR >= 0 ? "+" : ""}${portfolioXIRR.toFixed(1)}%` : <span className="text-muted-foreground text-xs">N/A</span>}
-                        </div>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+                </div>
               </motion.div>
 
               {/* Quick metric tiles */}
               <motion.div variants={stagger} className="@[1200px]/main:col-span-8 grid grid-cols-2 @[640px]/main:grid-cols-4 gap-3">
                 <motion.div variants={fadeUpSmall}>
-                  <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden h-full">
+                  <Card className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 relative overflow-hidden h-full">
                     <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardContent className="relative flex items-start gap-3 p-4">
-                      <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
-                        <IconChartLine className="size-4 text-foreground/70" />
+                      <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-primary/15">
+                        <IconChartLine className="size-4 text-primary" />
                       </div>
                       <div className="min-w-0">
-                        <span className="text-[11px] uppercase tracking-widest font-semibold text-muted-foreground/70">Stocks</span>
-                        <div className="text-xl font-black tabular-nums tracking-tight">{fmt(stockTotals.totalValue)}</div>
-                        <div className={`text-xs font-medium ${stockTotals.totalPL >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
+                        <span className="text-[13px] text-muted-foreground font-medium">Stocks</span>
+                        <div className="text-2xl font-black tabular-nums tracking-tight">{fmt(stockTotals.totalValue)}</div>
+                        <div className={`text-xs font-medium ${stockTotals.totalPL >= 0 ? "text-emerald-500" : "text-red-500"}`}>
                           {stockTotals.totalPL >= 0 ? "+" : ""}{stockTotals.plPercent.toFixed(1)}%
                           <span className="text-muted-foreground font-normal ml-1">({stocks.length})</span>
                         </div>
@@ -1114,16 +1118,16 @@ export default function InvestmentsPage() {
                   </Card>
                 </motion.div>
                 <motion.div variants={fadeUpSmall}>
-                  <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden h-full">
+                  <Card className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 relative overflow-hidden h-full">
                     <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardContent className="relative flex items-start gap-3 p-4">
-                      <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
-                        <IconChartBar className="size-4 text-foreground/70" />
+                      <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-amber-500/15">
+                        <IconChartBar className="size-4 text-amber-600 dark:text-amber-400" />
                       </div>
                       <div className="min-w-0">
-                        <span className="text-[11px] uppercase tracking-widest font-semibold text-muted-foreground/70">Mutual Funds</span>
-                        <div className="text-xl font-black tabular-nums tracking-tight">{fmt(fundTotals.current)}</div>
-                        <div className={`text-xs font-medium ${fundTotals.returns >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
+                        <span className="text-[13px] text-muted-foreground font-medium">Mutual Funds</span>
+                        <div className="text-2xl font-black tabular-nums tracking-tight">{fmt(fundTotals.current)}</div>
+                        <div className={`text-xs font-medium ${fundTotals.returns >= 0 ? "text-emerald-500" : "text-red-500"}`}>
                           {fundTotals.returns >= 0 ? "+" : ""}{fundTotals.plPercent.toFixed(1)}%
                           <span className="text-muted-foreground font-normal ml-1">({mutualFunds.length})</span>
                         </div>
@@ -1132,30 +1136,30 @@ export default function InvestmentsPage() {
                   </Card>
                 </motion.div>
                 <motion.div variants={fadeUpSmall}>
-                  <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden h-full">
+                  <Card className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 relative overflow-hidden h-full">
                     <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardContent className="relative flex items-start gap-3 p-4">
-                      <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
-                        <IconCoin className="size-4 text-foreground/70" />
+                      <div className="mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl bg-cyan-500/15">
+                        <IconCoin className="size-4 text-cyan-600 dark:text-cyan-400" />
                       </div>
                       <div className="min-w-0">
-                        <span className="text-[11px] uppercase tracking-widest font-semibold text-muted-foreground/70">Monthly SIP</span>
-                        <div className="text-xl font-black tabular-nums tracking-tight">{fmt(sipTotals.monthlyTotal)}</div>
+                        <span className="text-[13px] text-muted-foreground font-medium">Monthly SIP</span>
+                        <div className="text-2xl font-black tabular-nums tracking-tight">{fmt(sipTotals.monthlyTotal)}</div>
                         <div className="text-xs text-muted-foreground">{sipTotals.active} active of {sipTotals.total}</div>
                       </div>
                     </CardContent>
                   </Card>
                 </motion.div>
                 <motion.div variants={fadeUpSmall}>
-                  <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden h-full">
+                  <Card className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 relative overflow-hidden h-full">
                     <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardContent className="relative flex items-start gap-3 p-4">
-                      <div className={`mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl ${realizedPL >= 0 ? "bg-lime-500/10" : "bg-destructive/10"}`}>
-                        <IconTrendingUp className={`size-4 ${realizedPL >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`} />
+                      <div className={`mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-xl ${realizedPL >= 0 ? "bg-emerald-500/15" : "bg-red-500/15"}`}>
+                        <IconTrendingUp className={`size-4 ${realizedPL >= 0 ? "text-emerald-500" : "text-red-500"}`} />
                       </div>
                       <div className="min-w-0">
-                        <span className="text-[11px] uppercase tracking-widest font-semibold text-muted-foreground/70">Realized P&L</span>
-                        <div className={`text-xl font-black tabular-nums tracking-tight ${realizedPL >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
+                        <span className="text-[13px] text-muted-foreground font-medium">Realized P&L</span>
+                        <div className={`text-2xl font-black tabular-nums tracking-tight ${realizedPL >= 0 ? "text-emerald-500" : "text-red-500"}`}>
                           {realizedPL >= 0 ? "+" : ""}{fmt(realizedPL)}
                         </div>
                         <div className="text-xs text-muted-foreground">{exitedStocks.length} exited positions</div>
@@ -1174,7 +1178,7 @@ export default function InvestmentsPage() {
 
                 {/* Asset Allocation + Stock Weight combined */}
                 <motion.div variants={fadeUp} className="@[1200px]/main:col-span-4">
-                  <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden h-full">
+                  <Card className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 relative overflow-hidden h-full">
                     <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardHeader className="pb-2">
                       <div className="flex items-center gap-2">
@@ -1256,7 +1260,7 @@ export default function InvestmentsPage() {
                 {/* Stock P&L */}
                 {stockPLData.length > 0 && (
                   <motion.div variants={fadeUp} className="@[1200px]/main:col-span-4">
-                    <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden h-full">
+                    <Card className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 relative overflow-hidden h-full">
                       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                       <CardHeader className="pb-1">
                         <div className="flex items-center gap-2">
@@ -1273,29 +1277,34 @@ export default function InvestmentsPage() {
                         <div className="space-y-3">
                           {(() => {
                             const maxAbsPL = Math.max(...stockPLData.map((d) => Math.abs(d.pl)), 1)
-                            return stockPLData.map((entry) => {
+                            return stockPLData.map((entry, idx) => {
                             const barWidth = Math.max((Math.abs(entry.pl) / maxAbsPL) * 100, 4)
                             const isPositive = entry.pl >= 0
                             return (
-                              <div key={entry.name}>
+                              <motion.div
+                                key={entry.name}
+                                initial={{ opacity: 0, x: -8 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                transition={{ delay: idx * 0.04, duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
+                              >
                                 <div className="flex items-center justify-between mb-1">
                                   <span className="text-xs font-medium">{entry.name}</span>
                                   <div className="flex items-center gap-1.5">
-                                    <span className={`text-xs font-semibold tabular-nums ${isPositive ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
+                                    <span className={`text-xs font-semibold tabular-nums ${isPositive ? "text-emerald-500" : "text-red-500"}`}>
                                       {isPositive ? "+" : ""}{fmt(entry.pl)}
                                     </span>
-                                    <span className={`text-[11px] tabular-nums font-medium px-1.5 py-0.5 rounded-md ${isPositive ? "text-lime-700 dark:text-lime-300 bg-lime-500/10" : "text-destructive bg-destructive/10"}`}>
+                                    <span className={`text-[11px] tabular-nums font-semibold px-1.5 py-0.5 rounded-lg ${isPositive ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10" : "text-red-600 dark:text-red-400 bg-red-500/10"}`}>
                                       {isPositive ? "+" : ""}{entry.plPct}%
                                     </span>
                                   </div>
                                 </div>
                                 <div className="h-1.5 w-full rounded-full bg-muted/50 overflow-hidden">
                                   <div
-                                    className={`h-full rounded-full transition-all duration-700 ease-out ${isPositive ? "bg-gradient-to-r from-lime-500 to-lime-400" : "bg-gradient-to-r from-destructive to-destructive/80"}`}
+                                    className={`h-full rounded-full transition-all duration-700 ease-out ${isPositive ? "bg-gradient-to-r from-emerald-500 to-emerald-400" : "bg-gradient-to-r from-red-500 to-red-400"}`}
                                     style={{ width: `${barWidth}%` }}
                                   />
                                 </div>
-                              </div>
+                              </motion.div>
                             )
                           })
                           })()}
@@ -1308,12 +1317,12 @@ export default function InvestmentsPage() {
                 {/* Holdings Value (invested vs current) + MF Category */}
                 <motion.div variants={fadeUp} className="@[1200px]/main:col-span-4 grid gap-4">
                   {stockBarData.length > 0 && (
-                    <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
+                    <Card className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 relative overflow-hidden">
                       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                       <CardHeader className="flex flex-row items-center justify-between pb-2">
                         <div className="flex items-center gap-2">
-                          <div className="flex size-8 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
-                            <IconStack2 className="size-3.5 text-foreground/70" />
+                          <div className="flex size-8 items-center justify-center rounded-xl bg-primary/15">
+                            <IconStack2 className="size-3.5 text-primary" />
                           </div>
                           <div>
                             <CardTitle className="text-sm font-medium">Holdings Value</CardTitle>
@@ -1341,12 +1350,12 @@ export default function InvestmentsPage() {
                   )}
 
                   {fundCategoryData.length > 0 && (
-                    <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
+                    <Card className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 relative overflow-hidden">
                       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                       <CardHeader className="pb-2">
                         <div className="flex items-center gap-2">
-                          <div className="flex size-8 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
-                            <IconChartPie className="size-3.5 text-foreground/70" />
+                          <div className="flex size-8 items-center justify-center rounded-xl bg-amber-500/15">
+                            <IconChartPie className="size-3.5 text-amber-600 dark:text-amber-400" />
                           </div>
                           <CardTitle className="text-sm font-medium">MF Category Split</CardTitle>
                         </div>
@@ -1401,26 +1410,28 @@ export default function InvestmentsPage() {
             ══════════════════════════════════════════════════════════════ */}
             <motion.div variants={fadeUp} initial="hidden" animate="show">
             <Tabs defaultValue="stocks" className="space-y-4">
-              <TabsList variant="line" className="h-10 border-b border-border w-full justify-start">
-                <TabsTrigger value="stocks">Stocks ({stocks.length})</TabsTrigger>
-                <TabsTrigger value="stock-txns">Stock Orders ({stockTxns.length})</TabsTrigger>
-                <TabsTrigger value="funds">Mutual Funds ({mutualFunds.length})</TabsTrigger>
-                <TabsTrigger value="sips">SIPs ({sips.length})</TabsTrigger>
-              </TabsList>
+              <div className="tab-scroll">
+                <TabsList variant="line" className="h-10 border-b border-border/50 w-full justify-start">
+                  <TabsTrigger value="stocks">Stocks ({stocks.length})</TabsTrigger>
+                  <TabsTrigger value="stock-txns">Stock Orders ({stockTxns.length})</TabsTrigger>
+                  <TabsTrigger value="funds">Mutual Funds ({mutualFunds.length})</TabsTrigger>
+                  <TabsTrigger value="sips">SIPs ({sips.length})</TabsTrigger>
+                </TabsList>
+              </div>
 
               {/* ── STOCKS TAB ── */}
               <TabsContent value="stocks" className="space-y-4">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Button size="sm" variant="outline" className="rounded-lg" onClick={() => setShowAddStock(!showAddStock)}>
+                  <Button size="sm" variant="outline" className="rounded-xl w-full sm:w-auto hover:shadow-[0_0_12px_rgba(132,204,22,0.15)] transition-shadow" onClick={() => setShowAddStock(!showAddStock)}>
                     <IconPlus className="mr-1.5 size-3.5" /> Add Stock
                   </Button>
-                  <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:border-border">
+                  <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-border/50 px-3 py-1.5 text-xs text-muted-foreground transition-all hover:bg-accent hover:border-border hover:shadow-sm w-full sm:w-auto justify-center sm:justify-start">
                     <IconUpload className="size-3.5" />
                     Import CSV
                     <input type="file" accept=".csv" className="hidden" onChange={(e) => handleImportStocks(e.target.files?.[0])} />
                   </label>
                   <ReplaceToggle checked={replaceStocks} onChange={setReplaceStocks} label="Replace existing on import" />
-                  <Button variant="ghost" size="sm" className="rounded-lg ml-auto" onClick={() => refreshQuotes(stocks)} disabled={isRefreshing}>
+                  <Button variant="ghost" size="sm" className="rounded-xl ml-auto" onClick={() => refreshQuotes(stocks)} disabled={isRefreshing}>
                     <IconRefresh className={`mr-1.5 size-3.5 ${isRefreshing ? "animate-spin" : ""}`} /> Refresh Quotes
                   </Button>
                 </div>
@@ -1449,7 +1460,7 @@ export default function InvestmentsPage() {
                     <Skeleton className="h-40 rounded-lg" />
                   </div>
                 ) : stocks.length === 0 ? (
-                  <Card className="card-elevated border-dashed">
+                  <Card className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 border-dashed">
                     <CardContent className="py-16 text-center">
                       <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted/60 mx-auto mb-3">
                         <IconChartLine className="size-6 text-muted-foreground/60" />
@@ -1459,25 +1470,98 @@ export default function InvestmentsPage() {
                     </CardContent>
                   </Card>
                 ) : (
-                  <Card className="card-elevated overflow-hidden">
+                  <>
+                  {/* Mobile: Card-based holdings */}
+                  <div className="space-y-3 md:hidden">
+                    {stocks.map((s, idx) => {
+                      const q = quotes[s.symbol]
+                      const cmp = q?.current || s.averageCost
+                      const invested = s.shares * s.averageCost
+                      const current = s.shares * cmp
+                      const pl = current - invested
+                      const plPct = invested > 0 ? (pl / invested) * 100 : 0
+                      return (
+                        <motion.div
+                          key={s._id}
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: idx * 0.04, duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
+                          className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 p-4 relative overflow-hidden"
+                        >
+                          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-center gap-3">
+                              <div className="flex size-9 items-center justify-center rounded-xl bg-primary/15">
+                                <span className="text-xs font-black text-primary">{s.symbol.slice(0, 2)}</span>
+                              </div>
+                              <div>
+                                <div className="text-sm font-semibold">{s.symbol}</div>
+                                <div className="text-[11px] text-muted-foreground">{s.exchange} &middot; {s.shares} shares</div>
+                              </div>
+                            </div>
+                            <div className="flex gap-0.5">
+                              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => openEditStock(s)}><IconEdit className="size-3.5" /></Button>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-red-500 hover:text-red-500" onClick={() => handleDeleteStock(s._id)}><IconTrash className="size-3.5" /></Button>
+                            </div>
+                          </div>
+                          <div className="mt-3 grid grid-cols-3 gap-2">
+                            <div>
+                              <div className="text-[11px] text-muted-foreground">Invested</div>
+                              <div className="text-sm font-semibold tabular-nums">{fmt(invested)}</div>
+                            </div>
+                            <div>
+                              <div className="text-[11px] text-muted-foreground">Current</div>
+                              <div className="text-sm font-black tabular-nums">{fmt(current)}</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-[11px] text-muted-foreground">P&L</div>
+                              <span className={`inline-flex items-center gap-1 text-sm font-semibold tabular-nums ${pl >= 0 ? "text-emerald-500" : "text-red-500"}`}>
+                                {pl >= 0 ? "+" : ""}{plPct.toFixed(1)}%
+                              </span>
+                            </div>
+                          </div>
+                          {q && (
+                            <div className="mt-2 pt-2 border-t border-border/30 flex items-center justify-between">
+                              <span className="text-[11px] text-muted-foreground">Day change</span>
+                              <span className={`text-xs font-semibold tabular-nums px-1.5 py-0.5 rounded-lg ${q.changePercent >= 0 ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10" : "text-red-600 dark:text-red-400 bg-red-500/10"}`}>
+                                {q.changePercent >= 0 ? "+" : ""}{q.changePercent.toFixed(2)}%
+                              </span>
+                            </div>
+                          )}
+                        </motion.div>
+                      )
+                    })}
+                    {/* Mobile total summary */}
+                    <div className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 px-4 py-3">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-semibold uppercase tracking-wider text-muted-foreground">Total</span>
+                        <span className={`font-semibold ${stockTotals.totalPL >= 0 ? "text-emerald-500" : "text-red-500"}`}>
+                          P&L: {fmt(stockTotals.totalPL)} ({stockTotals.plPercent.toFixed(1)}%)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Desktop: Table view */}
+                  <Card className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 overflow-hidden hidden md:block">
                     <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow className="bg-muted/30 hover:bg-muted/30">
                           <TableHead className="font-semibold text-xs">Stock</TableHead>
-                          <TableHead className="text-right font-semibold text-xs hidden md:table-cell">Shares</TableHead>
-                          <TableHead className="text-right font-semibold text-xs hidden md:table-cell">Avg Cost</TableHead>
+                          <TableHead className="text-right font-semibold text-xs">Shares</TableHead>
+                          <TableHead className="text-right font-semibold text-xs">Avg Cost</TableHead>
                           <TableHead className="text-right font-semibold text-xs hidden lg:table-cell">CMP</TableHead>
-                          <TableHead className="text-right font-semibold text-xs hidden sm:table-cell">Invested</TableHead>
+                          <TableHead className="text-right font-semibold text-xs">Invested</TableHead>
                           <TableHead className="text-right font-semibold text-xs">Current</TableHead>
                           <TableHead className="text-right font-semibold text-xs">P&L</TableHead>
-                          <TableHead className="text-right font-semibold text-xs hidden sm:table-cell">Change</TableHead>
+                          <TableHead className="text-right font-semibold text-xs">Change</TableHead>
                           <TableHead className="text-right font-semibold text-xs hidden lg:table-cell">Buy Date</TableHead>
                           <TableHead className="w-[80px]" />
                         </TableRow>
                       </TableHeader>
                       <TableBody>
-                        {stocks.map((s) => {
+                        {stocks.map((s, idx) => {
                           const q = quotes[s.symbol]
                           const cmp = q?.current || s.averageCost
                           const invested = s.shares * s.averageCost
@@ -1490,30 +1574,30 @@ export default function InvestmentsPage() {
                                 <div className="font-semibold text-sm">{s.symbol}</div>
                                 <div className="text-[11px] text-muted-foreground">{s.exchange}</div>
                               </TableCell>
-                              <TableCell className="text-right tabular-nums text-sm hidden md:table-cell">{s.shares}</TableCell>
-                              <TableCell className="text-right tabular-nums text-sm hidden md:table-cell">{fmt(s.averageCost)}</TableCell>
+                              <TableCell className="text-right tabular-nums text-sm">{s.shares}</TableCell>
+                              <TableCell className="text-right tabular-nums text-sm">{fmt(s.averageCost)}</TableCell>
                               <TableCell className="text-right tabular-nums text-sm hidden lg:table-cell">{q?.current ? fmt(cmp) : <span className="text-muted-foreground" title="Using avg cost">{fmt(cmp)}*</span>}</TableCell>
-                              <TableCell className="text-right tabular-nums text-sm hidden sm:table-cell">{fmt(invested)}</TableCell>
-                              <TableCell className="text-right tabular-nums text-sm">{fmt(current)}{!q?.current && <span className="text-muted-foreground">*</span>}</TableCell>
+                              <TableCell className="text-right tabular-nums text-sm">{fmt(invested)}</TableCell>
+                              <TableCell className="text-right tabular-nums font-semibold text-sm">{fmt(current)}{!q?.current && <span className="text-muted-foreground">*</span>}</TableCell>
                               <TableCell className="text-right">
-                                <span className={`inline-flex items-center gap-1 text-sm font-medium px-2 py-0.5 rounded-md ${pl >= 0 ? "text-lime-700 dark:text-lime-300 bg-lime-500/8" : "text-destructive bg-destructive/8"}`}>
+                                <span className={`inline-flex items-center gap-1 text-sm font-semibold px-2 py-0.5 rounded-lg ${pl >= 0 ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/8" : "text-red-600 dark:text-red-400 bg-red-500/8"}`}>
                                   {fmt(pl)} <span className="text-[11px] opacity-75">({plPct.toFixed(1)}%)</span>
                                 </span>
                               </TableCell>
-                              <TableCell className="text-right hidden sm:table-cell">
+                              <TableCell className="text-right">
                                 {q ? (
-                                  <span className={`text-xs font-medium tabular-nums px-1.5 py-0.5 rounded-md ${q.changePercent >= 0 ? "text-lime-700 dark:text-lime-300 bg-lime-500/10" : "text-destructive bg-destructive/10"}`}>
+                                  <span className={`text-xs font-semibold tabular-nums px-1.5 py-0.5 rounded-lg ${q.changePercent >= 0 ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10" : "text-red-600 dark:text-red-400 bg-red-500/10"}`}>
                                     {q.changePercent >= 0 ? "+" : ""}{q.changePercent.toFixed(2)}%
                                   </span>
                                 ) : null}
                               </TableCell>
                               <TableCell className="text-right text-xs text-muted-foreground hidden lg:table-cell">
-                                {s.buyDate ? new Date(s.buyDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "—"}
+                                {s.buyDate ? new Date(s.buyDate).toLocaleDateString("en-IN", { day: "2-digit", month: "short", year: "numeric" }) : "\u2014"}
                               </TableCell>
                               <TableCell>
                                 <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                                   <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => openEditStock(s)}><IconEdit className="size-3.5" /></Button>
-                                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-destructive hover:text-destructive" onClick={() => handleDeleteStock(s._id)}><IconTrash className="size-3.5" /></Button>
+                                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-red-500 hover:text-red-500" onClick={() => handleDeleteStock(s._id)}><IconTrash className="size-3.5" /></Button>
                                 </div>
                               </TableCell>
                             </TableRow>
@@ -1522,29 +1606,30 @@ export default function InvestmentsPage() {
                       </TableBody>
                     </Table>
                     </div>
-                    <div className="flex items-center justify-between border-t bg-muted/20 px-4 py-2.5 text-sm">
+                    <div className="flex items-center justify-between border-t border-border/50 bg-muted/20 px-4 py-2.5 text-sm">
                       <span className="font-semibold text-xs uppercase tracking-wider text-muted-foreground">Total</span>
                       <div className="flex gap-5 text-xs">
                         <span>Invested: <strong className="font-semibold">{fmt(stockTotals.totalInvested)}</strong></span>
                         <span>Current: <strong className="font-semibold">{fmt(stockTotals.totalValue)}</strong></span>
-                        <span className={`font-semibold ${stockTotals.totalPL >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
+                        <span className={`font-semibold ${stockTotals.totalPL >= 0 ? "text-emerald-500" : "text-red-500"}`}>
                           P&L: {fmt(stockTotals.totalPL)} ({stockTotals.plPercent.toFixed(1)}%)
                         </span>
                         {stockXIRR !== null && (
-                          <span className={`font-semibold ${stockXIRR >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
+                          <span className={`font-semibold ${stockXIRR >= 0 ? "text-emerald-500" : "text-red-500"}`}>
                             XIRR: {stockXIRR >= 0 ? "+" : ""}{stockXIRR.toFixed(1)}%
                           </span>
                         )}
                       </div>
                     </div>
                   </Card>
+                  </>
                 )}
               </TabsContent>
 
               {/* ── STOCK ORDERS TAB ── */}
               <TabsContent value="stock-txns" className="space-y-4">
                 <div className="flex flex-wrap items-center gap-2">
-                  <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:border-border">
+                  <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-border/50 px-3 py-1.5 text-xs text-muted-foreground transition-all hover:bg-accent hover:border-border hover:shadow-sm w-full sm:w-auto justify-center sm:justify-start">
                     <IconUpload className="size-3.5" /> Import Order History CSV
                     <input type="file" accept=".csv" className="hidden" onChange={(e) => handleImportStockTxns(e.target.files?.[0])} />
                   </label>
@@ -1554,7 +1639,7 @@ export default function InvestmentsPage() {
 
                 {/* Exited positions summary */}
                 {exitedStocks.length > 0 && (
-                  <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
+                  <Card className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 relative overflow-hidden">
                     <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardHeader className="pb-2">
                       <div className="flex items-center gap-2">
@@ -1575,7 +1660,7 @@ export default function InvestmentsPage() {
                               <div className="text-sm font-semibold">{e.symbol}</div>
                               <div className="text-[11px] text-muted-foreground">Buy: {fmtPrecise(e.buyValue)} → Sell: {fmtPrecise(e.sellValue)}</div>
                             </div>
-                            <span className={`text-xs font-semibold tabular-nums px-2 py-1 rounded-lg ${e.realizedPL >= 0 ? "text-lime-700 dark:text-lime-300 bg-lime-500/10" : "text-destructive bg-destructive/10"}`}>
+                            <span className={`text-xs font-semibold tabular-nums px-2 py-1 rounded-lg ${e.realizedPL >= 0 ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10" : "text-red-600 dark:text-red-400 bg-red-500/10"}`}>
                               {e.realizedPL >= 0 ? "+" : ""}{fmtPrecise(e.realizedPL)}
                             </span>
                           </div>
@@ -1589,7 +1674,7 @@ export default function InvestmentsPage() {
                 {isLoading ? (
                   <div className="space-y-3"><Skeleton className="h-10 rounded-lg" /><Skeleton className="h-40 rounded-lg" /></div>
                 ) : stockTxns.length === 0 ? (
-                  <Card className="card-elevated border-dashed">
+                  <Card className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 border-dashed">
                     <CardContent className="py-16 text-center">
                       <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted/60 mx-auto mb-3">
                         <IconFileSpreadsheet className="size-6 text-muted-foreground/60" />
@@ -1599,7 +1684,7 @@ export default function InvestmentsPage() {
                     </CardContent>
                   </Card>
                 ) : (
-                  <Card className="card-elevated overflow-hidden">
+                  <Card className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 overflow-hidden">
                     <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
@@ -1623,7 +1708,7 @@ export default function InvestmentsPage() {
                                 <div className="text-[11px] text-muted-foreground max-w-[200px] truncate">{txn.stockName}</div>
                               </TableCell>
                               <TableCell>
-                                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-md ${txn.type === "BUY" ? "text-lime-700 dark:text-lime-300 bg-lime-500/10" : "text-destructive bg-destructive/10"}`}>
+                                <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-lg ${txn.type === "BUY" ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10" : "text-red-600 dark:text-red-400 bg-red-500/10"}`}>
                                   {txn.type}
                                 </span>
                               </TableCell>
@@ -1638,11 +1723,11 @@ export default function InvestmentsPage() {
                       </TableBody>
                     </Table>
                     </div>
-                    <div className="flex items-center justify-between border-t bg-muted/20 px-4 py-2.5 text-xs">
+                    <div className="flex items-center justify-between border-t border-border/50 bg-muted/20 px-4 py-2.5 text-xs">
                       <span className="font-semibold uppercase tracking-wider text-muted-foreground">{stockTxns.length} transaction(s)</span>
                       <div className="flex gap-4 font-medium">
-                        <span className="text-lime-600 dark:text-lime-400">Buy: {fmt(stockTxns.filter((t) => t.type === "BUY").reduce((s, t) => s + t.value, 0))}</span>
-                        <span className="text-destructive">Sell: {fmt(stockTxns.filter((t) => t.type === "SELL").reduce((s, t) => s + t.value, 0))}</span>
+                        <span className="text-emerald-500">Buy: {fmt(stockTxns.filter((t) => t.type === "BUY").reduce((s, t) => s + t.value, 0))}</span>
+                        <span className="text-red-500">Sell: {fmt(stockTxns.filter((t) => t.type === "SELL").reduce((s, t) => s + t.value, 0))}</span>
                       </div>
                     </div>
                   </Card>
@@ -1652,11 +1737,11 @@ export default function InvestmentsPage() {
               {/* ── MUTUAL FUNDS TAB ── */}
               <TabsContent value="funds" className="space-y-4">
                 <div className="flex flex-wrap items-center gap-2">
-                  <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:border-border">
+                  <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-border/50 px-3 py-1.5 text-xs text-muted-foreground transition-all hover:bg-accent hover:border-border hover:shadow-sm w-full sm:w-auto justify-center sm:justify-start">
                     <IconUpload className="size-3.5" /> Import Holdings CSV
                     <input type="file" accept=".csv" className="hidden" onChange={(e) => handleImportFunds(e.target.files?.[0])} />
                   </label>
-                  <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:border-border">
+                  <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-border/50 px-3 py-1.5 text-xs text-muted-foreground transition-all hover:bg-accent hover:border-border hover:shadow-sm w-full sm:w-auto justify-center sm:justify-start">
                     <IconUpload className="size-3.5" /> Import Order History
                     <input type="file" accept=".csv" className="hidden" onChange={(e) => handleImportFundTxns(e.target.files?.[0])} />
                   </label>
@@ -1667,41 +1752,41 @@ export default function InvestmentsPage() {
                 {fundTxnImportMsg && <div className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">{fundTxnImportMsg}</div>}
 
                 {/* Fund summary row */}
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
+                <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
+                  <Card className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 relative overflow-hidden">
                     <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">Invested</span>
-                        <div className="flex size-8 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
-                          <IconArrowUp className="size-3.5 text-foreground/70" />
+                        <span className="text-[13px] text-muted-foreground font-medium">Invested</span>
+                        <div className="flex size-9 items-center justify-center rounded-xl bg-primary/15">
+                          <IconArrowUp className="size-4 text-primary" />
                         </div>
                       </div>
                       <div className="mt-2 text-2xl font-black tabular-nums tracking-tight">{fmt(fundTotals.invested)}</div>
                     </CardContent>
                   </Card>
-                  <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
+                  <Card className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 relative overflow-hidden">
                     <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">Current Value</span>
-                        <div className="flex size-8 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
-                          <IconChartBar className="size-3.5 text-foreground/70" />
+                        <span className="text-[13px] text-muted-foreground font-medium">Current Value</span>
+                        <div className="flex size-9 items-center justify-center rounded-xl bg-amber-500/15">
+                          <IconChartBar className="size-4 text-amber-600 dark:text-amber-400" />
                         </div>
                       </div>
                       <div className="mt-2 text-2xl font-black tabular-nums tracking-tight">{fmt(fundTotals.current)}</div>
                     </CardContent>
                   </Card>
-                  <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
+                  <Card className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 relative overflow-hidden">
                     <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">Returns</span>
-                        <div className={`flex size-8 items-center justify-center rounded-xl ${fundTotals.returns >= 0 ? "bg-lime-500/10" : "bg-destructive/10"}`}>
-                          <IconTrendingUp className={`size-3.5 ${fundTotals.returns >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`} />
+                        <span className="text-[13px] text-muted-foreground font-medium">Returns</span>
+                        <div className={`flex size-9 items-center justify-center rounded-xl ${fundTotals.returns >= 0 ? "bg-emerald-500/15" : "bg-red-500/15"}`}>
+                          <IconTrendingUp className={`size-4 ${fundTotals.returns >= 0 ? "text-emerald-500" : "text-red-500"}`} />
                         </div>
                       </div>
-                      <div className={`mt-2 text-2xl font-black tabular-nums tracking-tight ${fundTotals.returns >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
+                      <div className={`mt-2 text-2xl font-black tabular-nums tracking-tight ${fundTotals.returns >= 0 ? "text-emerald-500" : "text-red-500"}`}>
                         {fmt(fundTotals.returns)} <span className="text-sm font-semibold">({fundTotals.plPercent.toFixed(1)}%)</span>
                       </div>
                     </CardContent>
@@ -1711,7 +1796,7 @@ export default function InvestmentsPage() {
                 {isLoading ? (
                   <div className="space-y-3"><Skeleton className="h-10 rounded-lg" /><Skeleton className="h-40 rounded-lg" /></div>
                 ) : mutualFunds.length === 0 ? (
-                  <Card className="card-elevated border-dashed">
+                  <Card className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 border-dashed">
                     <CardContent className="py-16 text-center">
                       <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted/60 mx-auto mb-3">
                         <IconChartBar className="size-6 text-muted-foreground/60" />
@@ -1721,17 +1806,72 @@ export default function InvestmentsPage() {
                     </CardContent>
                   </Card>
                 ) : (
-                  <Card className="card-elevated overflow-hidden">
+                  <>
+                  {/* Mobile: Card-based MF holdings */}
+                  <div className="space-y-3 md:hidden">
+                    {mutualFunds.map((f, idx) => {
+                      const ret = f.currentValue - f.investedValue
+                      const retPct = f.investedValue > 0 ? (ret / f.investedValue) * 100 : 0
+                      return (
+                        <motion.div
+                          key={f._id}
+                          initial={{ opacity: 0, y: 8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          transition={{ delay: idx * 0.04, duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
+                          className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 p-4 relative overflow-hidden"
+                        >
+                          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/15 to-transparent" />
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="min-w-0 flex-1">
+                              <div className="text-sm font-semibold truncate">{f.schemeName}</div>
+                              <div className="text-[11px] text-muted-foreground">{[f.amc, f.category].filter(Boolean).join(" - ") || "Mutual Fund"}</div>
+                            </div>
+                            <div className="flex gap-0.5 shrink-0">
+                              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => openEditFund(f)}><IconEdit className="size-3.5" /></Button>
+                              <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-red-500 hover:text-red-500" onClick={() => handleDeleteFund(f._id)}><IconTrash className="size-3.5" /></Button>
+                            </div>
+                          </div>
+                          <div className="mt-3 grid grid-cols-3 gap-2">
+                            <div>
+                              <div className="text-[11px] text-muted-foreground">Invested</div>
+                              <div className="text-sm font-semibold tabular-nums">{fmt(f.investedValue)}</div>
+                            </div>
+                            <div>
+                              <div className="text-[11px] text-muted-foreground">Current</div>
+                              <div className="text-sm font-black tabular-nums">{fmt(f.currentValue)}</div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-[11px] text-muted-foreground">Returns</div>
+                              <span className={`inline-flex items-center gap-1 text-sm font-semibold tabular-nums ${ret >= 0 ? "text-emerald-500" : "text-red-500"}`}>
+                                {retPct >= 0 ? "+" : ""}{retPct.toFixed(1)}%
+                              </span>
+                            </div>
+                          </div>
+                        </motion.div>
+                      )
+                    })}
+                    <div className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 px-4 py-3">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-semibold uppercase tracking-wider text-muted-foreground">Total ({mutualFunds.length})</span>
+                        <span className={`font-semibold ${fundTotals.returns >= 0 ? "text-emerald-500" : "text-red-500"}`}>
+                          P&L: {fmt(fundTotals.returns)} ({fundTotals.plPercent.toFixed(1)}%)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Desktop: Table view */}
+                  <Card className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 overflow-hidden hidden md:block">
                     <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
                         <TableRow className="bg-muted/30 hover:bg-muted/30">
                           <TableHead className="font-semibold text-xs">Scheme</TableHead>
-                          <TableHead className="text-right font-semibold text-xs hidden md:table-cell">Units</TableHead>
-                          <TableHead className="text-right font-semibold text-xs hidden sm:table-cell">Invested</TableHead>
+                          <TableHead className="text-right font-semibold text-xs">Units</TableHead>
+                          <TableHead className="text-right font-semibold text-xs">Invested</TableHead>
                           <TableHead className="text-right font-semibold text-xs">Current</TableHead>
                           <TableHead className="text-right font-semibold text-xs">P&L</TableHead>
-                          <TableHead className="text-right font-semibold text-xs hidden sm:table-cell">Returns %</TableHead>
+                          <TableHead className="text-right font-semibold text-xs">Returns %</TableHead>
                           <TableHead className="w-[80px]" />
                         </TableRow>
                       </TableHeader>
@@ -1745,21 +1885,21 @@ export default function InvestmentsPage() {
                                 <div className="font-semibold text-sm max-w-[280px] truncate">{f.schemeName}</div>
                                 <div className="text-[11px] text-muted-foreground">{[f.amc, f.category].filter(Boolean).join(" - ") || "Mutual Fund"}</div>
                               </TableCell>
-                              <TableCell className="text-right tabular-nums text-sm hidden md:table-cell">{Number(f.units).toFixed(3)}</TableCell>
-                              <TableCell className="text-right tabular-nums text-sm hidden sm:table-cell">{fmt(f.investedValue)}</TableCell>
-                              <TableCell className="text-right tabular-nums text-sm">{fmt(f.currentValue)}</TableCell>
+                              <TableCell className="text-right tabular-nums text-sm">{Number(f.units).toFixed(3)}</TableCell>
+                              <TableCell className="text-right tabular-nums text-sm">{fmt(f.investedValue)}</TableCell>
+                              <TableCell className="text-right tabular-nums font-semibold text-sm">{fmt(f.currentValue)}</TableCell>
                               <TableCell className="text-right">
-                                <span className={`text-sm font-medium px-2 py-0.5 rounded-md ${ret >= 0 ? "text-lime-700 dark:text-lime-300 bg-lime-500/8" : "text-destructive bg-destructive/8"}`}>{fmt(ret)}</span>
+                                <span className={`text-sm font-semibold px-2 py-0.5 rounded-lg ${ret >= 0 ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/8" : "text-red-600 dark:text-red-400 bg-red-500/8"}`}>{fmt(ret)}</span>
                               </TableCell>
-                              <TableCell className="text-right hidden sm:table-cell">
-                                <span className={`text-xs font-medium tabular-nums px-1.5 py-0.5 rounded-md ${retPct >= 0 ? "text-lime-700 dark:text-lime-300 bg-lime-500/10" : "text-destructive bg-destructive/10"}`}>
+                              <TableCell className="text-right">
+                                <span className={`text-xs font-semibold tabular-nums px-1.5 py-0.5 rounded-lg ${retPct >= 0 ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10" : "text-red-600 dark:text-red-400 bg-red-500/10"}`}>
                                   {retPct >= 0 ? "+" : ""}{retPct.toFixed(1)}%
                                 </span>
                               </TableCell>
                               <TableCell>
                                 <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                                   <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => openEditFund(f)}><IconEdit className="size-3.5" /></Button>
-                                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-destructive hover:text-destructive" onClick={() => handleDeleteFund(f._id)}><IconTrash className="size-3.5" /></Button>
+                                  <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-red-500 hover:text-red-500" onClick={() => handleDeleteFund(f._id)}><IconTrash className="size-3.5" /></Button>
                                 </div>
                               </TableCell>
                             </TableRow>
@@ -1768,27 +1908,28 @@ export default function InvestmentsPage() {
                       </TableBody>
                     </Table>
                     </div>
-                    <div className="flex items-center justify-between border-t bg-muted/20 px-4 py-2.5 text-xs">
+                    <div className="flex items-center justify-between border-t border-border/50 bg-muted/20 px-4 py-2.5 text-xs">
                       <span className="font-semibold uppercase tracking-wider text-muted-foreground">Total ({mutualFunds.length} schemes)</span>
                       <div className="flex gap-5">
                         <span>Invested: <strong className="font-semibold">{fmt(fundTotals.invested)}</strong></span>
                         <span>Current: <strong className="font-semibold">{fmt(fundTotals.current)}</strong></span>
-                        <span className={`font-semibold ${fundTotals.returns >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
+                        <span className={`font-semibold ${fundTotals.returns >= 0 ? "text-emerald-500" : "text-red-500"}`}>
                           P&L: {fmt(fundTotals.returns)} ({fundTotals.plPercent.toFixed(1)}%)
                         </span>
                         {fundXIRR !== null && (
-                          <span className={`font-semibold ${fundXIRR >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
+                          <span className={`font-semibold ${fundXIRR >= 0 ? "text-emerald-500" : "text-red-500"}`}>
                             XIRR: {fundXIRR >= 0 ? "+" : ""}{fundXIRR.toFixed(1)}%
                           </span>
                         )}
                       </div>
                     </div>
                   </Card>
+                  </>
                 )}
 
                 {/* Recent Transactions */}
                 {mutualFundTxns.length > 0 && (
-                  <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
+                  <Card className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 relative overflow-hidden">
                     <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardHeader className="pb-2">
                       <div className="flex items-center gap-2">
@@ -1808,7 +1949,7 @@ export default function InvestmentsPage() {
                             <div>
                               <div className="text-sm font-medium max-w-[300px] truncate">{txn.schemeName}</div>
                               <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
-                                <span className={`text-[11px] font-semibold px-1.5 py-0 rounded ${txn.transactionType === "PURCHASE" ? "text-lime-700 dark:text-lime-300 bg-lime-500/10" : "text-destructive bg-destructive/10"}`}>
+                                <span className={`text-[11px] font-semibold px-1.5 py-0 rounded-lg ${txn.transactionType === "PURCHASE" ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10" : "text-red-600 dark:text-red-400 bg-red-500/10"}`}>
                                   {txn.transactionType}
                                 </span>
                                 {txn.date}
@@ -1829,10 +1970,10 @@ export default function InvestmentsPage() {
               {/* ── SIPs TAB ── */}
               <TabsContent value="sips" className="space-y-4">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Button size="sm" variant="outline" className="rounded-lg" onClick={() => setShowAddSip(!showAddSip)}>
+                  <Button size="sm" variant="outline" className="rounded-xl w-full sm:w-auto hover:shadow-[0_0_12px_rgba(132,204,22,0.15)] transition-shadow" onClick={() => setShowAddSip(!showAddSip)}>
                     <IconPlus className="mr-1.5 size-3.5" /> Add SIP
                   </Button>
-                  <label className="flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-border px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-accent hover:border-border">
+                  <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-dashed border-border/50 px-3 py-1.5 text-xs text-muted-foreground transition-all hover:bg-accent hover:border-border hover:shadow-sm w-full sm:w-auto justify-center sm:justify-start">
                     <IconUpload className="size-3.5" /> Import from MF Order History
                     <input type="file" accept=".csv" className="hidden" onChange={(e) => handleImportSips(e.target.files?.[0])} />
                   </label>
@@ -1840,7 +1981,7 @@ export default function InvestmentsPage() {
                 </div>
                 {sipImportMsg && <div className="rounded-lg border border-border bg-muted/40 px-3 py-2 text-xs text-muted-foreground">{sipImportMsg}</div>}
                 <div className="text-[11px] text-muted-foreground/80 leading-relaxed">
-                  SIPs auto-detected from Groww MF Order History (2+ PURCHASE transactions per scheme). XIRR: {fundXIRR !== null ? <span className={`font-semibold ${fundXIRR >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>{fundXIRR >= 0 ? "+" : ""}{fundXIRR.toFixed(1)}%</span> : <span className="text-muted-foreground">N/A</span>}
+                  SIPs auto-detected from Groww MF Order History (2+ PURCHASE transactions per scheme). XIRR: {fundXIRR !== null ? <span className={`font-semibold ${fundXIRR >= 0 ? "text-emerald-500" : "text-red-500"}`}>{fundXIRR >= 0 ? "+" : ""}{fundXIRR.toFixed(1)}%</span> : <span className="text-muted-foreground">N/A</span>}
                 </div>
 
                 {showAddSip && (
@@ -1864,38 +2005,38 @@ export default function InvestmentsPage() {
                 )}
 
                 {/* SIP Summary */}
-                <div className="grid gap-3 sm:grid-cols-3">
-                  <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
-                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+                <div className="grid gap-3 grid-cols-1 sm:grid-cols-3">
+                  <Card className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 relative overflow-hidden">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-500/20 to-transparent" />
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">Monthly Outflow</span>
-                        <div className="flex size-8 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
-                          <IconCoin className="size-3.5 text-foreground/70" />
+                        <span className="text-[13px] text-muted-foreground font-medium">Monthly Outflow</span>
+                        <div className="flex size-9 items-center justify-center rounded-xl bg-cyan-500/15">
+                          <IconCoin className="size-4 text-cyan-600 dark:text-cyan-400" />
                         </div>
                       </div>
                       <div className="mt-2 text-2xl font-black tabular-nums tracking-tight">{fmt(sipTotals.monthlyTotal)}</div>
                     </CardContent>
                   </Card>
-                  <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
+                  <Card className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 relative overflow-hidden">
                     <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">Yearly Outflow</span>
-                        <div className="flex size-8 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
-                          <IconWallet className="size-3.5 text-foreground/70" />
+                        <span className="text-[13px] text-muted-foreground font-medium">Yearly Outflow</span>
+                        <div className="flex size-9 items-center justify-center rounded-xl bg-primary/15">
+                          <IconWallet className="size-4 text-primary" />
                         </div>
                       </div>
                       <div className="mt-2 text-2xl font-black tabular-nums tracking-tight">{fmt(sipTotals.yearlyTotal)}</div>
                     </CardContent>
                   </Card>
-                  <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
-                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+                  <Card className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 relative overflow-hidden">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent" />
                     <CardContent className="p-4">
                       <div className="flex items-center justify-between">
-                        <span className="text-[11px] font-semibold uppercase tracking-widest text-muted-foreground/70">Active SIPs</span>
-                        <div className="flex size-8 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
-                          <IconTrendingUp className="size-3.5 text-foreground/70" />
+                        <span className="text-[13px] text-muted-foreground font-medium">Active SIPs</span>
+                        <div className="flex size-9 items-center justify-center rounded-xl bg-emerald-500/15">
+                          <IconTrendingUp className="size-4 text-emerald-500" />
                         </div>
                       </div>
                       <div className="mt-2 text-2xl font-black tracking-tight">{sipTotals.active} <span className="text-sm text-muted-foreground font-normal">of {sipTotals.total}</span></div>
@@ -1906,7 +2047,7 @@ export default function InvestmentsPage() {
                 {isLoading ? (
                   <div className="space-y-3"><Skeleton className="h-10 rounded-lg" /><Skeleton className="h-40 rounded-lg" /></div>
                 ) : sips.length === 0 ? (
-                  <Card className="card-elevated border-dashed">
+                  <Card className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 border-dashed">
                     <CardContent className="py-16 text-center">
                       <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-muted/60 mx-auto mb-3">
                         <IconCoin className="size-6 text-muted-foreground/60" />
@@ -1916,7 +2057,49 @@ export default function InvestmentsPage() {
                     </CardContent>
                   </Card>
                 ) : (
-                  <Card className="card-elevated overflow-hidden">
+                  <>
+                  {/* Mobile: Card-based SIP view */}
+                  <div className="space-y-3 md:hidden">
+                    {sips.map((s, idx) => (
+                      <motion.div
+                        key={s._id}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        transition={{ delay: idx * 0.04, duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
+                        className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 p-4 relative overflow-hidden"
+                      >
+                        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-cyan-500/15 to-transparent" />
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0 flex-1">
+                            <div className="text-sm font-semibold truncate">{s.name}</div>
+                            <div className="text-[11px] text-muted-foreground">{s.provider}{s.expectedAnnualReturn ? ` - Exp. ${s.expectedAnnualReturn}% p.a.` : ""}</div>
+                          </div>
+                          <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-lg shrink-0 ${s.status === "active" ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10" : s.status === "paused" ? "text-amber-600 dark:text-amber-400 bg-amber-500/10" : "text-red-600 dark:text-red-400 bg-red-500/10"}`}>
+                            {s.status}
+                          </span>
+                        </div>
+                        <div className="mt-3 flex items-center justify-between">
+                          <div>
+                            <div className="text-[11px] text-muted-foreground">Monthly Amount</div>
+                            <div className="text-lg font-black tabular-nums tracking-tight">{fmt(s.monthlyAmount)}</div>
+                          </div>
+                          <div className="flex gap-0.5">
+                            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => openEditSip(s)}><IconEdit className="size-3.5" /></Button>
+                            <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-red-500 hover:text-red-500" onClick={() => handleDeleteSip(s._id)}><IconTrash className="size-3.5" /></Button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                    <div className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 px-4 py-3">
+                      <div className="flex items-center justify-between text-xs">
+                        <span className="font-semibold uppercase tracking-wider text-muted-foreground">{sips.length} SIP(s)</span>
+                        <span>Monthly total: <strong className="font-semibold">{fmt(sipTotals.monthlyTotal)}</strong></span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Desktop: Table view */}
+                  <Card className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 overflow-hidden hidden md:block">
                     <div className="overflow-x-auto">
                     <Table>
                       <TableHeader>
@@ -1940,14 +2123,14 @@ export default function InvestmentsPage() {
                             <TableCell className="text-right font-black tracking-tight tabular-nums text-sm">{fmt(s.monthlyAmount)}</TableCell>
                             <TableCell className="text-muted-foreground text-sm">{s.startDate}</TableCell>
                             <TableCell>
-                              <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-md ${s.status === "active" ? "text-lime-700 dark:text-lime-300 bg-lime-500/10" : s.status === "paused" ? "text-amber-700 dark:text-amber-300 bg-amber-500/10" : "text-destructive bg-destructive/10"}`}>
+                              <span className={`text-[11px] font-semibold px-2 py-0.5 rounded-lg ${s.status === "active" ? "text-emerald-600 dark:text-emerald-400 bg-emerald-500/10" : s.status === "paused" ? "text-amber-600 dark:text-amber-400 bg-amber-500/10" : "text-red-600 dark:text-red-400 bg-red-500/10"}`}>
                                 {s.status}
                               </span>
                             </TableCell>
                             <TableCell>
                               <div className="flex gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
                                 <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg" onClick={() => openEditSip(s)}><IconEdit className="size-3.5" /></Button>
-                                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-destructive hover:text-destructive" onClick={() => handleDeleteSip(s._id)}><IconTrash className="size-3.5" /></Button>
+                                <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg text-red-500 hover:text-red-500" onClick={() => handleDeleteSip(s._id)}><IconTrash className="size-3.5" /></Button>
                               </div>
                             </TableCell>
                           </TableRow>
@@ -1955,16 +2138,17 @@ export default function InvestmentsPage() {
                       </TableBody>
                     </Table>
                     </div>
-                    <div className="flex items-center justify-between border-t bg-muted/20 px-4 py-2.5 text-xs">
+                    <div className="flex items-center justify-between border-t border-border/50 bg-muted/20 px-4 py-2.5 text-xs">
                       <span className="font-semibold uppercase tracking-wider text-muted-foreground">{sips.length} SIP(s)</span>
                       <span>Monthly total: <strong className="font-semibold">{fmt(sipTotals.monthlyTotal)}</strong></span>
                     </div>
                   </Card>
+                  </>
                 )}
 
                 {/* SIP Projection Calculator */}
                 {sipProjections && (
-                  <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
+                  <Card className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 relative overflow-hidden">
                     <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardHeader className="pb-2">
                       <div className="flex items-center gap-2">
@@ -2018,8 +2202,8 @@ export default function InvestmentsPage() {
                                 <div className="text-[11px] text-muted-foreground">Invested: {fmt(p.invested)}</div>
                               </div>
                               <div className="text-right">
-                                <div className="text-sm font-black tabular-nums tracking-tight text-lime-600 dark:text-lime-400">{fmt(p.projected)}</div>
-                                <div className="text-[11px] font-medium text-lime-600 dark:text-lime-400">+{fmt(p.returns)} ({p.returnPct.toFixed(0)}%)</div>
+                                <div className="text-sm font-black tabular-nums tracking-tight text-emerald-500">{fmt(p.projected)}</div>
+                                <div className="text-[11px] font-medium text-emerald-500">+{fmt(p.returns)} ({p.returnPct.toFixed(0)}%)</div>
                               </div>
                             </div>
                           ))}
@@ -2031,7 +2215,7 @@ export default function InvestmentsPage() {
 
                 {/* SIP Deduction Matching */}
                 {(sipMatches.length > 0 || unmatchedGrowwTxns.length > 0) && (
-                  <Card className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
+                  <Card className="bg-card/80 backdrop-blur-xl rounded-2xl border border-border/50 relative overflow-hidden">
                     <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                     <CardHeader className="pb-2">
                       <div className="flex items-center gap-2">

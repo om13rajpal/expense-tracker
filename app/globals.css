@@ -272,20 +272,116 @@
   @apply rounded-md bg-muted px-1.5 py-0.5 text-xs font-medium;
 }
 
-/* ─── Apple Widget Card ─── */
+/* ─── Premium Widget Card ─── */
 
 .widget-apple {
-  background: white;
-  border-radius: 1.5rem;
+  border-radius: 1.75rem;
   border: none;
-  box-shadow: 0 0.5px 1px rgba(0,0,0,0.02), 0 4px 12px rgba(0,0,0,0.04), 0 12px 32px rgba(0,0,0,0.05);
+  background: oklch(0.995 0.003 85);
+  box-shadow:
+    0 0 0 1px oklch(0 0 0 / 3%),
+    0 0.5px 1px oklch(0 0 0 / 2%),
+    0 4px 12px oklch(0 0 0 / 4%),
+    0 12px 32px oklch(0 0 0 / 5%);
   transition:
     transform 0.4s cubic-bezier(0.32, 0.72, 0, 1),
     box-shadow 0.4s cubic-bezier(0.32, 0.72, 0, 1);
 }
 .widget-apple:hover {
   transform: translateY(-1px);
-  box-shadow: 0 0.5px 1px rgba(0,0,0,0.02), 0 6px 16px rgba(0,0,0,0.06), 0 16px 40px rgba(0,0,0,0.07);
+  box-shadow:
+    0 0 0 1px oklch(0 0 0 / 4%),
+    0 0.5px 1px oklch(0 0 0 / 2%),
+    0 6px 16px oklch(0 0 0 / 6%),
+    0 16px 40px oklch(0 0 0 / 7%);
+}
+
+.dark .widget-apple {
+  background: oklch(0.11 0.015 150);
+  box-shadow:
+    0 0 0 1px oklch(1 0 0 / 4%),
+    0 1px 2px oklch(0 0 0 / 20%),
+    0 4px 16px oklch(0 0 0 / 30%),
+    inset 0 1px 0 oklch(1 0 0 / 3%);
+}
+.dark .widget-apple:hover {
+  box-shadow:
+    0 0 0 1px oklch(1 0 0 / 6%),
+    0 1px 2px oklch(0 0 0 / 25%),
+    0 8px 24px oklch(0 0 0 / 35%),
+    inset 0 1px 0 oklch(1 0 0 / 5%);
+}
+
+/* ─── Widget accent backgrounds ─── */
+
+.widget-accent-fire {
+  background: linear-gradient(160deg, oklch(0.25 0.08 30) 0%, oklch(0.11 0.015 150) 60%);
+}
+.widget-accent-money {
+  background: linear-gradient(160deg, oklch(0.18 0.06 145) 0%, oklch(0.11 0.015 150) 60%);
+}
+.widget-accent-blue {
+  background: linear-gradient(160deg, oklch(0.18 0.06 240) 0%, oklch(0.11 0.015 150) 60%);
+}
+.widget-accent-purple {
+  background: linear-gradient(160deg, oklch(0.18 0.06 300) 0%, oklch(0.11 0.015 150) 60%);
+}
+.widget-accent-amber {
+  background: linear-gradient(160deg, oklch(0.2 0.06 70) 0%, oklch(0.11 0.015 150) 60%);
+}
+
+/* Light mode: accents are very subtle */
+:root .widget-accent-fire   { background: linear-gradient(160deg, oklch(0.97 0.02 30) 0%, oklch(0.995 0.003 85) 50%); }
+:root .widget-accent-money  { background: linear-gradient(160deg, oklch(0.97 0.02 145) 0%, oklch(0.995 0.003 85) 50%); }
+:root .widget-accent-blue   { background: linear-gradient(160deg, oklch(0.97 0.02 240) 0%, oklch(0.995 0.003 85) 50%); }
+:root .widget-accent-purple { background: linear-gradient(160deg, oklch(0.97 0.02 300) 0%, oklch(0.995 0.003 85) 50%); }
+:root .widget-accent-amber  { background: linear-gradient(160deg, oklch(0.97 0.02 70) 0%, oklch(0.995 0.003 85) 50%); }
+
+/* ─── Icon glow effects ─── */
+
+.icon-glow-fire {
+  filter: drop-shadow(0 0 6px oklch(0.7 0.2 30 / 50%));
+}
+.icon-glow-green {
+  filter: drop-shadow(0 0 6px oklch(0.7 0.19 145 / 50%));
+}
+.icon-glow-blue {
+  filter: drop-shadow(0 0 6px oklch(0.6 0.15 240 / 50%));
+}
+.icon-glow-purple {
+  filter: drop-shadow(0 0 6px oklch(0.6 0.15 300 / 50%));
+}
+.icon-glow-amber {
+  filter: drop-shadow(0 0 6px oklch(0.7 0.15 70 / 50%));
+}
+
+/* ─── Shimmer animation for progress bars ─── */
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.shimmer-bar {
+  background: linear-gradient(
+    90deg,
+    transparent 25%,
+    oklch(1 0 0 / 15%) 50%,
+    transparent 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s ease-in-out infinite;
+}
+
+/* ─── Glow pulse for accent dots ─── */
+
+@keyframes glow-pulse {
+  0%, 100% { box-shadow: 0 0 4px currentColor, 0 0 8px currentColor; opacity: 1; }
+  50% { box-shadow: 0 0 8px currentColor, 0 0 16px currentColor; opacity: 0.8; }
+}
+
+.dot-glow {
+  animation: glow-pulse 2.5s ease-in-out infinite;
 }
 
 /* ─── Widget Grid (react-grid-layout) ─── */
@@ -329,7 +425,7 @@
 /* Drop placeholder */
 .react-grid-placeholder {
   background: oklch(0.45 0.1 145 / 8%);
-  border-radius: 1.5rem;
+  border-radius: 1.75rem;
   border: 2px dashed oklch(0.45 0.1 145 / 20%);
   transition: all 350ms cubic-bezier(0.32, 0.72, 0, 1);
 }
@@ -370,8 +466,158 @@
   transform: rotate(0deg);
 }
 
+/* ─── Thin scrollbar utility ─── */
+
+.scrollbar-thin::-webkit-scrollbar {
+  width: 3px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: oklch(0.5 0.01 85 / 20%);
+  border-radius: 100px;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: oklch(0.5 0.01 85 / 40%);
+}
+
+/* ─── Widget entrance stagger ─── */
+
+@keyframes widget-enter {
+  0% {
+    opacity: 0;
+    filter: blur(4px);
+  }
+  60% {
+    opacity: 1;
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 1;
+    filter: blur(0px);
+  }
+}
+
+.react-grid-item {
+  animation: widget-enter 0.6s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+/* ─── Page-level entrance for content sections ─── */
+
+@keyframes page-enter {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.page-enter {
+  animation: page-enter 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.page-enter-stagger > * {
+  animation: page-enter 0.5s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+.page-enter-stagger > *:nth-child(1) { animation-delay: 0s; }
+.page-enter-stagger > *:nth-child(2) { animation-delay: 0.06s; }
+.page-enter-stagger > *:nth-child(3) { animation-delay: 0.12s; }
+.page-enter-stagger > *:nth-child(4) { animation-delay: 0.18s; }
+.page-enter-stagger > *:nth-child(5) { animation-delay: 0.24s; }
+.page-enter-stagger > *:nth-child(n+6) { animation-delay: 0.3s; }
+
+.react-grid-item:nth-child(1) { animation-delay: 0s; }
+.react-grid-item:nth-child(2) { animation-delay: 0.06s; }
+.react-grid-item:nth-child(3) { animation-delay: 0.12s; }
+.react-grid-item:nth-child(4) { animation-delay: 0.18s; }
+.react-grid-item:nth-child(5) { animation-delay: 0.24s; }
+.react-grid-item:nth-child(6) { animation-delay: 0.30s; }
+.react-grid-item:nth-child(7) { animation-delay: 0.36s; }
+.react-grid-item:nth-child(8) { animation-delay: 0.42s; }
+.react-grid-item:nth-child(9) { animation-delay: 0.48s; }
+.react-grid-item:nth-child(10) { animation-delay: 0.54s; }
+.react-grid-item:nth-child(n+11) { animation-delay: 0.6s; }
+
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
+}
+
+/* ─── Apple-style shared utilities ─── */
+
+.glass-card {
+  @apply bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl;
+}
+
+.glass-card-subtle {
+  @apply bg-card/60 backdrop-blur-lg border border-border/30 rounded-xl;
+}
+
+.metric-card {
+  @apply bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl p-5 relative overflow-hidden;
+}
+
+.metric-card::before {
+  content: '';
+  @apply absolute -top-12 -right-12 w-24 h-24 rounded-full opacity-10 blur-2xl;
+  background: var(--accent-glow, oklch(0.7 0.15 150));
+}
+
+/* Ambient glow — positioned radial gradient behind a card or section */
+.ambient-glow {
+  @apply relative;
+}
+.ambient-glow::before {
+  content: '';
+  @apply absolute -inset-4 -z-10 rounded-3xl opacity-15 blur-3xl;
+  background: radial-gradient(
+    ellipse at 50% 0%,
+    var(--accent-glow, oklch(0.7 0.15 150)) 0%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+.section-header {
+  @apply text-[13px] font-semibold uppercase tracking-wider text-muted-foreground;
+}
+
+/* Page content responsive container */
+.page-content {
+  @apply px-4 sm:px-6 lg:px-8 pb-8 space-y-6;
+}
+
+/* Responsive metric grid */
+.metric-grid {
+  @apply grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4;
+}
+
+/* Chart container that constrains height on mobile */
+.chart-container {
+  @apply w-full min-h-[200px] sm:min-h-[280px] lg:min-h-[320px];
+}
+
+/* Tab scroll container for mobile */
+.tab-scroll {
+  @apply flex overflow-x-auto gap-1 pb-1;
+}
+.tab-scroll::-webkit-scrollbar {
+  height: 0;
+}
+.tab-scroll::-webkit-scrollbar-thumb {
+  background: transparent;
+}
+
+/* Hide scrollbar on tabs-list for clean mobile scroll */
+[data-slot="tabs-list"] {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+[data-slot="tabs-list"]::-webkit-scrollbar {
+  display: none;
 }

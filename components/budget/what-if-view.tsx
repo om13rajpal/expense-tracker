@@ -165,8 +165,8 @@ export function WhatIfView() {
 
   if (monthlyIncome <= 0 || whatIfCategories.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center rounded-2xl border border-border bg-card relative overflow-hidden py-16 text-center">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+      <div className="flex flex-col items-center justify-center rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl relative overflow-hidden py-16 text-center">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
         <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-2xl bg-muted/80 dark:bg-muted">
           <IconAdjustments className="h-5 w-5 text-foreground/70" />
         </div>
@@ -178,8 +178,8 @@ export function WhatIfView() {
 
   return (
     <div className="space-y-5">
-      <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-5">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+      <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl relative overflow-hidden p-4 sm:p-5">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
         <div className="flex items-center gap-2.5 mb-5">
           <div className="flex items-center justify-center size-8 rounded-xl bg-muted/80 dark:bg-muted">
             <IconAdjustments className="h-4 w-4 text-foreground/70" />
@@ -290,7 +290,7 @@ function ImpactCard({ label, value, isPositive, subtitle }: {
     ? `${value >= 0 ? "+" : ""}${formatINR(value)}`
     : value
   return (
-    <div className="rounded-xl border border-border bg-card p-3">
+    <div className="rounded-xl border border-border/50 bg-card/60 backdrop-blur-lg p-3">
       <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">{label}</p>
       <p className={`text-lg font-black tracking-tight tabular-nums ${
         isPositive === true ? "text-lime-600 dark:text-lime-400" :

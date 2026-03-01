@@ -11,6 +11,7 @@ import * as React from "react"
 import { useEffect, useMemo, useState, useCallback } from "react"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "motion/react"
+import { MoneyInHours } from "@/components/money-in-hours"
 import {
   IconAlertCircle,
   IconCheck,
@@ -118,7 +119,7 @@ type CatRule = {
 
 import { formatINR as formatCurrency } from "@/lib/format"
 import { isOneTimePurchase, isOutlierTransaction } from "@/lib/edge-cases"
-import { isSimilarMerchant } from "@/lib/categorizer"
+import { isSimilarMerchant } from "@/lib/merchant-match"
 
 // Category color mapping for rich badges
 const CATEGORY_COLORS: Record<string, { bg: string; text: string; dot: string }> = {
@@ -774,63 +775,64 @@ export function TransactionView() {
         animate="show"
       >
         {/* Stat Summary Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <motion.div variants={fadeUp} className="grid grid-cols-1 sm:grid-cols-3 gap-3">
           {/* Income Card */}
-          <BentoTile
-            gradient="from-lime-500/[0.06] to-transparent"
-            hoverBorder="hover:border-lime-500/15"
-          >
-            <div className="p-4 flex items-center gap-4">
-              <div className="shrink-0 flex items-center justify-center size-11 rounded-xl bg-lime-500/10 shadow-[0_0_12px_-2px_rgba(163,230,53,0.15)]">
-                <IconArrowUpRight className="size-5 text-lime-600 dark:text-lime-400" />
+          <div className="relative overflow-hidden rounded-2xl bg-card/80 backdrop-blur-xl border border-border/50 p-4 sm:p-5 transition-colors hover:bg-muted/30">
+            {/* Ambient glow */}
+            <div className="pointer-events-none absolute -top-8 -right-8 w-24 h-24 rounded-full bg-lime-500/15 blur-2xl" />
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-lime-500/20 to-transparent" />
+            <div className="flex items-center gap-3 sm:gap-4 relative">
+              <div className="shrink-0 flex items-center justify-center size-10 sm:size-11 rounded-xl bg-lime-500/10 shadow-[0_0_16px_-3px_rgba(163,230,53,0.2)]">
+                <IconArrowUpRight className="size-4 sm:size-5 text-lime-600 dark:text-lime-400" />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">Income</p>
-                <motion.p variants={numberPop} className="text-2xl font-black tracking-tight text-lime-600 dark:text-lime-400 tabular-nums truncate">{formatCurrency(incomeTotal)}</motion.p>
+                <p className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1">Income</p>
+                <motion.p variants={numberPop} className="text-xl sm:text-2xl font-black tracking-tight text-lime-600 dark:text-lime-400 tabular-nums truncate leading-tight">{formatCurrency(incomeTotal)}</motion.p>
               </div>
             </div>
-          </BentoTile>
+          </div>
 
           {/* Expenses Card */}
-          <BentoTile>
-            <div className="p-4 flex items-center gap-4">
-              <div className="shrink-0 flex items-center justify-center size-11 rounded-xl bg-muted/80 dark:bg-muted">
-                <IconArrowDownRight className="size-5 text-foreground/70" />
+          <div className="relative overflow-hidden rounded-2xl bg-card/80 backdrop-blur-xl border border-border/50 p-4 sm:p-5 transition-colors hover:bg-muted/30">
+            <div className="pointer-events-none absolute -top-8 -right-8 w-24 h-24 rounded-full bg-rose-500/10 blur-2xl" />
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
+            <div className="flex items-center gap-3 sm:gap-4 relative">
+              <div className="shrink-0 flex items-center justify-center size-10 sm:size-11 rounded-xl bg-muted/80 dark:bg-muted">
+                <IconArrowDownRight className="size-4 sm:size-5 text-foreground/70" />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">Expenses</p>
-                <motion.p variants={numberPop} className="text-2xl font-black tracking-tight text-foreground/70 tabular-nums truncate">{formatCurrency(expenseTotal)}</motion.p>
+                <p className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1">Expenses</p>
+                <motion.p variants={numberPop} className="text-xl sm:text-2xl font-black tracking-tight text-foreground/70 tabular-nums truncate leading-tight">{formatCurrency(expenseTotal)}</motion.p>
               </div>
             </div>
-          </BentoTile>
+          </div>
 
           {/* Net Card */}
-          <BentoTile
-            gradient={netTotal >= 0 ? "from-lime-500/[0.06] to-transparent" : undefined}
-            hoverBorder={netTotal >= 0 ? "hover:border-lime-500/15" : "hover:border-destructive/15"}
-          >
-            <div className="p-4 flex items-center gap-4">
-              <div className={`shrink-0 flex items-center justify-center size-11 rounded-xl ${netTotal >= 0 ? "bg-lime-500/10 shadow-[0_0_12px_-2px_rgba(163,230,53,0.15)]" : "bg-destructive/10"}`}>
-                <IconTrendingUp className={`size-5 ${netTotal >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`} />
+          <div className="relative overflow-hidden rounded-2xl bg-card/80 backdrop-blur-xl border border-border/50 p-4 sm:p-5 transition-colors hover:bg-muted/30">
+            <div className={`pointer-events-none absolute -top-8 -right-8 w-24 h-24 rounded-full blur-2xl ${netTotal >= 0 ? "bg-lime-500/15" : "bg-rose-500/15"}`} />
+            <div className={`pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent ${netTotal >= 0 ? "via-lime-500/20" : "via-rose-500/20"} to-transparent`} />
+            <div className="flex items-center gap-3 sm:gap-4 relative">
+              <div className={`shrink-0 flex items-center justify-center size-10 sm:size-11 rounded-xl ${netTotal >= 0 ? "bg-lime-500/10 shadow-[0_0_16px_-3px_rgba(163,230,53,0.2)]" : "bg-destructive/10"}`}>
+                <IconTrendingUp className={`size-4 sm:size-5 ${netTotal >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`} />
               </div>
               <div className="min-w-0">
-                <p className="text-[10px] font-semibold text-muted-foreground/70 uppercase tracking-widest">Net</p>
-                <motion.p variants={numberPop} className={`text-2xl font-black tracking-tight tabular-nums truncate ${netTotal >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
+                <p className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1">Net</p>
+                <motion.p variants={numberPop} className={`text-xl sm:text-2xl font-black tracking-tight tabular-nums truncate leading-tight ${netTotal >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`}>
                   {netTotal >= 0 ? "+" : ""}{formatCurrency(netTotal)}
                 </motion.p>
               </div>
             </div>
-          </BentoTile>
-        </div>
+          </div>
+        </motion.div>
 
         {/* Search / Filter Toolbar */}
         <motion.div
           variants={fadeUpSmall}
-          className="rounded-2xl border border-border bg-card relative overflow-hidden p-3.5 flex flex-wrap items-center gap-3"
+          className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl relative overflow-hidden p-3 sm:p-3.5 flex flex-col sm:flex-row sm:flex-wrap items-stretch sm:items-center gap-2.5 sm:gap-3"
         >
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
           {/* Search Input */}
-          <div className="relative flex-1 min-w-[200px] max-w-[380px]">
+          <div className="relative flex-1 min-w-0 sm:min-w-[200px] sm:max-w-[380px]">
             <IconSearch className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground/60" />
             <Input
               placeholder="Search by description, category, or merchant..."
@@ -851,8 +853,9 @@ export function TransactionView() {
             )}
           </div>
 
-          {/* Filter Type Toggle */}
-          <div className="flex items-center rounded-xl bg-muted/50 p-0.5 gap-0.5">
+          {/* Filter Type Toggle + action buttons row */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-0.5 sm:pb-0 sm:overflow-visible sm:contents">
+          <div className="flex items-center rounded-xl bg-muted/50 p-0.5 gap-0.5 shrink-0">
             {(["all", "income", "expense"] as const).map((type) => (
               <button
                 key={type}
@@ -875,7 +878,7 @@ export function TransactionView() {
           <Button
             variant={showRecurringOnly ? "secondary" : "outline"}
             size="sm"
-            className="h-8 text-xs gap-1.5"
+            className="h-8 text-xs gap-1.5 shrink-0"
             onClick={() => {
               setShowRecurringOnly(!showRecurringOnly)
               setCurrentPage(1)
@@ -890,16 +893,17 @@ export function TransactionView() {
             <Button
               variant="ghost"
               size="sm"
-              className="h-8 text-xs text-muted-foreground gap-1.5"
+              className="h-8 text-xs text-muted-foreground gap-1.5 shrink-0"
               onClick={() => { setSearchQuery(""); setFilterType("all"); setShowRecurringOnly(false); setCurrentPage(1) }}
             >
               <IconFilterOff className="size-3.5" />
               Clear
             </Button>
           )}
+          </div>
 
           {/* Spacer */}
-          <div className="flex-1" />
+          <div className="hidden sm:flex flex-1" />
 
           {/* Transaction Count */}
           <span className="text-xs text-muted-foreground tabular-nums hidden sm:inline">
@@ -907,7 +911,7 @@ export function TransactionView() {
           </span>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1.5 sm:ml-0 ml-auto">
             <Tooltip>
               <TooltipTrigger asChild>
                 <Button
@@ -1058,10 +1062,10 @@ export function TransactionView() {
         </AnimatePresence>
 
         {/* Transaction Table */}
-        <motion.div variants={fadeUp} className="rounded-2xl border border-border bg-card relative overflow-hidden overflow-x-auto">
-          {/* Top edge light line — dark mode only */}
+        <motion.div variants={fadeUp} className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl relative overflow-hidden overflow-x-auto">
+          {/* Top edge light line */}
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent z-10" />
-          <Table className="min-w-[640px]">
+          <Table className="min-w-[560px] sm:min-w-[640px]">
             <TableHeader>
               <TableRow className="hover:bg-transparent border-b border-border">
                 <TableHead className="w-[40px] pl-4">
@@ -1114,7 +1118,7 @@ export function TransactionView() {
                     <motion.tr
                       key={transaction.id}
                       {...listItem(i)}
-                      className={`group border-b border-border transition-all duration-200
+                      className={`group border-b border-border/50 transition-all duration-200
                         ${selectedIds.has(transaction.id)
                           ? "bg-primary/[0.04] shadow-sm"
                           : isOutlier
@@ -1262,6 +1266,9 @@ export function TransactionView() {
                             {transaction.type === "income" ? "+" : "-"}
                             {formatCurrency(transaction.amount)}
                           </span>
+                          {transaction.type === "expense" && (
+                            <MoneyInHours amount={transaction.amount} className="hidden xl:inline" />
+                          )}
                         </div>
                       </TableCell>
 
@@ -1340,7 +1347,7 @@ export function TransactionView() {
         </motion.div>
 
         {/* Pagination */}
-        <motion.div variants={fadeUpSmall} className="flex flex-wrap items-center justify-between gap-4">
+        <motion.div variants={fadeUpSmall} className="flex flex-wrap items-center justify-between gap-3 sm:gap-4 pb-2">
           <div className="flex items-center gap-2">
             <span className="text-xs text-muted-foreground">Show</span>
             <Select

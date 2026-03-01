@@ -24,6 +24,7 @@ import { extractToken, corsHeaders, handleOptions } from "@/lib/middleware"
 import { verifyToken } from "@/lib/auth"
 import { getMongoDb } from "@/lib/mongodb"
 import { fetchAllFinancialData, buildFinancialContext } from "@/lib/financial-context"
+import { chatCompletionStream } from "@/lib/ai-client"
 
 /**
  * POST /api/spotlight/chat
@@ -67,19 +68,6 @@ export async function POST(request: NextRequest) {
       )
     }
 
-    const apiKey = process.env.OPENROUTER_API_KEY
-    if (!apiKey) {
-      return NextResponse.json(
-        { success: false, message: "AI service not configured" },
-        { status: 500, headers: corsHeaders() }
-      )
-    }
-
-    const openrouter = createOpenAI({
-      baseURL: "https://openrouter.ai/api/v1",
-      apiKey,
-    })
-
     const db = await getMongoDb()
     const financialData = await fetchAllFinancialData(db, user.userId)
     const context = buildFinancialContext(financialData)
@@ -88,16 +76,27 @@ export async function POST(request: NextRequest) {
 
 ${context}`
 
-    const result = streamText({
-      model: openrouter("anthropic/claude-sonnet-4.5"),
-      system: systemPrompt,
-      prompt,
-      maxOutputTokens: 1024,
-      temperature: 0.4,
-    })
+    // Route through user's linked ChatGPT if available, else OpenRouter
+    const { response: streamResponse, provider } = await chatCompletionStream(
+      [
+        { role: "system", content: systemPrompt },
+        { role: "user", content: prompt },
+      ],
+      {
+        maxTokens: 1024,
+        temperature: 0.4,
+        userId: user.userId,
+      }
+    )
 
-    return result.toTextStreamResponse({
-      headers: corsHeaders(),
+    // Forward the SSE stream directly to the client
+    return new Response(streamResponse.body, {
+      headers: {
+        ...corsHeaders(),
+        "Content-Type": "text/event-stream",
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive",
+      },
     })
   } catch (error) {
     console.error("Spotlight chat error:", error)

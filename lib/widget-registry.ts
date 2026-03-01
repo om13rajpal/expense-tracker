@@ -107,7 +107,7 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
     name: "AI Highlights",
     description: "AI-powered spending analysis and recommendations",
     category: "overview",
-    defaultSize: "medium",
+    defaultSize: "large",
     allowedSizes: ["medium", "large", "full"],
     component: () => import("@/components/dashboard/widgets/ai-highlights-widget"),
     icon: "IconSparkles",
@@ -236,6 +236,16 @@ export const WIDGET_REGISTRY: WidgetDefinition[] = [
     component: () => import("@/components/dashboard/widgets/quick-expense-widget"),
     icon: "IconWallet",
   },
+  {
+    id: "monthly-income-target",
+    name: "Income Target",
+    description: "Monthly income target with progress tracking",
+    category: "goals",
+    defaultSize: "small",
+    allowedSizes: ["small", "medium"],
+    component: () => import("@/components/dashboard/widgets/monthly-income-target-widget"),
+    icon: "IconTarget",
+  },
 ]
 
 /* ─── Lookup helper ─── */
@@ -247,17 +257,17 @@ export function getWidgetDef(id: string): WidgetDefinition | undefined {
 /* ─── Default Layout (matches current static dashboard) ─── */
 
 export const DEFAULT_DASHBOARD_LAYOUT: WidgetLayoutItem[] = [
-  // Row 0-1: hero + two small tiles + AI
-  { i: "net-position",  x: 0,  y: 0, w: 6, h: 6, size: "large" },
-  { i: "daily-budget",  x: 6,  y: 0, w: 3, h: 3, size: "small" },
-  { i: "month-progress", x: 9, y: 0, w: 3, h: 3, size: "small" },
-  { i: "ai-highlights", x: 6,  y: 3, w: 6, h: 3, size: "medium" },
-  // Row 2-3: chart + categories + small tiles
-  { i: "monthly-trend", x: 0,  y: 6, w: 6, h: 6, size: "large" },
-  { i: "top-spending",  x: 6,  y: 6, w: 6, h: 3, size: "medium" },
-  { i: "renewals",      x: 6,  y: 9, w: 3, h: 3, size: "small" },
-  { i: "bucket-list",   x: 9,  y: 9, w: 3, h: 3, size: "small" },
-  // Row 4: last two small tiles
-  { i: "streak",        x: 0,  y: 12, w: 3, h: 3, size: "small" },
-  { i: "splits",        x: 3,  y: 12, w: 3, h: 3, size: "small" },
+  // Row 0: hero + two small tiles
+  { i: "net-position",   x: 0,  y: 0, w: 6, h: 6, size: "large" },
+  { i: "daily-budget",   x: 6,  y: 0, w: 3, h: 3, size: "small" },
+  { i: "month-progress", x: 9,  y: 0, w: 3, h: 3, size: "small" },
+  // Row 1: AI highlights (large) + streak + splits
+  { i: "ai-highlights",  x: 6,  y: 3, w: 6, h: 6, size: "large" },
+  { i: "streak",         x: 0,  y: 6, w: 3, h: 3, size: "small" },
+  { i: "splits",         x: 3,  y: 6, w: 3, h: 3, size: "small" },
+  // Row 2: chart + categories + small tiles
+  { i: "monthly-trend",  x: 0,  y: 9, w: 6, h: 6, size: "large" },
+  { i: "top-spending",   x: 6,  y: 9, w: 6, h: 3, size: "medium" },
+  { i: "renewals",       x: 6,  y: 12, w: 3, h: 3, size: "small" },
+  { i: "bucket-list",    x: 9,  y: 12, w: 3, h: 3, size: "small" },
 ]

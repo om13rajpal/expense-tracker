@@ -350,8 +350,9 @@ export function TaxView() {
   if (authLoading || configLoading) {
     return (
       <div className="flex flex-1 flex-col">
-        <div className="@container/main flex flex-1 flex-col gap-5 p-4 md:p-6">
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="page-content pt-4">
+          <Skeleton className="h-8 w-48" />
+          <div className="metric-grid lg:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
               <Skeleton key={i} className="h-24 rounded-2xl border border-border" />
             ))}
@@ -367,37 +368,43 @@ export function TaxView() {
 
   return (
     <div className="flex flex-1 flex-col">
-      {/* Regime selector + save status bar */}
-      <div className="flex items-center justify-end gap-2 px-4 pt-4">
-        {saveMutation.isPending && (
-          <Badge variant="outline" className="text-[11px] animate-pulse">
-            Saving...
-          </Badge>
-        )}
-        <Select
-          value={config.preferredRegime}
-          onValueChange={(v) =>
-            update((p) => ({ ...p, preferredRegime: v as TaxConfig["preferredRegime"] }))
-          }
-        >
-          <SelectTrigger className="w-32 h-8 text-xs">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="auto">Auto (Best)</SelectItem>
-            <SelectItem value="old">Old Regime</SelectItem>
-            <SelectItem value="new">New Regime</SelectItem>
-          </SelectContent>
-        </Select>
+      <div className="page-content pt-4">
+      {/* Header + Regime selector */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="text-lg font-bold tracking-tight sm:text-xl">Tax Planner</h2>
+          <p className="text-[13px] text-muted-foreground mt-0.5">Indian tax planning for FY 2025-26</p>
+        </div>
+        <div className="flex items-center gap-2">
+          {saveMutation.isPending && (
+            <Badge variant="outline" className="text-[11px] animate-pulse">
+              Saving...
+            </Badge>
+          )}
+          <Select
+            value={config.preferredRegime}
+            onValueChange={(v) =>
+              update((p) => ({ ...p, preferredRegime: v as TaxConfig["preferredRegime"] }))
+            }
+          >
+            <SelectTrigger className="w-32 h-9 text-xs rounded-xl">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="auto">Auto (Best)</SelectItem>
+              <SelectItem value="old">Old Regime</SelectItem>
+              <SelectItem value="new">New Regime</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
-      <div className="@container/main flex flex-1 flex-col gap-6 p-4 md:p-6">
       {/* -- Metric Tiles -- */}
           <motion.div
             variants={stagger}
             initial="hidden"
             animate="show"
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3"
+            className="metric-grid lg:grid-cols-4"
           >
             <motion.div variants={fadeUpSmall}>
               <MetricTile
@@ -450,7 +457,7 @@ export function TaxView() {
 
           {/* -- AI Tax Savings -- */}
           <motion.div variants={fadeUp}>
-            <Card className="rounded-2xl border border-border bg-card relative overflow-hidden">
+            <Card className="glass-card relative overflow-hidden">
               <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between">
@@ -670,21 +677,23 @@ export function TaxView() {
           </motion.div>
 
           {/* -- Main Content -- */}
-          <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            {/* -- LEFT: Inputs (2 cols on xl) -- */}
-            <div className="xl:col-span-2 space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* -- LEFT: Inputs (2 cols on lg+) -- */}
+            <div className="lg:col-span-2 space-y-6">
               <Tabs defaultValue="income" className="w-full">
-                <TabsList className="w-full grid grid-cols-4">
-                  <TabsTrigger value="income" className="text-xs">Income</TabsTrigger>
-                  <TabsTrigger value="80c" className="text-xs">80C</TabsTrigger>
-                  <TabsTrigger value="health" className="text-xs">Health & HRA</TabsTrigger>
-                  <TabsTrigger value="other" className="text-xs">Other</TabsTrigger>
-                </TabsList>
+                <div className="tab-scroll">
+                  <TabsList className="w-full grid grid-cols-4">
+                    <TabsTrigger value="income" className="text-xs">Income</TabsTrigger>
+                    <TabsTrigger value="80c" className="text-xs">80C</TabsTrigger>
+                    <TabsTrigger value="health" className="text-xs">Health & HRA</TabsTrigger>
+                    <TabsTrigger value="other" className="text-xs">Other</TabsTrigger>
+                  </TabsList>
+                </div>
 
                 {/* -- Income Tab -- */}
                 <TabsContent value="income">
                   <motion.div variants={fadeUp} initial="hidden" animate="show">
-                    <Card className="rounded-2xl border border-border bg-card relative overflow-hidden">
+                    <Card className="glass-card relative overflow-hidden">
                       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-base">
@@ -726,7 +735,7 @@ export function TaxView() {
                 {/* -- 80C Tab -- */}
                 <TabsContent value="80c">
                   <motion.div variants={fadeUp} initial="hidden" animate="show">
-                    <Card className="rounded-2xl border border-border bg-card relative overflow-hidden">
+                    <Card className="glass-card relative overflow-hidden">
                       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-base">
@@ -795,7 +804,7 @@ export function TaxView() {
                 <TabsContent value="health">
                   <motion.div variants={fadeUp} initial="hidden" animate="show" className="space-y-6">
                     {/* 80D */}
-                    <Card className="rounded-2xl border border-border bg-card relative overflow-hidden">
+                    <Card className="glass-card relative overflow-hidden">
                       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-base">
@@ -832,7 +841,7 @@ export function TaxView() {
                     </Card>
 
                     {/* HRA */}
-                    <Card className="rounded-2xl border border-border bg-card relative overflow-hidden">
+                    <Card className="glass-card relative overflow-hidden">
                       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-base">
@@ -881,7 +890,7 @@ export function TaxView() {
                 {/* -- Other Deductions Tab -- */}
                 <TabsContent value="other">
                   <motion.div variants={fadeUp} initial="hidden" animate="show">
-                    <Card className="rounded-2xl border border-border bg-card relative overflow-hidden">
+                    <Card className="glass-card relative overflow-hidden">
                       <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2 text-base">
@@ -904,11 +913,11 @@ export function TaxView() {
               </Tabs>
             </div>
 
-            {/* -- RIGHT: Tax Comparison (1 col on xl) -- */}
+            {/* -- RIGHT: Tax Comparison (1 col on lg+) -- */}
             <div className="space-y-6">
               {/* Recommendation badge */}
               <motion.div variants={scaleIn} initial="hidden" animate="show">
-                <Card className="rounded-2xl border border-primary/30 bg-primary/5 relative overflow-hidden">
+                <Card className="rounded-2xl border border-primary/30 bg-primary/5 backdrop-blur-xl relative overflow-hidden">
                   <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <CardContent className="p-4 text-center">
                     <div className="flex items-center justify-center gap-2 mb-1">
@@ -929,7 +938,7 @@ export function TaxView() {
 
               {/* Bar chart comparison */}
               <motion.div variants={fadeUp} initial="hidden" animate="show">
-                <Card className="rounded-2xl border border-border bg-card relative overflow-hidden">
+                <Card className="glass-card relative overflow-hidden">
                   <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm">Tax Comparison</CardTitle>
@@ -1061,7 +1070,7 @@ export function TaxView() {
                 </Card>
               </motion.div>
             </div>
-      </div>
+          </div>
       </div>
     </div>
   )

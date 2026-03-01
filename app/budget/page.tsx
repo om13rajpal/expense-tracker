@@ -47,7 +47,7 @@ import {
   IconCalculator,
   IconAdjustments,
 } from "@tabler/icons-react"
-import { motion } from "motion/react"
+import { motion, useInView } from "motion/react"
 
 import { toast } from "sonner"
 import { useTransactions } from "@/hooks/use-transactions"
@@ -109,6 +109,7 @@ import { BudgetSuggestions } from "@/components/planning/budget-suggestions"
 import { PlanAllocateView } from "@/components/budget/plan-allocate-view"
 import { WhatIfView } from "@/components/budget/what-if-view"
 import { SpendingDial } from "@/components/budget/spending-dial"
+import { GhostBudgetCard } from "@/components/ghost-budget-card"
 
 interface BudgetCategoryItem {
   id: string
@@ -941,31 +942,33 @@ export default function BudgetPage() {
           <BudgetLoadingSkeleton />
         ) : (
           <motion.div
-            className="space-y-4 p-4 md:p-6"
+            className="page-content"
             initial="hidden"
             animate="show"
             variants={stagger}
           >
             {/* ─── Tabs: Current / History ─── */}
             <Tabs value={activeTab} onValueChange={setActiveTab}>
-              <motion.div variants={fadeUpSmall} className="border-b border-border -mx-4 px-4">
-                <TabsList variant="line" className="h-10">
-                  <TabsTrigger value="current">
-                    Current Month
-                  </TabsTrigger>
-                  <TabsTrigger value="plan">
-                    <IconCalculator className="h-3.5 w-3.5" />
-                    Plan & Allocate
-                  </TabsTrigger>
-                  <TabsTrigger value="whatif">
-                    <IconAdjustments className="h-3.5 w-3.5" />
-                    What-If
-                  </TabsTrigger>
-                  <TabsTrigger value="history">
-                    <IconHistory className="h-3.5 w-3.5" />
-                    History
-                  </TabsTrigger>
-                </TabsList>
+              <motion.div variants={fadeUpSmall} className="border-b border-border/50 -mx-4 px-4">
+                <div className="tab-scroll">
+                  <TabsList variant="line" className="h-10 w-max min-w-full">
+                    <TabsTrigger value="current">
+                      Current Month
+                    </TabsTrigger>
+                    <TabsTrigger value="plan">
+                      <IconCalculator className="h-3.5 w-3.5" />
+                      Plan & Allocate
+                    </TabsTrigger>
+                    <TabsTrigger value="whatif">
+                      <IconAdjustments className="h-3.5 w-3.5" />
+                      What-If
+                    </TabsTrigger>
+                    <TabsTrigger value="history">
+                      <IconHistory className="h-3.5 w-3.5" />
+                      History
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
               </motion.div>
 
                 <TabsContent value="current" className="space-y-4 mt-0">
@@ -973,7 +976,7 @@ export default function BudgetPage() {
               {/* ─── Alert Banner ─── */}
               {alerts.length > 0 && (
                 <motion.div initial={fadeUpSmall.hidden} animate={fadeUpSmall.show}>
-                  <div className="rounded-2xl border border-destructive/20 bg-destructive/[0.04] dark:bg-destructive/[0.06] relative overflow-hidden p-4">
+                  <div className="rounded-2xl border border-destructive/20 bg-destructive/[0.04] dark:bg-destructive/[0.06] backdrop-blur-xl relative overflow-hidden p-4">
                     <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-destructive/20 to-transparent" />
                     <div className="flex items-start gap-3">
                       <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl bg-destructive/10">
@@ -1003,9 +1006,7 @@ export default function BudgetPage() {
 
               {/* ─── Stat Bar ─── */}
               <motion.div initial={fadeUp.hidden} animate={fadeUp.show}>
-                <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-border">
-                  {/* Top edge light line */}
-                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+                <div className="metric-grid">
                   {[
                     {
                       label: "Total Spent",
@@ -1013,8 +1014,9 @@ export default function BudgetPage() {
                       sub: `of ${formatCurrency(totalMonthlyBudget)} budget`,
                       icon: IconWallet,
                       color: "",
-                      iconBg: "bg-muted/80 dark:bg-muted",
-                      iconColor: "text-muted-foreground",
+                      iconBg: "bg-blue-500/15 dark:bg-blue-400/15",
+                      iconColor: "text-blue-600 dark:text-blue-400",
+                      glowColor: "oklch(0.6 0.15 240)",
                     },
                     {
                       label: "Budget Left",
@@ -1022,8 +1024,9 @@ export default function BudgetPage() {
                       sub: "Remaining this period",
                       icon: IconArrowDown,
                       color: totalRemaining >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive",
-                      iconBg: totalRemaining >= 0 ? "bg-lime-500/10 shadow-[0_0_12px_rgba(132,204,22,0.15)]" : "bg-destructive/10",
+                      iconBg: totalRemaining >= 0 ? "bg-lime-500/15 dark:bg-lime-400/15" : "bg-destructive/15",
                       iconColor: totalRemaining >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive",
+                      glowColor: totalRemaining >= 0 ? "oklch(0.7 0.19 145)" : "oklch(0.6 0.2 27)",
                     },
                     {
                       label: "Projected",
@@ -1031,44 +1034,66 @@ export default function BudgetPage() {
                       sub: "On track to spend",
                       icon: IconTrendingUp,
                       color: totalProjected <= totalMonthlyBudget ? "text-lime-600 dark:text-lime-400" : "text-destructive",
-                      iconBg: "bg-muted/80 dark:bg-muted",
-                      iconColor: "text-muted-foreground",
+                      iconBg: "bg-violet-500/15 dark:bg-violet-400/15",
+                      iconColor: "text-violet-600 dark:text-violet-400",
+                      glowColor: "oklch(0.6 0.15 300)",
                     },
                     {
                       label: "Usage",
                       value: `${Math.min(totalPercentage, 999).toFixed(0)}%`,
-                      sub: null,
+                      sub: null as string | null,
                       icon: IconGauge,
                       color: getUsageColor(totalPercentage),
-                      iconBg: "bg-muted/80 dark:bg-muted",
-                      iconColor: "text-muted-foreground",
+                      iconBg: "bg-amber-500/15 dark:bg-amber-400/15",
+                      iconColor: "text-amber-600 dark:text-amber-400",
+                      glowColor: "oklch(0.7 0.15 70)",
                     },
-                  ].map((stat) => (
-                    <div key={stat.label} className="px-3 sm:px-5 py-3 sm:py-4 flex items-start gap-2 sm:gap-3">
-                      <div className={`mt-0.5 flex size-7 sm:size-9 shrink-0 items-center justify-center rounded-xl ${stat.iconBg}`}>
-                        <stat.icon className={`h-3.5 w-3.5 sm:h-4 sm:w-4 ${stat.iconColor}`} />
+                  ].map((stat, i) => (
+                    <motion.div
+                      key={stat.label}
+                      initial={{ opacity: 0, y: 16, scale: 0.97 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      transition={{ delay: i * 0.06, duration: 0.5, ease: [0.32, 0.72, 0, 1] }}
+                      className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl p-4 sm:p-5 relative overflow-hidden"
+                    >
+                      {/* Ambient glow */}
+                      <div
+                        className="pointer-events-none absolute -top-10 -right-10 w-24 h-24 rounded-full opacity-[0.08] blur-2xl"
+                        style={{ background: stat.glowColor }}
+                      />
+                      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
+                      <div className="flex items-start gap-3">
+                        <div className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${stat.iconBg}`}>
+                          <stat.icon className={`h-4 w-4 ${stat.iconColor}`} />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-[11px] sm:text-[13px] font-semibold text-muted-foreground uppercase tracking-wider leading-none mb-1.5">
+                            {stat.label}
+                          </p>
+                          <motion.p
+                            initial={numberPop.hidden}
+                            animate={numberPop.show}
+                            className={`text-lg sm:text-2xl font-black tracking-tight tabular-nums leading-tight truncate ${stat.color}`}
+                          >
+                            {stat.value}
+                          </motion.p>
+                          {stat.sub ? (
+                            <p className="text-[11px] text-muted-foreground mt-1">{stat.sub}</p>
+                          ) : (
+                            <div className="mt-2">
+                              <div className="h-1.5 rounded-full bg-muted/40 overflow-hidden">
+                                <motion.div
+                                  initial={{ width: 0 }}
+                                  animate={{ width: `${Math.min(totalPercentage, 100)}%` }}
+                                  transition={{ delay: 0.3, duration: 0.8, ease: [0.32, 0.72, 0, 1] }}
+                                  className={`h-full rounded-full bg-gradient-to-r ${getProgressGradient(totalPercentage)}`}
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                      <div className="min-w-0">
-                        <p className="text-[10px] sm:text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
-                          {stat.label}
-                        </p>
-                        <motion.p
-                          initial={numberPop.hidden}
-                          animate={numberPop.show}
-                          className={`text-base sm:text-lg font-black tracking-tight tabular-nums leading-tight truncate ${stat.color}`}
-                        >
-                          {stat.value}
-                        </motion.p>
-                        {stat.sub ? (
-                          <p className="text-[11px] text-muted-foreground mt-0.5">{stat.sub}</p>
-                        ) : (
-                          <Progress
-                            value={Math.min(totalPercentage, 100)}
-                            className={`h-1.5 mt-1.5 ${getProgressClass(totalPercentage)}`}
-                          />
-                        )}
-                      </div>
-                    </div>
+                    </motion.div>
                   ))}
                 </div>
               </motion.div>
@@ -1099,47 +1124,54 @@ export default function BudgetPage() {
                 />
               )}
 
+              {/* ─── Ghost Budget ─── */}
+              <GhostBudgetCard />
+
               {/* ─── Chart + Attention ─── */}
               <motion.div initial={fadeUp.hidden} animate={fadeUp.show}>
                 <div className="grid gap-4 lg:grid-cols-5">
                   {/* Budget vs Spending chart */}
-                  <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-5 lg:col-span-3">
-                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-                    <div className="mb-4">
+                  <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl relative overflow-hidden p-4 sm:p-5 lg:col-span-3">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
+                    {/* Ambient glow behind chart */}
+                    <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[60%] h-[60%] rounded-full bg-primary/[0.04] blur-[80px]" />
+                    <div className="relative mb-4">
                       <div className="flex items-center gap-1.5">
                         <h3 className="text-sm font-semibold">Budget vs Spending</h3>
                         <InfoTooltip text="Gray bars show your full monthly budget. Dark olive bars show actual spending. If olive exceeds gray, you are over budget." />
                       </div>
-                      <p className="text-xs text-muted-foreground/70 mt-0.5">Monthly budget compared to actual spend</p>
+                      <p className="text-[13px] text-muted-foreground mt-0.5">Monthly budget compared to actual spend</p>
                     </div>
                     {chartData.length > 0 ? (
-                      <>
-                        <ResponsiveContainer width="100%" height={300}>
-                          <BarChart data={chartData} barGap={4}>
-                            <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--color-border)" strokeOpacity={0.4} />
-                            <XAxis
-                              dataKey="category"
-                              tickLine={false}
-                              axisLine={false}
-                              tickMargin={8}
-                              tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
-                            />
-                            <YAxis
-                              tickLine={false}
-                              axisLine={false}
-                              tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
-                              tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
-                              width={40}
-                            />
-                            <Tooltip
-                              content={<ChartTooltip />}
-                              cursor={{ fill: "var(--color-muted)", opacity: 0.3, radius: 4 }}
-                            />
-                            <Bar dataKey="budget" fill={CHART_BUDGET} radius={[5, 5, 0, 0]} isAnimationActive={false} />
-                            <Bar dataKey="spent" fill={CHART_SPENT} radius={[5, 5, 0, 0]} isAnimationActive={false} />
-                          </BarChart>
-                        </ResponsiveContainer>
-                        <div className="flex items-center justify-center gap-6 mt-3 pt-3 border-t border-border text-xs text-muted-foreground">
+                      <div className="relative">
+                        <div className="chart-container">
+                          <ResponsiveContainer width="100%" height="100%">
+                            <BarChart data={chartData} barGap={4}>
+                              <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--color-border)" strokeOpacity={0.3} />
+                              <XAxis
+                                dataKey="category"
+                                tickLine={false}
+                                axisLine={false}
+                                tickMargin={8}
+                                tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                              />
+                              <YAxis
+                                tickLine={false}
+                                axisLine={false}
+                                tick={{ fontSize: 11, fill: "var(--muted-foreground)" }}
+                                tickFormatter={(value) => `${(value / 1000).toFixed(0)}k`}
+                                width={40}
+                              />
+                              <Tooltip
+                                content={<ChartTooltip />}
+                                cursor={{ fill: "var(--color-muted)", opacity: 0.3, radius: 4 }}
+                              />
+                              <Bar dataKey="budget" fill={CHART_BUDGET} radius={[6, 6, 0, 0]} isAnimationActive={false} />
+                              <Bar dataKey="spent" fill={CHART_SPENT} radius={[6, 6, 0, 0]} isAnimationActive={false} />
+                            </BarChart>
+                          </ResponsiveContainer>
+                        </div>
+                        <div className="flex items-center justify-center gap-6 mt-3 pt-3 border-t border-border/50 text-xs text-muted-foreground">
                           <div className="flex items-center gap-1.5">
                             <div className="size-2.5 rounded-full" style={{ backgroundColor: CHART_BUDGET }} />
                             Budget
@@ -1149,32 +1181,35 @@ export default function BudgetPage() {
                             Spent
                           </div>
                         </div>
-                      </>
+                      </div>
                     ) : (
-                      <div className="flex h-[300px] items-center justify-center text-sm text-muted-foreground">
+                      <div className="flex h-[200px] sm:h-[280px] lg:h-[320px] items-center justify-center text-sm text-muted-foreground">
                         No spending data yet.
                       </div>
                     )}
                   </div>
 
                   {/* Attention Needed */}
-                  <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-5 lg:col-span-2">
-                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+                  <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl relative overflow-hidden p-4 sm:p-5 lg:col-span-2">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
                     <div className="mb-4">
                       <div className="flex items-center gap-1.5">
                         <h3 className="text-sm font-semibold">Attention Needed</h3>
                         <InfoTooltip text="Top 5 categories by usage. Categories at 90%+ need immediate attention." />
                       </div>
-                      <p className="text-xs text-muted-foreground/70 mt-0.5">Categories closest to or over limit</p>
+                      <p className="text-[13px] text-muted-foreground mt-0.5">Categories closest to or over limit</p>
                     </div>
-                    <div className="space-y-1">
-                      {attentionItems.map((item) => {
+                    <div className="space-y-1.5">
+                      {attentionItems.map((item, idx) => {
                         const isUrgent = item.percentageUsed >= 90
                         const isWarning = item.percentageUsed >= 70 && item.percentageUsed < 90
                         return (
-                          <div
+                          <motion.div
                             key={item.budgetCategory}
-                            className={`rounded-lg px-3 py-2.5 transition-colors ${
+                            initial={{ opacity: 0, x: -8 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: 0.1 + idx * 0.05, duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
+                            className={`rounded-xl px-3 py-2.5 transition-colors ${
                               isUrgent
                                 ? "bg-destructive/[0.06] dark:bg-destructive/[0.08]"
                                 : isWarning
@@ -1197,11 +1232,12 @@ export default function BudgetPage() {
                                 </span>
                               )}
                             </div>
-                            {/* Color-coded progress bar */}
                             <div className="h-1.5 rounded-full bg-muted/40 overflow-hidden mb-1">
-                              <div
-                                className={`h-full rounded-full transition-all duration-500 ease-out bg-gradient-to-r ${getProgressGradient(item.percentageUsed)}`}
-                                style={{ width: `${Math.min(item.percentageUsed, 100)}%` }}
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${Math.min(item.percentageUsed, 100)}%` }}
+                                transition={{ delay: 0.2 + idx * 0.05, duration: 0.6, ease: [0.32, 0.72, 0, 1] }}
+                                className={`h-full rounded-full bg-gradient-to-r ${getProgressGradient(item.percentageUsed)}`}
                               />
                             </div>
                             <p className="text-[11px] text-muted-foreground tabular-nums">
@@ -1209,7 +1245,7 @@ export default function BudgetPage() {
                               <span className="text-muted-foreground/50"> / </span>
                               {formatCurrency(item.monthlyBudget)}
                             </p>
-                          </div>
+                          </motion.div>
                         )
                       })}
                     </div>
@@ -1220,25 +1256,39 @@ export default function BudgetPage() {
               {/* ─── Needs vs Wants Usage ─── */}
               {nwiUsageSummary && (
                 <motion.div initial={fadeUp.hidden} animate={fadeUp.show}>
-                  <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-5">
-                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+                  <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl relative overflow-hidden p-4 sm:p-5">
+                    <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
                     <div className="flex items-center gap-1.5 mb-4">
                       <h3 className="text-sm font-semibold">Needs vs Wants Usage</h3>
                       <InfoTooltip text="Shows how much of your Needs and Wants budget has been spent this month. Based on category classifications in the table below." />
                     </div>
                     <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-                      {(["needs", "wants", "investments", "savings"] as const).map((key) => {
+                      {(["needs", "wants", "investments", "savings"] as const).map((key, idx) => {
                         const cfg = BUCKET_CONFIG[key]
                         const BIcon = cfg.icon
                         const { budget, spent } = nwiUsageSummary[key]
                         const pct = budget > 0 ? (spent / budget) * 100 : 0
                         const left = budget - spent
                         const isOver = left < 0
+                        const accentColors: Record<string, string> = {
+                          needs: "border-l-foreground/50",
+                          wants: "border-l-foreground/30",
+                          investments: "border-l-primary",
+                          savings: "border-l-primary/50",
+                        }
                         return (
-                          <div key={key} className="space-y-2">
+                          <motion.div
+                            key={key}
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            transition={{ delay: idx * 0.06, duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
+                            className={`bg-muted/30 dark:bg-muted/20 rounded-xl p-3 space-y-2`}
+                          >
                             <div className="flex items-center justify-between">
                               <div className="flex items-center gap-1.5">
-                                <BIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                                <div className="flex size-6 items-center justify-center rounded-lg bg-card/60">
+                                  <BIcon className="h-3.5 w-3.5 text-muted-foreground" />
+                                </div>
                                 <span className="text-xs font-semibold">{cfg.label}</span>
                               </div>
                               <span className={`text-[11px] font-semibold tabular-nums ${isOver ? "text-destructive" : pct >= 80 ? "text-amber-500" : "text-muted-foreground"}`}>
@@ -1246,11 +1296,13 @@ export default function BudgetPage() {
                               </span>
                             </div>
                             <div className="h-2 rounded-full bg-muted/40 overflow-hidden">
-                              <div
-                                className={`h-full rounded-full transition-all duration-500 ease-out ${
+                              <motion.div
+                                initial={{ width: 0 }}
+                                animate={{ width: `${Math.min(pct, 100)}%` }}
+                                transition={{ delay: 0.2 + idx * 0.06, duration: 0.7, ease: [0.32, 0.72, 0, 1] }}
+                                className={`h-full rounded-full ${
                                   isOver ? "bg-destructive" : pct >= 80 ? "bg-amber-500" : "bg-primary"
                                 }`}
-                                style={{ width: `${Math.min(pct, 100)}%` }}
                               />
                             </div>
                             <div className="flex items-center justify-between text-[11px] text-muted-foreground tabular-nums">
@@ -1259,7 +1311,7 @@ export default function BudgetPage() {
                                 {isOver ? `-${formatCurrency(Math.abs(left))} over` : `${formatCurrency(left)} left`}
                               </span>
                             </div>
-                          </div>
+                          </motion.div>
                         )
                       })}
                     </div>
@@ -1269,8 +1321,8 @@ export default function BudgetPage() {
 
               {/* ─── Category Breakdown Table ─── */}
               <motion.div initial={fadeUp.hidden} animate={fadeUp.show}>
-                <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden overflow-x-auto">
-                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+                <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl relative overflow-hidden overflow-x-auto">
+                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
                   <div className="flex items-center justify-between px-5 py-4">
                     <div>
                       <h3 className="text-sm font-semibold">Category Breakdown</h3>
@@ -1516,8 +1568,8 @@ export default function BudgetPage() {
                 {/* ─── History Tab ─── */}
                 <TabsContent value="history" className="space-y-4 mt-0">
                   <motion.div initial={fadeUp.hidden} animate={fadeUp.show}>
-                    <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
-                      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+                    <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl relative overflow-hidden">
+                      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
                       <div className="flex items-center justify-between px-5 py-4">
                         <div>
                           <h3 className="text-sm font-semibold">Budget History</h3>
@@ -1552,13 +1604,19 @@ export default function BudgetPage() {
                           No budget history yet. Visit this page each month to build history.
                         </div>
                       ) : (
-                        <div className="px-5 pb-5 space-y-2">
-                          {budgetHistory.map((entry) => {
+                        <div className="px-4 sm:px-5 pb-5 space-y-2">
+                          {budgetHistory.map((entry, hIdx) => {
                             const monthKey = `${entry.year}-${entry.month}`
                             const isExpanded = expandedHistoryMonth === monthKey
                             const adherencePct = entry.totals.overallPercentage
                             return (
-                              <div key={monthKey} className="rounded-xl border border-border overflow-hidden">
+                              <motion.div
+                                key={monthKey}
+                                initial={{ opacity: 0, y: 8 }}
+                                animate={{ opacity: 1, y: 0 }}
+                                transition={{ delay: hIdx * 0.04, duration: 0.4, ease: [0.32, 0.72, 0, 1] }}
+                                className="rounded-xl border border-border/50 overflow-hidden"
+                              >
                                 <button
                                   className={`w-full flex items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/30 ${getAdherenceBg(adherencePct)}`}
                                   onClick={() => setExpandedHistoryMonth(isExpanded ? null : monthKey)}
@@ -1635,7 +1693,7 @@ export default function BudgetPage() {
                                     </Table>
                                   </div>
                                 )}
-                              </div>
+                              </motion.div>
                             )
                           })}
                         </div>
@@ -1696,19 +1754,21 @@ function MiniSparkline({ data, highlightIndex }: { data: number[]; highlightInde
 
 function BudgetLoadingSkeleton() {
   return (
-    <div className="space-y-4 p-4 md:p-6">
+    <div className="page-content">
       {/* Tab bar placeholder */}
       <Skeleton className="h-10 w-full max-w-md rounded-lg" />
 
-      {/* Stat cards row */}
-      <div className="card-elevated rounded-2xl border border-border bg-card grid grid-cols-2 md:grid-cols-4 divide-y md:divide-y-0 md:divide-x divide-border">
+      {/* Stat cards grid */}
+      <div className="metric-grid">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="px-3 sm:px-5 py-3 sm:py-4 flex items-start gap-2 sm:gap-3">
-            <Skeleton className="size-7 sm:size-9 rounded-xl shrink-0" />
-            <div className="space-y-1.5 flex-1">
-              <Skeleton className="h-3 w-14" />
-              <Skeleton className="h-5 w-24" />
-              <Skeleton className="h-3 w-20" />
+          <div key={i} className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl p-4 sm:p-5">
+            <div className="flex items-start gap-3">
+              <Skeleton className="size-9 rounded-xl shrink-0" />
+              <div className="space-y-2 flex-1">
+                <Skeleton className="h-3 w-16" />
+                <Skeleton className="h-6 w-28" />
+                <Skeleton className="h-3 w-24" />
+              </div>
             </div>
           </div>
         ))}
@@ -1716,20 +1776,20 @@ function BudgetLoadingSkeleton() {
 
       {/* Chart + Attention cards grid */}
       <div className="grid gap-4 lg:grid-cols-5">
-        <div className="card-elevated rounded-2xl border border-border bg-card p-5 lg:col-span-3 space-y-4">
+        <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl p-4 sm:p-5 lg:col-span-3 space-y-4">
           <div className="space-y-1.5">
             <Skeleton className="h-4 w-36" />
             <Skeleton className="h-3 w-52" />
           </div>
-          <Skeleton className="h-[300px] w-full rounded-lg" />
+          <Skeleton className="h-[200px] sm:h-[280px] lg:h-[320px] w-full rounded-lg" />
         </div>
-        <div className="card-elevated rounded-2xl border border-border bg-card p-5 lg:col-span-2 space-y-3">
+        <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl p-4 sm:p-5 lg:col-span-2 space-y-3">
           <div className="space-y-1.5 mb-1">
             <Skeleton className="h-4 w-32" />
             <Skeleton className="h-3 w-44" />
           </div>
           {Array.from({ length: 5 }).map((_, i) => (
-            <div key={i} className="flex items-center gap-3 rounded-lg px-3 py-2.5">
+            <div key={i} className="flex items-center gap-3 rounded-xl px-3 py-2.5">
               <Skeleton className="h-5 w-5 rounded-md shrink-0" />
               <div className="flex-1 space-y-1.5">
                 <Skeleton className="h-3.5 w-24" />

@@ -285,10 +285,10 @@ function HealthOverviewSkeleton() {
   return (
     <div className="space-y-5">
       {/* Stat bar */}
-      <div className="card-elevated rounded-2xl border border-border grid grid-cols-2 sm:grid-cols-4 divide-x divide-border">
+      <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl grid grid-cols-2 sm:grid-cols-4 divide-x divide-border/40">
         {Array.from({ length: 4 }).map((_, i) => (
-          <div key={i} className="px-5 py-4 flex items-center gap-3">
-            <Skeleton className="size-9 rounded-xl" />
+          <div key={i} className="px-3 sm:px-5 py-3 sm:py-4 flex items-center gap-2 sm:gap-3">
+            <Skeleton className="size-7 sm:size-9 rounded-xl" />
             <div className="space-y-1.5">
               <Skeleton className="h-3 w-16" />
               <Skeleton className="h-5 w-20" />
@@ -297,13 +297,13 @@ function HealthOverviewSkeleton() {
         ))}
       </div>
       {/* Score + Breakdown */}
-      <div className="grid gap-5 lg:grid-cols-5">
-        <div className="lg:col-span-2 card-elevated rounded-2xl border border-border p-6 flex flex-col items-center space-y-4">
+      <div className="grid gap-4 sm:gap-5 lg:grid-cols-5">
+        <div className="lg:col-span-2 bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl p-5 sm:p-6 flex flex-col items-center space-y-4">
           <Skeleton className="h-5 w-36" />
           <Skeleton className="h-[140px] w-[140px] rounded-full" />
           <Skeleton className="h-6 w-24 rounded-full" />
         </div>
-        <div className="lg:col-span-3 card-elevated rounded-2xl border border-border p-6 space-y-4">
+        <div className="lg:col-span-3 bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl p-5 sm:p-6 space-y-4">
           <Skeleton className="h-5 w-36" />
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i} className="space-y-2">
@@ -364,9 +364,9 @@ export function HealthOverview() {
       {/* Stat Bar */}
       <motion.div
         variants={fadeUp}
-        className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden grid grid-cols-2 sm:grid-cols-4 divide-x divide-border"
+        className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl relative overflow-hidden grid grid-cols-2 sm:grid-cols-4 divide-x divide-border/40"
       >
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
         <StatItem
           icon={IconChartDonut}
           label="Score"
@@ -413,10 +413,10 @@ export function HealthOverview() {
       </motion.div>
 
       {/* Score Ring + Score Breakdown */}
-      <motion.div variants={fadeUp} className="grid gap-5 lg:grid-cols-5">
+      <motion.div variants={fadeUp} className="grid gap-4 sm:gap-5 lg:grid-cols-5">
         {/* Score Ring */}
-        <div className="lg:col-span-2 card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-6 flex flex-col items-center">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+        <div className="lg:col-span-2 bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl relative overflow-hidden p-5 sm:p-6 flex flex-col items-center">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
           <div className="flex items-center gap-2 self-start mb-6">
             <IconHeartbeat className="h-4 w-4 text-muted-foreground" />
             <h3 className="text-sm font-semibold">Health Score</h3>
@@ -434,8 +434,8 @@ export function HealthOverview() {
         </div>
 
         {/* Score Breakdown */}
-        <div className="lg:col-span-3 card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-6">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+        <div className="lg:col-span-3 bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl relative overflow-hidden p-5 sm:p-6">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2">
               <IconChartLine className="h-4 w-4 text-muted-foreground" />

@@ -806,32 +806,38 @@ export function SubscriptionsView() {
   return (
     <>
       <div className="flex flex-1 flex-col">
-        <div className="flex items-center justify-end px-4 pt-4">
-          <Button
-            size="sm"
-            className="h-8 gap-1.5 text-xs"
-            onClick={() => { setForm(blankForm()); setLookupName(""); setAppliedSuggestion(false); setShowAddDialog(true) }}
-          >
-            <IconPlus className="h-3.5 w-3.5" />
-            Add
-          </Button>
-        </div>
         <motion.div
-          className="space-y-4 p-4 pt-3"
+          className="page-content pt-4"
           initial="hidden"
           animate="show"
           variants={stagger}
         >
+          {/* --- Header + Add Button --- */}
+          <motion.div variants={fadeUp} className="flex items-center justify-between">
+            <div>
+              <h2 className="text-lg font-bold tracking-tight sm:text-xl">Subscriptions</h2>
+              <p className="text-[13px] text-muted-foreground mt-0.5">Track and manage your recurring payments</p>
+            </div>
+            <Button
+              size="sm"
+              className="h-9 gap-1.5 text-xs rounded-xl"
+              onClick={() => { setForm(blankForm()); setLookupName(""); setAppliedSuggestion(false); setShowAddDialog(true) }}
+            >
+              <IconPlus className="h-3.5 w-3.5" />
+              Add
+            </Button>
+          </motion.div>
+
           {/* --- Stat Tiles --- */}
           <motion.div variants={fadeUp}>
-            <div className={`grid grid-cols-1 gap-3 ${overdueSubs.length > 0 ? "sm:grid-cols-4" : "sm:grid-cols-3"}`}>
+            <div className={`metric-grid ${overdueSubs.length > 0 ? "lg:grid-cols-4" : "lg:grid-cols-3"}`}>
               <MetricTile
                 label="Active Subscriptions"
                 value={activeSubs.length.toString()}
                 trendLabel={pausedSubs.length > 0 ? `${pausedSubs.length} paused` : undefined}
                 icon={<IconRepeat className="h-5 w-5" />}
-                iconBg="bg-muted/80 dark:bg-muted"
-                iconColor="text-foreground/70"
+                iconBg="bg-lime-500/10 dark:bg-lime-500/15"
+                iconColor="text-lime-600 dark:text-lime-400"
               />
               <MetricTile
                 label="Monthly Total"
@@ -865,46 +871,46 @@ export function SubscriptionsView() {
           {/* --- Overdue Subscriptions --- */}
           {overdueSubs.length > 0 && (
             <motion.div variants={fadeUp}>
-              <Card className="rounded-2xl border border-border bg-card relative overflow-hidden border-red-200 dark:border-red-800/40 bg-red-50/50 dark:bg-red-950/10">
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-                <CardHeader className="pb-2 pt-4 px-5">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="text-sm font-semibold flex items-center gap-2">
+              <div className="glass-card p-4 sm:p-5 border-destructive/20 dark:border-destructive/15 relative overflow-hidden">
+                <div className="pointer-events-none absolute -top-12 -right-12 w-32 h-32 rounded-full bg-destructive/10 blur-3xl" />
+                <div className="relative">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="flex size-9 items-center justify-center rounded-xl bg-destructive/10">
                         <IconAlertTriangle className="h-4 w-4 text-destructive" />
-                        Overdue Subscriptions
-                      </CardTitle>
-                      <CardDescription className="text-xs">
-                        {overdueSubs.length} subscription{overdueSubs.length > 1 ? "s" : ""} past expected payment date
-                      </CardDescription>
+                      </div>
+                      <div>
+                        <h3 className="text-sm font-semibold">Overdue Subscriptions</h3>
+                        <p className="text-[13px] text-muted-foreground">
+                          {overdueSubs.length} past expected date
+                        </p>
+                      </div>
                     </div>
                     <Button
                       size="sm"
                       variant="outline"
-                      className="h-7 text-xs gap-1 border-destructive/20 text-destructive hover:bg-destructive/10"
+                      className="h-8 text-xs gap-1.5 rounded-xl border-destructive/20 text-destructive hover:bg-destructive/10"
                       onClick={() => checkPaymentsMutation.mutate(undefined)}
                       disabled={checkPaymentsMutation.isPending}
                     >
-                      <IconEye className="h-3 w-3" />
+                      <IconEye className="h-3.5 w-3.5" />
                       {checkPaymentsMutation.isPending ? "Checking..." : "Check All"}
                     </Button>
                   </div>
-                </CardHeader>
-                <CardContent className="px-5 pb-4">
                   <div className="flex flex-wrap gap-2">
                     {overdueSubs.map((sub) => {
                       const days = Math.abs(daysUntil(sub.nextExpected))
                       return (
                         <div
                           key={sub._id}
-                          className="flex items-center gap-2 rounded-xl border border-red-200/60 dark:border-red-800/30 bg-background px-3 py-2"
+                          className="flex items-center gap-2 rounded-xl bg-card/80 backdrop-blur-sm border border-destructive/10 px-3 py-2"
                         >
                           <ServiceLogo name={sub.name} size={20} />
                           <span className="text-sm font-medium">{sub.name}</span>
                           <span className="text-xs text-muted-foreground tabular-nums">
                             {formatINR(sub.amount)}
                           </span>
-                          <Badge variant="destructive" className="text-[11px] px-1.5 py-0 h-4">
+                          <Badge variant="destructive" className="text-[11px] px-1.5 py-0 h-5 rounded-full">
                             {days}d overdue
                           </Badge>
                           <Button
@@ -931,62 +937,64 @@ export function SubscriptionsView() {
                       )
                     })}
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </motion.div>
           )}
 
           {/* --- Upcoming Renewals --- */}
           {upcomingRenewals.length > 0 && (
             <motion.div variants={fadeUp}>
-              <Card className="rounded-2xl border border-border bg-card relative overflow-hidden border-amber-200 dark:border-amber-800/40 bg-amber-50/50 dark:bg-amber-950/10">
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-                <CardHeader className="pb-2 pt-4 px-5">
-                  <CardTitle className="text-sm font-semibold flex items-center gap-2">
-                    <IconCalendar className="h-4 w-4 text-amber-600 dark:text-amber-400" />
-                    Upcoming Renewals
-                  </CardTitle>
-                  <CardDescription className="text-xs">
-                    {upcomingRenewals.length} subscription{upcomingRenewals.length > 1 ? "s" : ""} renewing within 7 days
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="px-5 pb-4">
+              <div className="glass-card p-4 sm:p-5 border-amber-200/40 dark:border-amber-800/20 relative overflow-hidden">
+                <div className="pointer-events-none absolute -top-12 -right-12 w-32 h-32 rounded-full bg-amber-500/10 blur-3xl" />
+                <div className="relative">
+                  <div className="flex items-center gap-2.5 mb-3">
+                    <div className="flex size-9 items-center justify-center rounded-xl bg-amber-500/10 dark:bg-amber-500/15">
+                      <IconCalendar className="h-4 w-4 text-amber-600 dark:text-amber-400" />
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-semibold">Upcoming Renewals</h3>
+                      <p className="text-[13px] text-muted-foreground">
+                        {upcomingRenewals.length} renewing within 7 days
+                      </p>
+                    </div>
+                  </div>
                   <div className="flex flex-wrap gap-2">
                     {upcomingRenewals.map((sub) => {
                       const days = daysUntil(sub.nextExpected)
                       return (
                         <div
                           key={sub._id}
-                          className="flex items-center gap-2 rounded-xl border border-amber-200/60 dark:border-amber-800/30 bg-background px-3 py-2"
+                          className="flex items-center gap-2 rounded-xl bg-card/80 backdrop-blur-sm border border-amber-200/30 dark:border-amber-800/20 px-3 py-2"
                         >
                           <ServiceLogo name={sub.name} size={20} />
                           <span className="text-sm font-medium">{sub.name}</span>
                           <span className="text-xs text-muted-foreground tabular-nums">
                             {formatINR(sub.amount)}
                           </span>
-                          <Badge variant="outline" className="text-[11px] px-1.5 py-0 h-4 border-amber-300 dark:border-amber-700 text-amber-700 dark:text-amber-400">
+                          <span className="inline-flex items-center rounded-full bg-amber-500/10 px-2 py-0.5 text-[11px] font-medium text-amber-700 dark:text-amber-400">
                             {days === 0 ? "Today" : days === 1 ? "Tomorrow" : `${days}d`}
-                          </Badge>
+                          </span>
                         </div>
                       )
                     })}
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </motion.div>
           )}
 
           {/* --- Subscriptions Table --- */}
           <motion.div variants={fadeUp}>
-            <Card className="rounded-2xl border border-border bg-card relative overflow-hidden">
+            <div className="glass-card relative overflow-hidden">
               <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-              <CardHeader className="pb-3 px-5 pt-4">
+              <div className="p-4 sm:p-5 pb-3">
                 <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                   <div>
-                    <CardTitle className="text-sm font-semibold">All Subscriptions</CardTitle>
-                    <CardDescription className="text-xs mt-0.5">
+                    <h3 className="text-sm font-semibold">All Subscriptions</h3>
+                    <p className="text-[13px] text-muted-foreground mt-0.5">
                       Manage your recurring payments
-                    </CardDescription>
+                    </p>
                   </div>
                   <div className="relative w-full sm:w-64">
                     <IconSearch className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
@@ -994,40 +1002,42 @@ export function SubscriptionsView() {
                       placeholder="Search subscriptions..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
-                      className="h-8 pl-8 text-xs"
+                      className="h-9 pl-8 text-xs rounded-xl"
                     />
                   </div>
                 </div>
-              </CardHeader>
-              <CardContent className="px-0 pb-0">
+              </div>
+              <div className="px-0 pb-0">
                 <Tabs defaultValue="active" className="w-full">
-                  <div className="px-5">
-                    <TabsList className="h-8">
-                      <TabsTrigger value="active" className="text-xs gap-1.5">
-                        Active
-                        {activeSubs.length > 0 && (
-                          <Badge variant="secondary" className="h-4 min-w-4 px-1 text-[11px]">
-                            {activeSubs.length}
-                          </Badge>
-                        )}
-                      </TabsTrigger>
-                      <TabsTrigger value="paused" className="text-xs gap-1.5">
-                        Paused
-                        {pausedSubs.length > 0 && (
-                          <Badge variant="secondary" className="h-4 min-w-4 px-1 text-[11px]">
-                            {pausedSubs.length}
-                          </Badge>
-                        )}
-                      </TabsTrigger>
-                      <TabsTrigger value="cancelled" className="text-xs gap-1.5">
-                        Cancelled
-                        {cancelledSubs.length > 0 && (
-                          <Badge variant="secondary" className="h-4 min-w-4 px-1 text-[11px]">
-                            {cancelledSubs.length}
-                          </Badge>
-                        )}
-                      </TabsTrigger>
-                    </TabsList>
+                  <div className="px-4 sm:px-5">
+                    <div className="tab-scroll">
+                      <TabsList className="h-9">
+                        <TabsTrigger value="active" className="text-xs gap-1.5 rounded-lg">
+                          Active
+                          {activeSubs.length > 0 && (
+                            <Badge variant="secondary" className="h-4 min-w-4 px-1 text-[11px]">
+                              {activeSubs.length}
+                            </Badge>
+                          )}
+                        </TabsTrigger>
+                        <TabsTrigger value="paused" className="text-xs gap-1.5 rounded-lg">
+                          Paused
+                          {pausedSubs.length > 0 && (
+                            <Badge variant="secondary" className="h-4 min-w-4 px-1 text-[11px]">
+                              {pausedSubs.length}
+                            </Badge>
+                          )}
+                        </TabsTrigger>
+                        <TabsTrigger value="cancelled" className="text-xs gap-1.5 rounded-lg">
+                          Cancelled
+                          {cancelledSubs.length > 0 && (
+                            <Badge variant="secondary" className="h-4 min-w-4 px-1 text-[11px]">
+                              {cancelledSubs.length}
+                            </Badge>
+                          )}
+                        </TabsTrigger>
+                      </TabsList>
+                    </div>
                   </div>
 
                   <TabsContent value="active" className="mt-0">
@@ -1087,23 +1097,22 @@ export function SubscriptionsView() {
                     />
                   </TabsContent>
                 </Tabs>
-              </CardContent>
-            </Card>
+              </div>
+            </div>
           </motion.div>
 
           {/* --- Summary by Category --- */}
           {activeSubs.length > 0 && (
             <motion.div variants={fadeUp}>
-              <Card className="rounded-2xl border border-border bg-card relative overflow-hidden">
+              <div className="glass-card p-4 sm:p-5 relative overflow-hidden">
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-                <CardHeader className="pb-3 px-5 pt-4">
-                  <CardTitle className="text-sm font-semibold">Spend by Category</CardTitle>
-                  <CardDescription className="text-xs mt-0.5">
+                <div className="pointer-events-none absolute -top-16 -left-16 w-32 h-32 rounded-full bg-primary/5 blur-3xl" />
+                <div className="relative">
+                  <h3 className="text-sm font-semibold mb-0.5">Spend by Category</h3>
+                  <p className="text-[13px] text-muted-foreground mb-4">
                     Monthly equivalent breakdown of active subscriptions
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="px-5 pb-4">
-                  <div className="space-y-2.5">
+                  </p>
+                  <div className="space-y-3">
                     {Object.entries(
                       activeSubs.reduce<Record<string, { monthly: number; count: number }>>((acc, sub) => {
                         const cat = sub.category || "Uncategorized"
@@ -1117,10 +1126,10 @@ export function SubscriptionsView() {
                       .map(([cat, { monthly, count }]) => {
                         const pct = monthlyTotal > 0 ? (monthly / monthlyTotal) * 100 : 0
                         return (
-                          <div key={cat} className="space-y-1">
+                          <div key={cat} className="space-y-1.5">
                             <div className="flex items-center justify-between text-sm">
                               <div className="flex items-center gap-2">
-                                <Badge variant="outline" className={`text-[11px] px-1.5 py-0 h-4 border-0 ${getCategoryBadgeClass(cat)}`}>
+                                <Badge variant="outline" className={`text-[11px] px-1.5 py-0 h-5 border-0 rounded-full ${getCategoryBadgeClass(cat)}`}>
                                   {cat}
                                 </Badge>
                                 <span className="text-xs text-muted-foreground">{count} sub{count > 1 ? "s" : ""}</span>
@@ -1130,9 +1139,9 @@ export function SubscriptionsView() {
                                 <span className="text-muted-foreground font-normal text-xs">/mo</span>
                               </span>
                             </div>
-                            <div className="h-1.5 rounded-full bg-muted/40 overflow-hidden">
+                            <div className="h-2 rounded-full bg-muted/40 overflow-hidden">
                               <div
-                                className="h-full rounded-full bg-primary transition-all duration-500 ease-out"
+                                className="h-full rounded-full bg-primary transition-all duration-500 ease-out shimmer-bar"
                                 style={{ width: `${Math.min(pct, 100)}%` }}
                               />
                             </div>
@@ -1140,8 +1149,8 @@ export function SubscriptionsView() {
                         )
                       })}
                   </div>
-                </CardContent>
-              </Card>
+                </div>
+              </div>
             </motion.div>
           )}
         </motion.div>
@@ -2099,8 +2108,9 @@ function SubscriptionTable({
 
 function SubscriptionsLoadingSkeleton() {
   return (
-    <div className="space-y-4 p-4">
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+    <div className="page-content pt-4">
+      <Skeleton className="h-8 w-48" />
+      <div className="metric-grid lg:grid-cols-3">
         <Skeleton className="h-[88px] rounded-2xl border border-border" />
         <Skeleton className="h-[88px] rounded-2xl border border-border" />
         <Skeleton className="h-[88px] rounded-2xl border border-border" />

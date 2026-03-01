@@ -130,6 +130,12 @@ export async function ensureIndexes(db: Db): Promise<void> {
         { chatId: 1 },
         { unique: true }
       ),
+
+      // Monthly income targets - one target per user per month
+      db.collection('monthly_income_targets').createIndex(
+        { userId: 1, month: 1 },
+        { unique: true }
+      ),
     ]);
 
     indexesEnsured = true;

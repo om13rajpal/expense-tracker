@@ -464,13 +464,14 @@ export function AnalyticsView() {
         {/* ── Stat Bar ── */}
         <motion.div
           variants={fadeUp}
-          className="rounded-2xl border border-border bg-card relative overflow-hidden grid grid-cols-2 @xl/main:grid-cols-4 divide-y @xl/main:divide-y-0 @xl/main:divide-x divide-border"
+          className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl relative overflow-hidden grid grid-cols-2 @xl/main:grid-cols-4 divide-y @xl/main:divide-y-0 @xl/main:divide-x divide-border/50"
         >
-          {/* Top edge light line — dark mode only */}
+          {/* Top edge light line */}
           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
 
           {/* Opening Balance */}
-          <div className="px-3 sm:px-5 py-3 sm:py-4 flex items-start gap-2.5 sm:gap-3.5">
+          <div className="px-3 sm:px-5 py-3 sm:py-4 flex items-start gap-2.5 sm:gap-3.5 relative">
+            <div className="pointer-events-none absolute -top-6 -right-6 w-16 h-16 rounded-full bg-muted-foreground/5 blur-xl" />
             <div className="mt-0.5 flex size-7 sm:size-9 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted shrink-0">
               <IconScale className="size-3.5 sm:size-4 text-muted-foreground" />
             </div>
@@ -485,8 +486,9 @@ export function AnalyticsView() {
           </div>
 
           {/* Income */}
-          <div className="px-3 sm:px-5 py-3 sm:py-4 flex items-start gap-2.5 sm:gap-3.5">
-            <div className="mt-0.5 flex size-7 sm:size-9 items-center justify-center rounded-xl bg-lime-500/10 shadow-[0_0_12px_-2px_rgba(163,230,53,0.15)] shrink-0">
+          <div className="px-3 sm:px-5 py-3 sm:py-4 flex items-start gap-2.5 sm:gap-3.5 relative">
+            <div className="pointer-events-none absolute -top-6 -right-6 w-16 h-16 rounded-full bg-lime-500/10 blur-xl" />
+            <div className="mt-0.5 flex size-7 sm:size-9 items-center justify-center rounded-xl bg-lime-500/10 shadow-[0_0_16px_-3px_rgba(163,230,53,0.2)] shrink-0">
               <IconArrowUpRight className="size-3.5 sm:size-4 text-lime-600 dark:text-lime-400" />
             </div>
             <div className="min-w-0">
@@ -500,7 +502,8 @@ export function AnalyticsView() {
           </div>
 
           {/* Expenses */}
-          <div className="px-3 sm:px-5 py-3 sm:py-4 flex items-start gap-2.5 sm:gap-3.5">
+          <div className="px-3 sm:px-5 py-3 sm:py-4 flex items-start gap-2.5 sm:gap-3.5 relative">
+            <div className="pointer-events-none absolute -top-6 -right-6 w-16 h-16 rounded-full bg-rose-500/8 blur-xl" />
             <div className="mt-0.5 flex size-7 sm:size-9 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted shrink-0">
               <IconArrowDownRight className="size-3.5 sm:size-4 text-foreground/70" />
             </div>
@@ -515,8 +518,9 @@ export function AnalyticsView() {
           </div>
 
           {/* Current Balance */}
-          <div className="px-3 sm:px-5 py-3 sm:py-4 flex items-start gap-2.5 sm:gap-3.5">
-            <div className={`mt-0.5 flex size-7 sm:size-9 items-center justify-center rounded-xl shrink-0 ${netChange >= 0 ? "bg-lime-500/10 shadow-[0_0_12px_-2px_rgba(163,230,53,0.15)]" : "bg-destructive/10"}`}>
+          <div className="px-3 sm:px-5 py-3 sm:py-4 flex items-start gap-2.5 sm:gap-3.5 relative">
+            <div className={`pointer-events-none absolute -top-6 -right-6 w-16 h-16 rounded-full blur-xl ${netChange >= 0 ? "bg-lime-500/10" : "bg-rose-500/10"}`} />
+            <div className={`mt-0.5 flex size-7 sm:size-9 items-center justify-center rounded-xl shrink-0 ${netChange >= 0 ? "bg-lime-500/10 shadow-[0_0_16px_-3px_rgba(163,230,53,0.2)]" : "bg-destructive/10"}`}>
               <IconWallet className={`size-3.5 sm:size-4 ${netChange >= 0 ? "text-lime-600 dark:text-lime-400" : "text-destructive"}`} />
             </div>
             <div className="min-w-0">
@@ -537,7 +541,7 @@ export function AnalyticsView() {
         {hasOneTimeExpenses && (
           <motion.div
             variants={fadeUpSmall}
-            className="rounded-2xl border border-border bg-card relative overflow-hidden flex items-center justify-between px-5 py-3.5 gap-4"
+            className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl relative overflow-hidden flex flex-col sm:flex-row items-start sm:items-center justify-between px-4 sm:px-5 py-3 sm:py-3.5 gap-3 sm:gap-4"
           >
             <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
             <div className="flex items-center gap-3">
@@ -569,8 +573,8 @@ export function AnalyticsView() {
         {/* ── Tabs ── */}
         <motion.div variants={fadeUp}>
           <Tabs value={activeSubTab} onValueChange={setActiveSubTab} className="space-y-4">
-            <div className="overflow-x-auto">
-              <TabsList className="inline-flex h-10 gap-1 rounded-2xl bg-muted/50 p-1 min-w-max">
+            <div className="overflow-x-auto tab-scroll">
+              <TabsList className="inline-flex h-10 gap-1 rounded-2xl bg-muted/40 backdrop-blur-lg p-1 min-w-max">
                 <TabsTrigger value="daily" className="rounded-xl px-3 sm:px-4 text-xs font-semibold">Daily</TabsTrigger>
                 <TabsTrigger value="weekly" className="rounded-xl px-3 sm:px-4 text-xs font-semibold">Weekly</TabsTrigger>
                 <TabsTrigger value="monthly" className="rounded-xl px-3 sm:px-4 text-xs font-semibold">Monthly</TabsTrigger>
@@ -582,13 +586,14 @@ export function AnalyticsView() {
 
             {/* ── Daily Tab ── */}
             <TabsContent value="daily" className="space-y-4">
-              <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5">
+              <div className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl relative overflow-hidden p-4 sm:p-5">
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-                <div className="mb-5">
+                <div className="pointer-events-none absolute -top-16 -right-16 w-40 h-40 rounded-full bg-lime-500/5 blur-3xl" />
+                <div className="mb-4 sm:mb-5">
                   <h3 className="text-sm font-semibold">Daily Cashflow</h3>
                   <p className="text-xs text-muted-foreground/70 mt-0.5">Income and expenses by day</p>
                 </div>
-                <ResponsiveContainer width="100%" height={320}>
+                <ResponsiveContainer width="100%" height={280} className="sm:!h-[320px]">
                   <BarChart data={dailyTrends.map((item) => ({
                     date: new Date(item.date).toLocaleDateString("en-US", { month: "short", day: "numeric", timeZone: "Asia/Kolkata" }),
                     income: item.income,
@@ -609,10 +614,9 @@ export function AnalyticsView() {
               </div>
 
               {/* Daily Highlights */}
-              <div className="rounded-2xl border border-border bg-card relative overflow-hidden grid grid-cols-3 divide-x divide-border">
-                {/* Top edge light line — dark mode only */}
+              <div className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl relative overflow-hidden grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 sm:divide-x divide-border/50">
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-                <div className="px-5 py-4 flex items-start gap-3">
+                <div className="px-4 sm:px-5 py-3 sm:py-4 flex items-start gap-3">
                   <div className="mt-0.5 flex size-8 items-center justify-center rounded-xl bg-lime-500/10">
                     <IconCalendarStats className="size-3.5 text-lime-600 dark:text-lime-300" />
                   </div>
@@ -620,12 +624,12 @@ export function AnalyticsView() {
                     <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
                       Avg Daily Spend
                     </p>
-                    <p className="text-lg font-black tracking-tight tabular-nums leading-tight">
+                    <p className="text-base sm:text-lg font-black tracking-tight tabular-nums leading-tight">
                       {formatCurrency(analytics?.dailyAverageSpend || 0)}
                     </p>
                   </div>
                 </div>
-                <div className="px-5 py-4 flex items-start gap-3">
+                <div className="px-4 sm:px-5 py-3 sm:py-4 flex items-start gap-3">
                   <div className="mt-0.5 flex size-8 items-center justify-center rounded-xl bg-lime-500/10">
                     <IconReceipt2 className="size-3.5 text-lime-600 dark:text-lime-300" />
                   </div>
@@ -633,12 +637,12 @@ export function AnalyticsView() {
                     <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
                       Transactions
                     </p>
-                    <p className="text-lg font-black tracking-tight tabular-nums leading-tight">
+                    <p className="text-base sm:text-lg font-black tracking-tight tabular-nums leading-tight">
                       {monthTransactions.length}
                     </p>
                   </div>
                 </div>
-                <div className="px-5 py-4 flex items-start gap-3">
+                <div className="px-4 sm:px-5 py-3 sm:py-4 flex items-start gap-3">
                   <div className="mt-0.5 flex size-8 items-center justify-center rounded-xl bg-lime-500/10">
                     <IconCalendar className="size-3.5 text-lime-600 dark:text-lime-300" />
                   </div>
@@ -646,7 +650,7 @@ export function AnalyticsView() {
                     <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest leading-none mb-1.5">
                       Period
                     </p>
-                    <p className="text-lg font-black tracking-tight leading-tight">
+                    <p className="text-base sm:text-lg font-black tracking-tight leading-tight">
                       {selectedMonth.label}
                     </p>
                   </div>
@@ -673,13 +677,13 @@ export function AnalyticsView() {
             <TabsContent value="monthly" className="space-y-4">
               <MonthlySummaryCard metrics={monthlyMetrics} />
 
-              <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5">
+              <div className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl relative overflow-hidden p-4 sm:p-5">
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                 <div className="mb-5">
                   <h3 className="text-sm font-semibold">Balance Trend</h3>
                   <p className="text-xs text-muted-foreground/70 mt-0.5">Selected month balance trend</p>
                 </div>
-                <ResponsiveContainer width="100%" height={280}>
+                <ResponsiveContainer width="100%" height={240} className="sm:!h-[280px]">
                   <AreaChart
                     data={balanceTrend.map((bt) => ({
                       date: bt.date.toLocaleDateString("en-US", {
@@ -717,7 +721,7 @@ export function AnalyticsView() {
               </div>
 
               <div className="grid gap-4 md:grid-cols-2">
-                <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5">
+                <div className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl relative overflow-hidden p-4 sm:p-5">
                   <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <div className="mb-5">
                     <h3 className="text-sm font-semibold">Monthly Trends</h3>
@@ -777,7 +781,7 @@ export function AnalyticsView() {
             {/* ── Comparison Tab (Month-over-Month) ── */}
             <TabsContent value="comparison" className="space-y-4">
               {/* Change Summary Cards */}
-              <div className="rounded-2xl border border-border bg-card relative overflow-hidden grid grid-cols-1 @lg/main:grid-cols-3 divide-y @lg/main:divide-y-0 @lg/main:divide-x divide-border">
+              <div className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl relative overflow-hidden grid grid-cols-1 @lg/main:grid-cols-3 divide-y @lg/main:divide-y-0 @lg/main:divide-x divide-border/50">
                 {/* Income Change */}
                 <div className="px-5 py-4 flex items-start gap-3.5">
                   <div className={`mt-0.5 flex size-9 items-center justify-center rounded-xl ${comparisonChanges.income.change >= 0 ? "bg-primary/10" : "bg-destructive/10"}`}>
@@ -839,7 +843,7 @@ export function AnalyticsView() {
 
               {/* Top Category Changes as Badges */}
               {topCategoryChanges.length > 0 && (
-                <div className="rounded-2xl border border-border bg-card relative overflow-hidden px-5 py-4">
+                <div className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl relative overflow-hidden px-4 sm:px-5 py-3 sm:py-4">
                   <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <p className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest mb-3">
                     Biggest Changes
@@ -864,7 +868,7 @@ export function AnalyticsView() {
               )}
 
               {/* Grouped Bar Chart */}
-              <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5">
+              <div className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl relative overflow-hidden p-4 sm:p-5">
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                 <div className="mb-5">
                   <h3 className="text-sm font-semibold">Category Comparison</h3>
@@ -874,7 +878,7 @@ export function AnalyticsView() {
                 </div>
                 {comparisonData.length > 0 ? (
                   <>
-                    <ResponsiveContainer width="100%" height={360}>
+                    <ResponsiveContainer width="100%" height={280} className="sm:!h-[360px]">
                       <BarChart data={comparisonData} barGap={4}>
                         <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--color-border)" strokeOpacity={0.4} />
                         <XAxis
@@ -908,13 +912,13 @@ export function AnalyticsView() {
 
               {/* Detailed Breakdown Table */}
               {comparisonData.length > 0 && (
-                <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5">
+                <div className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl relative overflow-hidden p-4 sm:p-5">
                   <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <div className="mb-4">
                     <h3 className="text-sm font-semibold">Detailed Breakdown</h3>
                   </div>
-                  <div className="space-y-1">
-                    <div className="grid grid-cols-[1fr_90px_90px_80px] gap-2 px-2 pb-2 border-b border-border">
+                  <div className="space-y-1 overflow-x-auto">
+                    <div className="grid grid-cols-[1fr_80px_80px_70px] sm:grid-cols-[1fr_90px_90px_80px] gap-2 px-2 pb-2 border-b border-border/50 min-w-[360px]">
                       <span className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest">Category</span>
                       <span className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest text-right">{selectedMonth.label.split(" ")[0]}</span>
                       <span className="text-[11px] font-semibold text-muted-foreground/70 uppercase tracking-widest text-right">{previousMonth.label.split(" ")[0]}</span>
@@ -927,7 +931,7 @@ export function AnalyticsView() {
                       const isDecrease = comp.current < comp.previous
                       const isIncrease = comp.current > comp.previous
                       return (
-                        <div key={comp.category} className="grid grid-cols-[1fr_90px_90px_80px] gap-2 items-center px-2 py-2 rounded-lg hover:bg-muted/40 transition-colors">
+                        <div key={comp.category} className="grid grid-cols-[1fr_80px_80px_70px] sm:grid-cols-[1fr_90px_90px_80px] gap-2 items-center px-2 py-2 rounded-lg hover:bg-muted/40 transition-colors min-w-[360px]">
                           <span className="text-[13px] font-medium truncate">{comp.category}</span>
                           <span className="text-[13px] font-black tracking-tight tabular-nums text-right">{formatCurrency(comp.current)}</span>
                           <span className="text-[13px] tabular-nums text-right text-muted-foreground">{formatCurrency(comp.previous)}</span>
@@ -939,7 +943,7 @@ export function AnalyticsView() {
                         </div>
                       )
                     })}
-                    <div className="grid grid-cols-[1fr_90px_90px_80px] gap-2 px-2 pt-2 mt-1 border-t border-border">
+                    <div className="grid grid-cols-[1fr_80px_80px_70px] sm:grid-cols-[1fr_90px_90px_80px] gap-2 px-2 pt-2 mt-1 border-t border-border/50 min-w-[360px]">
                       <span className="text-[13px] font-black tracking-tight">Total</span>
                       <span className="text-[13px] font-black tracking-tight tabular-nums text-right">{formatCurrency(comparisonChanges.expense.current)}</span>
                       <span className="text-[13px] font-black tracking-tight tabular-nums text-right text-muted-foreground">{formatCurrency(comparisonChanges.expense.previous)}</span>
@@ -954,7 +958,7 @@ export function AnalyticsView() {
 
             {/* ── Trends Tab (Category Trends Over Time) ── */}
             <TabsContent value="trends" className="space-y-4">
-              <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5">
+              <div className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl relative overflow-hidden p-4 sm:p-5">
                 <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                 <div className="mb-5 flex items-center gap-2">
                   <IconChartLine className="size-4 text-muted-foreground" />
@@ -967,7 +971,7 @@ export function AnalyticsView() {
                 </div>
                 {trendData.length > 0 && trendCategories.length > 0 ? (
                   <>
-                    <ResponsiveContainer width="100%" height={360}>
+                    <ResponsiveContainer width="100%" height={280} className="sm:!h-[360px]">
                       <LineChart data={trendData}>
                         <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--color-border)" strokeOpacity={0.4} />
                         <XAxis
@@ -1053,7 +1057,7 @@ export function AnalyticsView() {
             {/* ── Yearly Tab ── */}
             <TabsContent value="yearly" className="space-y-4">
               <div className="grid gap-4 md:grid-cols-3">
-                <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5">
+                <div className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl relative overflow-hidden p-4 sm:p-5">
                   <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <div className="mb-4">
                     <h3 className="text-sm font-semibold">Year Over Year</h3>
@@ -1087,7 +1091,7 @@ export function AnalyticsView() {
                     )}
                   </div>
                 </div>
-                <div className="rounded-2xl border border-border bg-card relative overflow-hidden p-5 md:col-span-2">
+                <div className="rounded-2xl border border-border/50 bg-card/80 backdrop-blur-xl relative overflow-hidden p-4 sm:p-5 md:col-span-2">
                   <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                   <div className="mb-5">
                     <h3 className="text-sm font-semibold">Annual Performance</h3>
@@ -1170,7 +1174,7 @@ export function AnalyticsView() {
 function AnalyticsLoadingSkeleton() {
   return (
     <div className="space-y-5 p-4">
-      <div className="rounded-2xl border border-border bg-card grid grid-cols-4 divide-x divide-border">
+      <div className="rounded-2xl border border-border/50 bg-card/80 grid grid-cols-2 sm:grid-cols-4 divide-y sm:divide-y-0 sm:divide-x divide-border/50">
         {[0, 1, 2, 3].map((i) => (
           <div key={i} className="px-5 py-4 flex items-start gap-3.5">
             <Skeleton className="size-9 rounded-xl" />

@@ -71,7 +71,7 @@ export default function AiPage() {
         <div className="relative z-[1] flex h-full flex-col overflow-hidden">
         <SiteHeader title="AI Assistant" />
         <Tabs defaultValue={defaultTab} className="flex flex-1 flex-col overflow-hidden">
-          <div className="border-b border-border px-4">
+          <div className="border-b border-border/50 px-4 backdrop-blur-sm bg-card/60">
             <TabsList variant="line" className="h-10">
               <TabsTrigger value="chat">
                 <IconRobot className="h-4 w-4" />

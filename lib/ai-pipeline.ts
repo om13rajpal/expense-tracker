@@ -1070,13 +1070,13 @@ export async function runAiPipeline(
   const systemPrompt = getSystemPrompt(type);
   const userMessage = buildUserMessage(type, ctx);
 
-  // Stage 4: Generate
+  // Stage 4: Generate — route through user's linked ChatGPT if available
   const rawContent = await chatCompletion(
     [
       { role: 'system', content: systemPrompt },
       { role: 'user', content: userMessage },
     ],
-    { maxTokens: 4000 }
+    { maxTokens: 4000, userId }
   );
 
   // Parse structured JSON (falls back to markdown if AI didn't return JSON)

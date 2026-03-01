@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useRef, useState } from "react"
-import { motion } from "motion/react"
+import { motion, useInView } from "motion/react"
 import { numberPop } from "@/lib/motion"
 import { formatINR as formatCurrency } from "@/lib/format"
 import { useDashboardData } from "@/lib/dashboard-context"
@@ -50,9 +50,9 @@ function BalanceSparkline({ data }: { data: { balance: number }[] }) {
   const max = Math.max(...values)
   const min = Math.min(...values)
   const range = max - min || 1
-  const w = 240
-  const h = 80
-  const pad = 4
+  const w = 600
+  const h = 120
+  const pad = 8
 
   const points = values.map((v, i) => {
     const x = (i / (values.length - 1)) * w
@@ -60,87 +60,189 @@ function BalanceSparkline({ data }: { data: { balance: number }[] }) {
     return { x, y }
   })
 
-  const linePath = points.map((p, i) => `${i === 0 ? "M" : "L"}${p.x},${p.y}`).join(" ")
+  // Smooth catmull-rom to cubic bezier path for a curvy line
+  let linePath = `M${points[0].x},${points[0].y}`
+  for (let i = 0; i < points.length - 1; i++) {
+    const p0 = points[Math.max(0, i - 1)]
+    const p1 = points[i]
+    const p2 = points[i + 1]
+    const p3 = points[Math.min(points.length - 1, i + 2)]
+
+    const cp1x = p1.x + (p2.x - p0.x) / 6
+    const cp1y = p1.y + (p2.y - p0.y) / 6
+    const cp2x = p2.x - (p3.x - p1.x) / 6
+    const cp2y = p2.y - (p3.y - p1.y) / 6
+
+    linePath += ` C${cp1x},${cp1y} ${cp2x},${cp2y} ${p2.x},${p2.y}`
+  }
   const areaPath = `${linePath} L${w},${h} L0,${h} Z`
 
   const trend = values[values.length - 1] >= values[0]
-  const color = trend ? "#10b981" : "#f59e0b"
+  const color = trend ? "oklch(0.65 0.2 155)" : "oklch(0.75 0.15 65)"
 
   return (
-    <svg viewBox={`0 0 ${w} ${h}`} className="w-full" style={{ height: h }} preserveAspectRatio="none">
+    <svg viewBox={`0 0 ${w} ${h}`} className="w-full h-auto" preserveAspectRatio="xMidYMid meet">
       <defs>
         <linearGradient id="sparkArea" x1="0" y1="0" x2="0" y2="1">
-          <stop offset="0%" stopColor={color} stopOpacity="0.2" />
+          <stop offset="0%" stopColor={color} stopOpacity="0.3" />
           <stop offset="100%" stopColor={color} stopOpacity="0" />
         </linearGradient>
+        <linearGradient id="sparkLine" x1="0" y1="0" x2="1" y2="0">
+          <stop offset="0%" stopColor={color} stopOpacity="0.4" />
+          <stop offset="50%" stopColor={color} stopOpacity="1" />
+          <stop offset="100%" stopColor={color} stopOpacity="1" />
+        </linearGradient>
       </defs>
-      <path d={areaPath} fill="url(#sparkArea)" />
-      <path d={linePath} fill="none" stroke={color} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
-      <circle cx={points[points.length - 1].x} cy={points[points.length - 1].y} r="3" fill={color} />
+      <motion.path
+        d={areaPath}
+        fill="url(#sparkArea)"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ delay: 0.6, duration: 0.8 }}
+      />
+      <motion.path
+        d={linePath}
+        fill="none"
+        stroke="url(#sparkLine)"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        initial={{ pathLength: 0, opacity: 0 }}
+        animate={{ pathLength: 1, opacity: 1 }}
+        transition={{ delay: 0.3, duration: 1.4, ease: [0.25, 0.1, 0.25, 1] }}
+      />
+      {/* Animated endpoint dot with glow */}
+      <motion.circle
+        cx={points[points.length - 1].x}
+        cy={points[points.length - 1].y}
+        r="4"
+        fill={color}
+        initial={{ scale: 0, opacity: 0 }}
+        animate={{ scale: 1, opacity: 1 }}
+        transition={{ delay: 1.5, duration: 0.3, type: "spring" }}
+        style={{ filter: `drop-shadow(0 0 6px ${color})` }}
+      />
+      <motion.circle
+        cx={points[points.length - 1].x}
+        cy={points[points.length - 1].y}
+        r="8"
+        fill={color}
+        opacity={0.15}
+        initial={{ scale: 0 }}
+        animate={{ scale: [0, 1.5, 1] }}
+        transition={{ delay: 1.5, duration: 0.6 }}
+      />
     </svg>
+  )
+}
+
+/* ─── Stat card subcomponent ─── */
+function StatBlock({
+  label,
+  value,
+  color,
+  dotClass,
+  delay,
+}: {
+  label: string
+  value: string
+  color: string
+  dotClass?: string
+  delay: number
+}) {
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: 8 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ delay, duration: 0.4, ease: [0.25, 0.1, 0.25, 1] }}
+    >
+      <div className="flex items-center gap-1.5 mb-0.5">
+        <div className={`size-2 rounded-full ${dotClass || "bg-muted-foreground/30"}`} />
+        <span className="text-[11px] text-muted-foreground font-medium">{label}</span>
+      </div>
+      <p className={`text-base font-black tracking-tight tabular-nums ${color}`}>{value}</p>
+    </motion.div>
   )
 }
 
 export default function NetPositionWidget({}: WidgetComponentProps) {
   const { closingBalance, totalIncome, totalExpenses, netSaved, sparklineData } = useDashboardData()
+  const containerRef = useRef<HTMLDivElement>(null)
+  const isInView = useInView(containerRef, { once: true, margin: "-50px" })
 
-  const animatedBalance = useAnimatedValue(closingBalance)
-  const animatedIncome = useAnimatedValue(totalIncome)
-  const animatedExpenses = useAnimatedValue(totalExpenses)
+  const animatedBalance = useAnimatedValue(isInView ? closingBalance : 0)
+  const animatedIncome = useAnimatedValue(isInView ? totalIncome : 0)
+  const animatedExpenses = useAnimatedValue(isInView ? totalExpenses : 0)
 
   return (
-    <div className="p-6 sm:p-7 flex flex-col h-full">
-      <div className="flex items-center justify-between mb-4">
-        <p className="text-base font-semibold text-neutral-500">
-          {getGreeting()}, <span className="text-neutral-900 font-bold">Om</span>
+    <div ref={containerRef} className="p-6 sm:p-7 flex flex-col h-full widget-accent-money relative overflow-hidden">
+      {/* Ambient background orbs */}
+      <div className="absolute -top-12 -right-12 w-40 h-40 bg-emerald-500/[0.04] dark:bg-emerald-500/[0.07] rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-primary/[0.03] dark:bg-primary/[0.05] rounded-full blur-3xl pointer-events-none" />
+
+      <motion.div
+        className="flex items-center justify-between mb-4"
+        initial={{ opacity: 0, y: -8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5 }}
+      >
+        <p className="text-base font-semibold text-muted-foreground">
+          {getGreeting()}, <span className="text-foreground font-bold">Om</span>
         </p>
-        <span className="text-[11px] font-medium text-neutral-400">
+        <span className="text-[11px] font-medium text-muted-foreground/60 px-2 py-0.5 rounded-full bg-muted/50">
           {new Date().toLocaleDateString("en-US", { month: "short", year: "numeric" })}
         </span>
-      </div>
+      </motion.div>
 
-      <div className="flex-1 flex flex-col justify-center -mt-2">
-        <p className="text-[13px] font-medium text-neutral-500 mb-1.5">
+      <div className="flex-1 flex flex-col justify-center -mt-2 relative">
+        <motion.p
+          className="text-[13px] font-medium text-muted-foreground mb-1.5"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.2, duration: 0.4 }}
+        >
           Current Balance
-        </p>
+        </motion.p>
         <motion.p
           variants={numberPop}
           initial="hidden"
-          animate="show"
-          className="text-5xl sm:text-6xl font-black tracking-tight tabular-nums text-neutral-900"
+          animate={isInView ? "show" : "hidden"}
+          className="text-5xl sm:text-6xl font-black tracking-tight tabular-nums text-foreground"
         >
           {formatCurrency(animatedBalance)}
         </motion.p>
 
-        <div className="mt-3 -mx-1">
+        <motion.div
+          className="mt-3 -mx-1"
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.6 }}
+        >
           <BalanceSparkline data={sparklineData} />
-        </div>
+        </motion.div>
       </div>
 
-      <div className="grid grid-cols-3 gap-4 pt-4 mt-auto border-t border-neutral-100">
-        <div>
-          <div className="flex items-center gap-1.5 mb-0.5">
-            <div className="size-2 rounded-full bg-emerald-500" />
-            <span className="text-[11px] text-neutral-500 font-medium">Income</span>
-          </div>
-          <p className="text-base font-black tracking-tight tabular-nums text-emerald-600">{formatCurrency(animatedIncome)}</p>
-        </div>
-        <div>
-          <div className="flex items-center gap-1.5 mb-0.5">
-            <div className="size-2 rounded-full bg-neutral-300" />
-            <span className="text-[11px] text-neutral-500 font-medium">Expenses</span>
-          </div>
-          <p className="text-base font-black tracking-tight tabular-nums text-neutral-700">{formatCurrency(animatedExpenses)}</p>
-        </div>
-        <div>
-          <div className="flex items-center gap-1.5 mb-0.5">
-            <div className="size-2 rounded-full bg-emerald-400" />
-            <span className="text-[11px] text-neutral-500 font-medium">Saved</span>
-          </div>
-          <p className={`text-base font-black tracking-tight tabular-nums ${netSaved >= 0 ? "text-emerald-600" : "text-red-500"}`}>
-            {formatCurrency(netSaved)}
-          </p>
-        </div>
+      <div className="grid grid-cols-3 gap-4 pt-4 mt-auto border-t border-border/50">
+        <StatBlock
+          label="Income"
+          value={formatCurrency(animatedIncome)}
+          color="text-emerald-500 dark:text-emerald-400"
+          dotClass="bg-emerald-500 dot-glow"
+          delay={0.8}
+        />
+        <StatBlock
+          label="Expenses"
+          value={formatCurrency(animatedExpenses)}
+          color="text-foreground/70"
+          delay={0.9}
+        />
+        <StatBlock
+          label="Saved"
+          value={formatCurrency(netSaved)}
+          color={netSaved >= 0 ? "text-emerald-500 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}
+          dotClass={netSaved >= 0 ? "bg-emerald-400 dot-glow" : "bg-red-400"}
+          delay={1.0}
+        />
       </div>
     </div>
   )

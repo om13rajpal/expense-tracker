@@ -17,83 +17,10 @@
  */
 
 import { TransactionCategory } from './types';
-import { chatCompletion } from './openrouter';
-
-// ============================================================================
-// Text Normalization Utilities
-// ============================================================================
-
-/**
- * Normalize text by removing all whitespace for fuzzy comparison.
- * Banks often mangle merchant names by inserting spaces or truncating,
- * e.g. "ZEPTONO W" -> "zeptonow", "HungerBo x" -> "hungerbox"
- */
-export function stripSpaces(text: string): string {
-  return text.replace(/\s+/g, '');
-}
-
-/**
- * Common prefixes added by banks/payment processors that should be
- * stripped before matching. These appear at the start of transaction
- * descriptions in Indian bank statements.
- */
-const BANK_PREFIXES = [
-  'UPI-', 'UPI/', 'UPI ',
-  'NEFT-', 'NEFT/', 'NEFT ',
-  'IMPS-', 'IMPS/', 'IMPS ',
-  'POS ', 'POS-', 'POS/',
-  'ATM-', 'ATM/', 'ATM ',
-  'BIL/', 'BIL-', 'BIL ',
-  'MMT/', 'MMT-',
-  'ECOM/', 'ECOM-',
-  'IB/', 'IB-',
-  'MB/', 'MB-',
-  'ACH/',
-  'SI-', // Standing instruction
-];
-
-/**
- * Strip common bank prefixes, trailing reference numbers, city codes,
- * and UPI suffixes from a transaction description to extract the
- * actual merchant name.
- *
- * Examples:
- *   "UPI-SWIGGY LTD BAN-123456789" -> "swiggy ltd ban"
- *   "POS ZEPTONOW BANGALORE" -> "zeptonow bangalore"
- *   "BIL/TATA POWER/REF12345" -> "tata power"
- */
-export function cleanBankText(text: string): string {
-  let cleaned = text.trim();
-
-  // Strip known bank prefixes (case-insensitive)
-  const upper = cleaned.toUpperCase();
-  for (const prefix of BANK_PREFIXES) {
-    if (upper.startsWith(prefix)) {
-      cleaned = cleaned.slice(prefix.length);
-      break;
-    }
-  }
-
-  // Remove trailing reference/transaction numbers (sequences of 6+ digits)
-  cleaned = cleaned.replace(/[\s\-/]*\d{6,}[\s]*$/g, '');
-
-  // Remove trailing UPI ID patterns like "merchant@upi" or "name@ybl"
-  cleaned = cleaned.replace(/[\s\-]*[\w.]+@[\w]+$/i, '');
-
-  // Remove common suffixes: city codes (3-letter all caps at end), "LTD", "PVT", "INDIA"
-  cleaned = cleaned.replace(
-    /\s+(PVT|LTD|PRIVATE|LIMITED|INDIA|TECHNOLOGIES|TECH|DIGITAL|PAYMENT[S]?|SOLUTION[S]?|SERVICE[S]?|ENTERPRISE[S]?)\b/gi,
-    ''
-  );
-
-  // Remove trailing city names (common Indian cities at end after spaces/dashes)
-  cleaned = cleaned.replace(
-    /[\s\-]+(BAN|BANG|BANGALORE|BENGALURU|MUM|MUMBAI|DEL|DELHI|HYD|HYDERABAD|CHE|CHENNAI|PUN|PUNE|KOL|KOLKATA|GUR|GURGAON|GURUGRAM|NOI|NOIDA|JAI|JAIPUR|AHM|AHMEDABAD|LUC|LUCKNOW|CHD|CHANDIGARH)[\s]*$/gi,
-    ''
-  );
-
-  return cleaned.trim().toLowerCase();
-}
+import { chatCompletion } from './ai-client';
+// Import pure text utilities from the client-safe module (used locally + re-exported)
+import { stripSpaces, cleanBankText } from './merchant-match';
+export { stripSpaces, cleanBankText, isSimilarMerchant } from './merchant-match';
 
 // ============================================================================
 // String Similarity — Jaro-Winkler
@@ -977,70 +904,6 @@ export function merchantMatchesCategory(
 }
 
 // ============================================================================
-// Similar Transaction Matching (for use in transaction page)
-// ============================================================================
-
-/**
- * Checks whether two merchant/description strings refer to the same merchant,
- * using the same fuzzy matching logic used by the categorizer.
- *
- * This is intended for the "apply to similar transactions" feature:
- * when a user re-categorizes one transaction, find others from the same merchant.
- *
- * @param text1 - First merchant or description text
- * @param text2 - Second merchant or description text
- * @param minLength - Minimum length of the shorter text to attempt matching (default 3)
- * @returns True if the two texts appear to refer to the same merchant
- */
-export function isSimilarMerchant(text1: string, text2: string, minLength = 3): boolean {
-  const clean1 = stripSpaces(cleanBankText(text1));
-  const clean2 = stripSpaces(cleanBankText(text2));
-
-  // Guard against very short strings that would match everything
-  if (clean1.length < minLength || clean2.length < minLength) {
-    return false;
-  }
-
-  // 1. Direct substring match (either direction)
-  if (clean1.includes(clean2) || clean2.includes(clean1)) {
-    return true;
-  }
-
-  // 2. Space-stripped substring match on raw text
-  const stripped1 = stripSpaces(text1.toLowerCase());
-  const stripped2 = stripSpaces(text2.toLowerCase());
-
-  if (stripped1.length >= minLength && stripped2.length >= minLength) {
-    if (stripped1.includes(stripped2) || stripped2.includes(stripped1)) {
-      return true;
-    }
-  }
-
-  // 3. Jaro-Winkler similarity on the cleaned versions
-  const shorter = clean1.length <= clean2.length ? clean1 : clean2;
-  const longer = clean1.length <= clean2.length ? clean2 : clean1;
-
-  if (shorter.length >= 4) {
-    // Check full-string similarity
-    if (jaroWinklerSimilarity(clean1, clean2) >= SIMILARITY_THRESHOLD) {
-      return true;
-    }
-
-    // Also check if the shorter is a high-similarity substring of the longer
-    if (longer.length > shorter.length + 4) {
-      for (let i = 0; i <= longer.length - shorter.length; i++) {
-        const window = longer.slice(i, i + shorter.length);
-        if (jaroWinklerSimilarity(window, shorter) >= SIMILARITY_THRESHOLD) {
-          return true;
-        }
-      }
-    }
-  }
-
-  return false;
-}
-
-// ============================================================================
 // AI-Powered Categorization (batch via OpenRouter / Claude)
 // ============================================================================
 
@@ -1084,7 +947,8 @@ export async function aiCategorizeBatch(
     type: string;
     date: string;
   }>,
-  validCategories: string[]
+  validCategories: string[],
+  userId?: string
 ): Promise<Array<{ id: string; category: string; confidence: number }>> {
   if (transactions.length === 0) return [];
 
@@ -1106,7 +970,7 @@ export async function aiCategorizeBatch(
       { role: 'system', content: AI_CATEGORIZE_SYSTEM_PROMPT },
       { role: 'user', content: userMessage },
     ],
-    { maxTokens: 4000, temperature: 0.1 }
+    { maxTokens: 4000, temperature: 0.1, userId }
   );
 
   // Strip code fences if present

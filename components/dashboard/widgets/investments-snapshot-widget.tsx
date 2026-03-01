@@ -1,8 +1,9 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, useRef } from "react"
 import Link from "next/link"
-import { IconTrendingUp, IconTrendingDown } from "@tabler/icons-react"
+import { motion, useInView } from "motion/react"
+import { IconTrendingUp, IconTrendingDown, IconChartLine } from "@tabler/icons-react"
 import { Skeleton } from "@/components/ui/skeleton"
 import { formatINR, formatCompact } from "@/lib/format"
 import type { WidgetComponentProps } from "@/lib/widget-registry"
@@ -18,6 +19,8 @@ interface PortfolioData {
 export default function InvestmentsSnapshotWidget({}: WidgetComponentProps) {
   const [data, setData] = useState<PortfolioData | null>(null)
   const [loading, setLoading] = useState(true)
+  const ref = useRef<HTMLAnchorElement>(null)
+  const isInView = useInView(ref, { once: true, margin: "-20px" })
 
   useEffect(() => {
     Promise.all([
@@ -72,8 +75,11 @@ export default function InvestmentsSnapshotWidget({}: WidgetComponentProps) {
   if (!data || data.totalValue === 0) {
     return (
       <Link href="/investments" className="block p-6 h-full">
-        <p className="text-[13px] font-medium text-neutral-500 mb-2">Investments</p>
-        <p className="text-sm text-muted-foreground">No portfolio data. Add your holdings →</p>
+        <div className="flex items-center gap-2 mb-2">
+          <IconChartLine className="size-4 text-muted-foreground" />
+          <p className="text-[13px] font-medium text-muted-foreground">Investments</p>
+        </div>
+        <p className="text-sm text-muted-foreground">No portfolio data. Add your holdings &#8594;</p>
       </Link>
     )
   }
@@ -81,28 +87,76 @@ export default function InvestmentsSnapshotWidget({}: WidgetComponentProps) {
   const isPositive = data.pnl >= 0
 
   return (
-    <Link href="/investments" className="block p-6 h-full">
-      <p className="text-[13px] font-medium text-neutral-500 mb-1">Portfolio Value</p>
-      <p className="text-2xl font-black tracking-tight tabular-nums text-neutral-900">{formatINR(data.totalValue)}</p>
-      <div className="flex items-center gap-1.5 mt-1 mb-4">
-        {isPositive ? <IconTrendingUp className="size-3.5 text-emerald-600" /> : <IconTrendingDown className="size-3.5 text-red-500" />}
-        <span className={`text-xs font-semibold tabular-nums ${isPositive ? "text-emerald-600" : "text-red-500"}`}>
-          {isPositive ? "+" : ""}{formatCompact(data.pnl)} ({data.pnlPct.toFixed(1)}%)
-        </span>
-      </div>
+    <Link ref={ref} href="/investments" className={`block p-6 h-full relative overflow-hidden ${isPositive ? "widget-accent-money" : ""}`}>
+      {/* Gradient overlay */}
+      <div className={`absolute inset-0 pointer-events-none ${
+        isPositive
+          ? "bg-gradient-to-br from-emerald-500/[0.03] dark:from-emerald-500/[0.06] to-transparent"
+          : "bg-gradient-to-br from-red-500/[0.03] dark:from-red-500/[0.06] to-transparent"
+      }`} />
 
-      {data.topHoldings.length > 0 && (
-        <div className="space-y-2">
-          {data.topHoldings.map((h, i) => (
-            <div key={i} className="flex items-center justify-between text-xs">
-              <span className="text-muted-foreground truncate mr-2">{h.name}</span>
-              <span className={`font-semibold tabular-nums shrink-0 ${h.change >= 0 ? "text-emerald-600" : "text-red-500"}`}>
-                {h.change >= 0 ? "+" : ""}{h.change.toFixed(1)}%
-              </span>
-            </div>
-          ))}
-        </div>
-      )}
+      <div className="relative">
+        <motion.p
+          className="text-[13px] font-medium text-muted-foreground mb-1"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: isInView ? 1 : 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          Portfolio Value
+        </motion.p>
+        <motion.p
+          className="text-2xl font-black tracking-tight tabular-nums text-foreground"
+          initial={{ opacity: 0, y: 6 }}
+          animate={{ opacity: isInView ? 1 : 0, y: isInView ? 0 : 6 }}
+          transition={{ delay: 0.15, duration: 0.4 }}
+        >
+          {formatINR(data.totalValue)}
+        </motion.p>
+
+        {/* P&L badge */}
+        <motion.div
+          className={`inline-flex items-center gap-1.5 mt-2 mb-4 px-2.5 py-1 rounded-full ${
+            isPositive
+              ? "bg-emerald-500/10 dark:bg-emerald-500/20"
+              : "bg-red-500/10 dark:bg-red-500/20"
+          }`}
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: isInView ? 1 : 0, scale: isInView ? 1 : 0.9 }}
+          transition={{ delay: 0.3, duration: 0.3, type: "spring" }}
+        >
+          {isPositive
+            ? <IconTrendingUp className="size-3.5 text-emerald-500 dark:text-emerald-400" />
+            : <IconTrendingDown className="size-3.5 text-red-500 dark:text-red-400" />
+          }
+          <span className={`text-xs font-bold tabular-nums ${isPositive ? "text-emerald-600 dark:text-emerald-400" : "text-red-600 dark:text-red-400"}`}>
+            {isPositive ? "+" : ""}{formatCompact(data.pnl)} ({data.pnlPct.toFixed(1)}%)
+          </span>
+        </motion.div>
+
+        {data.topHoldings.length > 0 && (
+          <div className="space-y-1.5">
+            {data.topHoldings.map((h, i) => (
+              <motion.div
+                key={i}
+                className="flex items-center gap-2 text-xs"
+                initial={{ opacity: 0, x: -8 }}
+                animate={{ opacity: isInView ? 1 : 0, x: isInView ? 0 : -8 }}
+                transition={{ delay: 0.4 + i * 0.08, duration: 0.3 }}
+              >
+                <div className={`w-0.5 h-4 rounded-full shrink-0 ${
+                  h.change >= 0
+                    ? "bg-emerald-500 dark:bg-emerald-400"
+                    : "bg-red-500 dark:bg-red-400"
+                }`} />
+                <span className="text-muted-foreground truncate flex-1">{h.name}</span>
+                <span className={`font-bold tabular-nums shrink-0 ${h.change >= 0 ? "text-emerald-500 dark:text-emerald-400" : "text-red-500 dark:text-red-400"}`}>
+                  {h.change >= 0 ? "+" : ""}{h.change.toFixed(1)}%
+                </span>
+              </motion.div>
+            ))}
+          </div>
+        )}
+      </div>
     </Link>
   )
 }

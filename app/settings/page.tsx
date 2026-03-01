@@ -13,7 +13,7 @@
 import * as React from "react"
 import { Suspense, useState, useEffect, useRef } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
-import { motion, AnimatePresence } from "motion/react"
+import { motion, AnimatePresence, useInView } from "motion/react"
 import { toast } from "sonner"
 import {
   IconBrandTelegram,
@@ -31,12 +31,14 @@ import {
   IconSettings,
   IconChevronRight,
   IconBrain,
+  IconTarget,
 } from "@tabler/icons-react"
 
 import { useAuth } from "@/hooks/use-auth"
+import { useMonthlyIncomeTarget, useSetMonthlyIncomeTarget } from "@/hooks/use-monthly-income-target"
 import { useSettings, useLinkTelegram, useUnlinkTelegram, useUpdateNotificationPrefs } from "@/hooks/use-settings"
 import { formatINR } from "@/lib/format"
-import { fadeUp, stagger } from "@/lib/motion"
+
 import { AppSidebar } from "@/components/app-sidebar"
 import { SiteHeader } from "@/components/site-header"
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
@@ -57,14 +59,40 @@ function ToggleSwitch({ checked, onChange }: { checked: boolean; onChange: () =>
       role="switch"
       aria-checked={checked}
       onClick={onChange}
-      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring ${checked ? "bg-primary" : "bg-muted"}`}
+      className={`relative inline-flex h-7 w-12 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background ${checked ? "bg-primary shadow-[0_0_8px_oklch(0.72_0.19_135/25%)]" : "bg-muted"}`}
     >
       <span
-        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-background shadow-lg ring-0 transition duration-200 ease-in-out ${checked ? "translate-x-5" : "translate-x-0"}`}
+        className={`pointer-events-none inline-block h-[22px] w-[22px] transform rounded-full bg-white shadow-md ring-0 transition-transform duration-300 ease-[cubic-bezier(0.32,0.72,0,1)] ${checked ? "translate-x-[22px]" : "translate-x-[1px]"}`}
       />
     </button>
   )
 }
+
+// ─── Animated section wrapper ─────────────────────────────────────────
+
+function AnimatedSection({ children, className, delay = 0, ...props }: React.ComponentProps<"div"> & { delay?: number }) {
+  const ref = useRef<HTMLDivElement>(null)
+  const isInView = useInView(ref, { once: true, margin: "-60px" })
+
+  return (
+    <motion.div
+      ref={ref}
+      initial={{ opacity: 0, y: 16, filter: "blur(4px)" }}
+      animate={isInView ? { opacity: 1, y: 0, filter: "blur(0px)" } : {}}
+      transition={{ duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] }}
+      className={className}
+      {...(props as React.ComponentProps<typeof motion.div>)}
+    >
+      {children}
+    </motion.div>
+  )
+}
+
+// ─── Glass card wrapper ──────────────────────────────────────────────
+
+const GLASS_CARD = "bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl relative overflow-hidden"
+const GLASS_CARD_HEADER = "relative bg-gradient-to-r from-primary/8 via-primary/5 to-transparent"
+const CARD_SHINE = "pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent"
 
 // ─── Section nav items ───────────────────────────────────────────────
 
@@ -344,24 +372,24 @@ function ChatGPTCard() {
   const planLabel = planType ? planType.charAt(0).toUpperCase() + planType.slice(1) : null
 
   return (
-    <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-      <div className="relative bg-gradient-to-r from-primary/8 via-primary/5 to-transparent px-5 py-4">
+    <div className={GLASS_CARD}>
+      <div className={CARD_SHINE} />
+      <div className={`${GLASS_CARD_HEADER} px-5 py-4`}>
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center size-10 rounded-xl bg-muted/80 dark:bg-muted border border-border">
-            <IconBrandOpenai className="h-5 w-5 text-foreground/70" />
+          <div className="flex items-center justify-center size-10 rounded-xl bg-emerald-500/15 border border-emerald-500/10">
+            <IconBrandOpenai className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
           </div>
           <div className="flex-1 min-w-0">
             <h4 className="text-sm font-semibold">ChatGPT</h4>
             <p className="text-xs text-muted-foreground mt-0.5">Sign in with your ChatGPT subscription for AI features</p>
           </div>
           {connected ? (
-            <span className="flex items-center gap-1.5 rounded-full bg-lime-500/10 border border-lime-500/15 px-3 py-1 text-xs font-medium text-lime-600 dark:text-lime-400">
+            <span className="flex items-center gap-1.5 rounded-full bg-lime-500/10 border border-lime-500/15 px-3 py-1.5 text-xs font-medium text-lime-600 dark:text-lime-400 shadow-[0_0_8px_oklch(0.72_0.19_135/10%)]">
               <span className="h-2 w-2 rounded-full bg-lime-500 animate-pulse" />
               Connected
             </span>
           ) : (
-            <span className="flex items-center gap-1.5 rounded-full bg-muted/60 border border-border/40 px-3 py-1 text-xs font-medium text-muted-foreground">
+            <span className="flex items-center gap-1.5 rounded-full bg-muted/60 border border-border/40 px-3 py-1.5 text-xs font-medium text-muted-foreground">
               <span className="h-2 w-2 rounded-full bg-muted-foreground/40" />
               Not connected
             </span>
@@ -377,7 +405,7 @@ function ChatGPTCard() {
                 { text: "GPT-4o for financial analysis & chat", step: "Powerful" },
                 { text: "Falls back to Claude if disconnected", step: "Flexible" },
               ].map(({ text, step }) => (
-                <div key={step} className="rounded-xl border border-border bg-card p-3 text-center">
+                <div key={step} className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-lg p-3 text-center">
                   <p className="text-[11px] font-semibold uppercase tracking-widest text-primary mb-1">{step}</p>
                   <p className="text-xs text-muted-foreground leading-relaxed">{text}</p>
                 </div>
@@ -503,7 +531,7 @@ function ChatGPTCard() {
           </div>
         ) : (
           <div className="space-y-4">
-            <div className="flex items-center justify-between rounded-xl border border-border bg-card p-4">
+            <div className="flex items-center justify-between rounded-xl border border-border/40 bg-card/60 backdrop-blur-lg p-4">
               <div>
                 {(authMethod === "oauth" || authMethod === "oauth-device") && email ? (
                   <>
@@ -528,7 +556,7 @@ function ChatGPTCard() {
                 {disconnecting ? "..." : "Disconnect"}
               </Button>
             </div>
-            <div className="rounded-xl border border-border bg-card p-4">
+            <div className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-lg p-4">
               <div className="flex items-center gap-2 mb-1">
                 <IconBrain className="h-4 w-4 text-lime-600 dark:text-lime-400" />
                 <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">Active AI Model</p>
@@ -613,13 +641,13 @@ function TelegramCard() {
   }
 
   return (
-    <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+    <div className={GLASS_CARD}>
+      <div className={CARD_SHINE} />
       {/* Telegram header */}
-      <div className="relative bg-gradient-to-r from-primary/8 via-primary/5 to-transparent px-5 py-4">
+      <div className={`${GLASS_CARD_HEADER} px-5 py-4`}>
         <div className="flex items-center gap-3">
-          <div className="flex items-center justify-center size-10 rounded-xl bg-muted/80 dark:bg-muted border border-border">
-            <IconBrandTelegram className="h-5 w-5 text-foreground/70" />
+          <div className="flex items-center justify-center size-10 rounded-xl bg-sky-500/15 border border-sky-500/10">
+            <IconBrandTelegram className="h-5 w-5 text-sky-600 dark:text-sky-400" />
           </div>
           <div className="flex-1 min-w-0">
             <h4 className="text-sm font-semibold">Telegram Bot</h4>
@@ -628,12 +656,12 @@ function TelegramCard() {
             </p>
           </div>
           {linked ? (
-            <span className="flex items-center gap-1.5 rounded-full bg-lime-500/10 border border-lime-500/15 px-3 py-1 text-xs font-medium text-lime-600 dark:text-lime-400">
+            <span className="flex items-center gap-1.5 rounded-full bg-lime-500/10 border border-lime-500/15 px-3 py-1.5 text-xs font-medium text-lime-600 dark:text-lime-400 shadow-[0_0_8px_oklch(0.72_0.19_135/10%)]">
               <span className="h-2 w-2 rounded-full bg-lime-500 animate-pulse" />
               Connected
             </span>
           ) : (
-            <span className="flex items-center gap-1.5 rounded-full bg-muted/60 border border-border/40 px-3 py-1 text-xs font-medium text-muted-foreground">
+            <span className="flex items-center gap-1.5 rounded-full bg-muted/60 border border-border/40 px-3 py-1.5 text-xs font-medium text-muted-foreground">
               <span className="h-2 w-2 rounded-full bg-muted-foreground/40" />
               Not connected
             </span>
@@ -654,7 +682,7 @@ function TelegramCard() {
                   ].map(({ text, step }) => (
                     <div
                       key={step}
-                      className="rounded-xl border border-border bg-card p-3 text-center"
+                      className="rounded-xl border border-border/50 bg-card/80 backdrop-blur-xl p-3 text-center"
                     >
                       <p className="text-[11px] font-semibold uppercase tracking-widest text-primary mb-1">{step}</p>
                       <p className="text-xs text-muted-foreground leading-relaxed">{text}</p>
@@ -674,7 +702,7 @@ function TelegramCard() {
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="rounded-xl border border-border bg-card p-4">
+                <div className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-lg p-4">
                   <p className="text-xs font-medium text-muted-foreground mb-2">
                     Send this command to <span className="font-semibold text-foreground">@capybara13bot</span> on Telegram:
                   </p>
@@ -692,7 +720,7 @@ function TelegramCard() {
                     </p>
                   )}
                 </div>
-                <div className="rounded-xl border border-border bg-card p-4">
+                <div className="rounded-xl border border-border/40 bg-card/60 backdrop-blur-lg p-4">
                   <p className="text-xs font-medium text-muted-foreground mb-2.5">Quick steps:</p>
                   <ol className="text-sm text-foreground/80 space-y-2.5 pl-0">
                     {[
@@ -715,7 +743,7 @@ function TelegramCard() {
         ) : (
           <div className="space-y-5">
             {/* Connected status */}
-            <div className="flex items-center justify-between rounded-xl border border-border bg-card p-4">
+            <div className="flex items-center justify-between rounded-xl border border-border/40 bg-card/60 backdrop-blur-lg p-4">
               <div>
                 <p className="text-sm font-medium text-foreground">
                   Linked {settings?.username ? `as @${settings.username}` : ""}
@@ -741,8 +769,8 @@ function TelegramCard() {
             {/* Notification Preferences */}
             <div className="space-y-3">
               <div className="flex items-center gap-2 mb-1">
-                <div className="flex items-center justify-center size-6 rounded-lg bg-muted/80 dark:bg-muted">
-                  <IconBell className="h-3.5 w-3.5 text-foreground/70" />
+                <div className="flex items-center justify-center size-6 rounded-lg bg-amber-500/15">
+                  <IconBell className="h-3.5 w-3.5 text-amber-600 dark:text-amber-400" />
                 </div>
                 <p className="text-xs font-semibold uppercase tracking-widest text-muted-foreground/70">
                   Notification Preferences
@@ -780,6 +808,95 @@ function TelegramCard() {
 }
 
 // ─── Main settings page ──────────────────────────────────────────────
+
+// ─── Monthly Income Target settings card ─────────────────────────────
+
+function MonthlyIncomeTargetSettings() {
+  const { data, isLoading } = useMonthlyIncomeTarget()
+  const setTargetMutation = useSetMonthlyIncomeTarget()
+  const [inputValue, setInputValue] = React.useState("")
+  const [editing, setEditing] = React.useState(false)
+
+  React.useEffect(() => {
+    if (data?.target) setInputValue(String(data.target))
+  }, [data?.target])
+
+  const handleSave = async () => {
+    const val = Number(inputValue)
+    if (!val || val <= 0) return
+    try {
+      await setTargetMutation.mutateAsync(val)
+      setEditing(false)
+      toast.success("Monthly income target updated")
+    } catch {
+      toast.error("Failed to update target")
+    }
+  }
+
+  if (isLoading) {
+    return (
+      <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl relative overflow-hidden p-5">
+        <Skeleton className="h-5 w-48" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl relative overflow-hidden">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+      <div className="px-5 py-4 space-y-3">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center justify-center size-9 rounded-xl bg-lime-500/15">
+            <IconTarget className="h-4.5 w-4.5 text-lime-600 dark:text-lime-400" />
+          </div>
+          <div className="flex-1">
+            <h4 className="text-sm font-semibold">Monthly Income Target</h4>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {data?.month ? `Target for ${data.month}` : "Set how much you can earn this month"}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <input
+            type="number"
+            placeholder="e.g. 100000"
+            value={inputValue}
+            onChange={(e) => { setInputValue(e.target.value); setEditing(true) }}
+            className="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring"
+          />
+          {editing && (
+            <Button
+              size="sm"
+              className="h-9 shrink-0"
+              onClick={handleSave}
+              disabled={setTargetMutation.isPending}
+            >
+              {setTargetMutation.isPending ? "..." : "Save"}
+            </Button>
+          )}
+        </div>
+
+        {data?.target && data.percentage !== null && (
+          <div className="rounded-xl border border-border/50 bg-card/80 p-3 flex items-center justify-between">
+            <div>
+              <p className="text-xs text-muted-foreground">Progress</p>
+              <p className="text-sm font-semibold tabular-nums">
+                {formatINR(data.actualIncome)} <span className="text-xs font-normal text-muted-foreground">/ {formatINR(data.target)}</span>
+              </p>
+            </div>
+            <div className="text-right">
+              <p className="text-lg font-black tabular-nums">{data.percentage}%</p>
+              <p className={`text-[11px] font-medium ${data.status === "achieved" ? "text-lime-600 dark:text-lime-400" : data.status === "on-track" ? "text-lime-600 dark:text-lime-400" : "text-amber-600 dark:text-amber-400"}`}>
+                {data.status === "achieved" ? "Achieved!" : data.status === "on-track" ? "On Track" : "Behind"}
+              </p>
+            </div>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
 
 /**
  * Settings page component. Renders a section-based settings UI with a side navigation
@@ -911,7 +1028,7 @@ export default function SettingsPage() {
             <div className="absolute top-[-10%] right-[-5%] w-[500px] h-[500px] rounded-full bg-lime-500/[0.05] blur-[200px]" />
             <div className="absolute bottom-[-10%] left-[-5%] w-[400px] h-[400px] rounded-full bg-cyan-500/[0.04] blur-[180px]" />
           </div>
-          <div className="@container/main flex flex-1 flex-col gap-2 p-4 md:p-6 relative z-[1]">
+          <div className="@container/main flex flex-1 flex-col gap-2 px-4 py-4 sm:px-6 md:px-8 md:py-6 relative z-[1]">
             {loading ? (
               <div className="mx-auto w-full max-w-4xl space-y-5">
                 <Skeleton className="h-28 w-full rounded-2xl border border-border" />
@@ -925,26 +1042,24 @@ export default function SettingsPage() {
                 </div>
               </div>
             ) : (
-              <motion.div variants={stagger} initial="hidden" animate="show" className="mx-auto w-full max-w-4xl flex flex-col gap-5">
+              <div className="mx-auto w-full max-w-4xl flex flex-col gap-5">
 
                 {/* ═══ Profile Header ═══ */}
-                <motion.div
-                  variants={fadeUp}
+                <AnimatedSection
                   id="profile"
-                  ref={(el) => { sectionRefs.current.profile = el }}
-                  className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden"
+                  className={GLASS_CARD}
                 >
-                  <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
-                  <div className="relative bg-gradient-to-r from-primary/8 via-primary/5 to-transparent px-6 py-6">
+                  <div ref={(el: HTMLDivElement | null) => { sectionRefs.current.profile = el }} className={CARD_SHINE} />
+                  <div className={`${GLASS_CARD_HEADER} px-5 sm:px-6 py-5 sm:py-6`}>
                     {/* Subtle dots pattern */}
                     <div className="absolute inset-0 opacity-[0.03]" style={{ backgroundImage: "radial-gradient(circle, currentColor 1px, transparent 1px)", backgroundSize: "20px 20px" }} />
-                    <div className="relative flex items-center gap-4">
-                      <div className="flex items-center justify-center h-14 w-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/10 text-primary text-xl font-bold">
+                    <div className="relative flex items-center gap-3 sm:gap-4">
+                      <div className="flex items-center justify-center h-12 w-12 sm:h-14 sm:w-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/10 border border-primary/10 text-primary text-lg sm:text-xl font-bold">
                         OR
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h2 className="text-lg font-bold tracking-tight">Om Rajpal</h2>
-                        <p className="text-sm text-muted-foreground mt-0.5">Manage your preferences and integrations</p>
+                        <h2 className="text-base sm:text-lg font-bold tracking-tight">Om Rajpal</h2>
+                        <p className="text-xs sm:text-sm text-muted-foreground mt-0.5">Manage your preferences and integrations</p>
                       </div>
                       <div className="hidden sm:flex items-center gap-2">
                         <div className="flex items-center gap-1.5 rounded-full bg-muted/60 border border-border/40 px-3 py-1">
@@ -954,15 +1069,14 @@ export default function SettingsPage() {
                       </div>
                     </div>
                   </div>
-                </motion.div>
+                </AnimatedSection>
 
                 {/* ═══ Main layout: sidebar nav + content ═══ */}
                 <div className="flex gap-6">
 
                   {/* Desktop section nav */}
-                  <motion.nav
-                    variants={fadeUp}
-                    className="hidden lg:flex flex-col gap-1 w-48 shrink-0 sticky top-24 self-start"
+                  <nav
+                    className="hidden lg:flex flex-col gap-1 w-48 shrink-0 sticky top-24 self-start bg-card/60 backdrop-blur-lg border border-border/30 rounded-xl p-2"
                   >
                     {NAV_SECTIONS.map(({ id, label, icon: Icon }) => (
                       <button
@@ -981,22 +1095,21 @@ export default function SettingsPage() {
                         )}
                       </button>
                     ))}
-                  </motion.nav>
+                  </nav>
 
                   {/* Content sections */}
                   <div className="flex-1 min-w-0 flex flex-col gap-5">
 
                     {/* ═══ Integrations ═══ */}
-                    <motion.div
-                      variants={fadeUp}
+                    <AnimatedSection
                       id="integrations"
-                      ref={(el) => { sectionRefs.current.integrations = el }}
+                      delay={0.1}
                     >
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="flex items-center justify-center size-8 rounded-xl bg-muted/80 dark:bg-muted">
-                          <IconBrandTelegram className="h-4 w-4 text-foreground/70" />
+                      <div ref={(el: HTMLDivElement | null) => { sectionRefs.current.integrations = el }} className="flex items-center gap-2.5 mb-3">
+                        <div className="flex items-center justify-center size-9 rounded-xl bg-sky-500/15">
+                          <IconBrandTelegram className="h-4.5 w-4.5 text-sky-600 dark:text-sky-400" />
                         </div>
-                        <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground/70">
+                        <h3 className="section-header">
                           Integrations
                         </h3>
                       </div>
@@ -1006,31 +1119,30 @@ export default function SettingsPage() {
                         </Suspense>
                         <TelegramCard />
                       </div>
-                    </motion.div>
+                    </AnimatedSection>
 
                     {/* ═══ Features ═══ */}
-                    <motion.div
-                      variants={fadeUp}
+                    <AnimatedSection
                       id="features"
-                      ref={(el) => { sectionRefs.current.features = el }}
+                      delay={0.2}
                     >
-                      <div className="flex items-center gap-2 mb-3">
-                        <div className="flex items-center justify-center size-8 rounded-xl bg-muted/80 dark:bg-muted">
-                          <IconPuzzle className="h-4 w-4 text-foreground/70" />
+                      <div ref={(el: HTMLDivElement | null) => { sectionRefs.current.features = el }} className="flex items-center gap-2.5 mb-3">
+                        <div className="flex items-center justify-center size-9 rounded-xl bg-lime-500/15">
+                          <IconPuzzle className="h-4.5 w-4.5 text-lime-600 dark:text-lime-400" />
                         </div>
-                        <h3 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground/70">
+                        <h3 className="section-header">
                           Features
                         </h3>
                       </div>
 
                       <div className="flex flex-col gap-3">
                         {/* Money in Hours */}
-                        <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
+                        <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl relative overflow-hidden">
                           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                           <div className="flex items-center justify-between px-5 py-4">
                             <div className="flex items-center gap-3">
-                              <div className="flex items-center justify-center size-9 rounded-xl bg-muted/80 dark:bg-muted">
-                                <IconClock className="h-4.5 w-4.5 text-foreground/70" />
+                              <div className="flex items-center justify-center size-9 rounded-xl bg-amber-500/15">
+                                <IconClock className="h-4.5 w-4.5 text-amber-600 dark:text-amber-400" />
                               </div>
                               <div>
                                 <h4 className="text-sm font-semibold">Money in Hours</h4>
@@ -1079,7 +1191,7 @@ export default function SettingsPage() {
                                   </div>
 
                                   {computedRate > 0 && (
-                                    <div className="rounded-xl border border-border bg-card p-3 flex items-center justify-between">
+                                    <div className="rounded-xl border border-border/50 bg-card/80 backdrop-blur-xl p-3 flex items-center justify-between">
                                       <div>
                                         <p className="text-xs text-muted-foreground">Your hourly rate</p>
                                         <p className="text-lg font-black tracking-tight tabular-nums">{formatINR(Math.round(computedRate))}<span className="text-xs font-normal text-muted-foreground">/hr</span></p>
@@ -1099,12 +1211,12 @@ export default function SettingsPage() {
                         </div>
 
                         {/* Ghost Budget */}
-                        <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden">
+                        <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl relative overflow-hidden">
                           <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
                           <div className="flex items-center justify-between px-5 py-4">
                             <div className="flex items-center gap-3">
-                              <div className="flex items-center justify-center size-9 rounded-xl bg-muted/80 dark:bg-muted">
-                                <IconGhost className="h-4.5 w-4.5 text-foreground/70" />
+                              <div className="flex items-center justify-center size-9 rounded-xl bg-violet-500/15">
+                                <IconGhost className="h-4.5 w-4.5 text-violet-600 dark:text-violet-400" />
                               </div>
                               <div>
                                 <h4 className="text-sm font-semibold">Ghost Budget</h4>
@@ -1134,17 +1246,20 @@ export default function SettingsPage() {
                           </AnimatePresence>
                         </div>
 
+                        {/* Monthly Income Target */}
+                        <MonthlyIncomeTargetSettings />
+
                         {/* Save features button */}
                         <Button onClick={handleSave} disabled={saving} className="w-full" size="lg">
                           <IconDeviceFloppy className="h-4 w-4 mr-2" />
                           {saving ? "Saving..." : "Save Feature Settings"}
                         </Button>
                       </div>
-                    </motion.div>
+                    </AnimatedSection>
 
                   </div>
                 </div>
-              </motion.div>
+              </div>
             )}
           </div>
         </div>

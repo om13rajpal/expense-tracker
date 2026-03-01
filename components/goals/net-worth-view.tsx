@@ -235,8 +235,8 @@ function NetWorthHero({
 
   return (
     <motion.div variants={fadeUp}>
-      <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-5 md:p-6">
-        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+      <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl relative overflow-hidden p-4 sm:p-5 md:p-6">
+        <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
         <div className="flex items-center gap-2 mb-5">
           <div className="flex items-center justify-center size-8 rounded-xl bg-muted/80 dark:bg-muted">
             <IconBuildingBank className="h-4 w-4 text-foreground/70" />
@@ -646,8 +646,8 @@ function DebtTrackerSection() {
   if (debtsLoading) {
     return (
       <motion.div variants={fadeUp}>
-        <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-5">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+        <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl relative overflow-hidden p-4 sm:p-5">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
           <div className="flex items-center gap-2.5 mb-5">
             <Skeleton className="size-8 rounded-xl" />
             <Skeleton className="h-4 w-24" />
@@ -670,8 +670,8 @@ function DebtTrackerSection() {
   return (
     <>
       <motion.div variants={fadeUp}>
-        <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-5">
-          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+        <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl relative overflow-hidden p-4 sm:p-5">
+          <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
           <div className="flex items-center justify-between mb-5">
             <div className="flex items-center gap-2.5">
               <div className="flex items-center justify-center size-8 rounded-xl bg-destructive/10">
@@ -839,8 +839,8 @@ function DebtTrackerSection() {
  */
 function NetWorthTimeline({ metrics }: { metrics: FinancialHealthMetrics }) {
   return (
-    <motion.div variants={fadeUp} className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-6">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+    <motion.div variants={fadeUp} className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl relative overflow-hidden p-5 sm:p-6">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
       <div className="flex items-center justify-between mb-1">
         <div className="flex items-center gap-2">
           <IconWallet className="h-4 w-4 text-muted-foreground" />
@@ -935,7 +935,7 @@ function NetWorthViewSkeleton() {
   return (
     <div className="space-y-5">
       {/* Net Worth Hero */}
-      <div className="card-elevated rounded-2xl border border-border p-6">
+      <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl p-5 sm:p-6">
         <div className="flex items-center gap-2 mb-5">
           <Skeleton className="size-8 rounded-xl" />
           <Skeleton className="h-4 w-24" />
@@ -957,7 +957,7 @@ function NetWorthViewSkeleton() {
         </div>
       </div>
       {/* Debt tracker */}
-      <div className="card-elevated rounded-2xl border border-border p-5">
+      <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl p-4 sm:p-5">
         <div className="flex items-center gap-2.5 mb-5">
           <Skeleton className="size-8 rounded-xl" />
           <Skeleton className="h-4 w-24" />
@@ -969,7 +969,7 @@ function NetWorthViewSkeleton() {
         </div>
       </div>
       {/* Timeline chart */}
-      <div className="card-elevated rounded-2xl border border-border p-6">
+      <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl p-5 sm:p-6">
         <Skeleton className="h-5 w-36 mb-3" />
         <Skeleton className="h-[260px] w-full rounded-xl" />
       </div>
@@ -1005,7 +1005,7 @@ export function NetWorthView() {
 
   if (queryError || !metrics) {
     return (
-      <div className="card-elevated rounded-2xl border border-border flex h-40 items-center justify-center">
+      <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl flex h-40 items-center justify-center">
         <p className="text-sm text-muted-foreground">
           {queryError ? "Failed to load financial data" : "No financial data available"}
         </p>

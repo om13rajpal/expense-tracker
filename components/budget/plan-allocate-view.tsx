@@ -350,8 +350,8 @@ export function PlanAllocateView() {
           {/* Left: Income + Investments */}
           <motion.div variants={fadeUpSmall} className="flex flex-col gap-4">
             {/* Income */}
-            <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-4">
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+            <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl relative overflow-hidden p-4">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
               <div className="flex items-center gap-3 mb-3">
                 <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-lime-500/10 shadow-[0_0_12px_rgba(132,204,22,0.15)]">
                   <IconCash className="h-4 w-4 text-lime-600 dark:text-lime-400" />
@@ -382,8 +382,8 @@ export function PlanAllocateView() {
             </div>
 
             {/* Investments */}
-            <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-4 flex-1 flex flex-col">
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+            <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl relative overflow-hidden p-4 flex-1 flex flex-col">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
@@ -438,8 +438,8 @@ export function PlanAllocateView() {
           {/* Right: Pie charts */}
           <motion.div variants={fadeUpSmall} className="flex flex-col gap-4">
             {/* Income Breakdown Pie */}
-            <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-4 flex-1 flex flex-col">
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+            <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl relative overflow-hidden p-4 flex-1 flex flex-col">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
               <div className="flex items-center gap-3 mb-2">
                 <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
                   <IconChartPie className="h-4 w-4 text-foreground/70" />
@@ -447,7 +447,9 @@ export function PlanAllocateView() {
                 <h2 className="text-sm font-semibold">Income Breakdown</h2>
               </div>
               {monthlyIncome > 0 && pieData.length > 0 ? (
-                <div className="h-48">
+                <div className="h-48 relative">
+                  {/* Ambient glow behind pie */}
+                  <div className="pointer-events-none absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[70%] h-[70%] rounded-full bg-primary/[0.05] blur-[60px]" />
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
                       <Pie data={pieData} cx="50%" cy="50%" innerRadius={50} outerRadius={80} paddingAngle={2} dataKey="value" stroke="none" isAnimationActive={true} animationDuration={400} animationBegin={0}>
@@ -463,7 +465,7 @@ export function PlanAllocateView() {
               {monthlyIncome > 0 && (
                 <div className="grid grid-cols-2 gap-1.5 mt-1">
                   {pieData.map((d) => (
-                    <div key={d.name} className="flex items-center gap-2 rounded-xl border border-border bg-card px-2.5 py-1.5">
+                    <div key={d.name} className="flex items-center gap-2 rounded-xl border border-border/50 bg-card/60 backdrop-blur-lg px-2.5 py-1.5">
                       <div className="h-2.5 w-2.5 rounded-full shrink-0" style={{ backgroundColor: d.color }} />
                       <div className="min-w-0 flex-1">
                         <p className="text-[11px] text-muted-foreground truncate">{d.name}</p>
@@ -478,8 +480,8 @@ export function PlanAllocateView() {
 
             {/* Investment Split Pie */}
             {investmentPieData.length > 1 && (
-              <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-4">
-                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+              <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl relative overflow-hidden p-4">
+                <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
                 <div className="flex items-center gap-3 mb-2">
                   <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-muted/80 dark:bg-muted">
                     <IconBuildingBank className="h-4 w-4 text-foreground/70" />
@@ -513,8 +515,8 @@ export function PlanAllocateView() {
         {/* Savings / Needs / Wants */}
         <motion.div variants={fadeUpSmall} className="grid gap-4 lg:grid-cols-3">
           {/* Savings */}
-          <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-4 lg:col-span-1">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+          <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl relative overflow-hidden p-4 lg:col-span-1">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
             <div className="flex items-center gap-2.5 mb-3">
               <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-lime-500/10">
                 <IconPigMoney className="h-4 w-4 text-lime-600 dark:text-lime-400" />
@@ -598,8 +600,8 @@ export function PlanAllocateView() {
 
         {/* Allocation Summary */}
         {monthlyIncome > 0 && (
-          <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-4">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+          <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl relative overflow-hidden p-4">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
             <div className="flex items-center justify-between mb-3">
               <h3 className="text-sm font-semibold">Allocation Summary</h3>
               {overAllocated > 0 ? (
@@ -636,8 +638,8 @@ export function PlanAllocateView() {
 
         {/* Plan vs Actual */}
         {planVsActual.length > 0 && (
-          <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-4">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+          <motion.div initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25 }} className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl relative overflow-hidden p-4">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
             <div className="flex items-center gap-3 mb-3">
               <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-lime-500/10">
                 <IconBulb className="h-4 w-4 text-lime-600 dark:text-lime-400" />
@@ -669,8 +671,8 @@ export function PlanAllocateView() {
         {/* Portfolio Summary + Tips */}
         <div className={`grid gap-5 ${(linked.sips || linked.stocks) ? "lg:grid-cols-2" : ""}`}>
           {(linked.sips || linked.stocks) && (
-            <motion.div variants={fadeUpSmall} className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-4">
-              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+            <motion.div variants={fadeUpSmall} className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl relative overflow-hidden p-4">
+              <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-3">
                   <div className="flex size-9 shrink-0 items-center justify-center rounded-xl bg-lime-500/10">
@@ -684,14 +686,14 @@ export function PlanAllocateView() {
               </div>
               <div className="grid grid-cols-2 gap-3">
                 {linked.sips && (
-                  <div className="rounded-xl border border-border bg-card p-3">
+                  <div className="rounded-xl border border-border/50 bg-card/60 backdrop-blur-lg p-3">
                     <p className="text-[11px] text-muted-foreground/70">Active SIPs</p>
                     <p className="text-lg font-black tracking-tight tabular-nums">{linked.sips.count}</p>
                     <p className="text-xs text-muted-foreground tabular-nums">{formatINR(linked.sips.totalMonthly)}/mo</p>
                   </div>
                 )}
                 {linked.stocks && (
-                  <div className="rounded-xl border border-border bg-card p-3">
+                  <div className="rounded-xl border border-border/50 bg-card/60 backdrop-blur-lg p-3">
                     <p className="text-[11px] text-muted-foreground/70">Stocks Held</p>
                     <p className="text-lg font-black tracking-tight tabular-nums">{linked.stocks.count}</p>
                     <p className="text-xs text-muted-foreground tabular-nums">{formatINR(linked.stocks.totalInvested)} invested</p>
@@ -702,8 +704,8 @@ export function PlanAllocateView() {
           )}
 
           {/* Quick Tips */}
-          <motion.div variants={fadeUpSmall} className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-4">
-            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+          <motion.div variants={fadeUpSmall} className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl relative overflow-hidden p-4">
+            <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
             <div className="flex items-start gap-2.5">
               <IconInfoCircle className="h-4 w-4 text-muted-foreground mt-0.5 shrink-0" />
               <div className="space-y-1.5 text-xs text-muted-foreground">
@@ -740,8 +742,8 @@ function StatCard({ icon: Icon, iconBg, iconColor, label, value, sub }: {
   icon: React.ComponentType<any>; iconBg: string; iconColor: string; label: string; value: string; sub: string
 }) {
   return (
-    <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-3">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+    <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl relative overflow-hidden p-3">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
       <div className="flex items-center gap-2.5">
         <div className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${iconBg}`}>
           <Icon className={`h-4 w-4 ${iconColor}`} />
@@ -764,8 +766,8 @@ interface AllocationCardProps {
 
 function AllocationCard({ icon: Icon, iconBg, iconColor, label, hint, value, onChange, pctStr, badgeColor, budgetPct }: AllocationCardProps) {
   return (
-    <div className="card-elevated rounded-2xl border border-border bg-card relative overflow-hidden p-4">
-      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/20 to-transparent" />
+    <div className="bg-card/80 backdrop-blur-xl border border-border/50 rounded-2xl relative overflow-hidden p-4">
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-primary/15 to-transparent" />
       <div className="flex items-center gap-2.5 mb-3">
         <div className={`flex size-9 shrink-0 items-center justify-center rounded-xl ${iconBg}`}>
           <Icon className={`h-4 w-4 ${iconColor}`} />
