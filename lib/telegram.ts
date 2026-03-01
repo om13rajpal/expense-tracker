@@ -154,6 +154,285 @@ export function buildConfirmKeyboard(txnId: string) {
   };
 }
 
+// ─── Chat actions ───────────────────────────────────────────────────
+
+/**
+ * Send a chat action (typing indicator, etc.) to a Telegram chat.
+ *
+ * @param chatId - The Telegram chat ID.
+ * @param action - The chat action (e.g. "typing").
+ */
+export async function sendChatAction(chatId: number, action: string = 'typing') {
+  return callTelegramAPI('sendChatAction', { chat_id: chatId, action });
+}
+
+/**
+ * Edit an existing message's text and optionally its inline keyboard.
+ */
+export async function editMessageText(
+  chatId: number,
+  messageId: number,
+  text: string,
+  options?: { parseMode?: string; replyMarkup?: object }
+) {
+  return callTelegramAPI('editMessageText', {
+    chat_id: chatId,
+    message_id: messageId,
+    text,
+    parse_mode: options?.parseMode ?? 'Markdown',
+    ...(options?.replyMarkup ? { reply_markup: options.replyMarkup } : {}),
+  });
+}
+
+// ─── Main Menu ──────────────────────────────────────────────────────
+
+/**
+ * Build the main menu inline keyboard with all primary actions.
+ */
+export function buildMainMenu() {
+  return {
+    inline_keyboard: [
+      [
+        { text: '\u{1F4B8} Log Expense', callback_data: 'm:log' },
+        { text: '\u{1F4B0} Log Income', callback_data: 'm:inc' },
+      ],
+      [
+        { text: '\u{1F4CB} Today', callback_data: 'm:today' },
+        { text: '\u{1F4CA} Report', callback_data: 'm:report' },
+      ],
+      [
+        { text: '\u{1F4B0} Budget', callback_data: 'm:budget' },
+        { text: '\u{1F3AF} Goals', callback_data: 'm:goals' },
+      ],
+      [
+        { text: '\u{1F4BC} Investments', callback_data: 'm:invest' },
+        { text: '\u{1F9E0} Ask AI', callback_data: 'm:ask' },
+      ],
+      [
+        { text: '\u{2699}\u{FE0F} Settings', callback_data: 'm:settings' },
+      ],
+    ],
+  };
+}
+
+// ─── Quick Actions ──────────────────────────────────────────────────
+
+/**
+ * Build context-aware quick action buttons appended after responses.
+ *
+ * @param context - The context type that determines which quick actions to show.
+ */
+export function buildQuickActions(context: string) {
+  const contextActions: Record<string, { text: string; callback_data: string }[]> = {
+    summary: [
+      { text: '\u{1F4CA} Monthly Report', callback_data: 'm:report' },
+      { text: '\u{1F4B0} Budget', callback_data: 'm:budget' },
+    ],
+    budget: [
+      { text: '\u{1F4CB} Today', callback_data: 'm:today' },
+      { text: '\u{1F9E0} Budget Advice', callback_data: 'm:ask' },
+    ],
+    report: [
+      { text: '\u{1F4B0} Budget', callback_data: 'm:budget' },
+      { text: '\u{1F3AF} Goals', callback_data: 'm:goals' },
+    ],
+    goals: [
+      { text: '\u{1F4BC} Investments', callback_data: 'm:invest' },
+      { text: '\u{1F4CA} Report', callback_data: 'm:report' },
+    ],
+    invest: [
+      { text: '\u{1F3AF} Goals', callback_data: 'm:goals' },
+      { text: '\u{1F4CA} Report', callback_data: 'm:report' },
+    ],
+    ask: [
+      { text: '\u{1F4CB} Today', callback_data: 'm:today' },
+      { text: '\u{1F4CA} Report', callback_data: 'm:report' },
+    ],
+  };
+
+  const row1 = contextActions[context] || [
+    { text: '\u{1F4CB} Today', callback_data: 'm:today' },
+    { text: '\u{1F4CA} Report', callback_data: 'm:report' },
+  ];
+
+  return {
+    inline_keyboard: [
+      row1,
+      [
+        { text: '\u{1F4B8} Log Expense', callback_data: 'm:log' },
+        { text: '\u{1F3E0} Menu', callback_data: 'm:menu' },
+      ],
+    ],
+  };
+}
+
+// ─── Category Picker V2 (with emoji) ───────────────────────────────
+
+const CATEGORY_EMOJI: Record<string, string> = {
+  'Food & Dining': '\u{1F355}',
+  'Transport': '\u{1F695}',
+  'Shopping': '\u{1F6CD}\u{FE0F}',
+  'Bills & Utilities': '\u{1F4F1}',
+  'Entertainment': '\u{1F3AC}',
+  'Healthcare': '\u{1F3E5}',
+  'Education': '\u{1F4DA}',
+  'Fitness': '\u{1F4AA}',
+  'Travel': '\u{2708}\u{FE0F}',
+  'Others': '\u{1F4E6}',
+};
+
+/**
+ * Build category keyboard with emoji prefixes and a Skip option.
+ * Callback: `c:<txnId>:<index>` (max ~30 bytes)
+ */
+export function buildCategoryKeyboardV2(txnId: string) {
+  const categories = getBudgetCategories();
+  const rows: { text: string; callback_data: string }[][] = [];
+  for (let i = 0; i < categories.length; i += 2) {
+    const emoji1 = CATEGORY_EMOJI[categories[i]] || '';
+    const row = [
+      { text: `${emoji1} ${categories[i]}`, callback_data: `c:${txnId}:${i}` },
+    ];
+    if (categories[i + 1]) {
+      const emoji2 = CATEGORY_EMOJI[categories[i + 1]] || '';
+      row.push({ text: `${emoji2} ${categories[i + 1]}`, callback_data: `c:${txnId}:${i + 1}` });
+    }
+    rows.push(row);
+  }
+  rows.push([{ text: '\u{23ED}\u{FE0F} Skip', callback_data: `c:${txnId}:skip` }]);
+  return { inline_keyboard: rows };
+}
+
+// ─── Payment Method Picker ──────────────────────────────────────────
+
+const PAYMENT_METHODS = [
+  { text: '\u{1F4F2} UPI', short: 'upi', full: 'UPI' },
+  { text: '\u{1F4B5} Cash', short: 'cash', full: 'Cash' },
+  { text: '\u{1F4B3} Card', short: 'card', full: 'Credit Card' },
+  { text: '\u{1F3E6} Net Banking', short: 'nb', full: 'Net Banking' },
+  { text: '\u{1F45B} Wallet', short: 'wal', full: 'Wallet' },
+];
+
+/**
+ * Resolve a short payment code back to the full payment method name.
+ */
+export function resolvePaymentMethod(short: string): string | null {
+  const found = PAYMENT_METHODS.find(p => p.short === short);
+  return found ? found.full : null;
+}
+
+/**
+ * Build payment method picker keyboard.
+ * Callback: `p:<txnId>:<short>`
+ */
+export function buildPaymentKeyboard(txnId: string) {
+  return {
+    inline_keyboard: [
+      PAYMENT_METHODS.slice(0, 3).map(p => ({
+        text: p.text,
+        callback_data: `p:${txnId}:${p.short}`,
+      })),
+      [
+        ...PAYMENT_METHODS.slice(3).map(p => ({
+          text: p.text,
+          callback_data: `p:${txnId}:${p.short}`,
+        })),
+        { text: '\u{23ED}\u{FE0F} Skip', callback_data: `p:${txnId}:skip` },
+      ],
+    ],
+  };
+}
+
+// ─── Confirmation Card V2 ───────────────────────────────────────────
+
+/**
+ * Build confirm/cancel/edit keyboard for a transaction.
+ * Callback: `tx:<txnId>:<action>` where action = ok/no/ec/ep/ea
+ */
+export function buildConfirmKeyboardV2(txnId: string) {
+  return {
+    inline_keyboard: [
+      [
+        { text: '\u{2705} Confirm', callback_data: `tx:${txnId}:ok` },
+        { text: '\u{274C} Cancel', callback_data: `tx:${txnId}:no` },
+      ],
+      [
+        { text: '\u{270F}\u{FE0F} Category', callback_data: `tx:${txnId}:ec` },
+        { text: '\u{270F}\u{FE0F} Payment', callback_data: `tx:${txnId}:ep` },
+        { text: '\u{270F}\u{FE0F} Amount', callback_data: `tx:${txnId}:ea` },
+      ],
+    ],
+  };
+}
+
+// ─── Flow Keyboards (no txnId, session-tracked) ─────────────────────
+
+/**
+ * Build category keyboard for guided flow (no txnId needed).
+ * Callback: `fc:<index>`
+ */
+export function buildFlowCategoryKeyboard() {
+  const categories = getBudgetCategories();
+  const rows: { text: string; callback_data: string }[][] = [];
+  for (let i = 0; i < categories.length; i += 2) {
+    const emoji1 = CATEGORY_EMOJI[categories[i]] || '';
+    const row = [
+      { text: `${emoji1} ${categories[i]}`, callback_data: `fc:${i}` },
+    ];
+    if (categories[i + 1]) {
+      const emoji2 = CATEGORY_EMOJI[categories[i + 1]] || '';
+      row.push({ text: `${emoji2} ${categories[i + 1]}`, callback_data: `fc:${i + 1}` });
+    }
+    rows.push(row);
+  }
+  rows.push([{ text: '\u{23ED}\u{FE0F} Skip', callback_data: 'fc:skip' }]);
+  return { inline_keyboard: rows };
+}
+
+/**
+ * Build payment keyboard for guided flow (no txnId needed).
+ * Callback: `fp:<method>`
+ */
+export function buildFlowPaymentKeyboard() {
+  return {
+    inline_keyboard: [
+      PAYMENT_METHODS.slice(0, 3).map(p => ({
+        text: p.text,
+        callback_data: `fp:${p.short}`,
+      })),
+      [
+        ...PAYMENT_METHODS.slice(3).map(p => ({
+          text: p.text,
+          callback_data: `fp:${p.short}`,
+        })),
+        { text: '\u{23ED}\u{FE0F} Skip', callback_data: 'fp:skip' },
+      ],
+    ],
+  };
+}
+
+// ─── Settings Menu ──────────────────────────────────────────────────
+
+/**
+ * Build the settings inline keyboard.
+ */
+export function buildSettingsMenu() {
+  return {
+    inline_keyboard: [
+      [
+        { text: '\u{1F514} Alerts ON', callback_data: 's:alerts:on' },
+        { text: '\u{1F515} Alerts OFF', callback_data: 's:alerts:off' },
+      ],
+      [
+        { text: '\u{1F517} Unlink Account', callback_data: 's:unlink' },
+      ],
+      [
+        { text: '\u{1F3E0} Back to Menu', callback_data: 'm:menu' },
+      ],
+    ],
+  };
+}
+
 // ─── Notification formatters ────────────────────────────────────────
 
 /**

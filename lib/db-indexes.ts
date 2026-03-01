@@ -119,6 +119,17 @@ export async function ensureIndexes(db: Db): Promise<void> {
         { expiresAt: 1 },
         { expireAfterSeconds: 0 }
       ),
+
+      // Telegram sessions - TTL (10 min inactivity expiry)
+      db.collection('telegram_sessions').createIndex(
+        { updatedAt: 1 },
+        { expireAfterSeconds: 600 }
+      ),
+      // Telegram sessions - one session per chat
+      db.collection('telegram_sessions').createIndex(
+        { chatId: 1 },
+        { unique: true }
+      ),
     ]);
 
     indexesEnsured = true;

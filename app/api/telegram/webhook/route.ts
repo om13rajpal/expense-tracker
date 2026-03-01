@@ -15,11 +15,19 @@ import { formatINR } from '@/lib/format';
 import {
   sendMessage,
   sendMessageWithKeyboard,
+  sendChatAction,
+  editMessageText,
   buildCategoryKeyboard,
+  buildCategoryKeyboardV2,
   buildConfirmKeyboard,
+  buildPaymentKeyboard,
+  buildMainMenu,
+  buildQuickActions,
+  buildSettingsMenu,
   getFileUrl,
   callTelegramAPI,
   resolveCategoryIndex,
+  resolvePaymentMethod,
   formatBudgetStatus,
   formatAiResponse,
 } from '@/lib/telegram';
@@ -32,7 +40,10 @@ import {
   sendInvestmentSummary,
 } from '@/lib/telegram-notifications';
 import { fetchAllFinancialData, buildFinancialContext } from '@/lib/financial-context';
-import { chatCompletion } from '@/lib/openrouter';
+import { chatCompletion } from '@/lib/ai-client';
+import { classifyIntent } from '@/lib/telegram-intent';
+import { getSession, clearSession } from '@/lib/telegram-session';
+import { startFlow, handleFlowInput, handleFlowCategoryCallback, handleFlowPaymentCallback } from '@/lib/telegram-flows';
 
 // ─── Dedup: track processed update_ids to reject Telegram retries ───
 
@@ -70,8 +81,20 @@ async function getUserIdByChatId(chatId: number): Promise<string | null> {
 // ─── Command Handlers ───────────────────────────────────────────────
 
 async function handleStart(chatId: number) {
+  const userId = await getUserIdByChatId(chatId);
+
+  if (userId) {
+    // Already linked — show main menu
+    await sendMessageWithKeyboard(
+      chatId,
+      '*Welcome back!* \u{1F389}\n\nWhat would you like to do?',
+      buildMainMenu()
+    );
+    return;
+  }
+
   const text = [
-    '*Welcome to Expense Tracker Bot!* 🎉\n',
+    '*Welcome to Expense Tracker Bot!* \u{1F389}\n',
     'I can help you track expenses, scan receipts, and send you daily summaries.\n',
     '*How to link your account:*',
     '1. Go to Settings in the app',
@@ -83,7 +106,7 @@ async function handleStart(chatId: number) {
     '  `Uber 350 transport`',
     '  `Salary 50000 income`\n',
     '*Send a receipt photo* to auto-extract expenses.\n',
-    'Type /help to see all commands.',
+    'Type /help or say "menu" for all options.',
   ].join('\n');
 
   await sendMessage(chatId, text);
@@ -180,18 +203,16 @@ async function handleHelp(chatId: number) {
     '*AI:*',
     '/ask `<question>` - Ask about your finances',
     '  _e.g. /ask How much did I spend on food?_\n',
-    '*Settings:*',
-    '/alerts `on|off` - Toggle proactive alerts\n',
-    '*Quick Entry:*',
-    '`Coffee 250` - Log an expense',
-    '`250 Coffee` - Also works',
-    '`Salary 50000 income` - Log income',
-    '`Uber 350 transport` - With category hint\n',
+    '*Natural Language:*',
+    'Just type naturally:',
+    '  `Coffee 250` - Log an expense',
+    '  `hi` or `menu` - Show main menu',
+    '  `how\'s my budget?` - AI answers your question\n',
     '*Receipt Scan:*',
     'Send a photo of a receipt to auto-extract expenses.',
   ].join('\n');
 
-  await sendMessage(chatId, text);
+  await sendMessageWithKeyboard(chatId, text, buildMainMenu());
 }
 
 async function handleSummary(chatId: number) {
@@ -251,7 +272,7 @@ async function handleSummary(chatId: number) {
     date: dateStr,
   });
 
-  await sendMessage(chatId, message);
+  await sendMessageWithKeyboard(chatId, message, buildQuickActions('summary'));
 }
 
 // ─── /ask <question> — AI Financial Query ───────────────────────────
@@ -294,7 +315,8 @@ async function handleAsk(chatId: number, question: string) {
     return;
   }
 
-  await sendMessage(chatId, 'Thinking... 🧠');
+  await sendChatAction(chatId, 'typing');
+  await sendMessage(chatId, 'Thinking... \u{1F9E0}');
 
   try {
     const db = await getMongoDb();
@@ -317,11 +339,13 @@ async function handleAsk(chatId: number, question: string) {
         role: 'user',
         content: question,
       },
-    ], { maxTokens: 1500 });
+    ], { maxTokens: 1500, userId });
 
     await recordAiQuery(userId);
     const formatted = formatAiResponse(response);
     await sendAiResponse(chatId, question, formatted);
+    // Send quick actions as a follow-up
+    await sendMessageWithKeyboard(chatId, '_What next?_', buildQuickActions('ask'));
   } catch (error) {
     console.error('AI query error:', error);
     await sendMessage(chatId, 'Sorry, I could not process your question right now. Please try again later.');
@@ -405,6 +429,7 @@ async function handleReport(chatId: number) {
     topCategories,
     comparedToPrevMonth: { incomeChange, expenseChange },
   });
+  await sendMessageWithKeyboard(chatId, '_What next?_', buildQuickActions('report'));
 }
 
 // ─── /budget — Current Budget Status ────────────────────────────────
@@ -452,7 +477,7 @@ async function handleBudget(chatId: number) {
     .filter((b) => b.limit > 0);
 
   const message = formatBudgetStatus(budgets);
-  await sendMessage(chatId, message);
+  await sendMessageWithKeyboard(chatId, message, buildQuickActions('budget'));
 }
 
 // ─── /goals — Savings Goals Progress ────────────────────────────────
@@ -489,6 +514,7 @@ async function handleGoals(chatId: number) {
   }));
 
   await sendGoalsProgress(chatId, goalData);
+  await sendMessageWithKeyboard(chatId, '_What next?_', buildQuickActions('goals'));
 }
 
 // ─── /investments — Portfolio Summary ───────────────────────────────
@@ -558,6 +584,7 @@ async function handleInvestments(chatId: number) {
     mutualFunds: mfData,
     sips: sipData,
   });
+  await sendMessageWithKeyboard(chatId, '_What next?_', buildQuickActions('invest'));
 }
 
 // ─── /alerts on|off — Toggle Proactive Alerts ───────────────────────
@@ -601,15 +628,94 @@ async function handleAlerts(chatId: number, arg: string) {
   );
 }
 
-// ─── Text Message Handler (Expense entry) ───────────────────────────
+// ─── Text Message Handler (Intent router + session awareness) ────────
 
-async function handleTextMessage(chatId: number, text: string) {
+/**
+ * Route a plain-text message through session check → intent classifier.
+ * Replaces the old flat expense-only handler with NLU-aware routing.
+ */
+async function routeMessage(chatId: number, text: string, username?: string) {
   const userId = await getUserIdByChatId(chatId);
   if (!userId) {
     await sendMessage(chatId, 'Account not linked. Use /start to learn how to link your account.');
     return;
   }
 
+  // Check for active session (guided flow)
+  const session = await getSession(chatId);
+  if (session && session.state !== 'IDLE') {
+    const consumed = await handleFlowInput(chatId, text, userId);
+    if (consumed) return;
+    // Flow was aborted due to strong competing intent — fall through to classifier
+  }
+
+  // Classify the intent
+  const { intent } = classifyIntent(text);
+
+  switch (intent) {
+    case 'GREETING':
+    case 'SHOW_MENU':
+      await sendMessageWithKeyboard(
+        chatId,
+        '\u{1F44B} *Hey there!* What would you like to do?',
+        buildMainMenu()
+      );
+      break;
+
+    case 'LOG_EXPENSE':
+    case 'LOG_INCOME':
+      await handleExpenseEntry(chatId, text, userId);
+      break;
+
+    case 'CHECK_BUDGET':
+      await handleBudget(chatId);
+      break;
+
+    case 'VIEW_SUMMARY':
+      await handleSummary(chatId);
+      break;
+
+    case 'VIEW_REPORT':
+      await sendChatAction(chatId, 'typing');
+      await handleReport(chatId);
+      break;
+
+    case 'CHECK_GOALS':
+      await handleGoals(chatId);
+      break;
+
+    case 'CHECK_INVESTMENTS':
+      await handleInvestments(chatId);
+      break;
+
+    case 'ASK_AI':
+      await handleAsk(chatId, text);
+      break;
+
+    case 'UNKNOWN':
+    default: {
+      // Try parsing as expense first
+      const parsed = parseExpenseMessage(text);
+      if (parsed) {
+        await handleExpenseEntry(chatId, text, userId);
+      } else {
+        // Show the menu as fallback
+        await sendMessageWithKeyboard(
+          chatId,
+          "I didn't quite get that. Here's what I can do:",
+          buildMainMenu()
+        );
+      }
+      break;
+    }
+  }
+}
+
+/**
+ * Handle direct expense/income entry from natural language.
+ * Enhanced with V2 category keyboard and quick actions.
+ */
+async function handleExpenseEntry(chatId: number, text: string, userId: string) {
   const parsed = parseExpenseMessage(text);
   if (!parsed) {
     await sendMessage(
@@ -646,7 +752,7 @@ async function handleTextMessage(chatId: number, text: string) {
   const result = await db.collection('transactions').insertOne(doc);
   const insertedId = result.insertedId.toString();
 
-  const typeEmoji = parsed.type === 'income' ? '💰' : '💸';
+  const typeEmoji = parsed.type === 'income' ? '\u{1F4B0}' : '\u{1F4B8}';
   const confirmText = [
     `${typeEmoji} *${parsed.type === 'income' ? 'Income' : 'Expense'} recorded!*\n`,
     `Description: ${parsed.description}`,
@@ -661,10 +767,10 @@ async function handleTextMessage(chatId: number, text: string) {
     await sendMessageWithKeyboard(
       chatId,
       confirmText + '\n\n_Wrong category? Tap to change:_',
-      buildCategoryKeyboard(insertedId)
+      buildCategoryKeyboardV2(insertedId)
     );
   } else {
-    await sendMessage(chatId, confirmText);
+    await sendMessageWithKeyboard(chatId, confirmText, buildQuickActions('summary'));
   }
 }
 
@@ -795,18 +901,222 @@ async function handleCallbackQuery(callbackQuery: {
 }) {
   const data = callbackQuery.data;
   const chatId = callbackQuery.message?.chat.id;
+  const messageId = callbackQuery.message?.message_id;
   if (!data || !chatId) return;
 
   // Acknowledge the callback
   await callTelegramAPI('answerCallbackQuery', { callback_query_id: callbackQuery.id });
 
+  const userId = await getUserIdByChatId(chatId);
+
+  // ─── Menu navigation: m:* ─────────────────────────────────────────
+  if (data.startsWith('m:')) {
+    // Clear any active flow session on menu navigation
+    await clearSession(chatId);
+
+    const action = data.slice(2);
+    switch (action) {
+      case 'menu':
+        await editMessageText(chatId, messageId!, '\u{1F44B} What would you like to do?', {
+          replyMarkup: buildMainMenu(),
+        });
+        return;
+      case 'log':
+        if (!userId) { await sendMessage(chatId, 'Account not linked. Use /link to connect.'); return; }
+        await startFlow(chatId, 'expense', userId, messageId);
+        return;
+      case 'inc':
+        if (!userId) { await sendMessage(chatId, 'Account not linked. Use /link to connect.'); return; }
+        await startFlow(chatId, 'income', userId, messageId);
+        return;
+      case 'today':
+        await handleSummary(chatId);
+        return;
+      case 'report':
+        await sendChatAction(chatId, 'typing');
+        await handleReport(chatId);
+        return;
+      case 'budget':
+        await handleBudget(chatId);
+        return;
+      case 'goals':
+        await handleGoals(chatId);
+        return;
+      case 'invest':
+        await handleInvestments(chatId);
+        return;
+      case 'ask':
+        if (!userId) { await sendMessage(chatId, 'Account not linked. Use /link to connect.'); return; }
+        await sendMessage(chatId, '\u{1F9E0} What would you like to ask about your finances?\n\n_Type your question:_');
+        return;
+      case 'settings':
+        await editMessageText(chatId, messageId!, '\u{2699}\u{FE0F} *Settings*', {
+          replyMarkup: buildSettingsMenu(),
+        });
+        return;
+    }
+    return;
+  }
+
+  // ─── Settings: s:* ────────────────────────────────────────────────
+  if (data.startsWith('s:')) {
+    if (!userId) return;
+    const action = data.slice(2);
+
+    if (action === 'alerts:on' || action === 'alerts:off') {
+      const enabled = action === 'alerts:on';
+      const db = await getMongoDb();
+      await db.collection('user_settings').updateOne(
+        { userId },
+        {
+          $set: {
+            telegramNotifications: {
+              budgetBreach: enabled,
+              weeklyDigest: enabled,
+              renewalAlert: enabled,
+              aiInsights: enabled,
+              dailySummary: enabled,
+            },
+          },
+        }
+      );
+      const emoji = enabled ? '\u{2705}' : '\u{1F515}';
+      await editMessageText(chatId, messageId!, `${emoji} Alerts turned *${enabled ? 'on' : 'off'}*.`, {
+        replyMarkup: buildSettingsMenu(),
+      });
+      return;
+    }
+
+    if (action === 'unlink') {
+      await handleUnlink(chatId);
+      return;
+    }
+    return;
+  }
+
+  // ─── Flow category callback: fc:* ─────────────────────────────────
+  if (data.startsWith('fc:')) {
+    const indexStr = data.slice(3);
+    await handleFlowCategoryCallback(chatId, indexStr, messageId!);
+    return;
+  }
+
+  // ─── Flow payment callback: fp:* ──────────────────────────────────
+  if (data.startsWith('fp:')) {
+    const methodStr = data.slice(3);
+    await handleFlowPaymentCallback(chatId, methodStr, messageId!);
+    return;
+  }
+
+  // ─── V2 Category selection: c:<txnId>:<categoryIndex|skip> ────────
+  if (data.startsWith('c:')) {
+    if (!userId) return;
+    const parts = data.split(':');
+    const txnId = parts[1];
+    const indexOrSkip = parts[2];
+
+    if (!ObjectId.isValid(txnId)) return;
+
+    if (indexOrSkip === 'skip') {
+      await editMessageText(chatId, messageId!, 'Category kept as is.', {
+        replyMarkup: buildQuickActions('summary'),
+      });
+      return;
+    }
+
+    const categoryIndex = parseInt(indexOrSkip, 10);
+    const category = resolveCategoryIndex(categoryIndex);
+    if (!category) return;
+
+    const db = await getMongoDb();
+    await db.collection('transactions').updateOne(
+      { _id: new ObjectId(txnId), userId },
+      { $set: { category, updatedAt: new Date().toISOString() } }
+    );
+
+    await editMessageText(chatId, messageId!, `Category updated to *${category}*`, {
+      replyMarkup: buildQuickActions('summary'),
+    });
+    return;
+  }
+
+  // ─── Payment method update: p:<txnId>:<short|skip> ────────────────
+  if (data.startsWith('p:')) {
+    if (!userId) return;
+    const parts = data.split(':');
+    const txnId = parts[1];
+    const methodOrSkip = parts[2];
+
+    if (!ObjectId.isValid(txnId)) return;
+
+    if (methodOrSkip === 'skip') {
+      await editMessageText(chatId, messageId!, 'Payment method kept as is.', {
+        replyMarkup: buildQuickActions('summary'),
+      });
+      return;
+    }
+
+    const method = resolvePaymentMethod(methodOrSkip);
+    if (!method) return;
+
+    const db = await getMongoDb();
+    await db.collection('transactions').updateOne(
+      { _id: new ObjectId(txnId), userId },
+      { $set: { paymentMethod: method, updatedAt: new Date().toISOString() } }
+    );
+
+    await editMessageText(chatId, messageId!, `Payment updated to *${method}*`, {
+      replyMarkup: buildQuickActions('summary'),
+    });
+    return;
+  }
+
+  // ─── Transaction confirm/cancel/edit: tx:<txnId>:<action> ─────────
+  if (data.startsWith('tx:')) {
+    if (!userId) return;
+    const parts = data.split(':');
+    const txnId = parts[1];
+    const action = parts[2];
+
+    if (!ObjectId.isValid(txnId)) return;
+    const db = await getMongoDb();
+
+    switch (action) {
+      case 'ok':
+        await db.collection('transactions').updateOne(
+          { _id: new ObjectId(txnId), userId },
+          { $set: { status: 'completed', updatedAt: new Date().toISOString() } }
+        );
+        await editMessageText(chatId, messageId!, '\u{2705} Transaction confirmed!', {
+          replyMarkup: buildQuickActions('summary'),
+        });
+        return;
+      case 'no':
+        await db.collection('transactions').deleteOne({ _id: new ObjectId(txnId), userId });
+        await editMessageText(chatId, messageId!, '\u{274C} Transaction cancelled.');
+        return;
+      case 'ec':
+        await editMessageText(chatId, messageId!, '_Pick a new category:_', {
+          replyMarkup: buildCategoryKeyboardV2(txnId),
+        });
+        return;
+      case 'ep':
+        await editMessageText(chatId, messageId!, '_Pick a payment method:_', {
+          replyMarkup: buildPaymentKeyboard(txnId),
+        });
+        return;
+      case 'ea':
+        await sendMessage(chatId, 'Type the corrected amount (e.g. `350`):');
+        return;
+    }
+    return;
+  }
+
+  // ─── Legacy callbacks (backward compat) ───────────────────────────
+  if (!userId) return;
   const db = await getMongoDb();
 
-  // Verify the user owns the transaction for all callback actions
-  const userId = await getUserIdByChatId(chatId);
-  if (!userId) return;
-
-  // Category selection: cat:<txnId>:<categoryIndex>
+  // Old category selection: cat:<txnId>:<categoryIndex>
   if (data.startsWith('cat:')) {
     const parts = data.split(':');
     const txnId = parts[1];
@@ -822,17 +1132,11 @@ async function handleCallbackQuery(callbackQuery: {
       { $set: { category, updatedAt: new Date().toISOString() } }
     );
 
-    // Edit the original message to reflect the change
-    await callTelegramAPI('editMessageText', {
-      chat_id: chatId,
-      message_id: callbackQuery.message!.message_id,
-      text: `Category updated to *${category}*`,
-      parse_mode: 'Markdown',
-    });
+    await editMessageText(chatId, messageId!, `Category updated to *${category}*`);
     return;
   }
 
-  // Receipt confirmation: receipt_confirm:<txnId>
+  // Old receipt confirmation: receipt_confirm:<txnId>
   if (data.startsWith('receipt_confirm:')) {
     const txnId = data.replace('receipt_confirm:', '');
     if (!ObjectId.isValid(txnId)) return;
@@ -842,28 +1146,44 @@ async function handleCallbackQuery(callbackQuery: {
       { $set: { status: 'completed', updatedAt: new Date().toISOString() } }
     );
 
-    await callTelegramAPI('editMessageText', {
-      chat_id: chatId,
-      message_id: callbackQuery.message!.message_id,
-      text: 'Receipt expense confirmed and saved!',
-      parse_mode: 'Markdown',
-    });
+    await editMessageText(chatId, messageId!, '\u{2705} Receipt expense confirmed and saved!');
     return;
   }
 
-  // Receipt cancellation: receipt_cancel:<txnId>
+  // Old receipt cancellation: receipt_cancel:<txnId>
   if (data.startsWith('receipt_cancel:')) {
     const txnId = data.replace('receipt_cancel:', '');
     if (!ObjectId.isValid(txnId)) return;
 
     await db.collection('transactions').deleteOne({ _id: new ObjectId(txnId), userId });
 
-    await callTelegramAPI('editMessageText', {
-      chat_id: chatId,
-      message_id: callbackQuery.message!.message_id,
-      text: 'Receipt expense cancelled.',
-      parse_mode: 'Markdown',
+    await editMessageText(chatId, messageId!, 'Receipt expense cancelled.');
+    return;
+  }
+
+  // Compact receipt callbacks: rc:<txnId> (confirm), rx:<txnId> (cancel)
+  if (data.startsWith('rc:')) {
+    const txnId = data.slice(3);
+    if (!ObjectId.isValid(txnId)) return;
+
+    await db.collection('transactions').updateOne(
+      { _id: new ObjectId(txnId), userId },
+      { $set: { status: 'completed', updatedAt: new Date().toISOString() } }
+    );
+
+    await editMessageText(chatId, messageId!, '\u{2705} Receipt expense confirmed!', {
+      replyMarkup: buildQuickActions('summary'),
     });
+    return;
+  }
+
+  if (data.startsWith('rx:')) {
+    const txnId = data.slice(3);
+    if (!ObjectId.isValid(txnId)) return;
+
+    await db.collection('transactions').deleteOne({ _id: new ObjectId(txnId), userId });
+
+    await editMessageText(chatId, messageId!, 'Receipt expense cancelled.');
     return;
   }
 }
@@ -932,8 +1252,8 @@ export async function POST(request: NextRequest) {
       const fileId = message.photo[message.photo.length - 1].file_id;
       scheduleReceiptProcessing(chatId, fileId);
     } else if (text && !text.startsWith('/')) {
-      // Natural language expense entry
-      await handleTextMessage(chatId, text);
+      // Natural language: session-aware intent routing
+      await routeMessage(chatId, text, username);
     }
 
     return NextResponse.json({ ok: true });
